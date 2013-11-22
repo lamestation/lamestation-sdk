@@ -1,0 +1,122 @@
+{{
+KS0108 Text-Drawing Library Demo
+─────────────────────────────────────────────────
+Version: 1.0
+Copyright (c) 2011 LameStation.
+See end of file for terms of use.
+
+Authors: Brett Weir
+─────────────────────────────────────────────────
+}}
+
+
+
+CON
+  _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
+  _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
+
+  FRAMES = 2
+  SCREEN_W = 128
+  SCREEN_H = 64
+  BITSPERPIXEL = 2
+  SCREEN_BW = 16   
+  SCREEN_BH = 8
+  SCREENSIZE = SCREEN_W*SCREEN_H
+  SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL*FRAMES
+
+  NL = 10
+  SPACEBAR = 32
+
+OBJ
+        lcd     :               "LCD_M_Driver"
+        txt    :               "Text_Driver" 
+
+VAR
+
+'These HAVE to be next to each other, in this order,
+'wherever they appear in your code.
+long    screenframe
+long    screen[SCREENSIZEB/4]
+long    bacon
+
+
+PUB TextMachine
+{{
+Doesn't really matter which one of these is called first,
+but if you call them in reverse order, you'll get a moment
+of garbled screen output.  @screen is the address of the
+screen in memory, and @screenframe is used to control
+which page is currently being drawn to.  Don't worry about @bacon.
+It's reserved for debugging stuffs.
+}}
+txt.enableGrfx(@bacon, @screen, @screenframe)
+lcd.start(@screen)
+
+repeat
+     {{
+    'The LCD and graphics libraries enforce flipping between
+    'two pages in memory to prevent screen flicker, but this
+    'functionality is hidden from the user.
+    
+    'To update the screen, you simply call switchFrame.
+    }}
+    txt.switchFrame
+
+    {{
+    'Clears the screen to black.
+    'Nuffin' special.
+    }}
+    txt.clearScreen
+
+    {{
+    'First argument is the string.
+    'string() for sending text on the fly.
+    'Or pass the address of a null-terminated string in a DAT block.
+
+    'The next two arguments are the x and y position of the cursor,
+    'which both have a resolution of 8 pixels.  Be careful not to
+    'allow the cursor to overflow off the screen (bottom-right of
+    'screen), as there is no protection in place yet and you will
+    'probably overwrite something you like.
+
+    'x position is a feature I just added today, so when the cursor
+    'reaches the right side of the screen, it isn't behaving like I
+    'want it to yet, when x is nonzero.  Buyer beware.
+    }}
+    txt.textbox(string("Super Texty Fun-Time?"), 0, 1)
+    txt.textbox(@yourmom, 0, 3) 
+
+
+
+
+
+DAT
+{
+NULL TERMINATE THAT SHIZZNIZZZZ
+}
+yourmom        byte    "!",34,"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz",0   
+          
+
+
+{{
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                           TERMS OF USE: MIT License                                  │                                                            
+├──────────────────────────────────────────────────────────────────────────────────────┤
+│Permission is hereby granted, free of charge, to any person obtaining a copy of this  │
+│software and associated documentation files (the "Software"), to deal in the Software │ 
+│without restriction, including without limitation the rights to use, copy, modify,    │
+│merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    │
+│permit persons to whom the Software is furnished to do so, subject to the following   │
+│conditions:                                                                           │                                            │
+│                                                                                      │                                               │
+│The above copyright notice and this permission notice shall be included in all copies │
+│or substantial portions of the Software.                                              │
+│                                                                                      │                                                │
+│THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   │
+│INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         │
+│PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    │
+│HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION     │
+│OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        │
+│SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                │
+└──────────────────────────────────────────────────────────────────────────────────────┘
+}}

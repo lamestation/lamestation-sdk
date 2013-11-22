@@ -1,0 +1,33 @@
+#tileset
+#tilebitmap <TileSetIdentifier>\\<TileSetIdentifier>.bmp 128
+#end tilebitmap
+#end tileset
+
+
+
+#file <TileSetIdentifier>\\<TileSetIdentifier>.bat
+cd ..
+img2dat_m "<TileSetIdentifier>/monotiles" -tilemap 8 8
+pause
+#end file
+
+
+
+#file <TileSetIdentifier>\\<TileSetIdentifier>.txt
+#tileset
+
+#map
+'tileset: <TileSetIdentifier> 
+'levelname <MapIdentifier>
+<MapIdentifier>
+byte\t<MapWidth>, <MapHeight>
+#mapdata  "\nbyte\t  "  ","  ","  "\nbyte\t  "  ""
+<(TileNumber + ((Bounds & 1)*128)):"%3d">
+#end mapdata
+
+#end map
+
+#end tileset 
+
+#end file
+

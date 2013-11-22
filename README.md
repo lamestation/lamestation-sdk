@@ -1,4 +1,4 @@
 lamestation-sdk
 ===============
 
-All the libraries you need to get started using the LameStation right away.
+All the Spin libraries you need to get started using the LameStation right away.
