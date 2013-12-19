@@ -1,7 +1,8 @@
 {{
-PWM Output Driver With Piano
+PWM Output Driver With MIDI Interface
 ─────────────────────────────────────────────────
-Version: 1.0 Copyright (c) 2013 LameStation LLC
+Version: 1.0
+Copyright (c) 2013 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
@@ -12,11 +13,11 @@ Authors: Brett Weir
 CON     _clkmode = xtal1 + pll16x
         _xinfreq = 5_000_000
 
-        FS      = 25000
-        PERIOD1 = 3200         ' 'FS = 80MHz / PERIOD1'
+        PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
+        FS      = 40000
         SAMPLES = 512
         PERVOICE = 1
-        VOICES = 8
+        VOICES = 4
         OSCILLATORS = VOICES*PERVOICE
         REGPEROSC = 4
 
@@ -243,6 +244,8 @@ PRI ControlPitchBend
             pst2.Char(" ")
             pst2.Dec(databyte2)
             pst2.Char(" ")
+            
+            pst2.Char(pst#NL)
 
 PRI InitPlugin
 
@@ -254,7 +257,6 @@ PUB go | x
     
   parameter := @sine
   channelparam := (INITVAL << 8)
-  'channelADSR := 127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (0 << R_OFFSET) + (3 << W_OFFSET)
   channelADSR := LONG[@instruments][0]
   
   repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
@@ -265,7 +267,6 @@ PUB go | x
   oscindexer := 0
   oscindexcounter := 0
      
-  
   cognew(@oscmodule, @parameter)    'start assembly cog
   repeat
         'system control messages begin with $FF
@@ -277,7 +278,6 @@ PUB go | x
          statusbyte := newbyte
          statusnibble := statusbyte & $F0
          statuschannel := statusbyte & $0F
-'         pst2.Char(pst#LF)
          pst2.Char(pst#NL)
          pst2.Hex(statusbyte, 2)
          pst2.Char(" ")
@@ -298,22 +298,11 @@ PUB go | x
          else
 
 
-'         pst2.Dec(databyte1)
- '        pst2.Char(" ")
-         'pst2.Chars(pst#NL, 1)
-         'pst2.Str(String("Output Value: "))
-         'pst2.Char(" ")
-         'pst2.Hex(channelADSR, 8)
-         'pst2.Hex(outputlong, 8)
-         'pst2.Char(32)
-         'pst2.Str(String("  Sine Addr: "))
-         'pst2.Dec(@sine)
-
 DAT
 
 instruments
 'tubular bells
-long    (127 + (12 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (3 << W_OFFSET))
+long    (127 + (4 << D_OFFSET) + (80 << S_OFFSET) + (0 << R_OFFSET) + (3 << W_OFFSET))
    
 'jarn harpsichord
 long    (127 + (41 << D_OFFSET) + (60 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
@@ -327,8 +316,8 @@ long    (127 + (12 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OF
 'POWER
 long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
 
-
-
+'accordion
+long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (64 << R_OFFSET) + (5 << W_OFFSET))
 
 
 
@@ -345,32 +334,31 @@ byte    105,106,107,108,108,109,110,111,112,112,113,114,114,115,116,116
 byte    117,117,118,119,119,120,120,121,121,121,122,122,123,123,123,124
 byte    124,124,125,125,125,125,126,126,126,126,126,126,126,126,126,126
 
-freqTable
-long    1153, 1222, 1294, 1371, 1453, 1539, 1631, 1728
-long    1830, 1939, 2055, 2177, 2306, 2444, 2589, 2743
-long    2906, 3079, 3262, 3456, 3661, 3879, 4110, 4354
-long    4613, 4888, 5178, 5486, 5812, 6158, 6524, 6912
-long    7323, 7759, 8220, 8709, 9227, 9776, 10357, 10973
-long    11625, 12317, 13049, 13825, 14647, 15518, 16441, 17419
-long    18454, 19552, 20714, 21946, 23251, 24634, 26099, 27651
-long    29295, 31037, 32882, 34838, 36909, 39104, 41429, 43893
-long    46503, 49268, 52198, 55302, 58590, 62074, 65765, 69676
-long    73819, 78209, 82859, 87786, 93007, 98537, 104396, 110604
-long    117181, 124149, 131531, 139353, 147639, 156418, 165719, 175573
-long    186014, 197075, 208793, 221209, 234363, 248299, 263063, 278706
-long    295279, 312837, 331439, 351147, 372028, 394150, 417587, 442418
-long    468726, 496598, 526127, 557412, 590558, 625674, 662878, 702295
-long    744056, 788300, 835175, 884837, 937452, 993196, 1052254, 1114825
-long    1181116, 1251348, 1325757, 1404591, 1488112, 1576600, 1670350, 1769674
 
+
+freqTable
+long    1071, 1135, 1202, 1274, 1350, 1430, 1515, 1605
+long    1700, 1802, 1909, 2022, 2143, 2270, 2405, 2548
+long    2700, 2860, 3030, 3210, 3401, 3604, 3818, 4045
+long    4286, 4540, 4810, 5097, 5400, 5721, 6061, 6421
+long    6803, 7208, 7636, 8090, 8572, 9081, 9621, 10194
+long    10800, 11442, 12122, 12843, 13607, 14416, 15273, 16181
+long    17144, 18163, 19243, 20388, 21600, 22884, 24245, 25687
+long    27214, 28833, 30547, 32363, 34288, 36327, 38487, 40776
+long    43200, 45769, 48491, 51374, 54429, 57666, 61095, 64727
+long    68576, 72654, 76974, 81552, 86401, 91539, 96982, 102749
+long    108859, 115332, 122190, 129455, 137153, 145309, 153949, 163104
+long    172802, 183078, 193964, 205498, 217718, 230664, 244380, 258911
+long    274307, 290618, 307899, 326208, 345605, 366156, 387929, 410996
+long    435436, 461328, 488760, 517823, 548614, 581237, 615799, 652416
+long    691211, 732313, 775858, 821993, 870872, 922656, 977520, 1035647
+long    1097229, 1162474, 1231598, 1304833, 1382423, 1464626, 1551717, 1643987
 
 
 
 
 
 piano
- 
-
 byte    130, 141, 154, 168, 200, 217, 230, 242, 240, 237, 233, 230, 226, 222, 212, 208
 byte    204, 198, 197, 195, 193, 192, 190, 185, 182, 179, 176, 171, 168, 166, 161, 159
 byte    157, 154, 153, 151, 150, 149, 150, 152, 157, 160, 162, 166, 168, 169, 170, 170
@@ -405,9 +393,6 @@ byte    105, 103, 101, 97, 95, 93, 89, 88, 86, 84, 80, 78, 76, 74, 73, 73
 byte    73, 74, 74, 77, 80, 82, 85, 91, 93, 95, 98, 100, 101, 105, 108, 112
 
 
-
-
-DAT
 
                         org
 
@@ -640,22 +625,6 @@ if_nc                   neg     osctemp, osctemp
 
 
 
-                             {
-
-:screechwave            mov     Addrtemp, phase
-                        and     Addrtemp, #$FF
-                        cmp     Addrtemp, #128          wc
-if_nc                   xor     Addrtemp, #$FF
-                        and     Addrtemp, #$7F
-                        add     Addrtemp, #300
-                        rdbyte  osctemp, Addrtemp
-                        cmp     phase, #256             wc              
-if_nc                   neg     osctemp, osctemp
-
-                        jmp     #:oscOutput         
-                                             }
-
-
 'ORGAN GENERATION
 :screechwave            mov     Addrtemp, phase
                         add     Addrtemp, organAddr
@@ -663,9 +632,6 @@ if_nc                   neg     osctemp, osctemp
                         subs    osctemp, #128
 
                         jmp     #:oscOutput         
-
-
-
 
 
 
@@ -686,15 +652,7 @@ if_nc                   neg     osctemp, osctemp
 
 
 
-
-                          
-
-
-
-
 :oscOutput
-
-
 'UNROLLED ADSR MULTIPLIER   (calculates proper volume of this oscillator's sample)
                         mov     multtemp, osctemp
                         mov     osctemp, #0
@@ -726,7 +684,7 @@ if_nz                   add     osctemp, multtemp
                         djnz    oscIndex, #oscloop
 
 
-'FINAL VOLUME ADJUSTMENT AND OUTPUT TO SOUND              
+'FINAL VOLUME ADJUSTMENT AND OUTPUT TO SOUND         
                         adds    output, outputoffset
 
 
