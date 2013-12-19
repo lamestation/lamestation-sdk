@@ -1,20 +1,17 @@
 #include <stdio.h>
 #include <math.h>
 
-#define NOTES   128
-#define fFCMIN  55.0/4.0
-#define FCsamplemin     55.0
+#define MIDINOTES   128
+#define ROOTNOTE 16.35
 
+// A0 = 55Hz
+// C0 = 16.35
 
 //Propeller definitions
-#define PROPNOTES   128
-//#define sysclk      79787884
+#define MIDINOTES   128
 #define sysclk      80000000
 
-#define A440        36909
-
-#define PWMperiod   3200
-#define fFCPROP     13.75
+#define PWMperiod   2500
 #define fSAMPLES    512.0
 
 float pitch (float Fnaught, int n) {
@@ -28,23 +25,23 @@ int main (void) {
     FILE * tableC = fopen("frequencytable_C.txt","w");
 
     //Generate frequency table for the Propeller
-    float fFrequencyP[PROPNOTES];
-    unsigned int iFrequencyP[PROPNOTES];
+    float fFrequencyP[MIDINOTES];
+    unsigned int iFrequencyP[MIDINOTES];
 
     float fFs = ((float) sysclk)/((float) PWMperiod);
     float fFCMINPROP = fFs/fSAMPLES;
 
 
-    for(int i = 0; i < PROPNOTES; i++) {
-        fFrequencyP[i] = pitch(fFCPROP, i);
+    for(int i = 0; i < MIDINOTES; i++) {
+        fFrequencyP[i] = pitch(ROOTNOTE, i);
         iFrequencyP[i] = (int) (pow(2.0,12.0)*fFrequencyP[i]/fFCMINPROP);
     }
 
     printf("Generating PASM table... ");
 
     fprintf(tableP,"freqTable");
-    for(int i = 0; i < PROPNOTES; i++) {
-        if (i % 8 == 0) fprintf(tableP, "\nword\t");
+    for(int i = 0; i < MIDINOTES; i++) {
+        if (i % 8 == 0) fprintf(tableP, "\nlong\t");
         fprintf(tableP,"%i",iFrequencyP[i]);
         if (i % 8 != 7) fprintf(tableP,", ");
     }
@@ -53,11 +50,11 @@ int main (void) {
 
 
     //frequency tables for C function generator and LaTeX
-    float fFrequency[NOTES];
-    unsigned int iFrequency[NOTES];
+    float fFrequency[MIDINOTES];
+    unsigned int iFrequency[MIDINOTES];
 
-    for(int i = 0; i < NOTES; i++) {
-        fFrequency[i] = pitch(fFCMIN, i);
+    for(int i = 0; i < MIDINOTES; i++) {
+        fFrequency[i] = pitch(ROOTNOTE, i);
         iFrequency[i] = (int) (pow(2.0,16.0)*fFrequency[i]);
     }
 
@@ -71,9 +68,9 @@ int main (void) {
                         " & F\\textsubscript{C}/F\\textsubscript{CSAMPLEMIN} &  \\\\\ \n\\hline\n");
 
     int linecounter = 0;
-    for(int i = 0; i < NOTES; i++) {
+    for(int i = 0; i < MIDINOTES; i++) {
         fprintf(tableL, "%i & %10.3f & %i & %f & \\\\ \n",i,fFrequency[i],
-                        iFrequency[i],fFrequency[i]/(pow(2.0,16.0)*FCsamplemin));
+                        iFrequency[i],fFrequency[i]/(pow(2.0,16.0)*ROOTNOTE));
 
 
         linecounter++;
@@ -108,7 +105,7 @@ int main (void) {
     fprintf(tableC,"int frequencytable[] = {");
     fprintf(tableC,"%i",iFrequency[0]);
 
-    for(int i = 1; i < NOTES; i++) {
+    for(int i = 1; i < MIDINOTES; i++) {
         fprintf(tableC,",%i",iFrequency[i]);
         if (i % 10 == 9) fprintf(tableC,"\n            ");
     }
