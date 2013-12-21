@@ -1,0 +1,149 @@
+#!/usr/bin/env python
+
+import os, sys
+
+from PIL import Image
+import argparse
+
+
+LS_SCREEN_W = 128
+LS_SCREEN_H = 64
+
+SCALEFACTOR = 4
+TEXTBOX_H = 30
+
+PAGES = 8
+ADDRESSES = 128
+PIXELS_PER_ADDRESS = 8
+
+OUTPUT_W = LS_SCREEN_W*SCALEFACTOR*2
+OUTPUT_H = LS_SCREEN_H*(SCALEFACTOR+1)+TEXTBOX_H
+
+
+def multiply_tuple(scalar,tup):
+    return tuple([scalar*x for x in tup])
+
+
+parser = argparse.ArgumentParser(description='Convert images to Propeller Spin data blocks for use with Lame Graphics.')
+
+parser.add_argument('-m','--mode', nargs=1, metavar=('MODE'), choices=['sprite','font'], default='sprite',
+        help="""Indicates what the image is to be converted into:
+            sprite - An image with custom width/height and that may have multiple frames
+            font - A bitmap font to be used with lame_text
+        """)
+parser.add_argument('-b','--bits', nargs=1, metavar=('BITS'), type=int, choices=[2,8],default=2,
+        help="Bit depth of images")
+
+parser.add_argument('-f','--framesize', nargs=2, metavar=('WIDTH','HEIGHT'), type=int,
+        help="Size of individual sprite frames (only needed for sprites)")
+
+parser.add_argument('filenames', metavar='FILE', nargs='+', help='Files to convert')
+
+
+args = parser.parse_args()
+
+
+
+
+for filename in args.filenames:
+    newfilename = filename+".dat"
+
+    print "       File:",filename
+    print "     Saving:",newfilename
+    print "  Bit depth:", args.bits
+    print " Image Type:", args.mode[0]
+
+    im = Image.open(filename)
+    output_im = Image.new("RGB",im.size)
+
+    output_txt = open(newfilename,'w')
+
+
+    print " Image size:",im.size
+    
+    if args.mode == 'sprite':
+
+        # Check if framesize passed in arguments
+        if args.framesize:
+            framesize = tuple(args.framesize)
+            print " Frame size:",framesize
+            if not framesize < im.size:
+                print "Frame is larger than image; exiting"
+                sys.exit(1)
+        else:
+            print "   Framesize not given; setting frame size to image size"
+            framesize = im.size
+        
+        # Calculate frameboost constant, the precalculated frame size so 
+        # that jumping to a frame requires only one multiplication, not three.
+        frameboost = (framesize[0]*2*framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF
+        dimensions = ((framesize[0]/PIXELS_PER_ADDRESS) & 0xFFFF , (framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF) 
+
+        output_txt.write("word\t$%X" % frameboost + "  'frameboost\n")
+        output_txt.write("word\t$%X, $%X   'width, height\n" % dimensions )
+
+
+    bytecount = 0
+
+    for page in range(0,im.size[1]/PIXELS_PER_ADDRESS):
+        for address in range(0,im.size[0]):
+
+            colorchar = 0
+
+            for pixel in range(0,PIXELS_PER_ADDRESS):
+
+                x = address
+                y = page*PIXELS_PER_ADDRESS + pixel
+
+                pixeldata = im.getpixel((x,y))
+                coloravg = sum(pixeldata)/3
+
+                # if color is not black
+                if coloravg:
+
+                    if coloravg < 255:
+                        colorchar += (1 << (pixel+8))
+
+                        # Pink is the alpha color
+                        if pixeldata == (255,0,255):
+                            output_im.putpixel((x,y), (255, 0, 255))
+                        else:
+                            output_im.putpixel((x,y), (139, 138, 116))
+                            colorchar += (1 << pixel)
+
+                    else:
+                        output_im.putpixel((x,y), (255, 233, 166))
+                        colorchar += (1 << pixel)
+
+                else:
+                    ## if black
+                    output_im.putpixel((x,y), (23,43,66))
+
+
+            if bytecount % 16 == 0:
+                output_txt.write("byte\t")
+            output_txt.write("$%X" % (colorchar & 0xFF))
+            output_txt.write(", ")
+            output_txt.write("$%X" % (colorchar >> 8))
+            if not bytecount % 16 == 15:
+                output_txt.write(", ")
+            else:
+                output_txt.write("\n")
+
+            bytecount += 1
+
+
+    # Create a canvas to paste both the input and output images onto
+    output_canvas = Image.new("RGB",(im.size[0],im.size[1]*2))
+    output_canvas.paste(im,(0,0))
+    output_canvas.paste(output_im,(0,im.size[1]))
+
+    # Then resize the canvas to make it easier to see
+    output_canvas = output_canvas.resize(multiply_tuple(SCALEFACTOR,(im.size[0],im.size[1]*2)))
+    output_canvas.show()
+
+
+    output_txt.close()
+
+
+    print open(newfilename,'r').read()
