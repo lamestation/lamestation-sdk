@@ -42,10 +42,9 @@ parser.add_argument('filenames', metavar='FILE', nargs='+', help='Files to conve
 
 args = parser.parse_args()
 
+filenames = [ i for i in args.filenames if not os.path.splitext(i)[1] == '.dat' ]
 
-
-
-for filename in args.filenames:
+for filename in filenames:
     newfilename = filename+".dat"
 
     print "       File:",filename
