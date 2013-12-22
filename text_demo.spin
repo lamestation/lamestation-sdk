@@ -28,8 +28,8 @@ CON
   SPACEBAR = 32
 
 OBJ
-        lcd     :               "LCD_M_Driver"
-        txt    :               "Text_Driver" 
+        lcd     :               "lame_lcd"
+        gfx    :               "lame_graphics" 
 
 VAR
 
@@ -49,7 +49,7 @@ screen in memory, and @screenframe is used to control
 which page is currently being drawn to.  Don't worry about @bacon.
 It's reserved for debugging stuffs.
 }}
-txt.enableGrfx(@bacon, @screen, @screenframe)
+gfx.enableGrfx(@bacon, @screen, @screenframe)
 lcd.start(@screen)
 
 repeat
@@ -60,13 +60,13 @@ repeat
     
     'To update the screen, you simply call switchFrame.
     }}
-    txt.switchFrame
+    gfx.switchFrame
 
     {{
     'Clears the screen to black.
     'Nuffin' special.
     }}
-    txt.clearScreen
+    gfx.clearScreen
 
     {{
     'First argument is the string.
@@ -83,8 +83,8 @@ repeat
     'reaches the right side of the screen, it isn't behaving like I
     'want it to yet, when x is nonzero.  Buyer beware.
     }}
-    txt.textbox(string("Super Texty Fun-Time?"), 0, 1)
-    txt.textbox(@yourmom, 0, 3) 
+    gfx.textbox(string("Super Texty Fun-Time?"), 0, 1)
+    gfx.textbox(@yourmom, 0, 3) 
 
 
 

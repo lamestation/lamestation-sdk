@@ -204,7 +204,7 @@ PUB Main
 dira~
 grfx.enableGrfx(@bacon, @screen, @screenframe)
 lcd.start(@screen)
-pst. StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
+pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
 
 audio.Start
 
@@ -252,6 +252,7 @@ audio.SetWaveform(1, 127)
 audio.SetADSR(127, 127, 100, 127) 
 audio.LoadSong(@titleScreenSong)
 audio.PlaySong
+
 
 
 choice := 1

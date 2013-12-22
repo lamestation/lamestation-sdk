@@ -2,7 +2,7 @@
 KS0108 Graphics Library
 ─────────────────────────────────────────────────
 Version: 1.0
-Copyright (c) 2011 LameStation.
+Copyright (c) 2013 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
@@ -341,11 +341,11 @@ repeat while byte[teststring][stringcursor] <> 0
     word[temp3][screencursor] := 0
     stringcursor++     
       
-    {        
+       
 repeat while screencursor < SCREEN_W - (boxx << 4)
     word[temp3][screencursor] := 0
     screencursor++        
-     }
+     
 
 lockclr(SCREENLOCK)
 

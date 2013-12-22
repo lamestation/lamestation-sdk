@@ -2,7 +2,7 @@
 KS0107/08 Monochrome LCD Framebuffer Driver
 ─────────────────────────────────────────────────
 Version: 1.0
-Copyright (c) 2011 LameStation.
+Copyright (c) 2013 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
