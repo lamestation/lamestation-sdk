@@ -21,8 +21,9 @@ def multiply_tuple(scalar,tup):
 
 parser = argparse.ArgumentParser(description='Convert images to Propeller Spin data blocks for use with Lame Graphics.')
 
-parser.add_argument('-m','--mode', nargs=1, metavar=('MODE'), choices=['sprite','font'], default=['sprite'],
+parser.add_argument('-m','--mode', nargs=1, metavar=('MODE'), choices=['sprite','font','block'], default=['sprite'],
         help="""Indicates what the image is to be converted into:
+            block - Image with no header, often used for tilemaps
             sprite - An image with custom width/height and that may have multiple frames
             font - A bitmap font to be used with lame_text
         """)
@@ -78,6 +79,10 @@ else:
 
             output_txt.write("word\t$%X" % frameboost + "  'frameboost\n")
             output_txt.write("word\t$%X, $%X   'width, height\n" % dimensions )
+
+        elif args.mode[0] == 'block':
+            framesize = im.size
+
 
 
         bytecount = 0

@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+
+import sys, os, re
+import xml.etree.ElementTree as ET
+import base64
+import argparse
+
+
+parser = argparse.ArgumentParser(description="""\
+        Convert tmx maps to data blocks for in-game tiled maps
+
+        Currently, CSV maps are supported.
+        """)
+parser.add_argument('filenames', metavar='FILE', nargs='+', help='Maps to convert')
+
+args = parser.parse_args()
+
+filenames = [ i for i in args.filenames if os.path.splitext(i)[1] == '.tmx' and os.path.isfile(i) ]
+
+if not filenames:
+    print "No valid file paths given."
+    sys.exit(1)
+else:
+    for filename in args.filenames:
+        tree = ET.parse(filename)
+
+        root = tree.getroot()
+
+        width = int(root.attrib['width'])
+        height = int(root.attrib['height'])
+
+        newfilename = filename+'.dat'
+        f = open(newfilename,'w')
+
+        f.write("map_%s\n" % os.path.splitext(os.path.basename(filename))[0])
+        f.write("byte\t%3i, %3i  'width, height\n" % (width, height))
+
+        for child in root.iter('tileset'):
+            print "Tileset: ",child.attrib['name'],child.attrib['tilewidth'],child.attrib['tileheight']
+
+        for child in root.iter('layer'):
+            data = child.find('data')
+            print "Encoding: ",data.attrib['encoding']
+            
+
+
+            if data.attrib['encoding'] == 'base64':
+                print data.text
+                blah = base64.standard_b64decode(data.text)
+                n = 2
+                print [blah[i:i+n] for i in range(0, len(blah), n)]
+
+
+        
+            elif data.attrib['encoding'] == 'csv':
+
+
+                text = re.sub(r"[\r\n]","", data.text)
+                text = text.split(',')
+                n = len(text)
+                for i in range(0,len(text)):
+                    if i % width == 0:
+                        f.write("byte\t")
+                    f.write("%3i" % int(text[i]))
+                    if i % width != 3:
+                        f.write(",")
+                    else:
+                        f.write("\n")
+
+                f.close()
+                print open(newfilename).read()
