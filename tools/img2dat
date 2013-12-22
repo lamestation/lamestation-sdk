@@ -10,15 +10,10 @@ LS_SCREEN_W = 128
 LS_SCREEN_H = 64
 
 SCALEFACTOR = 4
-TEXTBOX_H = 30
 
 PAGES = 8
 ADDRESSES = 128
 PIXELS_PER_ADDRESS = 8
-
-OUTPUT_W = LS_SCREEN_W*SCALEFACTOR*2
-OUTPUT_H = LS_SCREEN_H*(SCALEFACTOR+1)+TEXTBOX_H
-
 
 def multiply_tuple(scalar,tup):
     return tuple([scalar*x for x in tup])
@@ -98,7 +93,6 @@ else:
                     y = page*PIXELS_PER_ADDRESS + pixel
 
                     pixeldata = im.getpixel((x,y))
-                    print pixeldata
 
                     if type(pixeldata) is tuple:
                         coloravg = sum(pixeldata)/3
