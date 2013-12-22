@@ -1,0 +1,41 @@
+"Part","Number","Quantity","Unit Price ($)","Extended Price ($)"
+"Sparkfun PRT-08032 audio jack 3.5mm","Audio Jack",1,1.5,1.5
+"Keystone 4AAA Battery Holder","KEYSTONE 2482",1,0.76,0.76
+"12mm Pushbutton","12mm Pushbutton",3,0.5,1.5
+"Sparkfun COM-00523 Capacitor","MULTICOMP cap 10uF, 16V tant",2,0.16,0.33
+"Polarized Capacitor (Radial)","IC cap 100uF/16V 5x11",2,0.04,0.08
+"Sparkfun COM-08375 Capacitor","MULTICOMP cap 0.1uF/50V",2,0.25,0.5
+"Polarized Capacitor (Radial)","CAPPR1.5-4x5",1,0.45,0.45
+"Sparkfun DC Barrel Connector","SwitchCraft 2.1mm DC Jack",1,1.25,1.25
+"802 submini joystick","802 Submini Joystick",1,3.95,3.95
+,,,,
+"LCD",,,,
+"monochron KS0108 LCD","128x64 grfx LCD adafruit",1,30,30
+"20-pin header socket","Newark 2212S-20SG-85",1,0.58,0.58
+"Standoff Screws (4-pack)","Radioshack",1,1.99,1.99
+"2-56 bolts (42-pack)","Radioshack",1,1.99,1.99
+"2-56 nuts (42-pack)","Radioshack",1,1.99,1.99
+"Mounting Hardware Kit","Jameco 00106551",1,2.95,2.95
+,,,,
+"LED Green T-1 3/4","Jameco LG3330",1,0.15,0.15
+"Breakaway Header, 40-pin H","Sparkfun PRT-00553",1,1.95,1.95
+"Breakaway Header, 40-pin","Sparkfun PRT-00116",2,2.5,5
+"Mini Jumper 25-pack",,1,1.88,1.88
+"12-pin Header socket",,2,0.35,0.69
+"Grayhill Slide Switch","Grayhill 48ASSP1S1M6QBT",1,2.6,2.6
+"Parallax Propeller","DIP-40",1,7.99,7.99
+"Resistor","AXIAL-0.3",22,0.01,0.18
+"LM1117T-3.3","TO-220 Horizontal Mount",1,0.89,0.89
+"LM1117T-5.0","TO-220 Horizontal Mount",1,1.09,1.09
+"Jameco MG FR-29PC-100 speaker","0.2W PC-MNT Speaker",1,1.49,1.49
+"LM386N-1 Audio Amp","N08E",1,1.17,1.17
+"24LC256-E/P EEPROM, 8PDIP","PDIP300-P8",1,1.5,1.5
+"LM339N Quad Comparator","N14A Jameco",1,0.25,0.25
+"Bourns 3352T Trim Pot","Jameco",2,1.15,2.3
+"XTAL 5.5MHz","HC-49U",1,1.1,1.1
+,,,,
+"Custom PCB","4pcb $33 each deal",1,$33.00,$33.00
+,,,,
+,,,,
+"Per LameStation",,61,,113.04
+"Totals",3,183,,339.13
