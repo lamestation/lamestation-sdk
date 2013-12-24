@@ -5,17 +5,27 @@ import xml.etree.ElementTree as ET
 import base64
 import argparse
 
+import subprocess
+
 
 parser = argparse.ArgumentParser(description="""\
         Convert tmx maps to data blocks for in-game tiled maps
 
         Currently, CSV maps are supported.
+
+        This tool will create pack files that will contain compatible
+        map and tile data in a single file.
         """)
 parser.add_argument('filenames', metavar='FILE', nargs='+', help='Maps to convert')
 
 args = parser.parse_args()
 
 filenames = [ i for i in args.filenames if os.path.splitext(i)[1] == '.tmx' and os.path.isfile(i) ]
+
+
+oldtilemap_name = ""
+
+mapsets = {}
 
 if not filenames:
     print "No valid file paths given."
@@ -32,28 +42,29 @@ else:
         newfilename = filename+'.dat'
         f = open(newfilename,'w')
 
-        f.write("map_%s\n" % os.path.splitext(os.path.basename(filename))[0])
+        f.write("\nmap_%s\n" % os.path.splitext(os.path.basename(filename))[0])
         f.write("byte\t%3i, %3i  'width, height\n" % (width, height))
 
         for child in root.iter('tileset'):
-            print "Tileset: ",child.attrib['name'],child.attrib['tilewidth'],child.attrib['tileheight']
+            tilemap_name = child.find('image').attrib['source']
+            newtilemap_name = tilemap_name+'.dat'
+            if not oldtilemap_name == tilemap_name:
+                mapsets[newtilemap_name] = []
+                subprocess.call([os.path.join(os.path.dirname(__file__),"img2dat"), "--mode","block",tilemap_name])
+                oldtilemap_name = tilemap_name
+
+            mapsets[newtilemap_name].append(newfilename)
 
         for child in root.iter('layer'):
             data = child.find('data')
-            print "Encoding: ",data.attrib['encoding']
             
-
-
             if data.attrib['encoding'] == 'base64':
                 print data.text
                 blah = base64.standard_b64decode(data.text)
                 n = 2
                 print [blah[i:i+n] for i in range(0, len(blah), n)]
-
-
         
             elif data.attrib['encoding'] == 'csv':
-
 
                 text = re.sub(r"[\r\n]","", data.text)
                 text = text.split(',')
@@ -62,10 +73,24 @@ else:
                     if i % width == 0:
                         f.write("byte\t")
                     f.write("%3i" % int(text[i]))
-                    if i % width != 3:
+                    if i % width != width-1:
                         f.write(",")
                     else:
                         f.write("\n")
 
                 f.close()
-                print open(newfilename).read()
+
+            else:
+                print "Unsupported encoding scheme; exiting!"
+                sys.exit(1)
+
+
+for tilemap in mapsets:
+    f = open(tilemap+".pack",'w')
+    f.write(open(tilemap).read())
+
+    for level in mapsets[tilemap]:
+        f.write(open(level).read())
+    f.close()
+
+print open(tilemap+".pack",'r').read()
