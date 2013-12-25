@@ -15,30 +15,16 @@ CON
   _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
   _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
 
-  FRAMES = 2
-  SCREEN_W = 128
-  SCREEN_H = 64
-  BITSPERPIXEL = 2
-  SCREEN_BW = 16   
-  SCREEN_BH = 8
-  SCREENSIZE = SCREEN_W*SCREEN_H
-  SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL*FRAMES
-
   NL = 10
   SPACEBAR = 32
 
 OBJ
-        lcd     :               "lame_lcd"
         gfx    :                "lame_graphics" 
         pst     :               "lame_serial"
 
 
 VAR
 
-'These HAVE to be next to each other, in this order,
-'wherever they appear in your code.
-long    screenframe
-long    screen[SCREENSIZEB/4]
 long    bacon
 
 byte    slide
@@ -57,8 +43,7 @@ screen in memory, and @screenframe is used to control
 which page is currently being drawn to.  Don't worry about @bacon.
 It's reserved for debugging stuffs.
 }}
-gfx.enableGrfx(@bacon, @screen, @screenframe)
-lcd.start(@screen)
+gfx.enableGrfx()
 
 pst.StartRxTx(31, 30, 0, 115200)
 pst.Clear

@@ -12,14 +12,19 @@ Authors: Brett Weir
 
 CON
 
+  FRAMES = 2
+  FRAMERATE = 10
+  FRAMEPERIOD = 6000000 
+
   SCREEN_W = 128
   SCREEN_H = 64
   BITSPERPIXEL = 2
+  SCREEN_BW = 16   
   SCREEN_BH = 8
   SCREENSIZE = SCREEN_W*SCREEN_H
-  SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL
-  FRAMEFLIP = SCREENSIZEB/2
-  'FRAMEFLIP = SCREENSIZEB
+  SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL*FRAMES
+
+  FRAMEFLIP = SCREENSIZEB/2/FRAMES
 
   SCREENSPACER = SCREEN_W*2
 
@@ -41,8 +46,14 @@ CON
 
   SCREENLOCK = 0
 
+OBJ
+
+        lcd     :               "lame_lcd"
+
 
 VAR
+long    screenframe
+long    screen[SCREENSIZEB/4]
 
 long    imgpointer
 long    frmflip
@@ -93,26 +104,28 @@ word    frameboost
 
 
 
-PUB enableGrfx(outputpointer, screenpointer, framepointer)
+PUB enableGrfx(outputpointer)
 
   cognew(@graphicsdriver, @instruction1)
   instruction1 := INST_IDLE
   instruction2 := 0   
 
-  long[outputpointer] := @outputlong 
-
-  destscreen := screenpointer
-  frmpointer := framepointer
+  destscreen := @screen
+  frmpointer := @screenframe
   long[frmpointer] := 1
 
   clearScreen
+  
+  lcd.start(@screen)
+  
+  return @outputlong
 
-{
+{{
 PUB getScreen(screenpointer, framepointer)
     destscreen := screenpointer
     frmpointer := framepointer
     long[frmpointer] := 1
-}
+}}
 
 PUB switchFrame
 
@@ -576,7 +589,7 @@ destscrn                long    0
 frm                     long    0
 frmflipcurrent          long    0
 frmflip1                long    FRAMEFLIP*2
-fulscreen               long    SCREENSIZEB/BITSPERPIXEL
+fulscreen               long    SCREENSIZEB/BITSPERPIXEL/FRAMES
 valutemp                long    0
 datatemp                long    0
 datatemp2               long    0

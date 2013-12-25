@@ -14,17 +14,8 @@ CON
   _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
   _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
                         
-  FRAMES = 2
-  FRAMERATE = 10
-  FRAMEPERIOD = 6000000 
-
-  SCREEN_W = 128
-  SCREEN_H = 64
-  BITSPERPIXEL = 2
   SCREEN_BW = 16   
   SCREEN_BH = 8
-  SCREENSIZE = SCREEN_W*SCREEN_H
-  SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL*FRAMES
 
   SW1 = 1 << 24
   SW2 = 1 << 25
@@ -109,14 +100,11 @@ CON
         
 
 OBJ
-        lcd     :               "lame_lcd"
         grfx    :               "lame_graphics"
         audio   :               "lame_audio_synth"
         pst     :               "lame_serial"
 
 VAR
-long    screenframe
-long    screen[SCREENSIZEB/4]
 
 byte    levelw
 byte    levelh
@@ -202,8 +190,7 @@ byte    respawnindexsaved
 PUB Main
 
 dira~
-grfx.enableGrfx(@bacon, @screen, @screenframe)
-lcd.start(@screen)
+grfx.enableGrfx()
 pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
 
 audio.Start
