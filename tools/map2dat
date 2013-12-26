@@ -22,10 +22,9 @@ args = parser.parse_args()
 
 filenames = [ i for i in args.filenames if os.path.splitext(i)[1] == '.tmx' and os.path.isfile(i) ]
 
-
 oldtilemap_name = ""
-
 mapsets = {}
+
 
 if not filenames:
     print "No valid file paths given."
@@ -42,55 +41,89 @@ else:
         newfilename = filename+'.dat'
         f = open(newfilename,'w')
 
-        f.write("\nmap_%s\n" % os.path.splitext(os.path.basename(filename))[0])
+        reference_name = "map_" + os.path.splitext(os.path.basename(filename))[0]
+        f.write("\n%s\n" % reference_name)
         f.write("byte\t%3i, %3i  'width, height\n" % (width, height))
 
-        for child in root.iter('tileset'):
-            tilemap_name = child.find('image').attrib['source']
-            newtilemap_name = tilemap_name+'.dat'
-            if not oldtilemap_name == tilemap_name:
-                mapsets[newtilemap_name] = []
-                subprocess.call([os.path.join(os.path.dirname(__file__),"img2dat"), "--mode","block",tilemap_name])
-                oldtilemap_name = tilemap_name
+        tileset = root.find(".//tileset[@firstgid='1']")
+        tilemap_name = tileset.find('image').attrib['source']
+        fullpath_tilemap_name = os.path.join(os.path.dirname(newfilename),tilemap_name)
+        newtilemap_name = fullpath_tilemap_name+'.dat'
 
-            mapsets[newtilemap_name].append(newfilename)
+        if not oldtilemap_name == tilemap_name:
+            mapsets[newtilemap_name] = {}
+            subprocess.call([os.path.join(os.path.dirname(__file__),"img2dat"), "--mode","block",fullpath_tilemap_name])
+            oldtilemap_name = tilemap_name
+            
+        mapinfo = {"reference": reference_name, "width": width, "height": height}
+        mapsets[newtilemap_name][newfilename] = mapinfo
+
+        leveldata = {}
 
         for child in root.iter('layer'):
             data = child.find('data')
-            
-            if data.attrib['encoding'] == 'base64':
-                print data.text
-                blah = base64.standard_b64decode(data.text)
-                n = 2
-                print [blah[i:i+n] for i in range(0, len(blah), n)]
-        
-            elif data.attrib['encoding'] == 'csv':
+            if data.attrib['encoding'] == 'csv':
 
                 text = re.sub(r"[\r\n]","", data.text)
                 text = text.split(',')
                 n = len(text)
-                for i in range(0,len(text)):
-                    if i % width == 0:
-                        f.write("byte\t")
-                    f.write("%3i" % int(text[i]))
-                    if i % width != width-1:
-                        f.write(",")
-                    else:
-                        f.write("\n")
 
-                f.close()
-
+                leveldata[child.attrib['name']] = text
             else:
                 print "Unsupported encoding scheme; exiting!"
                 sys.exit(1)
 
+        def layer_with_collision(leveldatavalue,j):
+            value = int(leveldatavalue['Foreground'][j])
+            if int(leveldatavalue['Collision'][j]) > 0:
+                value += 1 << 7
+            return value
+
+        def layer_no_collision(leveldatavalue,j):
+            return int(leveldatavalue['Foreground'][j])
+
+
+        def process_output(process_stage):
+            for i in range(0,len(text)):
+                if i % width == 0:
+                    f.write("byte\t")
+
+                f.write("%3i" % process_stage(leveldata,i))
+
+                if i % width != width-1:
+                    f.write(",")
+                else:
+                    f.write("\n")
+
+        try:
+            leveldata['Collision']
+        except KeyError:
+#            print "No collision layer"
+            process_output(layer_no_collision)
+        else:
+#            print "Collision layer found"
+            process_output(layer_with_collision)
+
+        f.close()
+
 
 for tilemap in mapsets:
-    f = open(tilemap+".pack",'w')
+    packfile = tilemap+".pack"
+    f = open(packfile,'w')
+
+    f.write("\nmapTable_%s\nword\t" % tilemap.split('.')[0])
+
+    flist = []
+    for level in mapsets[tilemap]:
+        flist.append(mapsets[tilemap][level]['reference'])
+
+    f.write(", ".join(flist))
+    f.write("\n\n")
+
     f.write(open(tilemap).read())
 
     for level in mapsets[tilemap]:
         f.write(open(level).read())
     f.close()
 
-print open(tilemap+".pack",'r').read()
+    print open(packfile,'r').read()
