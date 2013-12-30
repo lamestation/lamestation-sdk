@@ -111,7 +111,7 @@ for tilemap in mapsets:
     packfile = tilemap+".pack"
     f = open(packfile,'w')
 
-    f.write("\nmapTable_%s\nword\t" % tilemap.split('.')[0])
+    f.write("\nmapTable_%s\nword\t" % os.path.basename(tilemap.split('.')[0]))
 
     flist = []
     for level in mapsets[tilemap]:

@@ -419,19 +419,9 @@ repeat until choice == 0
 
     levelw := byte[leveldata[currentlevel]][0] 
     levelh := byte[leveldata[currentlevel]][1]
-        
-    tilecnt := 0
-    tilecnttemp := 2
-    if yoffset > 0
-      repeat y from 0 to yoffset-1
-        tilecnttemp += levelw
-    repeat y from yoffset to yoffset+constant(5-1)
-        repeat x from xoffset to xoffset+constant(SCREEN_BW-1)   
-            tilecnt := tilecnttemp + x
-            tile := (byte[leveldata[currentlevel]][tilecnt] & TILEBYTE) -  1
-            grfx.box(@tilemap + (tile << 4), x-xoffset,y-yoffset+3)
+    
+    DrawMap(@tilemap,0,3,SCREEN_BW,5)
 
-        tilecnttemp += levelw
 
     
 InitLevel
@@ -670,7 +660,7 @@ repeat while choice == 0
       UpdateHandler
    
       'DRAW TILES TO SCREEN
-      DrawMap
+      DrawMap(@tilemap,0,0,SCREEN_BW,SCREEN_BH)
 
       
 
@@ -829,7 +819,7 @@ PUB SpawnTank(tankindexvar, respawnindexvar, respawnflag)
     tankdir[tankindexvar] := 0
     
 
-PUB DrawMap
+PUB DrawMap(source, position_x, position_y, width, height)
        
       'DRAW TILES TO SCREEN           
       tilecnt := 0
@@ -837,11 +827,11 @@ PUB DrawMap
       if yoffset > 0
         repeat y from 0 to yoffset-1
           tilecnttemp += levelw
-      repeat y from yoffset to yoffset+constant(SCREEN_BH-1)
-          repeat x from xoffset to xoffset+constant(SCREEN_BW-1)   
+      repeat y from yoffset to yoffset+height-1
+          repeat x from xoffset to xoffset+width-1  
               tilecnt := tilecnttemp + x
               tile := (byte[leveldata[currentlevel]][tilecnt] & TILEBYTE) -  1
-              grfx.box(@tilemap + (tile << 4), x-xoffset,y-yoffset)
+              grfx.box(source + (tile << 4), x-xoffset+position_x,y-yoffset+position_y)
 
           tilecnttemp += levelw
 
