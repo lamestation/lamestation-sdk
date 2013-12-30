@@ -12,113 +12,113 @@ Authors: Brett Weir
 
 CON
 
-  FRAMES = 2
-  FRAMERATE = 10
-  FRAMEPERIOD = 6000000 
+    FRAMES = 2
+    FRAMERATE = 10
+    FRAMEPERIOD = 6000000 
 
-  SCREEN_W = 128
-  SCREEN_H = 64
-  BITSPERPIXEL = 2
-  SCREEN_BW = 16   
-  SCREEN_BH = 8
-  SCREENSIZE = SCREEN_W*SCREEN_H
-  SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL*FRAMES
+    SCREEN_W = 128
+    SCREEN_H = 64
+    BITSPERPIXEL = 2
+    SCREEN_BW = 16   
+    SCREEN_BH = 8
+    SCREENSIZE = SCREEN_W*SCREEN_H
+    SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL*FRAMES
 
-  FRAMEFLIP = SCREENSIZEB/2/FRAMES
+    FRAMEFLIP = SCREENSIZEB/2/FRAMES
 
-  SCREENSPACER = SCREEN_W*2
-
-
-  NL = 10
-  TEXTPADDING = 2
-
-  SPACEBAR = 32
-  SPACEWIDTH = 1
-  MAXCHARWIDTH = 6
-
-  INST_IDLE = 0
-  INST_CLEARSCREEN = 1
-  INST_BLITSCREEN = 2
-  INST_SPRITE = 3
-  INST_BOX = 4
-  INST_TEXTBOX = 5
+    SCREENSPACER = SCREEN_W*2
 
 
-  SCREENLOCK = 0
+    NL = 10
+    TEXTPADDING = 2
+
+    SPACEBAR = 32
+    SPACEWIDTH = 1
+    MAXCHARWIDTH = 6
+
+    INST_IDLE = 0
+    INST_CLEARSCREEN = 1
+    INST_BLITSCREEN = 2
+    INST_SPRITE = 3
+    INST_BOX = 4
+    INST_TEXTBOX = 5
+
+
+    SCREENLOCK = 0
 
 OBJ
 
-        lcd     :               "lame_lcd"
+    lcd     :               "lame_lcd"
 
 
 VAR
-long    screenframe
-long    screen[SCREENSIZEB/4]
+    long    screenframe
+    long    screen[SCREENSIZEB/4]
 
-long    imgpointer
-long    frmflip
-long    temp
-long    temp2
-long    temp3
+    long    imgpointer
+    long    frmflip
+    long    temp
+    long    temp2
+    long    temp3
 
-long    instruction1
-long    instruction2
-long    outputlong
-long    frmpointer
-long    destscreen
-long    sourcegrfx
-
-
+    long    instruction1
+    long    instruction2
+    long    outputlong
+    long    frmpointer
+    long    destscreen
+    long    sourcegrfx
 
 
-byte    value
-long    valuetemp
-long    screencursor
-long    screencursortemp
-long    stringcursor
-long    text_line
-long    texttemp
-
-word    indexer
-word    indexstart
-word    indexend 
-
-word    indexh
 
 
-byte    oldcolorbyte
-byte    oldflipbyte
-byte    colorbyte
-byte    flipbyte
-byte    selectbyte
-byte    tempcolorbyte
-byte    tempflipbyte
+    byte    value
+    long    valuetemp
+    long    screencursor
+    long    screencursortemp
+    long    stringcursor
+    long    text_line
+    long    texttemp
 
-long    frmtemp
-long    indexx
+    word    indexer
+    word    indexstart
+    word    indexend 
 
-word    w
-word    h
-word    frameboost
+    word    indexh
+
+
+    byte    oldcolorbyte
+    byte    oldflipbyte
+    byte    colorbyte
+    byte    flipbyte
+    byte    selectbyte
+    byte    tempcolorbyte
+    byte    tempflipbyte
+
+    long    frmtemp
+    long    indexx
+
+    word    w
+    word    h
+    word    frameboost
 
 
 
 
 PUB enableGrfx(outputpointer)
 
-  cognew(@graphicsdriver, @instruction1)
-  instruction1 := INST_IDLE
-  instruction2 := 0   
+    cognew(@graphicsdriver, @instruction1)
+    instruction1 := INST_IDLE
+    instruction2 := 0   
 
-  destscreen := @screen
-  frmpointer := @screenframe
-  long[frmpointer] := 1
+    destscreen := @screen
+    frmpointer := @screenframe
+    long[frmpointer] := 1
 
-  clearScreen
-  
-  lcd.start(@screen)
-  
-  return @outputlong
+    clearScreen
+    
+    lcd.start(@screen)
+    
+    return @outputlong
 
 {{
 PUB getScreen(screenpointer, framepointer)
@@ -129,113 +129,113 @@ PUB getScreen(screenpointer, framepointer)
 
 PUB switchFrame
 
-repeat until not lockset(SCREENLOCK) 
+    repeat until not lockset(SCREENLOCK) 
 
-if long[frmpointer] == 1 
-    long[frmpointer] := 0
-    frmflip := FRAMEFLIP
-else
-    long[frmpointer] := 1
-    frmflip := 0
+    if long[frmpointer] == 1 
+        long[frmpointer] := 0
+        frmflip := FRAMEFLIP
+    else
+        long[frmpointer] := 1
+        frmflip := 0
 
-lockclr(SCREENLOCK)     
+    lockclr(SCREENLOCK)     
 
 
 PUB blit(source)
 
-repeat until not lockset(SCREENLOCK)  
-            
-sourcegrfx := source        
-instruction2 := 1 
-instruction1 := INST_BLITSCREEN     
+    repeat until not lockset(SCREENLOCK)  
+                
+    sourcegrfx := source        
+    instruction2 := 1 
+    instruction1 := INST_BLITSCREEN     
 
-repeat while instruction2 <> 0
-instruction1 := INST_IDLE
-         
-  {
-repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-    word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
-   }
-lockclr(SCREENLOCK) 
+    repeat while instruction2 <> 0
+    instruction1 := INST_IDLE
+             
+      {
+    repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+        word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
+       }
+    lockclr(SCREENLOCK) 
 
 
 PUB clearScreen
 
-repeat until not lockset(SCREENLOCK)
-      
-instruction2 := 1  
-instruction1 := INST_CLEARSCREEN 
-       
+    repeat until not lockset(SCREENLOCK)
+          
+    instruction2 := 1  
+    instruction1 := INST_CLEARSCREEN 
+           
 
-repeat while instruction2 <> 0
-instruction1 := INST_IDLE
+    repeat while instruction2 <> 0
+    instruction1 := INST_IDLE
 
-lockclr(SCREENLOCK) 
+    lockclr(SCREENLOCK) 
 
-'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-'   word[destscreen][imgpointer+frmflip] := 0
+    'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+    '   word[destscreen][imgpointer+frmflip] := 0
 
 
 PUB sprite(source, x, y)
 
-repeat until not lockset(SCREENLOCK)
+    repeat until not lockset(SCREENLOCK)
 
-x := x << 3
-w := 16
-h := 2
+    x := x << 3
+    w := 16
+    h := 2
 
-'temp := x + (y << 7)
-temp3 := 0
+    'temp := x + (y << 7)
+    temp3 := 0
 
-repeat indexh from 0 to h-1 step 1
-    temp := x + ((y+indexh) << 7)
-    repeat indexer from 0 to w-1 step 1
-            word[destscreen][temp+indexer+frmflip] := word[source][indexer + temp3]
-    temp3 += w
+    repeat indexh from 0 to h-1 step 1
+        temp := x + ((y+indexh) << 7)
+        repeat indexer from 0 to w-1 step 1
+                word[destscreen][temp+indexer+frmflip] := word[source][indexer + temp3]
+        temp3 += w
 
 
-lockclr(SCREENLOCK)
+    lockclr(SCREENLOCK)
 
 PUB sprite_trans(source, x, y, frame)
 
-repeat until not lockset(SCREENLOCK)
+    repeat until not lockset(SCREENLOCK)
 
-frameboost := word[source][0] 
-w := word[source][1]
-h := word[source][2]
+    frameboost := word[source][0] 
+    w := word[source][1]
+    h := word[source][2]
 
-w := w << 4
-
-
-
-repeat temp3 from 0 to frame step 1
-  source += frameboost
-
-source -= frameboost
-
-temp3 := 6  'offset from size words
-x := x << 3
-x += x
-
-frmtemp := w + x
-if frmtemp => SCREENSPACER
-  x := SCREENSPACER - w
-elseif x < 0
-  x := 0
-
-frmtemp := y + h
-if frmtemp => SCREEN_BH
-  y := SCREEN_BH - h
-elseif y < 0
-  y := 0
+    w := w << 4
 
 
-frmtemp := frmflip << 1
 
-repeat indexh from 0 to h-1 step 1
-    temp := x + ((y+indexh) << 8)
-    repeat indexer from 0 to w-1 step 2
-         
+    repeat temp3 from 0 to frame step 1
+      source += frameboost
+
+    source -= frameboost
+
+    temp3 := 6  'offset from size words
+    x := x << 3
+    x += x
+
+    frmtemp := w + x
+    if frmtemp => SCREENSPACER
+      x := SCREENSPACER - w
+    elseif x < 0
+      x := 0
+
+    frmtemp := y + h
+    if frmtemp => SCREEN_BH
+      y := SCREEN_BH - h
+    elseif y < 0
+      y := 0
+
+
+    frmtemp := frmflip << 1
+
+    repeat indexh from 0 to h-1 step 1
+        temp := x + ((y+indexh) << 8)
+        repeat indexer from 0 to w-1 step 2
+             
             oldcolorbyte := byte[destscreen][temp+indexer+frmtemp]
             oldflipbyte := byte[destscreen][temp+indexer+frmtemp+1]
             colorbyte := byte[source][indexer + temp3]
@@ -260,107 +260,107 @@ repeat indexh from 0 to h-1 step 1
             byte[destscreen][temp+indexer+frmtemp] := tempcolorbyte
             byte[destscreen][temp+indexer+frmtemp+1] := tempflipbyte
 
-            
-    temp3 += w
+                
+        temp3 += w
 
 
-lockclr(SCREENLOCK)    
+    lockclr(SCREENLOCK)    
     
 
 PUB box(source, x, y)
 
-repeat until not lockset(SCREENLOCK)  
-         
-temp := (x << 3) + (y << 7) 
-                    
-repeat indexer from 0 to 7 step 1
-    word[destscreen][temp+indexer+frmflip] := word[source][indexer]
+    repeat until not lockset(SCREENLOCK)  
+             
+    temp := (x << 3) + (y << 7) 
+                        
+    repeat indexer from 0 to 7 step 1
+        word[destscreen][temp+indexer+frmflip] := word[source][indexer]
 
-lockclr(SCREENLOCK)
+    lockclr(SCREENLOCK)
 
 
 PUB box_ex(source, x, y, duration)
 
-repeat until not lockset(SCREENLOCK)  
+    repeat until not lockset(SCREENLOCK)  
 
-duration := duration
-temp := (x << 3) + (y << 7) 
-                    
-repeat indexer from 0 to duration step 1
-    word[destscreen][temp+indexer+frmflip] := word[source][indexer]
+    duration := duration
+    temp := (x << 3) + (y << 7) 
+                        
+    repeat indexer from 0 to duration step 1
+        word[destscreen][temp+indexer+frmflip] := word[source][indexer]
 
-lockclr(SCREENLOCK)
+    lockclr(SCREENLOCK)
 
 
 PUB textbox(teststring, boxx, boxy)
 
-repeat until not lockset(SCREENLOCK)  
+    repeat until not lockset(SCREENLOCK)  
 
-text_line := (boxy << 8) + (boxx << 4)
-screencursor := 0
-stringcursor := 0 
+    text_line := (boxy << 8) + (boxx << 4)
+    screencursor := 0
+    stringcursor := 0 
 
-temp3 := destscreen + text_line + frmflip<<1             
-value := 1
+    temp3 := destscreen + text_line + frmflip<<1             
+    value := 1
 
-repeat while screencursor < constant(TEXTPADDING)
-    word[temp3][screencursor] := 0
-    screencursor++   
+    repeat while screencursor < constant(TEXTPADDING)
+        word[temp3][screencursor] := 0
+        screencursor++   
 
-    word[temp3][screencursor] := 0
- 
-   
-repeat while byte[teststring][stringcursor] <> 0
-    value := byte[teststring][stringcursor]
-
-    if screencursor > constant(SCREEN_W - MAXCHARWIDTH - TEXTPADDING)
-        repeat while screencursor < constant(SCREEN_W + TEXTPADDING + 1)
-           word[temp3][screencursor] := 0
-           screencursor++
-
-        text_line += SCREENSPACER
-        screencursor := TEXTPADDING 
-
-    temp3 := destscreen + frmflip<<1 + text_line
-
-    if value == SPACEBAR
-        repeat indexx from 0 to SPACEWIDTH step 1
-           word[temp3][screencursor] := 0
-           screencursor++
-
-
-    elseif value == NL
-        repeat while screencursor < constant(SCREEN_W + TEXTPADDING + 1)
-           word[temp3][screencursor] := 0
-           screencursor++
-
-        text_line += SCREENSPACER 
-        screencursor := TEXTPADDING
-       
-    else
-
-        value -= 32
-        valuetemp := value*MAXCHARWIDTH
-
-        screencursor++  
-        indexx := 0        
-        repeat while asciitable[valuetemp + indexx] <> 0
-            word[temp3][screencursor] := asciitable[valuetemp + indexx]
-            screencursor++
-            indexx++
-         
-         
-         
-    word[temp3][screencursor] := 0
-    stringcursor++     
-      
-       
-repeat while screencursor < SCREEN_W - (boxx << 4)
-    word[temp3][screencursor] := 0
-    screencursor++        
+        word[temp3][screencursor] := 0
      
+       
+    repeat while byte[teststring][stringcursor] <> 0
+        value := byte[teststring][stringcursor]
 
-lockclr(SCREENLOCK)
+        if screencursor > constant(SCREEN_W - MAXCHARWIDTH - TEXTPADDING)
+            repeat while screencursor < constant(SCREEN_W + TEXTPADDING + 1)
+               word[temp3][screencursor] := 0
+               screencursor++
+
+            text_line += SCREENSPACER
+            screencursor := TEXTPADDING 
+
+        temp3 := destscreen + frmflip<<1 + text_line
+
+        if value == SPACEBAR
+            repeat indexx from 0 to SPACEWIDTH step 1
+               word[temp3][screencursor] := 0
+               screencursor++
+
+
+        elseif value == NL
+            repeat while screencursor < constant(SCREEN_W + TEXTPADDING + 1)
+               word[temp3][screencursor] := 0
+               screencursor++
+
+            text_line += SCREENSPACER 
+            screencursor := TEXTPADDING
+           
+        else
+
+            value -= 32
+            valuetemp := value*MAXCHARWIDTH
+
+            screencursor++  
+            indexx := 0        
+            repeat while asciitable[valuetemp + indexx] <> 0
+                word[temp3][screencursor] := asciitable[valuetemp + indexx]
+                screencursor++
+                indexx++
+             
+             
+             
+        word[temp3][screencursor] := 0
+        stringcursor++     
+          
+           
+    repeat while screencursor < SCREEN_W - (boxx << 4)
+        word[temp3][screencursor] := 0
+        screencursor++        
+         
+
+    lockclr(SCREENLOCK)
 
 DAT
 
