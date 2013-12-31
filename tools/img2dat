@@ -53,12 +53,18 @@ else:
     for filename in filenames:
         newfilename = filename+".dat"
 
-        im = Image.open(filename)
+        try:
+            im = Image.open(filename)
+        except IOError:
+            print filename, "is not a valid image file"
+            sys.exit(1)
+
         im = im.convert("RGB")
         output_im = Image.new("RGB",im.size)
         output_txt = open(newfilename,'w')
 
         output_txt.write("gfx_%s\n" % os.path.splitext(os.path.basename(filename))[0])
+
         
         if args.mode[0] == 'sprite':
 
