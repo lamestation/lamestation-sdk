@@ -1,0 +1,141 @@
+#!/usr/bin/env python
+
+import os, sys, re
+
+import argparse
+import getpass
+
+import markdown
+import xmlrpclib
+
+
+parser = argparse.ArgumentParser(description='Generate Confluence API listing from Spin files.')
+
+parser.add_argument('-u','--url', nargs=1, metavar='URL', help='Confluence XMLRPC server URL')
+parser.add_argument('-s','--space', nargs=1, metavar='SPACE', help='Destination Confluence space')
+parser.add_argument('-p','--parent', nargs=1, metavar='PARENT', help='Parent page for API definition')
+parser.add_argument('-d','--dry-run', action='store_true', help='Do not upload; just show storage format')
+parser.add_argument('filenames', metavar='FILE', nargs='+', help='Spin files to extract API from')
+
+args = parser.parse_args()
+
+# Filter out non-spin, non-file arguments
+filenames = [ i for i in args.filenames if os.path.splitext(i)[1] == '.spin' and os.path.isfile(i) ]
+
+spinblocks = ('PUB','PRI','DAT','VAR','CON','OBJ')
+blocknames = {'PUB':'Public Functions','PRI':'Private Functions','DAT':'Data Blocks','VAR':'Variables','CON':'Constants','OBJ':'Objects'}
+
+# Only do anything if files are valid
+if not filenames:
+    print "No valid files selected"
+else:
+
+    proxy = xmlrpclib.ServerProxy(args.url[0])
+
+    user = raw_input("Enter Confluence username: ")
+    passwd = getpass.getpass("Enter Confluence password: ")
+    token = proxy.confluence2.login(user,passwd)
+
+    space = proxy.confluence2.getSpace(token,args.space[0])
+    parent = args.parent[0]
+
+    # Create parent page to add API pages under
+    try:
+        parentpage = proxy.confluence2.getPage(token,space['key'],parent)
+    except xmlrpclib.Fault as err:
+        parentpage = {}
+        parentpage['space'] = space['key']
+        parentpage['parentId'] = space['homePage']
+        parentpage['title'] = parent
+        
+    parentpage = proxy.confluence2.storePage(token,parentpage)
+
+    for filename in filenames:
+        print filename
+
+        # Organize list into nice sections before printing output
+        f = open(filename).read()
+        textblock = re.split('(\nPUB)|(\nDAT)|(\nPRI)|(\nVAR)|(\nCON)|(\nOBJ)',f)
+        textblock = filter(None, textblock)
+
+
+        # Zero out and initialize content variable
+        content = {}
+        for b in spinblocks:
+            content[b] = ""
+
+
+        # See if code starts with named block or comments
+        if textblock[0].split('\n')[1] in spinblocks:
+            startpoint = 0
+        else:
+            startpoint = 1
+
+        # Process and render output for individual sections
+        n = len(textblock)
+        r = range(n)
+
+        ## This code assumes that there is code before your main code
+        for i in r[startpoint::2]:
+            label = textblock[i].split('\n')[1]
+
+            if label == 'PUB' or label == 'PRI':
+                fullblock = label+textblock[i+1]
+
+                title = textblock[i+1].split('\n',1)[0]
+                content[label] += "\n<h4>"+title+"</h4>"
+
+                # Comments will be parsed in markdown for fancier output
+                markdownblock = re.findall("\n\'\'.*",fullblock)
+                markdownblock = ''.join(markdownblock)
+                markdownblock = re.sub("\n\'\'[ \t]*","\n",markdownblock)
+                
+                content[label] += "\n"+markdown.markdown(markdownblock)
+
+                # Add code excerpts for reference
+                content[label] += '<ac:structured-macro ac:name="code"><ac:parameter ac:name="collapse">true</ac:parameter><ac:plain-text-body><![CDATA['
+                content[label] += "\n"+re.sub("(?m)\n\'\'.*","",fullblock)
+                content[label] += ']]></ac:plain-text-body></ac:structured-macro>'
+
+
+
+        # Final Formatting
+
+        # Add table of contents zones for navigation
+        for l in ('PUB','PRI'):
+            if content[l]:
+                content[l] = '<h2>'+blocknames[l]+'</h2><ac:structured-macro ac:name="toc-zone"><ac:parameter ac:name="location">top</ac:parameter><ac:rich-text-body>' \
+                                + content[l] + '</ac:rich-text-body></ac:structured-macro>'
+
+        # Assemble pieces into final page for upload
+        finalcontent = ""
+        for c in spinblocks:
+            finalcontent += content[c]
+
+
+        # Add ToC panel at top of page
+        finalcontent = \
+        """<ac:structured-macro ac:name="panel"><ac:rich-text-body>
+        <p><strong>Table Of Contents</strong></p>
+        <p><ac:structured-macro ac:name="toc" /></p></ac:rich-text-body></ac:structured-macro>""" + finalcontent
+
+
+        if args.dry_run:
+            print finalcontent
+        else:
+
+            # Try to upload page; if it doesn't exist, create it.
+            try:
+                page = proxy.confluence2.getPage(token,space['key'],filename)
+            except xmlrpclib.Fault as err:
+                page = {}
+                page['space'] = space['key']
+                page['parentId'] = parentpage['id']
+                page['title'] = filename
+
+
+            page['content'] = finalcontent
+
+            proxy.confluence2.storePage(token,page)
+
+    proxy.confluence2.logout(token)

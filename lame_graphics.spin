@@ -1,13 +1,11 @@
-{{
-KS0108 Graphics Library
-─────────────────────────────────────────────────
-Version: 1.0
-Copyright (c) 2013 LameStation LLC
-See end of file for terms of use.
-
-Authors: Brett Weir
-─────────────────────────────────────────────────
-}}
+'' Lame Graphics Library
+'' ─────────────────────────────────────────────────
+'' Version: 1.0
+'' Copyright (c) 2013-2014 LameStation LLC
+'' See end of file for terms of use.
+'' 
+'' Authors: Brett Weir
+'' ─────────────────────────────────────────────────
 
 
 CON
@@ -119,13 +117,6 @@ PUB enableGrfx(outputpointer)
     lcd.start(@screen)
     
     return @outputlong
-
-{{
-PUB getScreen(screenpointer, framepointer)
-    destscreen := screenpointer
-    frmpointer := framepointer
-    long[frmpointer] := 1
-}}
 
 PUB switchFrame
 
@@ -293,6 +284,12 @@ PUB box_ex(source, x, y, duration)
 
 
 PUB textbox(teststring, boxx, boxy)
+'' This function creates a text with a black background.
+''
+'' * **teststring** - Address of source string
+'' * **boxx** - x position on screen (0-15)
+'' * **boxy** - y position on screen (0-7)
+''
 
     repeat until not lockset(SCREENLOCK)  
 
