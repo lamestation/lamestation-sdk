@@ -14,6 +14,7 @@ SCALEFACTOR = 4
 PAGES = 8
 ADDRESSES = 128
 PIXELS_PER_ADDRESS = 8
+BITS_PER_PIXEL = 2
 
 def multiply_tuple(scalar,tup):
     return tuple([scalar*x for x in tup])
@@ -80,7 +81,7 @@ else:
             
             # Calculate frameboost constant, the precalculated frame size so 
             # that jumping to a frame requires only one multiplication, not three.
-            frameboost = (framesize[0]*2*framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF
+            frameboost = (framesize[0]*BITS_PER_PIXEL*framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF
             dimensions = ((framesize[0]/PIXELS_PER_ADDRESS) & 0xFFFF , (framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF) 
 
             output_txt.write("word\t$%X" % frameboost + "  'frameboost\n")
