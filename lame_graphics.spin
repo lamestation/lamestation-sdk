@@ -220,10 +220,10 @@ PUB SpriteTrans(source, x, y, frame)
 '' from a memory address. It is designed to accept the sprite output from img2dat,
 '' and can handle multi-frame sprites, 3-color sprites, and sprites with transparency.
 ''
-'' **source** - Memory address of the source image
-'' **x** - Horizontal destination position (0-15)
-'' **y** - Vertical destination position (0-7)
-'' **frame** - If the image has multiple frames, this integer will select which to use
+'' * **source** - Memory address of the source image
+'' * **x** - Horizontal destination position (0-15)
+'' * **y** - Vertical destination position (0-7)
+'' * **frame** - If the image has multiple frames, this integer will select which to use
 ''
 '' The only limitation on size is that per-pixel blitting is not yet supported, so
 '' image dimensions must be in multiples of 8 to be drawn correctly, and positions
