@@ -6,7 +6,12 @@
 '' 
 '' Authors: Brett Weir
 '' ─────────────────────────────────────────────────
-
+'' This is a graphics library designed for use on the
+'' LameStation portable gaming handheld. It is designed
+'' to be straightforward to use and easy to set up.
+''
+'' Creating your first program is simple! First, include
+'' the graphics object in an object block.
 
 CON
 
@@ -122,6 +127,14 @@ PUB Start(outputpointer)
     return @outputlong
 
 PUB SwitchFrame
+'' Lame LCD, when initialized, sets up a double-buffered drawing surface
+'' to work with. It then switches back and forth between drawing to a
+'' buffer and outputting the contents of that buffer to the screen.
+'' This allows the screen to be redrawn at predictable intervals and
+'' eliminates screen tearing.
+''
+'' Whenever you wish to update the screen, simply call this function and it
+'' switch to the other frame. This command has no parameters.
 
     repeat until not lockset(SCREENLOCK) 
 
@@ -136,6 +149,10 @@ PUB SwitchFrame
 
 
 PUB blit(source)
+'' This command blits a 128x64 size image to the screen. The source image
+'' must not use the sprite header used in other commands. This command is
+'' primarily influenced for reference on drawing to the screen, not for
+'' its game utility so much.
 
     repeat until not lockset(SCREENLOCK)  
                 
@@ -154,6 +171,9 @@ PUB blit(source)
 
 
 PUB ClearScreen
+'' This command clears the screen to black. Recommended if your game
+'' display is sparse and not likely to be overdrawn every frame (like
+'' in a tile-based game).
 
     repeat until not lockset(SCREENLOCK)
           
@@ -171,6 +191,11 @@ PUB ClearScreen
 
 
 PUB Sprite(source, x, y)
+'' **BROKEN - this command currently does not work**
+''
+'' This is the original sprite function and has been
+'' largely superseded by SpriteTrans, which supports
+'' transparency and frames.
 
     repeat until not lockset(SCREENLOCK)
 
@@ -191,7 +216,22 @@ PUB Sprite(source, x, y)
     lockclr(SCREENLOCK)
 
 PUB SpriteTrans(source, x, y, frame)
-
+'' This function allows the user to blit an arbitrarily-sized image
+'' from a memory address. It is designed to accept the sprite output from img2dat,
+'' and can handle multi-frame sprites, 3-color sprites, and sprites with transparency.
+''
+'' **source** - Memory address of the source image
+'' **x** - Horizontal destination position (0-15)
+'' **y** - Vertical destination position (0-7)
+'' **frame** - If the image has multiple frames, this integer will select which to use
+''
+'' The only limitation on size is that per-pixel blitting is not yet supported, so
+'' image dimensions must be in multiples of 8 to be drawn correctly, and positions
+'' must be divided by 8 to fit on the screen grid.
+''
+'' Read more on img2dat to see how you can generate source images to use with this
+'' drawing command.
+''
     repeat until not lockset(SCREENLOCK)
 
     frameboost := word[source][0] 
@@ -262,6 +302,11 @@ PUB SpriteTrans(source, x, y, frame)
     
 
 PUB Box(source, x, y)
+'' This function displays an 8x8 tile from an address. This address could
+'' be a single image or it could be full tileset; the user is responsible
+'' for structuring their data. However, take a look at some of the tile
+'' functions to see how Box can be used to build larger functionality
+'' like tile mapping.
 
     repeat until not lockset(SCREENLOCK)  
              
@@ -274,6 +319,9 @@ PUB Box(source, x, y)
 
 
 PUB BoxEx(source, x, y, duration)
+'' This function is nearly identical to Box but allows you to display
+'' a clipped version of the sprite. I created it for the sole purpose
+'' of displaying a half-heart in the tank battle game.
 
     repeat until not lockset(SCREENLOCK)  
 
