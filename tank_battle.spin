@@ -192,7 +192,7 @@ byte    respawnindexsaved
 PUB Main
 
     dira~
-    gfx.Start()
+    gfx.Start
     pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
 
     audio.Start
@@ -249,7 +249,7 @@ PUB TitleScreen
         controls := ina   
         gfx.SwitchFrame
 
-        gfx.blit(@excitingtank)   
+        gfx.Blit(@excitingtank)   
 
         if controls & (SW1+SW2+SW3) <> 0
               if clicked == 0
@@ -473,7 +473,7 @@ PUB GameLoop : menureturn
     repeat while choice == 0
 
         controls := ina
-        gfx.SwitchFrame 
+        gfx.SwitchFrame
 
           if tankon[yourtank] == 1   
               tankoldx := tankx[yourtank]

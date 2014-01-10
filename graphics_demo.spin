@@ -34,7 +34,7 @@ VAR
 
 PUB Graphics_Demo
 
-    gfx.Start()
+    gfx.Start
 
     pst.StartRxTx(31, 30, 0, 115200)
     pst.Clear

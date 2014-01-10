@@ -107,7 +107,7 @@ VAR
 
 
 
-PUB Start(outputpointer)
+PUB Start
 '' This function initializes the library. It takes
 '' no parameters and takes care of setting up the LCD
 '' and frame buffer.
@@ -148,7 +148,7 @@ PUB SwitchFrame
     lockclr(SCREENLOCK)     
 
 
-PUB blit(source)
+PUB Blit(source)
 '' This command blits a 128x64 size image to the screen. The source image
 '' must not use the sprite header used in other commands. This command is
 '' primarily influenced for reference on drawing to the screen, not for

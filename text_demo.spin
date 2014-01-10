@@ -34,7 +34,7 @@ OBJ
 VAR
 
 PUB TextMachine
-    gfx.Start()
+    gfx.Start
 
     repeat
          {{
