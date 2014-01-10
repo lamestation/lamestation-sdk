@@ -9,18 +9,27 @@ Authors: Brett Weir
 ─────────────────────────────────────────────────
 }}
 
-'' The pins of importance on this particular controller are as follows
 
-'' D/I - 0 - Decides whether command is data or instruction
-'' R/W -> GND
-'' EN - 1 -  Sends command
-'' DB[2-9] - Data
-'' CS[10-11] - Active high chip enable
 
 CON
-  ''These indicate which pins connect to what.
-  LCDstart = 0, LCDend = 11
+'' These indicate which pins connect to what. If developing your own prototype,
+'' you can change the value of LCDstart to change the location of the LCD
+'' pinout.
+''
+  LCDstart = 0
+  LCDend = LCDstart + 11
 
+'' The pins on a KS0108 LCD are as follows.
+''
+'' * **D/I** - Indicates whether next command is data or instruction. 
+'' * **R/W** - Controls whether reading from or writing to the LCD. On the LameStation, this pin is wired to ground.
+'' * **EN** - This pin controls whether data is being sent. It remains off while data is prepared then toggled on to deliver.
+'' * **DB0-7** - These 8 bits are how data is delivered to the LCD, whether it is pixel data, address values, or otherwise.
+'' * **CSA, CSB** - Each KS0108 controller only actually handles 64x64 on-screen pixels, so a 128x64 LCD
+''           requires two of these chips in order to function. To handle this, the control signals are demultiplexed
+''           to one or both of the two chips, depending on which one is selected. In most cases, the Propeller is only
+''           talking to one of these chips at a time, because most time is spending sending screen data. The rare case
+''
   DI = LCDstart + 0
   EN = LCDstart + 1
   DBstart = LCDstart + 2
@@ -28,8 +37,20 @@ CON
   CSA = LCDstart + 10
   CSB = LCDstart + 11
 
+'' I have this constant so that the frame rate can be limited;
+'' however, in practice, I set it to some high value like 300
+'' so that the screen will refresh as fast as possible.
+''
   FRAMERATE = 300
-  SYNCLOCK = 1
+  
+'' For differences in LCD chipsets, set byte period to:
+''
+'' - KS0108 - 220
+'' - SBN0064G - 300
+''
+'' Some LCDs just can't be driven as fast.
+''
+  BYTEPERIOD = 220
 
 
   SCREEN_W = 128
@@ -38,8 +59,11 @@ CON
   SCREENSIZE = SCREEN_W*SCREEN_H  
   SCREENSIZEB = SCREEN_W*SCREEN_BH
   BITSPERPIXEL = 2
+  
 
-PUB start(screenPointer)
+
+PUB Start(screenPointer)
+'' 
     cognew(@lcd_entry, screenPointer)
 
 DAT
@@ -202,7 +226,7 @@ Addrtemp                long    0
 LCD_time                long    0
 LCD_frameperiod         long    (80000000/FRAMERATE)
 LCD_bytetime            long    0
-LCD_byteperiod          long    220
+LCD_byteperiod          long    BYTEPERIOD
 
 
 LCD_displayon           long    (3 << CSA + 63 << DBstart)        'complete commands   both screens

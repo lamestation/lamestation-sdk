@@ -122,7 +122,7 @@ PUB Start
 
     clearScreen
     
-    lcd.start(@screen)
+    lcd.Start(@screen)
     
     return @outputlong
 
