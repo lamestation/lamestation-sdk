@@ -100,7 +100,7 @@ CON
         
 
 OBJ
-        grfx    :               "lame_graphics"
+        gfx    :               "lame_graphics"
         audio   :               "lame_audio_synth"
         pst     :               "lame_serial"
 
@@ -126,7 +126,7 @@ long    controls
 long    xoffset
 long    yoffset
 
-long    tankgrfx[TANKS]
+long    tankgfx[TANKS]
 long    tankx[TANKS]
 long    tanky[TANKS]
 long    tankoldx
@@ -146,7 +146,7 @@ long    tankytemp
 byte    tankwtemp
 byte    tankhtemp
 
-long    tanktypegrfx[TANKTYPES]
+long    tanktypegfx[TANKTYPES]
 word    tanktypename[TANKTYPES]
 
 byte    score[TANKS]
@@ -192,13 +192,13 @@ byte    respawnindexsaved
 PUB Main
 
 dira~
-grfx.enableGrfx()
+gfx.Start()
 pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
 
 audio.Start
 
-grfx.clearScreen
-grfx.switchFrame
+gfx.ClearScreen
+gfx.SwitchFrame
 
 InitData
 
@@ -221,11 +221,11 @@ repeat
 
 PUB LogoScreen
 
-grfx.clearScreen
-grfx.switchFrame
-grfx.clearScreen
-grfx.sprite_trans(@teamlamelogo, 0, 3, 0)
-grfx.switchFrame
+gfx.ClearScreen
+gfx.SwitchFrame
+gfx.ClearScreen
+gfx.SpriteTrans(@teamlamelogo, 0, 3, 0)
+gfx.SwitchFrame
 
 audio.SetWaveform(3, 127)
 audio.SetADSR(127, 10, 0, 10)
@@ -247,9 +247,9 @@ audio.PlaySong
 choice := 1
 repeat until choice == 0  
     controls := ina   
-    grfx.switchFrame
+    gfx.SwitchFrame
 
-    grfx.blit(@excitingtank)   
+    gfx.blit(@excitingtank)   
 
     if controls & (SW1+SW2+SW3) <> 0
           if clicked == 0
@@ -280,8 +280,8 @@ joyclicked := 0
 repeat until choice == 0
 
     controls := ina   
-    grfx.switchFrame         
-    grfx.clearScreen
+    gfx.SwitchFrame         
+    gfx.ClearScreen
 
     if controls & (J_U+J_D) <> 0
        if joyclicked == 0
@@ -325,30 +325,30 @@ repeat until choice == 0
         
 
 
-    grfx.sprite_trans(@tanklogo, 0, 0, 0)
-    grfx.textbox(string("CHOOSE"), 6, 2)
+    gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+    gfx.TextBox(string("CHOOSE"), 6, 2)
 
-    grfx.textbox(string("You"),2,3)
-    grfx.textbox(string("Enemy"),10,3)
+    gfx.TextBox(string("You"),2,3)
+    gfx.TextBox(string("Enemy"),10,3)
     
-    grfx.textbox(tanktypename[yourtype],0,7)
-    grfx.textbox(tanktypename[theirtype],9,7)
+    gfx.TextBox(tanktypename[yourtype],0,7)
+    gfx.TextBox(tanktypename[theirtype],9,7)
        
-    grfx.textbox(string("vs."),7,5)
+    gfx.TextBox(string("vs."),7,5)
         
-    grfx.sprite_trans(tanktypegrfx[yourtype], 3, 4, 3) 
-    grfx.sprite_trans(tanktypegrfx[theirtype], 11, 4, 2) 
+    gfx.SpriteTrans(tanktypegfx[yourtype], 3, 4, 3) 
+    gfx.SpriteTrans(tanktypegfx[theirtype], 11, 4, 2) 
 
-   ' grfx.textbox(string("At"),3,7)   
-    'grfx.textbox(levelname[currentlevel],5,7)  
+   ' gfx.TextBox(string("At"),3,7)   
+    'gfx.TextBox(levelname[currentlevel],5,7)  
 
 
-tankgrfx[yourtank] := tanktypegrfx[yourtype]
-tankgrfx[theirtank] := tanktypegrfx[theirtype]
+tankgfx[yourtank] := tanktypegfx[yourtype]
+tankgfx[theirtank] := tanktypegfx[theirtype]
 
 repeat tankindex from 0 to TANKSMASK
-   tankw[tankindex] := word[tankgrfx[tankindex]][1]
-   tankh[tankindex] := word[tankgrfx[tankindex]][2]
+   tankw[tankindex] := word[tankgfx[tankindex]][1]
+   tankh[tankindex] := word[tankgfx[tankindex]][2]
 
 
 
@@ -363,8 +363,8 @@ joyclicked := 0
 repeat until choice == 0
 
     controls := ina   
-    grfx.switchFrame
-    grfx.clearScreen         
+    gfx.SwitchFrame
+    gfx.ClearScreen         
 
 
     if controls & (J_U+J_D) <> 0
@@ -411,9 +411,9 @@ repeat until choice == 0
           clicked := 1       
 
 
-    grfx.sprite_trans(@tanklogo, 0, 0, 0)
-    grfx.textbox(string("Level:"),0,2)                  
-    grfx.textbox(levelname[currentlevel],5,2)
+    gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+    gfx.TextBox(string("Level:"),0,2)                  
+    gfx.TextBox(levelname[currentlevel],5,2)
 
     'DRAW TILES TO SCREEN
     xoffset := 5
@@ -437,11 +437,11 @@ choice := 1
 repeat until choice == 0
 
     controls := ina   
-    grfx.switchFrame         
-    grfx.clearScreen
+    gfx.SwitchFrame         
+    gfx.ClearScreen
 
-    grfx.sprite_trans(@tanklogo, 0, 0, 0)
-    grfx.textbox(string("Prepare for battle..."),2,3)
+    gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+    gfx.TextBox(string("Prepare for battle..."),2,3)
     
     if controls & (SW1+SW2+SW3) <> 0
       if clicked == 0
@@ -473,7 +473,7 @@ choice := 0
 repeat while choice == 0
 
     controls := ina
-    grfx.switchFrame 
+    gfx.SwitchFrame 
 
       if tankon[yourtank] == 1   
           tankoldx := tankx[yourtank]
@@ -608,9 +608,9 @@ repeat while choice == 0
               yourtype++
               if yourtype > TANKTYPESMASK
                 yourtype := 0
-              tankgrfx[yourtank] := tanktypegrfx[yourtype]
-              tankw[yourtank] := word[tankgrfx[yourtank]][1]
-              tankh[yourtank] := word[tankgrfx[yourtank]][2]
+              tankgfx[yourtank] := tanktypegfx[yourtype]
+              tankw[yourtank] := word[tankgfx[yourtank]][1]
+              tankh[yourtank] := word[tankgfx[yourtank]][2]
                }
           else
               clicked := 0
@@ -677,13 +677,13 @@ repeat while choice == 0
               if (tankxtemp => 0) and (tankxtemp =< SCREEN_BW-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_BH - tankh[yourtank])
 
                 if tankdir[tankindex] == DIR_D
-                    grfx.sprite_trans(tankgrfx[tankindex], tankxtemp, tankytemp, 0)
+                    gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 0)
                 elseif tankdir[tankindex] == DIR_U       
-                    grfx.sprite_trans(tankgrfx[tankindex], tankxtemp, tankytemp, 1)
+                    gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 1)
                 elseif tankdir[tankindex] == DIR_L       
-                    grfx.sprite_trans(tankgrfx[tankindex], tankxtemp, tankytemp, 2)
+                    gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 2)
                 elseif tankdir[tankindex] == DIR_R       
-                    grfx.sprite_trans(tankgrfx[tankindex], tankxtemp, tankytemp, 3)
+                    gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 3)
           
                                                          
       'CONTROL EXISTING BULLETS -----
@@ -700,11 +700,11 @@ choice := 0
 repeat while choice == 0
        
     controls := ina   
-    grfx.switchFrame         
-    grfx.clearScreen
+    gfx.SwitchFrame         
+    gfx.ClearScreen
 
-    grfx.sprite_trans(@tanklogo, 0, 0, 0)
-    grfx.textbox(string(" PAUSE!"),5,2)
+    gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+    gfx.TextBox(string(" PAUSE!"),5,2)
 
 
     if controls & (J_U+J_D) <> 0
@@ -730,11 +730,11 @@ repeat while choice == 0
     else
       clicked := 0
       
-    grfx.sprite_trans(@bulletgrfx, 3, 4+menuchoice, 0)
-    grfx.textbox(string("Return to Game"),4,4)
-    grfx.textbox(string("Change Level"),4,5)
-    grfx.textbox(string("Change Tank"),4,6)
-    grfx.textbox(string("Give Up?"),4,7)
+    gfx.SpriteTrans(@bulletgfx, 3, 4+menuchoice, 0)
+    gfx.TextBox(string("Return to Game"),4,4)
+    gfx.TextBox(string("Change Level"),4,5)
+    gfx.TextBox(string("Change Tank"),4,6)
+    gfx.TextBox(string("Give Up?"),4,7)
 
 
 if menuchoice == 1
@@ -777,11 +777,11 @@ tanktypename[2] := @gianttankname
 tanktypename[3] := @happyfacename
 tanktypename[4] := @moonmanname
 
-tanktypegrfx[0] := @extremetank
-tanktypegrfx[1] := @extremethang
-tanktypegrfx[2] := @gianttank
-tanktypegrfx[3] := @happyface
-tanktypegrfx[4] := @moonman
+tanktypegfx[0] := @extremetank
+tanktypegfx[1] := @extremethang
+tanktypegfx[2] := @gianttank
+tanktypegfx[3] := @happyface
+tanktypegfx[4] := @moonman
 
 
 PUB InitLevel
@@ -836,7 +836,7 @@ PUB DrawMap(source, position_x, position_y, width, height)
           repeat x from xoffset to xoffset+width-1  
               tilecnt := tilecnttemp + x
               tile := (byte[leveldata[currentlevel]][tilecnt] & TILEBYTE) -  1
-              grfx.box(source + (tile << 4), x-xoffset+position_x,y-yoffset+position_y)
+              gfx.Box(source + (tile << 4), x-xoffset+position_x,y-yoffset+position_y)
 
           tilecnttemp += levelw
 
@@ -967,7 +967,7 @@ PUB BulletHandler
             
 
 
-               grfx.sprite_trans(@bulletgrfx, bulletxtemp , bulletytemp, 0)
+               gfx.SpriteTrans(@bulletgfx, bulletxtemp , bulletytemp, 0)
 
 
                repeat tankindex from 0 to TANKSMASK
@@ -1007,26 +1007,26 @@ PUB StatusOverlay
     if tankon[yourtank] == 1   
         repeat x from 0 to ((tankhealth[yourtank]-1)) step 1
              if x < ((tankhealth[yourtank]-1)>>1)
-                 grfx.box(@heartbox, x>>1, 7)
+                 gfx.Box(@heartbox, x>>1, 7)
              else
                  if x & $1 == 0
-                     grfx.box_ex(@heartbox, x>>1, 7, 3)
+                     gfx.BoxEx(@heartbox, x>>1, 7, 3)
                  else
-                     grfx.box(@heartbox, x>>1, 7)
+                     gfx.Box(@heartbox, x>>1, 7)
 
 
     intarray[0] := 48+(score[yourtank]/10)
     intarray[1] := 48+(score[yourtank]//10)
     intarray[2] := 0
 
-    grfx.textbox(@intarray, 0, 0)
+    gfx.TextBox(@intarray, 0, 0)
 
 
     intarray[0] := 48+(score[theirtank]/10)
     intarray[1] := 48+(score[theirtank]//10)
     intarray[2] := 0
 
-    grfx.textbox(@intarray, 14, 0)
+    gfx.TextBox(@intarray, 14, 0)
 
 
 DAT 'LEVEL DATA
@@ -1248,13 +1248,13 @@ byte    $0, $FF, $0, $FF, $1, $E3, $5, $FC, $E, $8, $1F, $70, $3D, $E0, $3B, $F0
 
 
 
-bulletgrfx
+bulletgfx
 word    $10  'frameboost
 word    $1, $1   'width, height
 byte    $0, $FF, $4, $C7, $2A, $AB, $1E, $9D, $3E, $B9, $5E, $D5, $3C, $E3, $0, $FF
 
 
-heartgrfx
+heartgfx
 word    $10  'frameboost
 word    $1, $1   'width, height
 byte    $0, $E1, $F, $CE, $1F, $9E, $3E, $39, $38, $39, $3F, $BE, $1F, $DE, $E, $E1

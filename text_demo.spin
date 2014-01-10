@@ -33,67 +33,46 @@ OBJ
 
 VAR
 
-'These HAVE to be next to each other, in this order,
-'wherever they appear in your code.
-long    screenframe
-long    screen[SCREENSIZEB/4]
-long    bacon
-
-
 PUB TextMachine
-{{
-Doesn't really matter which one of these is called first,
-but if you call them in reverse order, you'll get a moment
-of garbled screen output.  @screen is the address of the
-screen in memory, and @screenframe is used to control
-which page is currently being drawn to.  Don't worry about @bacon.
-It's reserved for debugging stuffs.
-}}
-gfx.enableGrfx(@bacon, @screen, @screenframe)
-lcd.start(@screen)
+    gfx.Start()
 
-repeat
-     {{
-    'The LCD and graphics libraries enforce flipping between
-    'two pages in memory to prevent screen flicker, but this
-    'functionality is hidden from the user.
-    
-    'To update the screen, you simply call switchFrame.
-    }}
-    gfx.switchFrame
+    repeat
+         {{
+        'The LCD and graphics libraries enforce flipping between
+        'two pages in memory to prevent screen flicker, but this
+        'functionality is hidden from the user.
+        
+        'To update the screen, you simply call switchFrame.
+        }}
+        gfx.SwitchFrame
 
-    {{
-    'Clears the screen to black.
-    'Nuffin' special.
-    }}
-    gfx.clearScreen
+        {{
+        'Clears the screen to black.
+        'Nuffin' special.
+        }}
+        gfx.ClearScreen
 
-    {{
-    'First argument is the string.
-    'string() for sending text on the fly.
-    'Or pass the address of a null-terminated string in a DAT block.
+        {{
+        'First argument is the string.
+        'string() for sending text on the fly.
+        'Or pass the address of a null-terminated string in a DAT block.
 
-    'The next two arguments are the x and y position of the cursor,
-    'which both have a resolution of 8 pixels.  Be careful not to
-    'allow the cursor to overflow off the screen (bottom-right of
-    'screen), as there is no protection in place yet and you will
-    'probably overwrite something you like.
+        'The next two arguments are the x and y position of the cursor,
+        'which both have a resolution of 8 pixels.  Be careful not to
+        'allow the cursor to overflow off the screen (bottom-right of
+        'screen), as there is no protection in place yet and you will
+        'probably overwrite something you like.
 
-    'x position is a feature I just added today, so when the cursor
-    'reaches the right side of the screen, it isn't behaving like I
-    'want it to yet, when x is nonzero.  Buyer beware.
-    }}
-    gfx.textbox(string("Super Texty Fun-Time?"), 0, 1)
-    gfx.textbox(@yourmom, 0, 3) 
-
-
-
+        'x position is a feature I just added today, so when the cursor
+        'reaches the right side of the screen, it isn't behaving like I
+        'want it to yet, when x is nonzero.  Buyer beware.
+        }}
+        gfx.TextBox(string("Super Texty Fun-Time?"), 0, 1)
+        gfx.TextBox(@yourmom, 0, 3) 
 
 
 DAT
-{
-NULL TERMINATE THAT SHIZZNIZZZZ
-}
+''Strings need to be null-terminated
 yourmom        byte    "!",34,"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz",0   
           
 

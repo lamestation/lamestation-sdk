@@ -102,7 +102,7 @@ VAR
 
 
 
-PUB enableGrfx(outputpointer)
+PUB Start(outputpointer)
 
     cognew(@graphicsdriver, @instruction1)
     instruction1 := INST_IDLE
@@ -118,7 +118,7 @@ PUB enableGrfx(outputpointer)
     
     return @outputlong
 
-PUB switchFrame
+PUB SwitchFrame
 
     repeat until not lockset(SCREENLOCK) 
 
@@ -150,7 +150,7 @@ PUB blit(source)
     lockclr(SCREENLOCK) 
 
 
-PUB clearScreen
+PUB ClearScreen
 
     repeat until not lockset(SCREENLOCK)
           
@@ -167,7 +167,7 @@ PUB clearScreen
     '   word[destscreen][imgpointer+frmflip] := 0
 
 
-PUB sprite(source, x, y)
+PUB Sprite(source, x, y)
 
     repeat until not lockset(SCREENLOCK)
 
@@ -187,7 +187,7 @@ PUB sprite(source, x, y)
 
     lockclr(SCREENLOCK)
 
-PUB sprite_trans(source, x, y, frame)
+PUB SpriteTrans(source, x, y, frame)
 
     repeat until not lockset(SCREENLOCK)
 
@@ -258,7 +258,7 @@ PUB sprite_trans(source, x, y, frame)
     lockclr(SCREENLOCK)    
     
 
-PUB box(source, x, y)
+PUB Box(source, x, y)
 
     repeat until not lockset(SCREENLOCK)  
              
@@ -270,7 +270,7 @@ PUB box(source, x, y)
     lockclr(SCREENLOCK)
 
 
-PUB box_ex(source, x, y, duration)
+PUB BoxEx(source, x, y, duration)
 
     repeat until not lockset(SCREENLOCK)  
 
@@ -283,7 +283,7 @@ PUB box_ex(source, x, y, duration)
     lockclr(SCREENLOCK)
 
 
-PUB textbox(teststring, boxx, boxy)
+PUB TextBox(teststring, boxx, boxy)
 '' This function creates a text with a black background.
 ''
 '' * **teststring** - Address of source string

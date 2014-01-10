@@ -25,68 +25,59 @@ OBJ
 
 VAR
 
-long    bacon
+    byte    slide
+    long    blah
 
-byte    slide
-long    blah
-
-long    thiscount
-long    lastcount
+    long    thiscount
+    long    lastcount
 
 
 PUB Graphics_Demo
-{{
-Doesn't really matter which one of these is called first,
-but if you call them in reverse order, you'll get a moment
-of garbled screen output.  @screen is the address of the
-screen in memory, and @screenframe is used to control
-which page is currently being drawn to.  Don't worry about @bacon.
-It's reserved for debugging stuffs.
-}}
-gfx.enableGrfx()
 
-pst.StartRxTx(31, 30, 0, 115200)
-pst.Clear
+    gfx.Start()
 
-slide := 0
-lastcount := 0
+    pst.StartRxTx(31, 30, 0, 115200)
+    pst.Clear
 
-gfx.clearScreen
+    slide := 0
+    lastcount := 0
 
-repeat
-    'The LCD and graphics libraries enforce flipping between
-    'two pages in memory to prevent screen flicker, but this
-    'functionality is hidden from the user.
-    
-    'To update the screen, you simply call switchFrame.
-    gfx.switchFrame
+    gfx.ClearScreen
 
-    'Clears the screen to black.
-    'Nuffin' special.
-    case slide
-        'Clear the screen to black
-        0:  gfx.clearScreen
-        1:  gfx.blit(@gfx_bacon)
-'        2:  gfx.sprite(@gfx_test_checker, 0, 0)        
-        2:  gfx.sprite_trans(@gfx_test_checker, 0, 0, 0)
-        3:  gfx.clearScreen
-            gfx.textbox(string("THIS IS THE REAL BACON"), 0, 0)
-            gfx.textbox(string("- bacon"), 1, 1)
-            gfx.textbox(string("- bacon"), 1, 2)        
-            gfx.textbox(string("- bacon"), 1, 3)
-            gfx.textbox(string("How much more bacon can one man eat? We recently interviewed Hayao Miyazaki to find out! Stay tuned!"), 0, 4)  
-    
-   
-    slide++
-    if slide > 3
-        slide := 0
+    repeat
+        'The LCD and graphics libraries enforce flipping between
+        'two pages in memory to prevent screen flicker, but this
+        'functionality is hidden from the user.
         
-    thiscount := cnt - lastcount
+        'To update the screen, you simply call switchFrame.
+        gfx.SwitchFrame
+
+        'Clears the screen to black.
+        'Nuffin' special.
+        case slide
+            'Clear the screen to black
+            0:  gfx.ClearScreen
+            1:  gfx.Blit(@gfx_bacon)
+    '        2:  gfx.Sprite(@gfx_test_checker, 0, 0)        
+            2:  gfx.SpriteTrans(@gfx_test_checker, 0, 0, 0)
+            3:  gfx.ClearScreen
+                gfx.TextBox(string("THIS IS THE REAL BACON"), 0, 0)
+                gfx.TextBox(string("- bacon"), 1, 1)
+                gfx.TextBox(string("- bacon"), 1, 2)        
+                gfx.TextBox(string("- bacon"), 1, 3)
+                gfx.TextBox(string("How much more bacon can one man eat? We recently interviewed Hayao Miyazaki to find out! Stay tuned!"), 0, 4)  
         
-    pst.Dec(slide)
-    
-    ' sleep
-    repeat blah from 0 to 100000
+       
+        slide++
+        if slide > 3
+            slide := 0
+            
+        thiscount := cnt - lastcount
+            
+        pst.Dec(slide)
+        
+        ' sleep
+        repeat blah from 0 to 100000
 
 
 
