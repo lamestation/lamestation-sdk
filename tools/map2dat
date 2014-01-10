@@ -7,6 +7,8 @@ import argparse
 
 import subprocess
 
+from PIL import Image
+
 
 parser = argparse.ArgumentParser(description="""\
         Convert tmx maps to data blocks for in-game tiled maps
@@ -47,8 +49,16 @@ else:
 
         tileset = root.find(".//tileset[@firstgid='1']")
         tilemap_name = tileset.find('image').attrib['source']
+        tilemap_w = int(tileset.find('image').attrib['width'])
+        tilemap_tilew = int(tileset.attrib['tilewidth'])
+        tilemap_tileh = int(tileset.attrib['tilewidth'])
+        tilemap_inc = tilemap_w/tilemap_tilew
+
         fullpath_tilemap_name = os.path.join(os.path.dirname(newfilename),tilemap_name)
         newtilemap_name = fullpath_tilemap_name+'.dat'
+
+        ## See if a corresponding collision map is available
+        collisionmap_name = fullpath_tilemap_name.split('.')[0]+'_collision.'+fullpath_tilemap_name.split('.')[1]
 
         if not oldtilemap_name == tilemap_name:
             mapsets[newtilemap_name] = {}
@@ -61,6 +71,7 @@ else:
         leveldata = {}
 
         for child in root.iter('layer'):
+            maplayer = child.attrib['name']
             data = child.find('data')
             if data.attrib['encoding'] == 'csv':
 
@@ -74,13 +85,17 @@ else:
                 sys.exit(1)
 
         def layer_with_collision(leveldatavalue,j):
-            value = int(leveldatavalue['Foreground'][j])
-            if int(leveldatavalue['Collision'][j]) > 0:
+            value = int(leveldatavalue[maplayer][j])
+
+            tilex = value % tilemap_inc - 1
+            tiley = value / tilemap_inc
+
+            if not sum(collision_data.getpixel((tilex*tilemap_tilew,tiley*tilemap_tileh)))/3 > 0:
                 value += 1 << 7
             return value
 
         def layer_no_collision(leveldatavalue,j):
-            return int(leveldatavalue['Foreground'][j])
+            return int(leveldatavalue[maplayer][j])
 
 
         def process_output(process_stage):
@@ -96,13 +111,26 @@ else:
                     f.write("\n")
 
         try:
-            leveldata['Collision']
+            #leveldata['Collision']
+            collision_data = Image.open(collisionmap_name).convert("RGB")
         except KeyError:
 #            print "No collision layer"
             process_output(layer_no_collision)
         else:
 #            print "Collision layer found"
             process_output(layer_with_collision)
+
+        
+        object_data = root.find(".//objectgroup[@name='start']")
+        if not object_data == []:
+            f.write("\n' startlocations\n")
+
+            f.write("\nbyte\t%i" % len(object_data))
+
+            for o in object_data:
+                f.write("\nbyte\t"+str(int(o.attrib['x'])/tilemap_tilew)+", "
+                        +str(int(o.attrib['y'])/tilemap_tilew))
+
 
         f.close()
 
@@ -111,13 +139,13 @@ for tilemap in mapsets:
     packfile = tilemap+".pack"
     f = open(packfile,'w')
 
-    f.write("\nmapTable_%s\nword\t" % os.path.basename(tilemap.split('.')[0]))
+    f.write("\nmapTable_%s\nword\t@" % os.path.basename(tilemap.split('.')[0]))
 
     flist = []
     for level in mapsets[tilemap]:
         flist.append(mapsets[tilemap][level]['reference'])
 
-    f.write(", ".join(flist))
+    f.write(", @".join(flist))
     f.write("\n\n")
 
     f.write(open(tilemap).read())
