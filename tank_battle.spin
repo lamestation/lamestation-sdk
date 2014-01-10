@@ -191,164 +191,164 @@ byte    respawnindexsaved
 
 PUB Main
 
-dira~
-gfx.Start()
-pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
+    dira~
+    gfx.Start()
+    pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
 
-audio.Start
+    audio.Start
 
-gfx.ClearScreen
-gfx.SwitchFrame
+    gfx.ClearScreen
+    gfx.SwitchFrame
 
-InitData
+    InitData
 
-clicked := 0
-LogoScreen
-TitleScreen
-TankSelect
-LevelSelect                          
-TankFaceOff          
+    clicked := 0
+    LogoScreen
+    TitleScreen
+    TankSelect
+    LevelSelect                          
+    TankFaceOff          
 
 
 
-menuchoice := GO_GAME
-repeat
-    if menuchoice == GO_GAME
-        menuchoice := GameLoop
-    elseif menuchoice == GO_MENU
-        menuchoice := PauseMenu
+    menuchoice := GO_GAME
+    repeat
+        if menuchoice == GO_GAME
+            menuchoice := GameLoop
+        elseif menuchoice == GO_MENU
+            menuchoice := PauseMenu
 
 
 PUB LogoScreen
 
-gfx.ClearScreen
-gfx.SwitchFrame
-gfx.ClearScreen
-gfx.SpriteTrans(@teamlamelogo, 0, 3, 0)
-gfx.SwitchFrame
+    gfx.ClearScreen
+    gfx.SwitchFrame
+    gfx.ClearScreen
+    gfx.SpriteTrans(@teamlamelogo, 0, 3, 0)
+    gfx.SwitchFrame
 
-audio.SetWaveform(3, 127)
-audio.SetADSR(127, 10, 0, 10)
-audio.PlaySequence(@logoScreenSound)  
+    audio.SetWaveform(3, 127)
+    audio.SetADSR(127, 10, 0, 10)
+    audio.PlaySequence(@logoScreenSound)  
 
-repeat x from 0 to 150000 
+    repeat x from 0 to 150000 
 
-audio.StopSong
+    audio.StopSong
 
 PUB TitleScreen
 
-audio.SetWaveform(1, 127)
-audio.SetADSR(127, 127, 100, 127) 
-audio.LoadSong(@titleScreenSong)
-audio.PlaySong
+    audio.SetWaveform(1, 127)
+    audio.SetADSR(127, 127, 100, 127) 
+    audio.LoadSong(@titleScreenSong)
+    audio.PlaySong
 
 
 
-choice := 1
-repeat until choice == 0  
-    controls := ina   
-    gfx.SwitchFrame
+    choice := 1
+    repeat until choice == 0  
+        controls := ina   
+        gfx.SwitchFrame
 
-    gfx.blit(@excitingtank)   
+        gfx.blit(@excitingtank)   
 
-    if controls & (SW1+SW2+SW3) <> 0
-          if clicked == 0
-            choice := 0
-            clicked := 1
-           
-            yourtank := 0
-            theirtank := 1
-            pst.Char(UPDATEORDER) 
+        if controls & (SW1+SW2+SW3) <> 0
+              if clicked == 0
+                choice := 0
+                clicked := 1
+               
+                yourtank := 0
+                theirtank := 1
+                pst.Char(UPDATEORDER) 
 
-    else
-          clicked := 0
+        else
+              clicked := 0
 
-    repeat while pst.RxCount > 0
-       receivebyte := pst.CharIn
-                
-       if receivebyte == UPDATEORDER
-          yourtank := 1
-          theirtank := 0
+        repeat while pst.RxCount > 0
+           receivebyte := pst.CharIn
+                    
+           if receivebyte == UPDATEORDER
+              yourtank := 1
+              theirtank := 0
 
-          choice := 0
-          clicked := 1
+              choice := 0
+              clicked := 1
 
 PUB TankSelect         
 
-choice := 1
-joyclicked := 0
-repeat until choice == 0
+    choice := 1
+    joyclicked := 0
+    repeat until choice == 0
 
-    controls := ina   
-    gfx.SwitchFrame         
-    gfx.ClearScreen
+        controls := ina   
+        gfx.SwitchFrame         
+        gfx.ClearScreen
 
-    if controls & (J_U+J_D) <> 0
-       if joyclicked == 0
-          joyclicked := 1 
-          if controls & J_U <> 0
-            if yourtype <> 0
-              yourtype--
-            else
-              yourtype := TANKTYPESMASK
-          if controls & J_D <> 0
-            yourtype++
-            if yourtype > TANKTYPESMASK
-              yourtype := 0
+        if controls & (J_U+J_D) <> 0
+           if joyclicked == 0
+              joyclicked := 1 
+              if controls & J_U <> 0
+                if yourtype <> 0
+                  yourtype--
+                else
+                  yourtype := TANKTYPESMASK
+              if controls & J_D <> 0
+                yourtype++
+                if yourtype > TANKTYPESMASK
+                  yourtype := 0
 
-          pst.Char(UPDATETYPE)
-          pst.Char(yourtype) 
-    else
-        joyclicked := 0
+              pst.Char(UPDATETYPE)
+              pst.Char(yourtype) 
+        else
+            joyclicked := 0
 
-  
-    if controls & (SW1+SW2+SW3) <> 0
-      if clicked == 0
-        choice := 0
-        clicked := 1
+      
+        if controls & (SW1+SW2+SW3) <> 0
+          if clicked == 0
+            choice := 0
+            clicked := 1
 
-        pst.Char(UPDATEADVANCE)
+            pst.Char(UPDATEADVANCE)
+            
+        else
+          clicked := 0
+
+        'MULTIPLAYER HANDLING
+        repeat while pst.RxCount > 0
+           receivebyte := pst.CharIn
+                    
+           if receivebyte == UPDATETYPE
+              theirtype := pst.CharIn
+
+           elseif receivebyte == UPDATEADVANCE
+              choice := 0
+              clicked := 1          
+            
+
+
+        gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+        gfx.TextBox(string("CHOOSE"), 6, 2)
+
+        gfx.TextBox(string("You"),2,3)
+        gfx.TextBox(string("Enemy"),10,3)
         
-    else
-      clicked := 0
+        gfx.TextBox(tanktypename[yourtype],0,7)
+        gfx.TextBox(tanktypename[theirtype],9,7)
+           
+        gfx.TextBox(string("vs."),7,5)
+            
+        gfx.SpriteTrans(tanktypegfx[yourtype], 3, 4, 3) 
+        gfx.SpriteTrans(tanktypegfx[theirtype], 11, 4, 2) 
 
-    'MULTIPLAYER HANDLING
-    repeat while pst.RxCount > 0
-       receivebyte := pst.CharIn
-                
-       if receivebyte == UPDATETYPE
-          theirtype := pst.CharIn
-
-       elseif receivebyte == UPDATEADVANCE
-          choice := 0
-          clicked := 1          
-        
+       ' gfx.TextBox(string("At"),3,7)   
+        'gfx.TextBox(levelname[currentlevel],5,7)  
 
 
-    gfx.SpriteTrans(@tanklogo, 0, 0, 0)
-    gfx.TextBox(string("CHOOSE"), 6, 2)
+    tankgfx[yourtank] := tanktypegfx[yourtype]
+    tankgfx[theirtank] := tanktypegfx[theirtype]
 
-    gfx.TextBox(string("You"),2,3)
-    gfx.TextBox(string("Enemy"),10,3)
-    
-    gfx.TextBox(tanktypename[yourtype],0,7)
-    gfx.TextBox(tanktypename[theirtype],9,7)
-       
-    gfx.TextBox(string("vs."),7,5)
-        
-    gfx.SpriteTrans(tanktypegfx[yourtype], 3, 4, 3) 
-    gfx.SpriteTrans(tanktypegfx[theirtype], 11, 4, 2) 
-
-   ' gfx.TextBox(string("At"),3,7)   
-    'gfx.TextBox(levelname[currentlevel],5,7)  
-
-
-tankgfx[yourtank] := tanktypegfx[yourtype]
-tankgfx[theirtank] := tanktypegfx[theirtype]
-
-repeat tankindex from 0 to TANKSMASK
-   tankw[tankindex] := word[tankgfx[tankindex]][1]
-   tankh[tankindex] := word[tankgfx[tankindex]][2]
+    repeat tankindex from 0 to TANKSMASK
+       tankw[tankindex] := word[tankgfx[tankindex]][1]
+       tankh[tankindex] := word[tankgfx[tankindex]][2]
 
 
 
@@ -358,456 +358,456 @@ repeat tankindex from 0 to TANKSMASK
 
 PUB LevelSelect
 
-choice := 1
-joyclicked := 0
-repeat until choice == 0
+    choice := 1
+    joyclicked := 0
+    repeat until choice == 0
 
-    controls := ina   
-    gfx.SwitchFrame
-    gfx.ClearScreen         
+        controls := ina   
+        gfx.SwitchFrame
+        gfx.ClearScreen         
 
 
-    if controls & (J_U+J_D) <> 0
-       if joyclicked == 0
-          joyclicked := 1 
-          if controls & J_U <> 0
-            if currentlevel <> 0
-              currentlevel--
-            else
-              currentlevel := LEVELSMASK
-          if controls & J_D <> 0
-            currentlevel++
-            if currentlevel > LEVELSMASK
-              currentlevel := 0
+        if controls & (J_U+J_D) <> 0
+           if joyclicked == 0
+              joyclicked := 1 
+              if controls & J_U <> 0
+                if currentlevel <> 0
+                  currentlevel--
+                else
+                  currentlevel := LEVELSMASK
+              if controls & J_D <> 0
+                currentlevel++
+                if currentlevel > LEVELSMASK
+                  currentlevel := 0
 
-          pst.Char(UPDATELEVEL)
-          pst.Char(currentlevel)
-    else
-        joyclicked := 0
-          
+              pst.Char(UPDATELEVEL)
+              pst.Char(currentlevel)
+        else
+            joyclicked := 0
+              
 
-    
-    if controls & (SW1+SW2+SW3) <> 0
-      if clicked == 0
-        choice := 0
-        clicked := 1
-
-        pst.Char(UPDATELEVEL)
-        pst.Char(currentlevel)
-        pst.Char(UPDATEADVANCE)
         
-    else
-      clicked := 0
+        if controls & (SW1+SW2+SW3) <> 0
+          if clicked == 0
+            choice := 0
+            clicked := 1
 
-    'MULTIPLAYER HANDLING
-    repeat while pst.RxCount > 0
-       receivebyte := pst.CharIn
-                
-       if receivebyte == UPDATELEVEL
-          currentlevel := pst.CharIn
+            pst.Char(UPDATELEVEL)
+            pst.Char(currentlevel)
+            pst.Char(UPDATEADVANCE)
+            
+        else
+          clicked := 0
 
-       elseif receivebyte == UPDATEADVANCE
-          choice := 0
-          clicked := 1       
+        'MULTIPLAYER HANDLING
+        repeat while pst.RxCount > 0
+           receivebyte := pst.CharIn
+                    
+           if receivebyte == UPDATELEVEL
+              currentlevel := pst.CharIn
 
-
-    gfx.SpriteTrans(@tanklogo, 0, 0, 0)
-    gfx.TextBox(string("Level:"),0,2)                  
-    gfx.TextBox(levelname[currentlevel],5,2)
-
-    'DRAW TILES TO SCREEN
-    xoffset := 5
-    yoffset := 2
-
-    levelw := byte[leveldata[currentlevel]][0] 
-    levelh := byte[leveldata[currentlevel]][1]
-    
-    DrawMap(tilemap,0,3,SCREEN_BW,5)
+           elseif receivebyte == UPDATEADVANCE
+              choice := 0
+              clicked := 1       
 
 
-    
-InitLevel
+        gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+        gfx.TextBox(string("Level:"),0,2)                  
+        gfx.TextBox(levelname[currentlevel],5,2)
+
+        'DRAW TILES TO SCREEN
+        xoffset := 5
+        yoffset := 2
+
+        levelw := byte[leveldata[currentlevel]][0] 
+        levelh := byte[leveldata[currentlevel]][1]
+        
+        DrawMap(tilemap,0,3,SCREEN_BW,5)
+
+
+        
+    InitLevel
 
 
 
 
 PUB TankFaceOff
          
-choice := 1
-repeat until choice == 0
+    choice := 1
+    repeat until choice == 0
 
-    controls := ina   
-    gfx.SwitchFrame         
-    gfx.ClearScreen
+        controls := ina   
+        gfx.SwitchFrame         
+        gfx.ClearScreen
 
-    gfx.SpriteTrans(@tanklogo, 0, 0, 0)
-    gfx.TextBox(string("Prepare for battle..."),2,3)
-    
-    if controls & (SW1+SW2+SW3) <> 0
-      if clicked == 0
-        choice := 0
-        clicked := 1
+        gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+        gfx.TextBox(string("Prepare for battle..."),2,3)
+        
+        if controls & (SW1+SW2+SW3) <> 0
+          if clicked == 0
+            choice := 0
+            clicked := 1
 
-        pst.Char(UPDATEADVANCE)
-    else
-      clicked := 0  
+            pst.Char(UPDATEADVANCE)
+        else
+          clicked := 0  
 
-    'MULTIPLAYER HANDLING
-    repeat while pst.RxCount > 0
-       receivebyte := pst.CharIn
-                
-       if receivebyte == UPDATEADVANCE
-          choice := 0
-          clicked := 1   
+        'MULTIPLAYER HANDLING
+        repeat while pst.RxCount > 0
+           receivebyte := pst.CharIn
+                    
+           if receivebyte == UPDATEADVANCE
+              choice := 0
+              clicked := 1   
 
      
     
 PUB GameLoop : menureturn
 
-audio.StopSong
-audio.SetWaveform(4, 127)
-audio.SetADSR(127, 70, 0, 70)
+    audio.StopSong
+    audio.SetWaveform(4, 127)
+    audio.SetADSR(127, 70, 0, 70)
 
-clicked := 0
-choice := 0                               
-repeat while choice == 0
+    clicked := 0
+    choice := 0                               
+    repeat while choice == 0
 
-    controls := ina
-    gfx.SwitchFrame 
+        controls := ina
+        gfx.SwitchFrame 
 
-      if tankon[yourtank] == 1   
-          tankoldx := tankx[yourtank]
-          tankoldy := tanky[yourtank]
-          tankolddir := tankdir[yourtank]
-          oldscore := score[yourtank]
+          if tankon[yourtank] == 1   
+              tankoldx := tankx[yourtank]
+              tankoldy := tanky[yourtank]
+              tankolddir := tankdir[yourtank]
+              oldscore := score[yourtank]
 
-          'TANK CONTROL
-          'LEFT AND RIGHT   
-          if controls & J_L <> 0
-             tankdir[yourtank] := 0        
+              'TANK CONTROL
+              'LEFT AND RIGHT   
+              if controls & J_L <> 0
+                 tankdir[yourtank] := 0        
 
-             tankx[yourtank]--
-              if tankx[yourtank] < 0
-                  tankx[yourtank] := 0
-          if controls & J_R <> 0
-              tankdir[yourtank] := 1
-          
-              tankx[yourtank]++
-              if tankx[yourtank] > levelw - tankw[yourtank]
-                  tankx[yourtank] := levelw - tankw[yourtank] 
-
-
-          tankxtemp := tankx[yourtank] 
-          tankytemp := tanky[yourtank]
-          tilecnt := 0
-          tilecnttemp := 2
-          if tanky[yourtank] > 0
-              repeat y from 0 to tanky[yourtank]-1
-                   tilecnttemp += levelw
-          repeat y from tankytemp to tankytemp+tankh[yourtank]-1
-              repeat x from tankxtemp to tankxtemp+tankw[yourtank]-1 
-                  tilecnt := tilecnttemp + x
-           
-                  tile := (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
-                  if tile <> 0
-                         tankx[yourtank] := tankoldx 
-              tilecnttemp += levelw
-
-          repeat tankindex from 0 to TANKSMASK
-              if tankon[tankindex]
-                  if tankindex <> yourtank
-                      collided := 1
-                      if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
-                         collided := 0
-                      if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
-                         collided := 0
-                      if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
-                         collided := 0
-                      if tankytemp > tanky[tankindex]+tankh[tankindex]-1
-                         collided := 0
-
-                      if collided == 1
-                         tankx[yourtank] := tankoldx    
-
-
-
-       
-      'UP AND DOWN   
-          if controls & J_U <> 0
-              tankdir[yourtank] := 2
+                 tankx[yourtank]--
+                  if tankx[yourtank] < 0
+                      tankx[yourtank] := 0
+              if controls & J_R <> 0
+                  tankdir[yourtank] := 1
               
-              tanky[yourtank]--
-              if tanky[yourtank] < 0
-                  tanky[yourtank] := 0
-          if controls & J_D <> 0
-              tankdir[yourtank] := 3  
+                  tankx[yourtank]++
+                  if tankx[yourtank] > levelw - tankw[yourtank]
+                      tankx[yourtank] := levelw - tankw[yourtank] 
 
-              tanky[yourtank]++
-              if tanky[yourtank] > levelh - tankh[yourtank]
-                  tanky[yourtank] := levelh - tankh[yourtank]
-   
-          tankxtemp := tankx[yourtank] 
-          tankytemp := tanky[yourtank]
-          tilecnt := 0
-          tilecnttemp := 2
-          if tanky[yourtank] > 0
-              repeat y from 0 to tanky[yourtank]-1
+
+              tankxtemp := tankx[yourtank] 
+              tankytemp := tanky[yourtank]
+              tilecnt := 0
+              tilecnttemp := 2
+              if tanky[yourtank] > 0
+                  repeat y from 0 to tanky[yourtank]-1
+                       tilecnttemp += levelw
+              repeat y from tankytemp to tankytemp+tankh[yourtank]-1
+                  repeat x from tankxtemp to tankxtemp+tankw[yourtank]-1 
+                      tilecnt := tilecnttemp + x
+               
+                      tile := (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
+                      if tile <> 0
+                             tankx[yourtank] := tankoldx 
                   tilecnttemp += levelw
-          repeat y from tankytemp to tankytemp+tankw[yourtank]-1
-              repeat x from tankxtemp to tankxtemp+tankh[yourtank]-1 
-                  tilecnt := tilecnttemp + x
+
+              repeat tankindex from 0 to TANKSMASK
+                  if tankon[tankindex]
+                      if tankindex <> yourtank
+                          collided := 1
+                          if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
+                             collided := 0
+                          if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
+                             collided := 0
+                          if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
+                             collided := 0
+                          if tankytemp > tanky[tankindex]+tankh[tankindex]-1
+                             collided := 0
+
+                          if collided == 1
+                             tankx[yourtank] := tankoldx    
+
+
+
            
-                  tile := (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
-                  if tile <> 0
-                        tanky[yourtank] := tankoldy
-              tilecnttemp += levelw
-
-          repeat tankindex from 0 to TANKSMASK
-              if tankon[tankindex] 
-                  if tankindex <> yourtank
-                      collided := 1
-                      if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
-                         collided := 0
-                      if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
-                         collided := 0
-                      if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
-                         collided := 0
-                      if tankytemp > tanky[tankindex]+tankh[tankindex]-1
-                         collided := 0
-
-                      if collided == 1
-                         tanky[yourtank] := tankoldy    
-
-
-          'OFFSET CONTROL
-          ControlOffset(yourtank)
- 
-    
-
- 
-           
-           
-          if controls & SW1 <> 0
-            if clicked == 0
-              clicked := 1
-           
-             ' choice := GO_MENU 'Go to menu
-              
-            '  yourtank++
-             ' yourtank &= TANKSMASK
-
-          elseif controls & SW2 <> 0
-              if tankon[yourtank] == 1
-                SpawnBullet(yourtank)
-                bulletspawned := 1
-            
-          elseif controls & SW3 <> 0
-            if clicked == 0
-              clicked := 1
-              {
-              yourtype++
-              if yourtype > TANKTYPESMASK
-                yourtype := 0
-              tankgfx[yourtank] := tanktypegfx[yourtype]
-              tankw[yourtank] := word[tankgfx[yourtank]][1]
-              tankh[yourtank] := word[tankgfx[yourtank]][2]
-               }
-          else
-              clicked := 0
-           
-
-
-
-  
-      else
-
-          'TANK CONTROL
-          'LEFT AND RIGHT   
-          if controls & J_L <> 0
-              xoffset--
-              if xoffset < 0
-                  xoffset := 0 
-          if controls & J_R <> 0
-              xoffset++
-              if xoffset > levelw-SCREEN_BW
-                  xoffset := levelw-SCREEN_BW
-
-
-                  
           'UP AND DOWN   
-          if controls & J_U <> 0
-              yoffset-- 
-              if yoffset < 0
-                  yoffset := 0  
-          if controls & J_D <> 0
-              yoffset++
-              if yoffset > levelh-SCREEN_BH
-                  yoffset := levelh-SCREEN_BH  
+              if controls & J_U <> 0
+                  tankdir[yourtank] := 2
+                  
+                  tanky[yourtank]--
+                  if tanky[yourtank] < 0
+                      tanky[yourtank] := 0
+              if controls & J_D <> 0
+                  tankdir[yourtank] := 3  
 
-           
-          if controls & (SW1+SW2+SW3) <> 0
-            if clicked == 0
-              SpawnTank(yourtank, 0, 1)
-              tankspawned := 1      
-              
-              clicked := 1
-          else
-            clicked := 0
-           
+                  tanky[yourtank]++
+                  if tanky[yourtank] > levelh - tankh[yourtank]
+                      tanky[yourtank] := levelh - tankh[yourtank]
+       
+              tankxtemp := tankx[yourtank] 
+              tankytemp := tanky[yourtank]
+              tilecnt := 0
+              tilecnttemp := 2
+              if tanky[yourtank] > 0
+                  repeat y from 0 to tanky[yourtank]-1
+                      tilecnttemp += levelw
+              repeat y from tankytemp to tankytemp+tankw[yourtank]-1
+                  repeat x from tankxtemp to tankxtemp+tankh[yourtank]-1 
+                      tilecnt := tilecnttemp + x
+               
+                      tile := (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
+                      if tile <> 0
+                            tanky[yourtank] := tankoldy
+                  tilecnttemp += levelw
+
+              repeat tankindex from 0 to TANKSMASK
+                  if tankon[tankindex] 
+                      if tankindex <> yourtank
+                          collided := 1
+                          if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
+                             collided := 0
+                          if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
+                             collided := 0
+                          if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
+                             collided := 0
+                          if tankytemp > tanky[tankindex]+tankh[tankindex]-1
+                             collided := 0
+
+                          if collided == 1
+                             tanky[yourtank] := tankoldy    
 
 
+              'OFFSET CONTROL
+              ControlOffset(yourtank)
+     
+        
+
+     
+               
+               
+              if controls & SW1 <> 0
+                if clicked == 0
+                  clicked := 1
+               
+                 ' choice := GO_MENU 'Go to menu
+                  
+                '  yourtank++
+                 ' yourtank &= TANKSMASK
+
+              elseif controls & SW2 <> 0
+                  if tankon[yourtank] == 1
+                    SpawnBullet(yourtank)
+                    bulletspawned := 1
+                
+              elseif controls & SW3 <> 0
+                if clicked == 0
+                  clicked := 1
+                  {
+                  yourtype++
+                  if yourtype > TANKTYPESMASK
+                    yourtype := 0
+                  tankgfx[yourtank] := tanktypegfx[yourtype]
+                  tankw[yourtank] := word[tankgfx[yourtank]][1]
+                  tankh[yourtank] := word[tankgfx[yourtank]][2]
+                   }
+              else
+                  clicked := 0
+               
 
 
-      'HANDLE OPPONENT TANKS
-      UpdateHandler
-   
-      'DRAW TILES TO SCREEN
-      DrawMap(tilemap,0,0,SCREEN_BW,SCREEN_BH)
 
       
+          else
 
-      'DRAW TANKS TO SCREEN        
-      repeat tankindex from 0 to TANKS-1
-          if tankon[tankindex] == 1
-              tankxtemp := tankx[tankindex] - xoffset
-              tankytemp := tanky[tankindex] - yoffset
-              tankwtemp := tankw[tankindex]
-              tankhtemp := tankh[tankindex]        
-                                                                                    
-              if (tankxtemp => 0) and (tankxtemp =< SCREEN_BW-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_BH - tankh[yourtank])
+              'TANK CONTROL
+              'LEFT AND RIGHT   
+              if controls & J_L <> 0
+                  xoffset--
+                  if xoffset < 0
+                      xoffset := 0 
+              if controls & J_R <> 0
+                  xoffset++
+                  if xoffset > levelw-SCREEN_BW
+                      xoffset := levelw-SCREEN_BW
 
-                if tankdir[tankindex] == DIR_D
-                    gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 0)
-                elseif tankdir[tankindex] == DIR_U       
-                    gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 1)
-                elseif tankdir[tankindex] == DIR_L       
-                    gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 2)
-                elseif tankdir[tankindex] == DIR_R       
-                    gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 3)
+
+                      
+              'UP AND DOWN   
+              if controls & J_U <> 0
+                  yoffset-- 
+                  if yoffset < 0
+                      yoffset := 0  
+              if controls & J_D <> 0
+                  yoffset++
+                  if yoffset > levelh-SCREEN_BH
+                      yoffset := levelh-SCREEN_BH  
+
+               
+              if controls & (SW1+SW2+SW3) <> 0
+                if clicked == 0
+                  SpawnTank(yourtank, 0, 1)
+                  tankspawned := 1      
+                  
+                  clicked := 1
+              else
+                clicked := 0
+               
+
+
+
+
+          'HANDLE OPPONENT TANKS
+          UpdateHandler
+       
+          'DRAW TILES TO SCREEN
+          DrawMap(tilemap,0,0,SCREEN_BW,SCREEN_BH)
+
           
-                                                         
-      'CONTROL EXISTING BULLETS -----
-      BulletHandler
 
-      'HUD OVERLY
-      StatusOverlay
+          'DRAW TANKS TO SCREEN        
+          repeat tankindex from 0 to TANKS-1
+              if tankon[tankindex] == 1
+                  tankxtemp := tankx[tankindex] - xoffset
+                  tankytemp := tanky[tankindex] - yoffset
+                  tankwtemp := tankw[tankindex]
+                  tankhtemp := tankh[tankindex]        
+                                                                                        
+                  if (tankxtemp => 0) and (tankxtemp =< SCREEN_BW-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_BH - tankh[yourtank])
 
-menureturn := choice
+                    if tankdir[tankindex] == DIR_D
+                        gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 0)
+                    elseif tankdir[tankindex] == DIR_U       
+                        gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 1)
+                    elseif tankdir[tankindex] == DIR_L       
+                        gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 2)
+                    elseif tankdir[tankindex] == DIR_R       
+                        gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 3)
+              
+                                                             
+          'CONTROL EXISTING BULLETS -----
+          BulletHandler
+
+          'HUD OVERLY
+          StatusOverlay
+
+    menureturn := choice
 
 PUB PauseMenu : menureturn
 
-choice := 0
-repeat while choice == 0
-       
-    controls := ina   
-    gfx.SwitchFrame         
-    gfx.ClearScreen
+    choice := 0
+    repeat while choice == 0
+           
+        controls := ina   
+        gfx.SwitchFrame         
+        gfx.ClearScreen
 
-    gfx.SpriteTrans(@tanklogo, 0, 0, 0)
-    gfx.TextBox(string(" PAUSE!"),5,2)
-
-
-    if controls & (J_U+J_D) <> 0
-       if joyclicked == 0
-          joyclicked := 1 
-          if controls & J_U <> 0
-            if menuchoice <> 0
-              menuchoice--
-            else
-              menuchoice := PAUSEMENU1_CHOICES
-          if controls & J_D <> 0
-            menuchoice++
-            if menuchoice > PAUSEMENU1_CHOICES
-              menuchoice := 0 
-    else
-        joyclicked := 0
-         
-
-    if controls & (SW1+SW2+SW3) <> 0
-      if clicked == 0
-        choice := GO_GAME
-        clicked := 1
-    else
-      clicked := 0
-      
-    gfx.SpriteTrans(@bulletgfx, 3, 4+menuchoice, 0)
-    gfx.TextBox(string("Return to Game"),4,4)
-    gfx.TextBox(string("Change Level"),4,5)
-    gfx.TextBox(string("Change Tank"),4,6)
-    gfx.TextBox(string("Give Up?"),4,7)
+        gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+        gfx.TextBox(string(" PAUSE!"),5,2)
 
 
-if menuchoice == 1
-    LevelSelect
+        if controls & (J_U+J_D) <> 0
+           if joyclicked == 0
+              joyclicked := 1 
+              if controls & J_U <> 0
+                if menuchoice <> 0
+                  menuchoice--
+                else
+                  menuchoice := PAUSEMENU1_CHOICES
+              if controls & J_D <> 0
+                menuchoice++
+                if menuchoice > PAUSEMENU1_CHOICES
+                  menuchoice := 0 
+        else
+            joyclicked := 0
+             
 
-elseif menuchoice == 2
-    TankSelect
+        if controls & (SW1+SW2+SW3) <> 0
+          if clicked == 0
+            choice := GO_GAME
+            clicked := 1
+        else
+          clicked := 0
+          
+        gfx.SpriteTrans(@bulletgfx, 3, 4+menuchoice, 0)
+        gfx.TextBox(string("Return to Game"),4,4)
+        gfx.TextBox(string("Change Level"),4,5)
+        gfx.TextBox(string("Change Tank"),4,6)
+        gfx.TextBox(string("Give Up?"),4,7)
 
-menureturn := GO_GAME
+
+    if menuchoice == 1
+        LevelSelect
+
+    elseif menuchoice == 2
+        TankSelect
+
+    menureturn := GO_GAME
 
 
 
 PUB InitData
 
-currentlevel := 0
-yourtype := 0
-theirtype := 0
+    currentlevel := 0
+    yourtype := 0
+    theirtype := 0
 
-tilemap := @gfx_tiles_2b_poketron
+    tilemap := @gfx_tiles_2b_poketron
 
-leveldata[0] := @map_supercastle  
-'leveldata[0] := @MoonManLevel   
-'leveldata[1] := @WronskianDelta
-'leveldata[2] := @TheCastle
-'leveldata[3] := @thehole
-'leveldata[4] := @pokemon
-           
-levelname[0] := @level0name
-'levelname[1] := @level1name
-'levelname[2] := @level2name
-'levelname[3] := @level3name
-'levelname[4] := @level4name
+    leveldata[0] := @map_supercastle  
+    'leveldata[0] := @MoonManLevel   
+    'leveldata[1] := @WronskianDelta
+    'leveldata[2] := @TheCastle
+    'leveldata[3] := @thehole
+    'leveldata[4] := @pokemon
+               
+    levelname[0] := @level0name
+    'levelname[1] := @level1name
+    'levelname[2] := @level2name
+    'levelname[3] := @level3name
+    'levelname[4] := @level4name
 
-levelw := byte[leveldata[currentlevel]][0] 
-levelh := byte[leveldata[currentlevel]][1]
+    levelw := byte[leveldata[currentlevel]][0] 
+    levelh := byte[leveldata[currentlevel]][1]
 
-tanktypename[0] := @extremetankname   
-tanktypename[1] := @extremethangname
-tanktypename[2] := @gianttankname
-tanktypename[3] := @happyfacename
-tanktypename[4] := @moonmanname
+    tanktypename[0] := @extremetankname   
+    tanktypename[1] := @extremethangname
+    tanktypename[2] := @gianttankname
+    tanktypename[3] := @happyfacename
+    tanktypename[4] := @moonmanname
 
-tanktypegfx[0] := @extremetank
-tanktypegfx[1] := @extremethang
-tanktypegfx[2] := @gianttank
-tanktypegfx[3] := @happyface
-tanktypegfx[4] := @moonman
+    tanktypegfx[0] := @extremetank
+    tanktypegfx[1] := @extremethang
+    tanktypegfx[2] := @gianttank
+    tanktypegfx[3] := @happyface
+    tanktypegfx[4] := @moonman
 
 
 PUB InitLevel
 
-levelw := byte[leveldata[currentlevel]][0] 
-levelh := byte[leveldata[currentlevel]][1]
+    levelw := byte[leveldata[currentlevel]][0] 
+    levelh := byte[leveldata[currentlevel]][1]
 
-'INITIALIZE START LOCATIONS         
-repeat tankindex from 0 to TANKSMASK
-    score[tankindex] := 0 
-    SpawnTank(tankindex, tankindex, 0)
+    'INITIALIZE START LOCATIONS         
+    repeat tankindex from 0 to TANKSMASK
+        score[tankindex] := 0 
+        SpawnTank(tankindex, tankindex, 0)
 
-tankspawned := 0
-respawnindex := yourtank
+    tankspawned := 0
+    respawnindex := yourtank
 
-ControlOffset(yourtank)
+    ControlOffset(yourtank)
 
 
-bullet := 0
-repeat bulletindex from 0 to BULLETSMASK
-    bulleton[bulletindex] := 0 
-    bulletx[bulletindex] := 0
-    bullety[bulletindex] := 0
-    bulletspeed[bulletindex] := 0
-    bulletdir[bulletindex] := 0
-bulletspawned := 0
+    bullet := 0
+    repeat bulletindex from 0 to BULLETSMASK
+        bulleton[bulletindex] := 0 
+        bulletx[bulletindex] := 0
+        bullety[bulletindex] := 0
+        bulletspeed[bulletindex] := 0
+        bulletdir[bulletindex] := 0
+    bulletspawned := 0
 
 
 
@@ -826,176 +826,176 @@ PUB SpawnTank(tankindexvar, respawnindexvar, respawnflag)
 
 PUB DrawMap(source, position_x, position_y, width, height)
        
-      'DRAW TILES TO SCREEN           
-      tilecnt := 0
-      tilecnttemp := 2
-      if yoffset > 0
-        repeat y from 0 to yoffset-1
-          tilecnttemp += levelw
-      repeat y from yoffset to yoffset+height-1
-          repeat x from xoffset to xoffset+width-1  
-              tilecnt := tilecnttemp + x
-              tile := (byte[leveldata[currentlevel]][tilecnt] & TILEBYTE) -  1
-              gfx.Box(source + (tile << 4), x-xoffset+position_x,y-yoffset+position_y)
+    'DRAW TILES TO SCREEN           
+    tilecnt := 0
+    tilecnttemp := 2
+    if yoffset > 0
+      repeat y from 0 to yoffset-1
+        tilecnttemp += levelw
+    repeat y from yoffset to yoffset+height-1
+        repeat x from xoffset to xoffset+width-1  
+            tilecnt := tilecnttemp + x
+            tile := (byte[leveldata[currentlevel]][tilecnt] & TILEBYTE) -  1
+            gfx.Box(source + (tile << 4), x-xoffset+position_x,y-yoffset+position_y)
 
-          tilecnttemp += levelw
+        tilecnttemp += levelw
 
 
 PUB ControlOffset(tankindexvar)
 
-          xoffset := tankx[tankindexvar] - 7
-          if xoffset < 0
-              xoffset := 0      
-          elseif xoffset > levelw-SCREEN_BW
-              xoffset := levelw-SCREEN_BW
-                        
-          yoffset := tanky[tankindexvar] - 3
-          if yoffset < 0
-              yoffset := 0      
-          elseif yoffset > levelh-SCREEN_BH
-              yoffset := levelh-SCREEN_BH 
+    xoffset := tankx[tankindexvar] - 7
+    if xoffset < 0
+        xoffset := 0      
+    elseif xoffset > levelw-SCREEN_BW
+        xoffset := levelw-SCREEN_BW
+                  
+    yoffset := tanky[tankindexvar] - 3
+    if yoffset < 0
+        yoffset := 0      
+    elseif yoffset > levelh-SCREEN_BH
+        yoffset := levelh-SCREEN_BH 
 
 
 PUB UpdateHandler
 
-          'WIRELESS STUFF
-          if tankoldx <> tankx[yourtank]
-             pst.Char(UPDATETANKX)
-             pst.Char(tankx[yourtank])
+    'WIRELESS STUFF
+    if tankoldx <> tankx[yourtank]
+       pst.Char(UPDATETANKX)
+       pst.Char(tankx[yourtank])
 
-          if tankoldy <> tanky[yourtank]
-             pst.Char(UPDATETANKY)
-             pst.Char(tanky[yourtank])
+    if tankoldy <> tanky[yourtank]
+       pst.Char(UPDATETANKY)
+       pst.Char(tanky[yourtank])
 
-          if tankolddir <> tankdir[yourtank]
-             pst.Char(UPDATETANKDIR)
-             pst.Char(tankdir[yourtank])
+    if tankolddir <> tankdir[yourtank]
+       pst.Char(UPDATETANKDIR)
+       pst.Char(tankdir[yourtank])
 
-          if bulletspawned == 1
-             pst.Char(UPDATEBULLETSPAWN)
-             bulletspawned := 0
+    if bulletspawned == 1
+       pst.Char(UPDATEBULLETSPAWN)
+       bulletspawned := 0
 
-          if tankspawned == 1
-             pst.Char(UPDATETANKSPAWN)
-             pst.Char(respawnindex)
-             tankspawned := 0
+    if tankspawned == 1
+       pst.Char(UPDATETANKSPAWN)
+       pst.Char(respawnindex)
+       tankspawned := 0
 
-          if oldscore <> score[yourtank]
-             pst.Char(UPDATESCORE)
-             pst.Char(score[yourtank])
+    if oldscore <> score[yourtank]
+       pst.Char(UPDATESCORE)
+       pst.Char(score[yourtank])
 
 
-          repeat while pst.RxCount > 0
-                receivebyte := pst.CharIn
+    repeat while pst.RxCount > 0
+          receivebyte := pst.CharIn
 
-                if receivebyte == UPDATETANKX
-                   tankx[theirtank] := pst.CharIn
+          if receivebyte == UPDATETANKX
+             tankx[theirtank] := pst.CharIn
 
-                elseif receivebyte == UPDATETANKY
-                   tanky[theirtank] := pst.CharIn
+          elseif receivebyte == UPDATETANKY
+             tanky[theirtank] := pst.CharIn
 
-                elseif receivebyte == UPDATETANKDIR
-                   tankdir[theirtank] := pst.CharIn
+          elseif receivebyte == UPDATETANKDIR
+             tankdir[theirtank] := pst.CharIn
 
-                elseif receivebyte == UPDATEBULLETSPAWN
-                   SpawnBullet(theirtank)
+          elseif receivebyte == UPDATEBULLETSPAWN
+             SpawnBullet(theirtank)
 
-                elseif receivebyte == UPDATETANKSPAWN
-                   receivebyte := pst.CharIn
-                   SpawnTank(theirtank,receivebyte,0)
+          elseif receivebyte == UPDATETANKSPAWN
+             receivebyte := pst.CharIn
+             SpawnTank(theirtank,receivebyte,0)
 
-                elseif receivebyte == UPDATESCORE
-                   score[theirtank] := pst.CharIn
+          elseif receivebyte == UPDATESCORE
+             score[theirtank] := pst.CharIn
 
-                elseif receivebyte == UPDATETANKDIED
-                   receivebyte := pst.CharIn
-                   tankon[receivebyte] := 0
-                   
+          elseif receivebyte == UPDATETANKDIED
+             receivebyte := pst.CharIn
+             tankon[receivebyte] := 0
+                  
    
     
 
 PUB SpawnBullet(tankindexvar)
 
-      bulleton[bullet] := 1 
-      bulletdir[bullet] := tankdir[tankindexvar]
+    bulleton[bullet] := 1 
+    bulletdir[bullet] := tankdir[tankindexvar]
 
-      if bulletdir[bullet] == DIR_L
-          bulletx[bullet] := tankx[tankindexvar]
-          bullety[bullet] := tanky[tankindexvar]
-            
-      if bulletdir[bullet] == DIR_R
-          bulletx[bullet] := tankx[tankindexvar] + tankw[tankindexvar] - 1
-          bullety[bullet] := tanky[tankindexvar]
-            
-      if bulletdir[bullet] == DIR_U
-          bulletx[bullet] := tankx[tankindexvar]
-          bullety[bullet] := tanky[tankindexvar]
-            
-      if bulletdir[bullet] == DIR_D
-          bulletx[bullet] := tankx[tankindexvar]
-          bullety[bullet] := tanky[tankindexvar] + tankh[tankindexvar] - 1
-                        
-      bullet++
-      if bullet > BULLETSMASK
-          bullet := 0
+    if bulletdir[bullet] == DIR_L
+        bulletx[bullet] := tankx[tankindexvar]
+        bullety[bullet] := tanky[tankindexvar]
+          
+    if bulletdir[bullet] == DIR_R
+        bulletx[bullet] := tankx[tankindexvar] + tankw[tankindexvar] - 1
+        bullety[bullet] := tanky[tankindexvar]
+          
+    if bulletdir[bullet] == DIR_U
+        bulletx[bullet] := tankx[tankindexvar]
+        bullety[bullet] := tanky[tankindexvar]
+          
+    if bulletdir[bullet] == DIR_D
+        bulletx[bullet] := tankx[tankindexvar]
+        bullety[bullet] := tanky[tankindexvar] + tankh[tankindexvar] - 1
+                      
+    bullet++
+    if bullet > BULLETSMASK
+        bullet := 0
 
-      audio.PlaySound(6+tankindexvar,40)
+    audio.PlaySound(2+tankindexvar,40)
           
 
 PUB BulletHandler
 
-      repeat bulletindex from 0 to BULLETS-1
-          if bulleton[bulletindex]
+    repeat bulletindex from 0 to BULLETS-1
+        if bulleton[bulletindex]
 
-            if bulletdir[bulletindex] == DIR_L
-               bulletx[bulletindex] -= BULLETINGSPEED
-            
-            elseif bulletdir[bulletindex] == DIR_R
-               bulletx[bulletindex] += BULLETINGSPEED   
-            
-            elseif bulletdir[bulletindex] == DIR_U
-               bullety[bulletindex] -= BULLETINGSPEED    
-            
-            elseif bulletdir[bulletindex] == DIR_D
-               bullety[bulletindex] += BULLETINGSPEED  
+          if bulletdir[bulletindex] == DIR_L
+             bulletx[bulletindex] -= BULLETINGSPEED
+          
+          elseif bulletdir[bulletindex] == DIR_R
+             bulletx[bulletindex] += BULLETINGSPEED   
+          
+          elseif bulletdir[bulletindex] == DIR_U
+             bullety[bulletindex] -= BULLETINGSPEED    
+          
+          elseif bulletdir[bulletindex] == DIR_D
+             bullety[bulletindex] += BULLETINGSPEED  
 
-            bulletxtemp := bulletx[bulletindex] - xoffset
-            bulletytemp := bullety[bulletindex] - yoffset
+          bulletxtemp := bulletx[bulletindex] - xoffset
+          bulletytemp := bullety[bulletindex] - yoffset
 
-            if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_BW-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_BH - 1)            
-  
-            
+          if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_BW-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_BH - 1)            
 
-
-               gfx.SpriteTrans(@bulletgfx, bulletxtemp , bulletytemp, 0)
+          
 
 
-               repeat tankindex from 0 to TANKSMASK
-                  if tankon[tankindex]
-                     collided := 1
-                     if bulletx[bulletindex] < tankx[tankindex]
-                         collided := 0
-                     if bulletx[bulletindex] > tankx[tankindex]+tankw[tankindex]-1
-                         collided := 0
-                     if bullety[bulletindex] < tanky[tankindex]
-                         collided := 0
-                     if bullety[bulletindex] > tanky[tankindex]+tankh[tankindex]-1
-                         collided := 0
-                
-                     if collided == 1
-                         if tankhealth[tankindex] > 1
-                             tankhealth[tankindex]--
-                         else
-                             tankon[tankindex] := 0
-                             score[(tankindex+1) & TANKSMASK]++ 
-                             pst.Char(UPDATETANKDIED)
-                             pst.Char(tankindex)
-                             
-                         bulleton[bulletindex] := 0
+             gfx.SpriteTrans(@bulletgfx, bulletxtemp , bulletytemp, 0)
 
-               
-            else
-                bulleton[bulletindex] := 0
+
+             repeat tankindex from 0 to TANKSMASK
+                if tankon[tankindex]
+                   collided := 1
+                   if bulletx[bulletindex] < tankx[tankindex]
+                       collided := 0
+                   if bulletx[bulletindex] > tankx[tankindex]+tankw[tankindex]-1
+                       collided := 0
+                   if bullety[bulletindex] < tanky[tankindex]
+                       collided := 0
+                   if bullety[bulletindex] > tanky[tankindex]+tankh[tankindex]-1
+                       collided := 0
+              
+                   if collided == 1
+                       if tankhealth[tankindex] > 1
+                           tankhealth[tankindex]--
+                       else
+                           tankon[tankindex] := 0
+                           score[(tankindex+1) & TANKSMASK]++ 
+                           pst.Char(UPDATETANKDIED)
+                           pst.Char(tankindex)
+                           
+                       bulleton[bulletindex] := 0
+
+             
+          else
+              bulleton[bulletindex] := 0
 
 
 

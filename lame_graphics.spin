@@ -103,6 +103,9 @@ VAR
 
 
 PUB Start(outputpointer)
+'' This function initializes the library. It takes
+'' no parameters and takes care of setting up the LCD
+'' and frame buffer.
 
     cognew(@graphicsdriver, @instruction1)
     instruction1 := INST_IDLE
