@@ -76,7 +76,7 @@ CON     _clkmode = xtal1 + pll16x
         SOFF = 252 
 
         BARRESOLUTION = 8
-        MAXBARS = 16
+        MAXBARS = 32
 
 
 '0 timestamp     amount (shift by 12)
