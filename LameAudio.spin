@@ -76,7 +76,7 @@ CON     _clkmode = xtal1 + pll16x
         SOFF = 252 
 
         BARRESOLUTION = 8
-        MAXBARS = 32
+   '     MAXBARS = 32
 
 
 '0 timestamp     amount (shift by 12)
@@ -153,7 +153,7 @@ long    repeatindex
 long    repeatseqindex
 long    songAddr
 long    loopsongPtr
-long    barAddr
+
 byte    songchoice
 byte    looping
 byte    bar
@@ -161,8 +161,7 @@ byte    barinc
 byte    totalbars
 byte    play
 
-
-byte    songregister[MAXBARS*(1+BARRESOLUTION)]
+word    barAddr
 
 long    barcursor
 long    barshift
@@ -171,12 +170,7 @@ long    linecursor
 long    songbyteshift
 long    loopptrshift
 
-long    loadbarcursor
-long    loadsongcursor
-long    loadbarshift
-
-long    PlayStack[40]
-long    LoopingPlayStack[100]
+long    LoopingPlayStack[20]
 
 PUB Start
     
@@ -245,21 +239,11 @@ PUB PlaySequence(songAddrvar)
 
 PUB LoadSong(songBarAddrvar)
 
+  barAddr := songBarAddrvar
   totalbars := byte[songBarAddrvar][0]
   repeatlong := byte[songBarAddrvar][1] << 8
-  loadsongcursor := 2
-  loadbarshift := 0
-    
-           
-  repeat bar from 0 to totalbars-1 
-     repeat loadbarcursor from 0 to BARRESOLUTION
-         linecursor := loadbarshift + loadbarcursor
-         songregister[loadbarshift + loadbarcursor] := byte[songBarAddrvar][loadsongcursor]
-         loadsongcursor++
+  loopsongPtr := barAddr + (totalbars-1)*(BARRESOLUTION)+2         
 
-     loadbarshift += constant(BARRESOLUTION+1)
-
-  loopsongPtr := songBarAddrvar + loadsongcursor
 
 PUB PlaySong
   play := 1
@@ -267,6 +251,7 @@ PUB PlaySong
 PUB StopSong
   play := 0
   StopAllSound
+
 PUB StopAllSound
   repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
      oscRegister[oscindexer] &= !KEYBITS 
@@ -296,12 +281,12 @@ repeat
                repeat while byte[loopsongPtr][songcursor] <> BAROFF and play == 1  
                   songbyte := byte[loopsongPtr][songcursor]
                   
-                  if songregister[barshift+1+linecursor] == SNOP
+                  if  byte[barAddr][barshift+2+1+linecursor] == SNOP
 
-                  elseif songregister[barshift+1+linecursor] == SOFF
-                      StopSound( songregister[barshift] )       
+                  elseif byte[barAddr][barshift+2+1+linecursor] == SOFF
+                      StopSound( byte[barAddr][barshift+2] )       
                   else
-                      PlaySound( songregister[barshift] , songregister[barshift+1+linecursor] )  'channel, note
+                      PlaySound( byte[barAddr][barshift+2] , byte[barAddr][barshift+2+1+linecursor] )  'channel, note
 
                       
                   songcursor += 1
