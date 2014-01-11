@@ -1,5 +1,5 @@
 {{
-Audio Synthesizer
+LameAudio Synthesizer
 ─────────────────────────────────────────────────
 Version: 1.0
 Copyright (c) 2013 LameStation LLC
@@ -10,353 +10,356 @@ Authors: Brett Weir
 }}
 
 
-CON     _clkmode = xtal1 + pll16x
-        _xinfreq = 5_000_000
+CON     
+    _clkmode = xtal1 + pll16x
+    _xinfreq = 5_000_000
 
-        PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
-        FS      = 40000
-        SAMPLES = 512
-        PERVOICE = 1
-        VOICES = 4
-        OSCILLATORS = VOICES*PERVOICE
-        REGPEROSC = 4
+    PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
+    FS      = 40000
+    SAMPLES = 512
+    PERVOICE = 1
+    VOICES = 4
+    OSCILLATORS = VOICES*PERVOICE
+    REGPEROSC = 4
 
-        OUTPUTPIN_LMONO = 27
-        OUTPUTPIN_R = 27
+    OUTPUTPIN_LMONO = 27
+    OUTPUTPIN_R = 27
 
-      '  OUTPUTPIN_LMONO = 15
-       ' OUTPUTPIN_R = 15
+  '  OUTPUTPIN_LMONO = 15
+   ' OUTPUTPIN_R = 15
 
-        'MIDIPIN = 25
-        MIDIPIN = 23
+    'MIDIPIN = 25
+    MIDIPIN = 23
+
+    
+    KEYBITS = $180
+    HELDBIT = $80
+    KEYONBIT = $100
+    SUSPEDALBIT = $800000
+
+    NOTEBITS = $7F
+    'VELOCITYBITS = $7F00
+    VOLUMEBITS = $FFFFFF
+
+    ADSRBITS = $3000000 'new
+    ATTACKBIT = $1000000
+    SUSTAINBIT = $2000000
+
+    'ADSR register
+    '       4bit      7bit       7bit       7bit       7bit
+    '       0000    0000000    0000000    0000000    0000000
+    '        W         R          S          D          A
+
+
+    A_OFFSET = 0
+    D_OFFSET = 7
+    S_OFFSET = 14
+    R_OFFSET = 21
+    W_OFFSET = 28
+
+    A_MASK = !($7F << A_OFFSET)
+    D_MASK = !($7F << D_OFFSET)
+    S_MASK = !($7F << S_OFFSET)
+    R_MASK = !($7F << R_OFFSET)
+    W_MASK = !($F << W_OFFSET)
+        
+
+    'SONG PLAYER
+    ENDOFSONG = 0
+    TIMEWAIT = 1
+    NOTEON = 2
+    NOTEOFF = 3
+    
+    SONGS = 1
+    SONGOFF = 255
+    BAROFF = 254
+    SNOP = 253
+    SOFF = 252 
+
+    BARRESOLUTION = 8
+
+
+    '0 timestamp     amount (shift by 12)
+    '1 note on    note  channel
+    '2 note off   channel
 
         
-        KEYBITS = $180
-        HELDBIT = $80
-        KEYONBIT = $100
-        SUSPEDALBIT = $800000
+    '0 - note (last 8 bits)
+    '1 - target volume         
+    '2 - phase inc
+    '3 - phase acc
 
-        NOTEBITS = $7F
-        'VELOCITYBITS = $7F00
-        VOLUMEBITS = $FFFFFF
+    'NEW NOTE REGISTER
 
-        ADSRBITS = $3000000 'new
-        ATTACKBIT = $1000000
-        SUSTAINBIT = $2000000
-
-        'ADSR register
-'       4bit      7bit       7bit       7bit       7bit
-'       0000    0000000    0000000    0000000    0000000
-'        W         R          S          D          A
-
-
-        A_OFFSET = 0
-        D_OFFSET = 7
-        S_OFFSET = 14
-        R_OFFSET = 21
-        W_OFFSET = 28
-
-        A_MASK = !($7F << A_OFFSET)
-        D_MASK = !($7F << D_OFFSET)
-        S_MASK = !($7F << S_OFFSET)
-        R_MASK = !($7F << R_OFFSET)
-        W_MASK = !($F << W_OFFSET)
-        
-
-'SONG PLAYER
-        ENDOFSONG = 0
-        TIMEWAIT = 1
-        NOTEON = 2
-        NOTEOFF = 3
-        
-        SONGS = 1
-        SONGOFF = 255
-        BAROFF = 254
-        SNOP = 253
-        SOFF = 252 
-
-        BARRESOLUTION = 8
-   '     MAXBARS = 32
-
-
-'0 timestamp     amount (shift by 12)
-'1 note on    note  channel
-'2 note off   channel
-
-        
-        '0 - note (last 8 bits)
-        '1 - target volume         
-        '2 - phase inc
-        '3 - phase acc
-
-'NEW NOTE REGISTER
-
-        'note registers
-        ' $           ----------- 16 bits ----------
-        ' $0000      0000000      0       0    0000000
-        '            velocity   keyon    held  notenum
+    'note registers
+    ' $           ----------- 16 bits ----------
+    ' $0000      0000000      0       0    0000000
+    '            velocity   keyon    held  notenum
 
 
 
 
-        'target volume register
-        ' --- 6bits ---     2bit            --------- 24 bits ----------
-        '    %0000_00       00             0000_0000 0000_0000 0000_0000
-        '               ADSR state               current volume
+    'target volume register
+    ' --- 6bits ---     2bit            --------- 24 bits ----------
+    '    %0000_00       00             0000_0000 0000_0000 0000_0000
+    '               ADSR state               current volume
 
-        'phase inc and acc registers
-        ' ----------------- 32 bits -------------
-        ' %0000_0000 0000_0000 0000_0000 0000_0000       value to increment
-        ' %0000_0000 0000_0000 0000_0000 0000_0000       accumulator
+    'phase inc and acc registers
+    ' ----------------- 32 bits -------------
+    ' %0000_0000 0000_0000 0000_0000 0000_0000       value to increment
+    ' %0000_0000 0000_0000 0000_0000 0000_0000       accumulator
          
 
 
 
-'CHANNEL PARAM REGISTER
+    'CHANNEL PARAM REGISTER
 
-        
-        OSCREGS = OSCILLATORS*REGPEROSC
-        OSCBITMASK = (OSCILLATORS-1) << 2
-        INITVAL = 127
-
-
-                
-
-
+    
+    OSCREGS = OSCILLATORS*REGPEROSC
+    OSCBITMASK = (OSCILLATORS-1) << 2
+    INITVAL = 127
 
 
 VAR
 
-'ASM data structure (do not mess up)
-long    parameter
-long    outputlong
+    'ASM data structure (do not mess up)
+    long    parameter
+    long    outputlong
 
-long    channelparam  'volume   'waveform LSB
-long    channelADSR
+    long    channelparam  'volume   'waveform LSB
+    long    channelADSR
 
-long    oscRegister[OSCREGS]
+    long    oscRegister[OSCREGS]
 
 
-byte    oscindexer
-byte    oscindexcounter
-byte    oscoffindexer
+    byte    oscindexer
+    byte    oscindexcounter
+    byte    oscoffindexer
 
-byte    channelbyte
-byte    instrumentbyte
+    byte    channelbyte
+    byte    instrumentbyte
 
-long    songcursor
-long    seqcursor
-byte    seqbyte 
-byte    songbyte
-long    repeatlong
-long    repeatindex
-long    repeatseqindex
-long    songAddr
-long    loopsongPtr
+    long    songcursor
+    long    seqcursor
+    byte    seqbyte 
+    byte    songbyte
+    long    repeatlong
+    long    repeatindex
+    long    repeatseqindex
+    long    songAddr
+    long    loopsongPtr
 
-byte    songchoice
-byte    looping
-byte    bar
-byte    barinc   
-byte    totalbars
-byte    play
+    byte    songchoice
+    byte    looping
+    byte    bar
+    byte    barinc   
+    byte    totalbars
+    byte    play
 
-word    barAddr
+    word    barAddr
 
-long    barcursor
-long    barshift
-long    songlinecursor
-long    linecursor
-long    songbyteshift
-long    loopptrshift
+    long    barcursor
+    long    barshift
+    long    songlinecursor
+    long    linecursor
+    long    songbyteshift
+    long    loopptrshift
 
-long    LoopingPlayStack[20]
+    long    LoopingPlayStack[20]
 
 PUB Start
+      
+    parameter := @sine
+    channelparam := (INITVAL << 8)
+    channelADSR := LONG[@instruments][0]
+    songchoice := SONGOFF
+    looping := 0  
+    play := 0
     
-  parameter := @sine
-  channelparam := (INITVAL << 8)
-  channelADSR := LONG[@instruments][0]
-  songchoice := SONGOFF
-  looping := 0  
-  play := 0
-  
-  
-  repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
-      oscRegister[oscindexer] := 0
-      oscRegister[oscindexer+1] := 0
-      oscRegister[oscindexer+2] := 0
-      oscRegister[oscindexer+3] := 0
-  oscindexer := 0
-  oscindexcounter := 0
-
-  cognew(@oscmodule, @parameter)    'start assembly cog
-  cognew(LoopingSongParser, @LoopingPlayStack)
+    
+    repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
+        oscRegister[oscindexer] := 0
+        oscRegister[oscindexer+1] := 0
+        oscRegister[oscindexer+2] := 0
+        oscRegister[oscindexer+3] := 0
+    oscindexer := 0
+    oscindexcounter := 0
+    
+    cognew(@oscmodule, @parameter)    'start assembly cog
+    cognew(LoopingSongParser, @LoopingPlayStack)
+    
 
 PUB SetADSR(attackvar, decayvar, sustainvar, releasevar)
-  channelADSR := (channelADSR & A_MASK) + (attackvar << A_OFFSET)
-  channelADSR := (channelADSR & D_MASK) + (decayvar << D_OFFSET)
-  channelADSR := (channelADSR & S_MASK) + (sustainvar << S_OFFSET)
-  channelADSR := (channelADSR & R_MASK) + (releasevar << R_OFFSET)
+
+    channelADSR := (channelADSR & A_MASK) + (attackvar << A_OFFSET)
+    channelADSR := (channelADSR & D_MASK) + (decayvar << D_OFFSET)
+    channelADSR := (channelADSR & S_MASK) + (sustainvar << S_OFFSET)
+    channelADSR := (channelADSR & R_MASK) + (releasevar << R_OFFSET)
   
 PUB SetWaveform(waveformvar, volumevar)
-  channelADSR := (channelADSR & W_MASK) + (waveformvar << W_OFFSET)
-  channelparam := (channelparam & $FFFF00FF) + (volumevar << 8)
+
+    channelADSR := (channelADSR & W_MASK) + (waveformvar << W_OFFSET)
+    channelparam := (channelparam & $FFFF00FF) + (volumevar << 8)
 
 PUB LoadInstr(instrnum)
-  channelADSR := LONG[@instruments][instrnum]
+
+    channelADSR := LONG[@instruments][instrnum]
   
 PUB PlaySound(channel, note)
-  if note < 128 and channel < VOICES
-     oscindexer := channel << 2
-     oscRegister[oscindexer] &= !KEYBITS          
-     oscRegister[oscindexer+1] &= !ADSRBITS
-     oscRegister[oscindexer] := note + KEYBITS
+
+    if note < 128 and channel < VOICES
+        oscindexer := channel << 2
+        oscRegister[oscindexer] &= !KEYBITS          
+        oscRegister[oscindexer+1] &= !ADSRBITS
+        oscRegister[oscindexer] := note + KEYBITS
 
 PUB StopSound(channel)
-  if channel < VOICES
-     oscindexer := channel << 2          
-     oscRegister[oscindexer] &= !KEYBITS 
+
+    if channel < VOICES
+        oscindexer := channel << 2          
+        oscRegister[oscindexer] &= !KEYBITS 
 
 PUB PlaySequence(songAddrvar)
-     seqcursor := 0
-     
-     repeat while byte[songAddrvar][seqcursor] <> ENDOFSONG
+    seqcursor := 0
+    
+    repeat while byte[songAddrvar][seqcursor] <> ENDOFSONG
         seqbyte := byte[songAddrvar][seqcursor]
         if seqbyte == TIMEWAIT
             repeatlong := byte[songAddrvar][seqcursor] << 13
             repeat repeatseqindex from 0 to repeatlong
             seqcursor += 2
-     
+        
         elseif seqbyte == NOTEON
             PlaySound(byte[songAddrvar][seqcursor+1],byte[songAddrvar][seqcursor+2])   
             seqcursor += 3
-     
+        
         elseif seqbyte == NOTEOFF
             StopSound(byte[songAddrvar][seqcursor+1])
             seqcursor += 2
 
-
 PUB LoadSong(songBarAddrvar)
 
-  barAddr := songBarAddrvar
-  totalbars := byte[songBarAddrvar][0]
-  repeatlong := byte[songBarAddrvar][1] << 8
-  loopsongPtr := barAddr + (totalbars-1)*(BARRESOLUTION)+2         
-
+    barAddr := songBarAddrvar
+    totalbars := byte[songBarAddrvar][0]
+    repeatlong := byte[songBarAddrvar][1] << 8
+    loopsongPtr := barAddr + (totalbars-1)*(BARRESOLUTION)+2         
 
 PUB PlaySong
-  play := 1
+
+    play := 1
 
 PUB StopSong
-  play := 0
-  StopAllSound
+
+    play := 0
+    StopAllSound
 
 PUB StopAllSound
-  repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
-     oscRegister[oscindexer] &= !KEYBITS 
+
+    repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
+        oscRegister[oscindexer] &= !KEYBITS 
+
 PRI LoopingSongParser
 
-repeat
+    repeat
 
-     if play == 1
-        songcursor := 0
-        barcursor := 0
-           
-        repeat while byte[loopsongPtr][songcursor] <> SONGOFF and play == 1  
-         
-           barcursor := songcursor
-         
-           repeat linecursor from 0 to constant(BARRESOLUTION-1)  
-         
-               songcursor := barcursor
+        if play == 1
+            songcursor := 0
+            barcursor := 0
                
-               barshift := 0
-               barinc := 0
-               repeat while barinc < byte[loopsongPtr][songcursor]
-                      barshift += constant(BARRESOLUTION+1)
-                      barinc++
-               
+            repeat while byte[loopsongPtr][songcursor] <> SONGOFF and play == 1  
+                
+                barcursor := songcursor
+                
+                repeat linecursor from 0 to constant(BARRESOLUTION-1)  
+                
+                    songcursor := barcursor
+                    
+                    barshift := 0
+                    barinc := 0
+                    repeat while barinc < byte[loopsongPtr][songcursor]
+                        barshift += constant(BARRESOLUTION+1)
+                        barinc++
+                    
 
-               repeat while byte[loopsongPtr][songcursor] <> BAROFF and play == 1  
-                  songbyte := byte[loopsongPtr][songcursor]
-                  
-                  if  byte[barAddr][barshift+2+1+linecursor] == SNOP
+                    repeat while byte[loopsongPtr][songcursor] <> BAROFF and play == 1  
+                        songbyte := byte[loopsongPtr][songcursor]
+                        
+                        if byte[barAddr][barshift+2+1+linecursor] == SNOP
 
-                  elseif byte[barAddr][barshift+2+1+linecursor] == SOFF
-                      StopSound( byte[barAddr][barshift+2] )       
-                  else
-                      PlaySound( byte[barAddr][barshift+2] , byte[barAddr][barshift+2+1+linecursor] )  'channel, note
+                        elseif byte[barAddr][barshift+2+1+linecursor] == SOFF
+                            StopSound( byte[barAddr][barshift+2] )       
+                        else
+                            PlaySound( byte[barAddr][barshift+2] , byte[barAddr][barshift+2+1+linecursor] )  'channel, note
 
-                      
-                  songcursor += 1
-                  repeat while barinc < byte[loopsongPtr][songcursor]
-                      barshift += constant(BARRESOLUTION+1)
-                      barinc++
-              
-               repeat repeatindex from 0 to repeatlong
-              
-           songcursor += 1
+                            
+                        songcursor += 1
+                        repeat while barinc < byte[loopsongPtr][songcursor]
+                            barshift += constant(BARRESOLUTION+1)
+                            barinc++
+                    
+                    repeat repeatindex from 0 to repeatlong
+                   
+                songcursor += 1
 
-        StopAllSound     
+            StopAllSound     
+
+
 
 DAT
 
-instruments
-'tubular bells
-long    (127 + (4 << D_OFFSET) + (80 << S_OFFSET) + (0 << R_OFFSET) + (3 << W_OFFSET))
-   
-'jarn harpsichord
-long    (127 + (41 << D_OFFSET) + (60 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
+    instruments
+    'tubular bells
+    long    (127 + (4 << D_OFFSET) + (80 << S_OFFSET) + (0 << R_OFFSET) + (3 << W_OFFSET))
+       
+    'jarn harpsichord
+    long    (127 + (41 << D_OFFSET) + (60 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
 
-'super square
-long    (10 + (127 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (1 << W_OFFSET))
+    'super square
+    long    (10 + (127 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (1 << W_OFFSET))
 
-'attack but no release....
-long    (127 + (12 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
+    'attack but no release....
+    long    (127 + (12 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
 
-'POWER
-long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
+    'POWER
+    long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
 
-'accordion
-long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (64 << R_OFFSET) + (5 << W_OFFSET))
-
-
+    'accordion
+    long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (64 << R_OFFSET) + (5 << W_OFFSET))
 
 
 
-'quarter sine table
-sine 
-byte    0,1,3,4,6,7,9,10,12,13,15,17,18,20,21,23
-byte    24,26,27,29,30,32,33,35,36,38,39,41,42,44,45,47
-byte    48,50,51,52,54,55,57,58,59,61,62,63,65,66,67,69
-byte    70,71,73,74,75,76,78,79,80,81,82,84,85,86,87,88
-byte    89,90,91,93,94,95,96,97,98,99,100,101,102,102,103,104
-byte    105,106,107,108,108,109,110,111,112,112,113,114,114,115,116,116
-byte    117,117,118,119,119,120,120,121,121,121,122,122,123,123,123,124
-byte    124,124,125,125,125,125,126,126,126,126,126,126,126,126,126,126
+
+
+    'quarter sine table
+    sine 
+    byte    0,1,3,4,6,7,9,10,12,13,15,17,18,20,21,23
+    byte    24,26,27,29,30,32,33,35,36,38,39,41,42,44,45,47
+    byte    48,50,51,52,54,55,57,58,59,61,62,63,65,66,67,69
+    byte    70,71,73,74,75,76,78,79,80,81,82,84,85,86,87,88
+    byte    89,90,91,93,94,95,96,97,98,99,100,101,102,102,103,104
+    byte    105,106,107,108,108,109,110,111,112,112,113,114,114,115,116,116
+    byte    117,117,118,119,119,120,120,121,121,121,122,122,123,123,123,124
+    byte    124,124,125,125,125,125,126,126,126,126,126,126,126,126,126,126
 
 
 
-freqTable
-long    1071, 1135, 1202, 1274, 1350, 1430, 1515, 1605
-long    1700, 1802, 1909, 2022, 2143, 2270, 2405, 2548
-long    2700, 2860, 3030, 3210, 3401, 3604, 3818, 4045
-long    4286, 4540, 4810, 5097, 5400, 5721, 6061, 6421
-long    6803, 7208, 7636, 8090, 8572, 9081, 9621, 10194
-long    10800, 11442, 12122, 12843, 13607, 14416, 15273, 16181
-long    17144, 18163, 19243, 20388, 21600, 22884, 24245, 25687
-long    27214, 28833, 30547, 32363, 34288, 36327, 38487, 40776
-long    43200, 45769, 48491, 51374, 54429, 57666, 61095, 64727
-long    68576, 72654, 76974, 81552, 86401, 91539, 96982, 102749
-long    108859, 115332, 122190, 129455, 137153, 145309, 153949, 163104
-long    172802, 183078, 193964, 205498, 217718, 230664, 244380, 258911
-long    274307, 290618, 307899, 326208, 345605, 366156, 387929, 410996
-long    435436, 461328, 488760, 517823, 548614, 581237, 615799, 652416
-long    691211, 732313, 775858, 821993, 870872, 922656, 977520, 1035647
-long    1097229, 1162474, 1231598, 1304833, 1382423, 1464626, 1551717, 1643987
-
-
+    freqTable
+    long    1071, 1135, 1202, 1274, 1350, 1430, 1515, 1605
+    long    1700, 1802, 1909, 2022, 2143, 2270, 2405, 2548
+    long    2700, 2860, 3030, 3210, 3401, 3604, 3818, 4045
+    long    4286, 4540, 4810, 5097, 5400, 5721, 6061, 6421
+    long    6803, 7208, 7636, 8090, 8572, 9081, 9621, 10194
+    long    10800, 11442, 12122, 12843, 13607, 14416, 15273, 16181
+    long    17144, 18163, 19243, 20388, 21600, 22884, 24245, 25687
+    long    27214, 28833, 30547, 32363, 34288, 36327, 38487, 40776
+    long    43200, 45769, 48491, 51374, 54429, 57666, 61095, 64727
+    long    68576, 72654, 76974, 81552, 86401, 91539, 96982, 102749
+    long    108859, 115332, 122190, 129455, 137153, 145309, 153949, 163104
+    long    172802, 183078, 193964, 205498, 217718, 230664, 244380, 258911
+    long    274307, 290618, 307899, 326208, 345605, 366156, 387929, 410996
+    long    435436, 461328, 488760, 517823, 548614, 581237, 615799, 652416
+    long    691211, 732313, 775858, 821993, 870872, 922656, 977520, 1035647
+    long    1097229, 1162474, 1231598, 1304833, 1382423, 1464626, 1551717, 1643987
 
 
 

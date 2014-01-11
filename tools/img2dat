@@ -134,12 +134,12 @@ else:
                         output_im.putpixel((x,y), (23,43,66))
 
 
-                if bytecount % 16 == 0:
+                if bytecount % framesize[0] == 0:
                     output_txt.write("byte\t")
                 output_txt.write("$%X" % (colorchar & 0xFF))
                 output_txt.write(", ")
                 output_txt.write("$%X" % (colorchar >> 8))
-                if not bytecount % 16 == 15:
+                if not bytecount % framesize[0] == framesize[0]-1:
                     output_txt.write(", ")
                 else:
                     output_txt.write("\n")
