@@ -11,183 +11,183 @@ Authors: Brett Weir
 
 
 CON
-  _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
-  _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
-                        
-  SCREEN_BW = 16   
-  SCREEN_BH = 8
+    _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
+    _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
+                          
+    SCREEN_BW = 16   
+    SCREEN_BH = 8
+    
+    SW1 = 1 << 24
+    SW2 = 1 << 25
+    SW3 = 1 << 26
+    
+    J_U = 1 << 12
+    J_D = 1 << 13
+    J_R = 1 << 14
+    J_L = 1 << 15
+    
+    DIR_U = 2
+    DIR_D = 3
+    DIR_L = 0
+    DIR_R = 1
+    
+    NL = 10
+    TANKS = 2   'must be power of 2
+    TANKSMASK = TANKS-1
+    
+    TANKTYPES = 5 'must be power of 2
+    TANKTYPESMASK = TANKTYPES-1
+    
+    TANKHEALTHMAX = 10
+    
+    BULLETS = 20
+    BULLETSMASK = BULLETS-1
+    
+    BULLETINGSPEED = 2
+    
+    XOFFSET1 = 16
+    YOFFSET1 = 20
+    
+    COLLIDEBIT = $80
+    TILEBYTE = COLLIDEBIT-1
+    
+    LEVELS = 1
+    LEVELSMASK = LEVELS-1
+    
+    GO_GAME = 1
+    GO_MENU = 2
+    
+    PAUSEMENU1_CHOICES = 3
+    
+    WIFI_RX = 22
+    WIFI_TX = 23
+    
+    UPDATETANKX = 1
+    UPDATETANKY = 2
+    UPDATETANKDIR = 3
+    UPDATEBULLETSPAWN = 4
+    
+    'CONTROLS LIFE AND DEATH
+    UPDATETANKSPAWN = 5
+    UPDATETANKDIED = 6
+    UPDATESCORE = 7
+    UPDATEADVANCE = 8
+    UPDATEORDER = 9
+    UPDATETYPE = 10
+    UPDATELEVEL = 11
+    
+    
+    'DECIDES WHO CLICKED TO INITIALIZE THE GAME
+    'if this message is sent, you start in starting location 1.
+    'if it's received by an opponent, you start in location 2.
+    'UPDATEADVANCE = 10
 
-  SW1 = 1 << 24
-  SW2 = 1 << 25
-  SW3 = 1 << 26
 
-  J_U = 1 << 12
-  J_D = 1 << 13
-  J_R = 1 << 14
-  J_L = 1 << 15
-
-  DIR_U = 2
-  DIR_D = 3
-  DIR_L = 0
-  DIR_R = 1
-
-  NL = 10
-  TANKS = 2   'must be power of 2
-  TANKSMASK = TANKS-1
-
-  TANKTYPES = 5 'must be power of 2
-  TANKTYPESMASK = TANKTYPES-1
-
-  TANKHEALTHMAX = 10
-
-  BULLETS = 20
-  BULLETSMASK = BULLETS-1
-
-  BULLETINGSPEED = 2
-
-  XOFFSET1 = 16
-  YOFFSET1 = 20
-
-  COLLIDEBIT = $80
-  TILEBYTE = COLLIDEBIT-1
-
-  LEVELS = 1
-  LEVELSMASK = LEVELS-1
-
-  GO_GAME = 1
-  GO_MENU = 2
-
-  PAUSEMENU1_CHOICES = 3
-
-  WIFI_RX = 22
-  WIFI_TX = 23
-
-  UPDATETANKX = 1
-  UPDATETANKY = 2
-  UPDATETANKDIR = 3
-  UPDATEBULLETSPAWN = 4
-
-  'CONTROLS LIFE AND DEATH
-  UPDATETANKSPAWN = 5
-  UPDATETANKDIED = 6
-  UPDATESCORE = 7
-  UPDATEADVANCE = 8
-  UPDATEORDER = 9
-  UPDATETYPE = 10
-  UPDATELEVEL = 11
-  
-
-  'DECIDES WHO CLICKED TO INITIALIZE THE GAME
-  'if this message is sent, you start in starting location 1.
-  'if it's received by an opponent, you start in location 2.
- ' UPDATEADVANCE = 10
-
-
-'SONG PLAYER
-        ENDOFSONG = 0
-        TIMEWAIT = 1
-        NOTEON = 2
-        NOTEOFF = 3
-        
-        SONGS = 2
-        SONGOFF = 255
-        BAROFF = 254
-        SNOP = 253
-        SOFF = 252
-        
-        BARRESOLUTION = 8
-        MAXBARS = 18
+    'SONG PLAYER
+    ENDOFSONG = 0
+    TIMEWAIT = 1
+    NOTEON = 2
+    NOTEOFF = 3
+    
+    SONGS = 2
+    SONGOFF = 255
+    BAROFF = 254
+    SNOP = 253
+    SOFF = 252
+    
+    BARRESOLUTION = 8
+    MAXBARS = 18
         
 
 OBJ
-        gfx    :               "lame_graphics"
-        audio   :               "lame_audio_synth"
-        pst     :               "lame_serial"
+    gfx     :               "LameGFX"
+    audio   :               "LameAudio"
+    pst     :               "LameSerial"
 
 VAR
 
-byte    levelw
-byte    levelh
-byte    currentlevel
-word    leveldata[LEVELS]
-word    levelname[LEVELS]
-word    tilemap
-byte    levelstarts[LEVELS*TANKS]
+    byte    levelw
+    byte    levelh
+    byte    currentlevel
+    word    leveldata[LEVELS]
+    word    levelname[LEVELS]
+    word    tilemap
+    byte    levelstarts[LEVELS*TANKS]
 
-long    x
-long    y    
-long    tile
-long    tilecnt
-long    tilecnttemp
-
-
-long    controls
-
-long    xoffset
-long    yoffset
-
-long    tankgfx[TANKS]
-long    tankx[TANKS]
-long    tanky[TANKS]
-long    tankoldx
-long    tankoldy
-byte    tankolddir
-byte    tankstartx[TANKS]
-byte    tankstarty[TANKS]
-
-byte    tankw[TANKS]
-byte    tankh[TANKS]
-byte    tankdir[TANKS]
-byte    tankhealth[TANKS]
-byte    tankon[TANKS]
-
-long    tankxtemp
-long    tankytemp
-byte    tankwtemp
-byte    tankhtemp
-
-long    tanktypegfx[TANKTYPES]
-word    tanktypename[TANKTYPES]
-
-byte    score[TANKS]
-byte    oldscore
-
-word    bullet
-long    bulletx[BULLETS]
-long    bullety[BULLETS]
-byte    bulletspeed[BULLETS]
-byte    bulletdir[BULLETS]
-byte    bulleton[BULLETS]
-
-long    bulletxtemp
-long    bulletytemp
-
-long    bacon
-
-byte    collided
-byte    yourtank
-byte    theirtank
-byte    yourtype
-byte    oldtype
-byte    theirtype
-byte    tankindex
-byte    levelindex
-word    bulletindex
-
-byte    choice
-byte    menuchoice
-byte    clicked           
-byte    joyclicked
-
-byte    intarray[3]
+    long    x
+    long    y    
+    long    tile
+    long    tilecnt
+    long    tilecnttemp
 
 
-'WIFI HANDLING VARIABLES
-byte    receivebyte
-byte    bulletspawned
-byte    tankspawned
-byte    respawnindex
-byte    respawnindexsaved
+    long    controls
+
+    long    xoffset
+    long    yoffset
+
+    long    tankgfx[TANKS]
+    long    tankx[TANKS]
+    long    tanky[TANKS]
+    long    tankoldx
+    long    tankoldy
+    byte    tankolddir
+    byte    tankstartx[TANKS]
+    byte    tankstarty[TANKS]
+
+    byte    tankw[TANKS]
+    byte    tankh[TANKS]
+    byte    tankdir[TANKS]
+    byte    tankhealth[TANKS]
+    byte    tankon[TANKS]
+
+    long    tankxtemp
+    long    tankytemp
+    byte    tankwtemp
+    byte    tankhtemp
+
+    long    tanktypegfx[TANKTYPES]
+    word    tanktypename[TANKTYPES]
+
+    byte    score[TANKS]
+    byte    oldscore
+
+    word    bullet
+    long    bulletx[BULLETS]
+    long    bullety[BULLETS]
+    byte    bulletspeed[BULLETS]
+    byte    bulletdir[BULLETS]
+    byte    bulleton[BULLETS]
+
+    long    bulletxtemp
+    long    bulletytemp
+
+    long    bacon
+
+    byte    collided
+    byte    yourtank
+    byte    theirtank
+    byte    yourtype
+    byte    oldtype
+    byte    theirtype
+    byte    tankindex
+    byte    levelindex
+    word    bulletindex
+
+    byte    choice
+    byte    menuchoice
+    byte    clicked           
+    byte    joyclicked
+
+    byte    intarray[3]
+
+
+    'WIFI HANDLING VARIABLES
+    byte    receivebyte
+    byte    bulletspawned
+    byte    tankspawned
+    byte    respawnindex
+    byte    respawnindexsaved
 
 PUB Main
 

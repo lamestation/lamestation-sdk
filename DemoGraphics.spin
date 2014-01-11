@@ -19,8 +19,8 @@ CON
   SPACEBAR = 32
 
 OBJ
-        gfx    :                "lame_graphics" 
-        pst     :               "lame_serial"
+        gfx     :               "LameGFX" 
+        pst     :               "LameSerial"
 
 
 VAR

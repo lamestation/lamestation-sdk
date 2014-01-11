@@ -28,8 +28,8 @@ CON
   SPACEBAR = 32
 
 OBJ
-        lcd     :               "lame_lcd"
-        gfx    :               "lame_graphics" 
+        lcd     :               "LameLCD"
+        gfx     :               "LameGFX" 
 
 VAR
 

@@ -51,7 +51,7 @@ CON
 
 OBJ
 
-    lcd     :               "lame_lcd"
+    lcd     :               "LameLCD"
 
 
 VAR
