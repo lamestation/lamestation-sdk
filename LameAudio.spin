@@ -243,6 +243,9 @@ PUB LoadSong(songBarAddrvar)
     totalbars := byte[songBarAddrvar][0]
     repeatlong := byte[songBarAddrvar][1] << 8
     loopsongPtr := barAddr + (totalbars-1)*(BARRESOLUTION)+2         
+    
+    songcursor := 0
+    barcursor := 0
 
 PUB PlaySong
 
