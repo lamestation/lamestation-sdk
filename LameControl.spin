@@ -49,6 +49,9 @@ PUB A
     
 PUB B
     return controls & SW3
+    
+PUB Any
+    return controls & (SW1+SW2+SW3)
 
 PUB Left
     return controls & J_L    
@@ -61,3 +64,5 @@ PUB Up
 
 PUB Down
     return controls & J_D
+
+
