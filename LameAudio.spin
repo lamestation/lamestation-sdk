@@ -77,6 +77,7 @@ CON
     SOFF = 252 
 
     BARRESOLUTION = 8
+    BYTES_SONGHEADER = 3
 
 
     '0 timestamp     amount (shift by 12)
@@ -155,6 +156,7 @@ VAR
     byte    barinc   
     byte    totalbars
     byte    play
+    byte    barres
 
     word    barAddr
 
@@ -242,6 +244,7 @@ PUB LoadSong(songBarAddrvar)
     barAddr := songBarAddrvar
     totalbars := byte[songBarAddrvar][0]
     repeatlong := byte[songBarAddrvar][1] << 8
+    barres := byte[songBarAddrvar][2]
     loopsongPtr := barAddr + (totalbars-1)*(BARRESOLUTION)+2         
     
     songcursor := 0
@@ -287,12 +290,12 @@ PRI LoopingSongParser
                     repeat while byte[loopsongPtr][songcursor] <> BAROFF and play == 1  
                         songbyte := byte[loopsongPtr][songcursor]
                         
-                        if byte[barAddr][barshift+2+1+linecursor] == SNOP
+                        if byte[barAddr][barshift+BYTES_SONGHEADER+1+linecursor] == SNOP
 
-                        elseif byte[barAddr][barshift+2+1+linecursor] == SOFF
-                            StopSound( byte[barAddr][barshift+2] )       
+                        elseif byte[barAddr][barshift+BYTES_SONGHEADER+1+linecursor] == SOFF
+                            StopSound( byte[barAddr][barshift+BYTES_SONGHEADER] )       
                         else
-                            PlaySound( byte[barAddr][barshift+2] , byte[barAddr][barshift+2+1+linecursor] )  'channel, note
+                            PlaySound( byte[barAddr][barshift+BYTES_SONGHEADER] , byte[barAddr][barshift+BYTES_SONGHEADER+1+linecursor] )  'channel, note
 
                             
                         songcursor += 1
