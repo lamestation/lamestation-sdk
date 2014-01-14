@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="100" height="8" tilewidth="8" tileheight="8">
+ <tileset firstgid="1" name="tiles_2b_tuxor" tilewidth="8" tileheight="8">
+  <image source="../../tilemaps/tiles_2b_tuxor.png" trans="ff00ff" width="64" height="32"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="100" height="8">
+  <data encoding="base64" compression="zlib">
+   eJzVlVsPwiAMhRlD5xZ90kX//y9VkpGcYEtbGF4evuxCydpzaDc650YGn93nDJVcG/YiVE5auJq5+vEd5nB78YD1sNXnK59Lepfyb/FE8iMA3/KDiqNq7uGH5cxwHnKaLQU4jVOeiQODNd+a2kq9EVk7+LFX7pp+uWzfPxf8wNwCA/rCxUhIvU+d2TzX2B/3H/PDOsNwXi3E1cLg3vtG8mECON2p2qhzs/e8mgFOZ8ts8Jles+AHtZZqpe6l/qL8SSQdj4Dmn5KfM4zt6YcGjSeoN+5t9UOzP8ZOAuiHFPtprH60UNJT0l3rB8fpT3gCdM0PEg==
+  </data>
+ </layer>
+</map>
