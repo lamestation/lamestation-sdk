@@ -403,9 +403,9 @@ PUB TextBox(teststring, boxx, boxy)
         stringcursor++     
           
            
-    repeat while screencursor < SCREEN_W - (boxx << 4)
-        word[temp3][screencursor] := 0
-        screencursor++        
+'    repeat while screencursor < SCREEN_W - (boxx << 4)
+'        word[temp3][screencursor] := 0
+'        screencursor++        
          
 
     lockclr(SCREENLOCK)
