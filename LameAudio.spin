@@ -78,7 +78,7 @@ CON
 
     BARRESOLUTION = 8
     BYTES_SONGHEADER = 3
-
+    BYTES_BARHEADER = 1
 
     '0 timestamp     amount (shift by 12)
     '1 note on    note  channel
@@ -141,14 +141,14 @@ VAR
     byte    instrumentbyte
 
     long    songcursor
+    long    barcursor
     long    seqcursor
     byte    seqbyte 
     byte    songbyte
     long    repeatlong
     long    repeatindex
     long    repeatseqindex
-    long    songAddr
-    long    loopsongPtr
+    word    loopsongPtr     '' This value points to the first address of the song definition in a song
 
     byte    songchoice
     byte    looping
@@ -157,15 +157,12 @@ VAR
     byte    totalbars
     byte    play
     byte    barres
+    word    bartmp
 
     word    barAddr
 
-    long    barcursor
-    long    barshift
-    long    songlinecursor
-    long    linecursor
-    long    songbyteshift
-    long    loopptrshift
+    word    barshift
+    byte    linecursor
 
     long    LoopingPlayStack[20]
 
@@ -221,6 +218,11 @@ PUB StopSound(channel)
         oscindexer := channel << 2          
         oscRegister[oscindexer] &= !KEYBITS 
 
+PUB StopAllSound
+
+    repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
+        oscRegister[oscindexer] &= !KEYBITS 
+
 PUB PlaySequence(songAddrvar)
     seqcursor := 0
     
@@ -245,7 +247,7 @@ PUB LoadSong(songBarAddrvar)
     totalbars := byte[songBarAddrvar][0]
     repeatlong := byte[songBarAddrvar][1] << 8
     barres := byte[songBarAddrvar][2]
-    loopsongPtr := barAddr + (totalbars-1)*(BARRESOLUTION)+2         
+    loopsongPtr := barAddr + totalbars*(barres+BYTES_BARHEADER) + BYTES_SONGHEADER        
     
     songcursor := 0
     barcursor := 0
@@ -258,11 +260,17 @@ PUB StopSong
 
     play := 0
     StopAllSound
+        
+PRI FindLoopBarFromSongPointer
+'' This function increments the loop pointer by
+'' the value of the song pointr
 
-PUB StopAllSound
+    barinc := 0
+    barshift := 0
+    repeat while barinc < byte[loopsongPtr][songcursor]
+        barshift += barres+BYTES_BARHEADER
+        barinc++
 
-    repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
-        oscRegister[oscindexer] &= !KEYBITS 
 
 PRI LoopingSongParser
 
@@ -270,45 +278,40 @@ PRI LoopingSongParser
 
         if play == 1
             songcursor := 0
-            barcursor := 0
                
+            ' iterate through song definition lines
             repeat while byte[loopsongPtr][songcursor] <> SONGOFF and play == 1  
                 
                 barcursor := songcursor
                 
-                repeat linecursor from 0 to constant(BARRESOLUTION-1)  
+                
+                ' iterate through loop definitions
+                repeat linecursor from 0 to (barres-1)
                 
                     songcursor := barcursor
-                    
-                    barshift := 0
-                    barinc := 0
-                    repeat while barinc < byte[loopsongPtr][songcursor]
-                        barshift += constant(BARRESOLUTION+1)
-                        barinc++
-                    
 
+                    ' play all notes defined in song definition
                     repeat while byte[loopsongPtr][songcursor] <> BAROFF and play == 1  
-                        songbyte := byte[loopsongPtr][songcursor]
+                        FindLoopBarFromSongPointer 
                         
-                        if byte[barAddr][barshift+BYTES_SONGHEADER+1+linecursor] == SNOP
+                        bartmp := barshift+BYTES_SONGHEADER+BYTES_BARHEADER+linecursor
+                        
+                        if byte[barAddr][bartmp] == SNOP
 
-                        elseif byte[barAddr][barshift+BYTES_SONGHEADER+1+linecursor] == SOFF
+                        elseif byte[barAddr][bartmp] == SOFF
                             StopSound( byte[barAddr][barshift+BYTES_SONGHEADER] )       
+                            
                         else
-                            PlaySound( byte[barAddr][barshift+BYTES_SONGHEADER] , byte[barAddr][barshift+BYTES_SONGHEADER+1+linecursor] )  'channel, note
+                            PlaySound( byte[barAddr][barshift+BYTES_SONGHEADER] , byte[barAddr][bartmp] )  'channel, note
 
                             
                         songcursor += 1
-                        repeat while barinc < byte[loopsongPtr][songcursor]
-                            barshift += constant(BARRESOLUTION+1)
-                            barinc++
                     
                     repeat repeatindex from 0 to repeatlong
                    
                 songcursor += 1
 
-            StopAllSound     
-
+            StopAllSound
 
 
 DAT
