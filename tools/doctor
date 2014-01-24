@@ -14,7 +14,11 @@ parser = argparse.ArgumentParser(description='Generate Confluence API listing fr
 parser.add_argument('-u','--url', nargs=1, metavar='URL', help='Confluence XMLRPC server URL')
 parser.add_argument('-s','--space', nargs=1, metavar='SPACE', help='Destination Confluence space')
 parser.add_argument('-p','--parent', nargs=1, metavar='PARENT', help='Parent page for API definition')
-parser.add_argument('-d','--dry-run', action='store_true', help='Do not upload; just show storage format')
+
+parser.add_argument('--dry-run', action='store_true', help='Do not upload; just show storage format')
+parser.add_argument('--log', action='store_true', help='Save a copy of the storage format output')
+parser.add_argument('--debug', action='store_true', help='Print storage format output to screen')
+
 parser.add_argument('filenames', metavar='FILE', nargs='+', help='Spin files to extract API from')
 
 args = parser.parse_args()
@@ -30,25 +34,28 @@ if not filenames:
     print "No valid files selected"
 else:
 
-    proxy = xmlrpclib.ServerProxy(args.url[0])
 
-    user = raw_input("Enter Confluence username: ")
-    passwd = getpass.getpass("Enter Confluence password: ")
-    token = proxy.confluence2.login(user,passwd)
+    if not args.dry_run:
+        proxy = xmlrpclib.ServerProxy(args.url[0])
 
-    space = proxy.confluence2.getSpace(token,args.space[0])
-    parent = args.parent[0]
+        user = raw_input("Enter Confluence username: ")
+        passwd = getpass.getpass("Enter Confluence password: ")
+        token = proxy.confluence2.login(user,passwd)
 
-    # Create parent page to add API pages under
-    try:
-        parentpage = proxy.confluence2.getPage(token,space['key'],parent)
-    except xmlrpclib.Fault as err:
-        parentpage = {}
-        parentpage['space'] = space['key']
-        parentpage['parentId'] = space['homePage']
-        parentpage['title'] = parent
-        
-    parentpage = proxy.confluence2.storePage(token,parentpage)
+        space = proxy.confluence2.getSpace(token,args.space[0])
+        parent = args.parent[0]
+
+        # Create parent page to add API pages under
+        try:
+            parentpage = proxy.confluence2.getPage(token,space['key'],parent)
+        except xmlrpclib.Fault as err:
+            parentpage = {}
+            parentpage['space'] = space['key']
+            parentpage['parentId'] = space['homePage']
+            parentpage['title'] = parent
+            
+        parentpage = proxy.confluence2.storePage(token,parentpage)
+
 
     for filename in filenames:
         print filename
@@ -86,11 +93,22 @@ else:
                 content[label] += "\n<h4>"+title+"</h4>"
 
                 # Comments will be parsed in markdown for fancier output
-                markdownblock = re.findall("\n\'\'.*",fullblock)
+                markdownblock = re.findall("\n.*\'\'.*",fullblock)
                 markdownblock = ''.join(markdownblock)
-                markdownblock = re.sub("\n\'\'[ \t]*","\n",markdownblock)
+                markdownblock = re.sub("\n.*\'\'[ ]?","\n",markdownblock)
+
                 
                 content[label] += "\n"+markdown.markdown(markdownblock)
+
+                # Weird confluence XHTML has to come after markdown
+                # Change pre tags to confluence stuff
+                content[label]= re.sub('<pre>(.*?)</pre>',\
+                        '<ac:structured-macro ac:name="code"><ac:plain-text-body><![CDATA[ \g<1> ]]></ac:plain-text-body></ac:structured-macro>',\
+                        content[label],flags=re.S)
+
+                content[label]= re.sub('<code>(.*?)</code>',\
+                        '<ac:structured-macro ac:name="code"><ac:plain-text-body><![CDATA[ \g<1> ]]></ac:plain-text-body></ac:structured-macro>',\
+                        content[label],flags=re.S)
 
                 # Add code excerpts for reference
                 content[label] += '<ac:structured-macro ac:name="code"><ac:parameter ac:name="collapse">true</ac:parameter><ac:plain-text-body><![CDATA['
@@ -120,10 +138,15 @@ else:
         <p><ac:structured-macro ac:name="toc" /></p></ac:rich-text-body></ac:structured-macro>""" + finalcontent
 
 
-        if args.dry_run:
+        if args.debug:
             print finalcontent
-        else:
 
+        if args.log:
+            newfile = open('doctor.log','w')
+            newfile.write(finalcontent)
+            newfile.close()
+
+        if not args.dry_run:
             # Try to upload page; if it doesn't exist, create it.
             try:
                 page = proxy.confluence2.getPage(token,space['key'],filename)
@@ -138,4 +161,5 @@ else:
 
             proxy.confluence2.storePage(token,page)
 
-    proxy.confluence2.logout(token)
+    if not args.dry_run:
+        proxy.confluence2.logout(token)
