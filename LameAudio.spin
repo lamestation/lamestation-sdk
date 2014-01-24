@@ -260,6 +260,10 @@ PUB StopSong
 
     play := 0
     StopAllSound
+    
+PUB SongPlaying
+'' This function returns whether a song is currently playing
+    return play
         
 PRI FindLoopBarFromSongPointer
 '' This function increments the loop pointer by
