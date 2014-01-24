@@ -48,6 +48,33 @@ CON
 
 
     SCREENLOCK = 0
+    
+    
+'' This table 
+'' 
+'' +------+-------+------+-------------+
+'' | Flip | Color | Mask | Color       |
+'' +------+-------+------+-------------+
+'' |   0  |   0   |   0  | Black       |
+'' +------+-------+------+-------------+
+'' |   0  |   1   |   0  | White       |
+'' +------+-------+------+-------------+
+'' |   1  |   0   |   1  | Transparent |
+'' +------+-------+------+-------------+
+'' |   1  |   1   |   0  | Black       |
+'' +------+-------+------+-------------+
+''
+'' This operation is equivalent to `Mask = Flip & !Color`.
+''
+'' The color constant definitions here correspond to this.
+''    
+    BLACK = 0
+    WHITE = 1
+    TRANSPARENT = 2
+    GRAY = 3
+    
+    
+    
 
 OBJ
 
@@ -124,7 +151,7 @@ PUB Start
     
     lcd.Start(@screen)
     
-    return @outputlong
+    return @screen
 
 PUB SwitchFrame
 '' Lame LCD, when initialized, sets up a double-buffered drawing surface
@@ -410,7 +437,151 @@ PUB TextBox(teststring, boxx, boxy)
 
     lockclr(SCREENLOCK)
 
+
+
 DAT
+                        org
+
+graphicsdriver          mov     Addr, par
+
+                        mov     instruct1Addr, Addr    'get first instruction long   
+                        add     Addr, #4
+
+                        mov     instruct2Addr, Addr    'get second instruction long       
+                        add     Addr, #4                         
+
+                        mov     outputAddr, Addr       'get output long              
+                        add     Addr, #4
+
+                        mov     frmpointAddr, Addr
+                        rdlong  frmpoint, frmpointAddr 'get frame pointer long 
+                        add     Addr, #4
+ 
+                        mov     destscrnAddr, Addr     'get destscreen long
+                        rdlong  destscrn, destscrnAddr
+                        add     Addr, #4
+
+                        mov     sourceAddr, Addr       'get sourceaddr long
+
+'START MAIN LOOP                       
+loopytime               rdlong  instruct1, instruct1Addr
+
+                        cmp     instruct1, #0   wz
+if_z                    jmp     #loopexit
+
+
+
+
+                        rdlong  frm, frmpoint
+                        cmp     frm, #0         wz
+if_z                    mov     frmflipcurrent, frmflip1
+if_nz                   mov     frmflipcurrent, #0
+
+
+' Decide which command to execute next
+                         
+                        cmp     instruct1, #1   wz      'CLEARSCREEN
+if_z                    jmp     #clearscreen1
+                        cmp     instruct1, #2   wz      'BLITSCREEN
+if_z                    jmp     #blitscreen1
+                        cmp     instruct1, #3   wz      'SPRITE
+if_z                    jmp     #sprite1
+                        cmp     instruct1, #4   wz      'BOX
+if_z                    jmp     #box1
+
+
+
+
+
+'CLEAR THE SCREEN
+'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+ '   word[destscreen][imgpointer+frmflip] := 0
+
+clearscreen1            mov     Addrtemp, destscrn
+                        mov     valutemp, fulscreen
+       
+:loop                   mov     datatemp, Addrtemp
+                        add     datatemp, frmflipcurrent
+                        wrword  zero, datatemp
+                        add     Addrtemp, #2
+                        djnz    valutemp, #:loop
+                        jmp     #loopexit
+
+
+'BLIT FULL SCREEN
+'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+ '   word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
+
+blitscreen1             mov     Addrtemp, destscrn
+                        rdlong  Addrtemp2, sourceAddr
+                        mov     valutemp, fulscreen
+       
+:loop                   mov     datatemp, Addrtemp
+                        add     datatemp, frmflipcurrent
+           
+                        rdword  datatemp2, Addrtemp2
+
+                        wrword  datatemp2, datatemp
+                        add     Addrtemp, #2
+                        add     Addrtemp2, #2
+                        djnz    valutemp, #:loop
+                        jmp     #loopexit
+
+
+
+sprite1
+
+
+
+box1
+
+                        
+loopexit                wrlong  sourceAddr, outputAddr
+                        wrlong  zero, instruct2Addr
+
+                        jmp     #loopytime
+
+
+
+                        
+Addr                    long    0
+Addrtemp                long    0
+Addrtemp2               long    0
+instruct1Addr           long    0
+instruct2Addr           long    0
+outputAddr              long    0      
+frmpointAddr            long    0
+destscrnAddr            long    0
+
+instruct1               long    0
+instruct2               long    0
+frmpoint                long    0
+destscrn                long    0
+
+frm                     long    0
+frmflipcurrent          long    0
+frmflip1                long    FRAMEFLIP*2
+fulscreen               long    SCREENSIZEB/BITSPERPIXEL/FRAMES
+valutemp                long    0
+datatemp                long    0
+datatemp2               long    0
+zero                    long    0
+trueth                  long    $FF
+
+'sourceaddr              long    2260
+sourceAddr              long    0
+                      
+
+                        fit 496     
+
+
+
+
+
+
+DAT
+
+
 
 asciitable
 
@@ -514,141 +685,6 @@ byte    $32, $2A, $2A, $26, $0, $0
 
 
 
-
-
-
-DAT
-                        org
-
-graphicsdriver          mov     Addr, par
-
-                        mov     instruct1Addr, Addr    'get first instruction long   
-                        add     Addr, #4
-
-                        mov     instruct2Addr, Addr    'get second instruction long       
-                        add     Addr, #4                         
-
-                        mov     outputAddr, Addr       'get output long              
-                        add     Addr, #4
-
-                        mov     frmpointAddr, Addr
-                        rdlong  frmpoint, frmpointAddr 'get frame pointer long 
-                        add     Addr, #4
- 
-                        mov     destscrnAddr, Addr     'get destscreen long
-                        rdlong  destscrn, destscrnAddr
-                        add     Addr, #4
-
-                        mov     sourceAddr, Addr       'get sourceaddr long
-
-'START MAIN LOOP                       
-loopytime               rdlong  instruct1, instruct1Addr
-
-                        cmp     instruct1, #0   wz
-if_z                    jmp     #loopexit
-
-
-
-
-                        rdlong  frm, frmpoint
-                        cmp     frm, #0         wz
-if_z                    mov     frmflipcurrent, frmflip1
-if_nz                   mov     frmflipcurrent, #0
-
-                         
-                        cmp     instruct1, #1   wz      'CLEARSCREEN
-if_z                    jmp     #clearscreen1
-                        cmp     instruct1, #2   wz      'BLITSCREEN
-if_z                    jmp     #blitscreen1
-                        cmp     instruct1, #3   wz      'SPRITE
-if_z                    jmp     #sprite1
-                        cmp     instruct1, #4   wz      'BOX
-if_z                    jmp     #box1
-
-
-
-
-
-'CLEAR THE SCREEN
-'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[destscreen][imgpointer+frmflip] := 0
-
-clearscreen1            mov     Addrtemp, destscrn
-                        mov     valutemp, fulscreen
-       
-:loop                   mov     datatemp, Addrtemp
-                        add     datatemp, frmflipcurrent
-                        wrword  zero, datatemp
-                        add     Addrtemp, #2
-                        djnz    valutemp, #:loop
-                        jmp     #loopexit
-
-
-'BLIT FULL SCREEN
-'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
-
-blitscreen1             mov     Addrtemp, destscrn
-                        rdlong  Addrtemp2, sourceAddr
-                        mov     valutemp, fulscreen
-       
-:loop                   mov     datatemp, Addrtemp
-                        add     datatemp, frmflipcurrent
-           
-                        rdword  datatemp2, Addrtemp2
-
-                        wrword  datatemp2, datatemp
-                        add     Addrtemp, #2
-                        add     Addrtemp2, #2
-                        djnz    valutemp, #:loop
-                        jmp     #loopexit
-
-
-
-sprite1
-
-
-
-box1
-
-                        
-loopexit                wrlong  sourceAddr, outputAddr
-                        wrlong  zero, instruct2Addr
-
-                        jmp     #loopytime
-
-
-
-                        
-Addr                    long    0
-Addrtemp                long    0
-Addrtemp2               long    0
-instruct1Addr           long    0
-instruct2Addr           long    0
-outputAddr              long    0      
-frmpointAddr            long    0
-destscrnAddr            long    0
-
-instruct1               long    0
-instruct2               long    0
-frmpoint                long    0
-destscrn                long    0
-
-frm                     long    0
-frmflipcurrent          long    0
-frmflip1                long    FRAMEFLIP*2
-fulscreen               long    SCREENSIZEB/BITSPERPIXEL/FRAMES
-valutemp                long    0
-datatemp                long    0
-datatemp2               long    0
-zero                    long    0
-trueth                  long    $FF
-
-'sourceaddr              long    2260
-sourceAddr              long    0
-                      
-
-                        fit 496     
 
 
 {{
