@@ -1,5 +1,6 @@
 byte    18     'number of bars
-byte    30    'tempo
+byte    30     'tempo
+byte    8      'bar resolution
 
 'MAIN SECTION
 '0-5

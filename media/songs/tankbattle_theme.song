@@ -2,7 +2,8 @@
 '' ------
 
     byte    15     'number of bars
-    byte    28    'tempo
+    byte    28     'tempo
+    byte    8      'bar resolution
 
 '' Loop Definitions
 '' ----------------
