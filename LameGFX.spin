@@ -93,9 +93,18 @@ OBJ
 
 VAR
 
-    ' These must apppear in this order.
+'' These longs make up the interface between Spin and
+'' assembly, as well as between LameGFX and LameLCD.
+'' They must apppear in this order.
+'' ---------------------------------------------------
+    long    instruction1
+    long    instruction2
+    long    outputlong
+    long    sourcegrfx
     long    screenframe
     long    screen[SCREENSIZEB/4]
+'' ---------------------------------------------------
+
 
     long    imgpointer
     long    frmflip
@@ -103,12 +112,8 @@ VAR
     long    temp2
     long    temp3
 
-    long    instruction1
-    long    instruction2
-    long    outputlong
-    long    frmpointer
-    long    destscreen
-    long    sourcegrfx
+
+
 
 
 
@@ -154,10 +159,8 @@ PUB Start
     cognew(@graphicsdriver, @instruction1)
     instruction1 := INST_IDLE
     instruction2 := 0   
-
-    destscreen := @screen
-    frmpointer := @screenframe
-    long[frmpointer] := 1
+    
+    screenframe := 1
 
     clearScreen
     
@@ -177,11 +180,11 @@ PUB SwitchFrame
 
     repeat until not lockset(SCREENLOCK) 
 
-    if long[frmpointer] == 1 
-        long[frmpointer] := 0
+    if screenframe
+        screenframe := 0
         frmflip := FRAMEFLIP
     else
-        long[frmpointer] := 1
+        screenframe := 1
         frmflip := 0
 
     lockclr(SCREENLOCK)     
@@ -204,7 +207,7 @@ PUB Blit(source)
              
       
     'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-    '    word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
+    '    word[@screen][imgpointer+frmflip] := word[source][imgpointer]
        
     lockclr(SCREENLOCK) 
 
@@ -226,7 +229,7 @@ PUB ClearScreen
     lockclr(SCREENLOCK) 
 
     'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-    '   word[destscreen][imgpointer+frmflip] := 0
+    '   word[@screen][imgpointer+frmflip] := 0
 
 
 PUB Sprite(source, x, y)
@@ -248,7 +251,7 @@ PUB Sprite(source, x, y)
     repeat indexh from 0 to h-1 step 1
         temp := x + ((y+indexh) << 7)
         repeat indexer from 0 to w-1 step 1
-                word[destscreen][temp+indexer+frmflip] := word[source][indexer + temp3]
+                word[@screen][temp+indexer+frmflip] := word[source][indexer + temp3]
         temp3 += w
 
 
@@ -309,8 +312,8 @@ PUB SpriteTrans(source, x, y, frame)
         temp := x + ((y+indexh) << 8)
         repeat indexer from 0 to w-1 step 2
              
-            oldcolorbyte := byte[destscreen][temp+indexer+frmtemp]
-            oldflipbyte := byte[destscreen][temp+indexer+frmtemp+1]
+            oldcolorbyte := byte[@screen][temp+indexer+frmtemp]
+            oldflipbyte := byte[@screen][temp+indexer+frmtemp+1]
             colorbyte := byte[source][indexer + temp3]
             flipbyte := byte[source][indexer + temp3 + 1]
             selectbyte := flipbyte
@@ -330,8 +333,8 @@ PUB SpriteTrans(source, x, y, frame)
 
 
 
-            byte[destscreen][temp+indexer+frmtemp] := tempcolorbyte
-            byte[destscreen][temp+indexer+frmtemp+1] := tempflipbyte
+            byte[@screen][temp+indexer+frmtemp] := tempcolorbyte
+            byte[@screen][temp+indexer+frmtemp+1] := tempflipbyte
 
                 
         temp3 += w
@@ -368,7 +371,7 @@ PUB Box(source, x, y)
  '   temp := (x << 3) + (y << 7)
                          
   '  repeat indexer from 0 to 7 step 1
-   '     word[destscreen][temp+indexer+frmflip] := word[source][indexer]
+   '     word[@screen][temp+indexer+frmflip] := word[source][indexer]
     
 
     lockclr(SCREENLOCK)
@@ -385,7 +388,7 @@ PUB BoxEx(source, x, y, duration)
     temp := (x << 3) + (y << 7) 
                         
     repeat indexer from 0 to duration step 1
-        word[destscreen][temp+indexer+frmflip] := word[source][indexer]
+        word[@screen][temp+indexer+frmflip] := word[source][indexer]
 
     lockclr(SCREENLOCK)
 
@@ -404,7 +407,7 @@ PUB TextBox(teststring, boxx, boxy)
     screencursor := 0
     stringcursor := 0 
 
-    temp3 := destscreen + text_line + frmflip<<1             
+    temp3 := @screen + text_line + frmflip<<1             
     value := 1
 
     repeat while screencursor < constant(TEXTPADDING)
@@ -425,7 +428,7 @@ PUB TextBox(teststring, boxx, boxy)
             text_line += SCREENSPACER
             screencursor := TEXTPADDING 
 
-        temp3 := destscreen + frmflip<<1 + text_line
+        temp3 := @screen + frmflip<<1 + text_line
 
         if value == SPACEBAR
             repeat indexx from 0 to SPACEWIDTH step 1
@@ -601,16 +604,19 @@ graphicsdriver          mov     Addr, par
 
                         mov     outputAddr, Addr       'get output long              
                         add     Addr, #4
+                        
+                        mov     sourceAddr, Addr       'get sourceaddr long
+                        add     Addr, #4
 
-                        mov     frmpointAddr, Addr
-                        rdlong  frmpoint, frmpointAddr 'get frame pointer long 
+                       'mov     frmpointAddr, Addr
+                       ' rdlong  frmpoint, frmpointAddr 'get frame pointer long 
+                        mov     frmpoint, Addr
                         add     Addr, #4
  
-                        mov     destscrnAddr, Addr     'get destscreen long
-                        rdlong  destscrn, destscrnAddr
-                        add     Addr, #4
+                       ' mov     destscrnAddr, Addr     'get @screen long
+                      '  rdlong  destscrn, destscrnAddr
+                        mov     destscrn, Addr     'get @screen long
 
-                        mov     sourceAddr, Addr       'get sourceaddr long
 
 'START MAIN LOOP                       
 loopytime               rdlong  instruct1full, instruct1Addr
@@ -658,7 +664,7 @@ if_z                    jmp     #box1
 
 'CLEAR THE SCREEN
 'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[destscreen][imgpointer+frmflip] := 0
+ '   word[@screen][imgpointer+frmflip] := 0
 
 clearscreen1            mov     Addrtemp, destscrn
                         mov     valutemp, fulscreen
@@ -673,7 +679,7 @@ clearscreen1            mov     Addrtemp, destscrn
 
 'BLIT FULL SCREEN
 'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
+ '   word[@screen][imgpointer+frmflip] := word[source][imgpointer]
 
 blitscreen1             mov     Addrtemp, destscrn
                         rdlong  Addrtemp2, sourceAddr
@@ -704,7 +710,7 @@ sprite1
 'temp := (x << 3) + (y << 7)                         
 '
 'repeat indexer from 0 to 7 step 1
-'    word[destscreen][temp+indexer+frmflip] := word[source][indexer]
+'    word[@screen][temp+indexer+frmflip] := word[source][indexer]
 
 box1                    mov     Addrtemp, destscrn
                         rdlong  Addrtemp2, sourceAddr
@@ -775,8 +781,6 @@ Addrtemp2               long    0
 instruct1Addr           long    0
 instruct2Addr           long    0
 outputAddr              long    0      
-frmpointAddr            long    0
-destscrnAddr            long    0
 
 instruct1               long    0
 instruct1full           long    0
