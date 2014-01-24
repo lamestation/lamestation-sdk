@@ -12,6 +12,16 @@
 ''
 '' Creating your first program is simple! First, include
 '' the graphics object in an object block.
+''
+'' To communicate between Spin and assembly, the GFX
+'' driver establishes two longs, one for sending information
+'' and one for receiving. These are:
+''
+'' * **instruction1** - send data to assembly cog
+'' * **instruction2** - receive data from cog
+''
+''
+''
 
 CON
 
@@ -82,6 +92,8 @@ OBJ
 
 
 VAR
+
+    ' These must apppear in this order.
     long    screenframe
     long    screen[SCREENSIZEB/4]
 
@@ -190,10 +202,10 @@ PUB Blit(source)
     repeat while instruction2 <> 0
     instruction1 := INST_IDLE
              
-      {
-    repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-        word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
-       }
+      
+    'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+    '    word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
+       
     lockclr(SCREENLOCK) 
 
 
@@ -326,7 +338,7 @@ PUB SpriteTrans(source, x, y, frame)
 
 
     lockclr(SCREENLOCK)    
-    
+
 
 PUB Box(source, x, y)
 '' This function displays an 8x8 tile from an address. This address could
@@ -334,13 +346,30 @@ PUB Box(source, x, y)
 '' for structuring their data. However, take a look at some of the tile
 '' functions to see how Box can be used to build larger functionality
 '' like tile mapping.
+'' <pre>
+''             y        x      instr/flags
+''          |      | |      |  |      |
+'' 00000000 00000000 00000000  00000000
+'' </pre>
+''
 
-    repeat until not lockset(SCREENLOCK)  
-             
-    temp := (x << 3) + (y << 7) 
-                        
-    repeat indexer from 0 to 7 step 1
-        word[destscreen][temp+indexer+frmflip] := word[source][indexer]
+    repeat until not lockset(SCREENLOCK)
+
+    
+    sourcegrfx := source        
+    instruction2 := 1 
+    instruction1 := INST_BOX + (x << 8) + (y << 16)
+
+    repeat while instruction2 <> 0
+    instruction1 := INST_IDLE
+ 
+    
+    
+ '   temp := (x << 3) + (y << 7)
+                         
+  '  repeat indexer from 0 to 7 step 1
+   '     word[destscreen][temp+indexer+frmflip] := word[source][indexer]
+    
 
     lockclr(SCREENLOCK)
 
@@ -439,140 +468,8 @@ PUB TextBox(teststring, boxx, boxy)
 
 
 
-DAT
-                        org
-
-graphicsdriver          mov     Addr, par
-
-                        mov     instruct1Addr, Addr    'get first instruction long   
-                        add     Addr, #4
-
-                        mov     instruct2Addr, Addr    'get second instruction long       
-                        add     Addr, #4                         
-
-                        mov     outputAddr, Addr       'get output long              
-                        add     Addr, #4
-
-                        mov     frmpointAddr, Addr
-                        rdlong  frmpoint, frmpointAddr 'get frame pointer long 
-                        add     Addr, #4
- 
-                        mov     destscrnAddr, Addr     'get destscreen long
-                        rdlong  destscrn, destscrnAddr
-                        add     Addr, #4
-
-                        mov     sourceAddr, Addr       'get sourceaddr long
-
-'START MAIN LOOP                       
-loopytime               rdlong  instruct1, instruct1Addr
-
-                        cmp     instruct1, #0   wz
-if_z                    jmp     #loopexit
 
 
-
-
-                        rdlong  frm, frmpoint
-                        cmp     frm, #0         wz
-if_z                    mov     frmflipcurrent, frmflip1
-if_nz                   mov     frmflipcurrent, #0
-
-
-' Decide which command to execute next
-                         
-                        cmp     instruct1, #1   wz      'CLEARSCREEN
-if_z                    jmp     #clearscreen1
-                        cmp     instruct1, #2   wz      'BLITSCREEN
-if_z                    jmp     #blitscreen1
-                        cmp     instruct1, #3   wz      'SPRITE
-if_z                    jmp     #sprite1
-                        cmp     instruct1, #4   wz      'BOX
-if_z                    jmp     #box1
-
-
-
-
-
-'CLEAR THE SCREEN
-'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[destscreen][imgpointer+frmflip] := 0
-
-clearscreen1            mov     Addrtemp, destscrn
-                        mov     valutemp, fulscreen
-       
-:loop                   mov     datatemp, Addrtemp
-                        add     datatemp, frmflipcurrent
-                        wrword  zero, datatemp
-                        add     Addrtemp, #2
-                        djnz    valutemp, #:loop
-                        jmp     #loopexit
-
-
-'BLIT FULL SCREEN
-'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
-
-blitscreen1             mov     Addrtemp, destscrn
-                        rdlong  Addrtemp2, sourceAddr
-                        mov     valutemp, fulscreen
-       
-:loop                   mov     datatemp, Addrtemp
-                        add     datatemp, frmflipcurrent
-           
-                        rdword  datatemp2, Addrtemp2
-
-                        wrword  datatemp2, datatemp
-                        add     Addrtemp, #2
-                        add     Addrtemp2, #2
-                        djnz    valutemp, #:loop
-                        jmp     #loopexit
-
-
-
-sprite1
-
-
-
-box1
-
-                        
-loopexit                wrlong  sourceAddr, outputAddr
-                        wrlong  zero, instruct2Addr
-
-                        jmp     #loopytime
-
-
-
-                        
-Addr                    long    0
-Addrtemp                long    0
-Addrtemp2               long    0
-instruct1Addr           long    0
-instruct2Addr           long    0
-outputAddr              long    0      
-frmpointAddr            long    0
-destscrnAddr            long    0
-
-instruct1               long    0
-instruct2               long    0
-frmpoint                long    0
-destscrn                long    0
-
-frm                     long    0
-frmflipcurrent          long    0
-frmflip1                long    FRAMEFLIP*2
-fulscreen               long    SCREENSIZEB/BITSPERPIXEL/FRAMES
-valutemp                long    0
-datatemp                long    0
-datatemp2               long    0
-zero                    long    0
-trueth                  long    $FF
-
-'sourceaddr              long    2260
-sourceAddr              long    0
-                      
-
-                        fit 496     
 
 
 
@@ -682,6 +579,232 @@ byte    $1C, $20, $18, $20, $1C, $0
 byte    $24, $18, $18, $24, $0, $0
 byte    $4, $98, $60, $18, $4, $0
 byte    $32, $2A, $2A, $26, $0, $0
+
+
+
+
+
+
+
+
+
+DAT
+                        org     0
+
+graphicsdriver          mov     Addr, par
+
+                        mov     instruct1Addr, Addr    'get first instruction long   
+                        add     Addr, #4
+
+                        mov     instruct2Addr, Addr    'get second instruction long       
+                        add     Addr, #4                         
+
+                        mov     outputAddr, Addr       'get output long              
+                        add     Addr, #4
+
+                        mov     frmpointAddr, Addr
+                        rdlong  frmpoint, frmpointAddr 'get frame pointer long 
+                        add     Addr, #4
+ 
+                        mov     destscrnAddr, Addr     'get destscreen long
+                        rdlong  destscrn, destscrnAddr
+                        add     Addr, #4
+
+                        mov     sourceAddr, Addr       'get sourceaddr long
+
+'START MAIN LOOP                       
+loopytime               rdlong  instruct1full, instruct1Addr
+
+                        mov     instruct1, instruct1full
+                        and     instruct1, #255
+                        cmp     instruct1, #0   wz
+if_z                    jmp     #loopexit
+
+
+
+
+                        rdlong  frm, frmpoint
+                        cmp     frm, #0         wz
+if_z                    mov     frmflipcurrent, frmflip1
+if_nz                   mov     frmflipcurrent, #0
+
+
+' Decide which command to execute next
+                         
+                        cmp     instruct1, #1   wz      'CLEARSCREEN
+if_z                    jmp     #clearscreen1
+                        cmp     instruct1, #2   wz      'BLITSCREEN
+if_z                    jmp     #blitscreen1
+                        cmp     instruct1, #3   wz      'SPRITE
+if_z                    jmp     #sprite1
+                        cmp     instruct1, #4   wz      'BOX
+if_z                    jmp     #box1
+
+
+
+
+
+'' instruct1 does not pass values that are big, and it's reading in a long.
+'' I can use the rest of the room in the long to pass through parameters like
+'' x, y, frame, duration. The screen isn't any larger than 128x64, so 256
+'' should be sufficient; just need to watch for signs.
+''
+'' param3   param2   param1    instr/flags
+''
+'' 00000000 00000000 00000000   00000000
+
+
+
+
+'CLEAR THE SCREEN
+'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+ '   word[destscreen][imgpointer+frmflip] := 0
+
+clearscreen1            mov     Addrtemp, destscrn
+                        mov     valutemp, fulscreen
+       
+:loop                   mov     datatemp, Addrtemp
+                        add     datatemp, frmflipcurrent
+                        wrword  zero, datatemp
+                        add     Addrtemp, #2
+                        djnz    valutemp, #:loop
+                        jmp     #loopexit
+
+
+'BLIT FULL SCREEN
+'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+ '   word[destscreen][imgpointer+frmflip] := word[source][imgpointer]
+
+blitscreen1             mov     Addrtemp, destscrn
+                        rdlong  Addrtemp2, sourceAddr
+                        mov     valutemp, fulscreen
+       
+:loop                   mov     datatemp, Addrtemp
+                        add     datatemp, frmflipcurrent
+           
+                        rdword  datatemp2, Addrtemp2
+
+                        wrword  datatemp2, datatemp
+                        add     Addrtemp, #2
+                        add     Addrtemp2, #2
+                        djnz    valutemp, #:loop
+                        jmp     #loopexit
+
+
+
+sprite1
+
+
+
+
+
+
+
+'BLIT BOX
+'temp := (x << 3) + (y << 7)                         
+'
+'repeat indexer from 0 to 7 step 1
+'    word[destscreen][temp+indexer+frmflip] := word[source][indexer]
+
+box1                    mov     Addrtemp, destscrn
+                        rdlong  Addrtemp2, sourceAddr
+                        mov     valutemp, #8
+                        
+                        
+                        '' (x << 3) + (y << 7)
+                        '' x and y are left-shifted in the instruction register
+                        '' so they need to be shifted back so the above relation
+                        '' is true.
+                        ''
+                        '' x << 3 = x << 8 >> 5
+                        '' y << 7 = y << 16 >> 9
+                        ''
+                        '' So it should be shifted x >> 5 and y >> 9
+                        '' Then add this data to the starting address position
+                        ''
+                        '' Another difference though is that the original code
+                        '' is word-aligned, so to get the result here, we have to
+                        '' left shift all values again once, to go from word
+                        '' to byte aligned
+                        ''
+                        '' x >> 5 << 1 = x >> 4
+                        '' y >> 9 << 1 = x >> 8
+                     
+                      
+                        
+                        mov     instruct1, instruct1full
+                        and     instruct1, param1mask   ' get X position
+                        shr     instruct1, #4           ' x >> 4
+                        add     Addrtemp, instruct1
+
+                        mov     instruct1, instruct1full
+                        and     instruct1, param2mask   ' get Y position
+                        shr     instruct1, #8           ' y >> 8
+                        add     Addrtemp, instruct1
+
+
+                        '' Begin copying data       
+:loop                   mov     datatemp, Addrtemp
+                        add     datatemp, frmflipcurrent
+           
+                        rdword  datatemp2, Addrtemp2
+
+                        wrword  datatemp2, datatemp
+                        add     Addrtemp, #2
+                        add     Addrtemp2, #2
+                        djnz    valutemp, #:loop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+                        jmp     #loopexit
+
+
+
+
+
+
+                        
+loopexit                wrlong  sourceAddr, outputAddr
+                        wrlong  zero, instruct2Addr
+
+                        jmp     #loopytime
+
+
+
+                        
+Addr                    long    0
+Addrtemp                long    0
+Addrtemp2               long    0
+instruct1Addr           long    0
+instruct2Addr           long    0
+outputAddr              long    0      
+frmpointAddr            long    0
+destscrnAddr            long    0
+
+instruct1               long    0
+instruct1full           long    0
+instruct2               long    0
+frmpoint                long    0
+destscrn                long    0
+
+frm                     long    0
+frmflipcurrent          long    0
+frmflip1                long    FRAMEFLIP*2
+fulscreen               long    SCREENSIZEB/BITSPERPIXEL/FRAMES
+valutemp                long    0
+datatemp                long    0
+datatemp2               long    0
+zero                    long    0
+trueth                  long    $FF
+
+param1mask              long    $0000FF00
+param2mask              long    $00FF0000
+param3mask              long    $FF000000
+
+'sourceaddr              long    2260
+sourceAddr              long    0
+                      
+
+                        fit 496     
+
+
 
 
 
