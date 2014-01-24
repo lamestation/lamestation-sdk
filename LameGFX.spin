@@ -187,7 +187,32 @@ PUB SwitchFrame
         screenframe := 1
         frmflip := 0
 
-    lockclr(SCREENLOCK)     
+    lockclr(SCREENLOCK)
+    
+
+PRI SendASMCommand(source, instruction)
+'' This is just a little function to allow for reuse
+'' of the assembly interface code.
+''
+'' * **source** - The memory address of the graphics
+'' * **instruction** - Instruction / parameters to send to LameGFX.
+''  
+'' This command maintains the lock so it is not necessary
+'' to request it in your drawing function
+''
+    repeat until not lockset(SCREENLOCK)  
+                
+    sourcegrfx := source
+    
+    instruction1 := instruction     'send instructions to cog
+    instruction2 := 1               'receive reply
+   
+    repeat while instruction2 <> 0  'cog will set instruction2 to 0 when finished
+    instruction1 := INST_IDLE
+             
+    lockclr(SCREENLOCK) 
+
+
 
 
 PUB Blit(source)
@@ -196,20 +221,14 @@ PUB Blit(source)
 '' primarily influenced for reference on drawing to the screen, not for
 '' its game utility so much.
 
-    repeat until not lockset(SCREENLOCK)  
-                
-    sourcegrfx := source        
-    instruction2 := 1 
-    instruction1 := INST_BLITSCREEN     
+    SendASMCommand(source, INST_BLITSCREEN)
 
-    repeat while instruction2 <> 0
-    instruction1 := INST_IDLE
-             
+'    repeat until not lockset(SCREENLOCK)               
       
     'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
     '    word[@screen][imgpointer+frmflip] := word[source][imgpointer]
        
-    lockclr(SCREENLOCK) 
+'    lockclr(SCREENLOCK) 
 
 
 PUB ClearScreen
@@ -217,19 +236,16 @@ PUB ClearScreen
 '' display is sparse and not likely to be overdrawn every frame (like
 '' in a tile-based game).
 
-    repeat until not lockset(SCREENLOCK)
+    SendASMCommand(0, INST_CLEARSCREEN)
+
+'    repeat until not lockset(SCREENLOCK)
           
-    instruction2 := 1  
-    instruction1 := INST_CLEARSCREEN 
-           
-
-    repeat while instruction2 <> 0
-    instruction1 := INST_IDLE
-
-    lockclr(SCREENLOCK) 
-
     'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
     '   word[@screen][imgpointer+frmflip] := 0
+    
+'    lockclr(SCREENLOCK) 
+
+
 
 
 PUB Sprite(source, x, y)
@@ -349,32 +365,31 @@ PUB Box(source, x, y)
 '' for structuring their data. However, take a look at some of the tile
 '' functions to see how Box can be used to build larger functionality
 '' like tile mapping.
+''
+'' This is the instruction mapping for Box.
+''
 '' <pre>
-''             y        x      instr/flags
-''          |      | |      |  |      |
+''             y        x        instr
+''          -------- --------  --------
 '' 00000000 00000000 00000000  00000000
 '' </pre>
 ''
-
-    repeat until not lockset(SCREENLOCK)
-
+'' Here is the original Spin implementation for reference.
+''
+'' <pre>
+'' repeat until not lockset(SCREENLOCK)
+''
+'' temp := (x << 3) + (y << 7)
+''                       
+'' repeat indexer from 0 to 7 step 1
+''     word[@screen][temp+indexer+frmflip] := word[source][indexer] 
+''
+'' lockclr(SCREENLOCK)
+'' </pre>
+'' 
+''
+    SendASMCommand(source, INST_BOX + (x << 8) + (y << 16))     
     
-    sourcegrfx := source        
-    instruction2 := 1 
-    instruction1 := INST_BOX + (x << 8) + (y << 16)
-
-    repeat while instruction2 <> 0
-    instruction1 := INST_IDLE
- 
-    
-    
- '   temp := (x << 3) + (y << 7)
-                         
-  '  repeat indexer from 0 to 7 step 1
-   '     word[@screen][temp+indexer+frmflip] := word[source][indexer]
-    
-
-    lockclr(SCREENLOCK)
 
 
 PUB BoxEx(source, x, y, duration)
