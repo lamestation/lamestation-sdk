@@ -1413,6 +1413,7 @@ byte    ENDOFSONG
 titleScreenSong
 byte    15     'number of bars
 byte    28    'tempo
+byte    8    'bar resolution
 
 'ROOT BASS
 byte    0, 36,SOFF,  36,SOFF,   34,  36,SOFF,  34
