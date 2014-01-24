@@ -129,8 +129,8 @@ byte    databyte2
 
 
 OBJ
-        pst   :       "lame_serial"
-        pst2   :       "lame_serial"       
+        pst   :       "LameSerial"
+        pst2   :      "LameSerial"       
 
 
 PRI ControlNote
@@ -257,7 +257,7 @@ PUB go | x
     
   parameter := @sine
   channelparam := (INITVAL << 8)
-  channelADSR := LONG[@instruments][0]
+  channelADSR := LONG[@instruments][4]
   
   repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
       oscRegister[oscindexer] := 0
@@ -314,7 +314,7 @@ long    (10 + (127 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (1 << W_OF
 long    (127 + (12 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
 
 'POWER
-long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
+long    (127 + (100 << D_OFFSET) + (127 << S_OFFSET) + (0 << R_OFFSET) + (1 << W_OFFSET))
 
 'accordion
 long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (64 << R_OFFSET) + (5 << W_OFFSET))
