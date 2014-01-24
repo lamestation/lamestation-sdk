@@ -60,6 +60,18 @@ CON
   SCREENSIZEB = SCREEN_W*SCREEN_BH
   BITSPERPIXEL = 2
   
+'' Setting up the LCD requires the following variables to be
+'' defined in your application, and they must appear in this
+'' order. The names are not important; only the address of the
+'' framebuffer (screen) is passed to the LCD driver when
+'' initialized.
+''
+'' <pre>
+'' long    screenframe
+'' long    screen[SCREENSIZEB/4]
+'' </pre>
+''
+  
 
 
 PUB Start(screenPointer)
