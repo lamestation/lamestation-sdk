@@ -214,6 +214,21 @@ PRI SendASMCommand(source, instruction)
 
 
 
+PUB ClearScreen
+'' This command clears the screen to black. Recommended if your game
+'' display is sparse and not likely to be overdrawn every frame (like
+'' in a tile-based game).
+
+    SendASMCommand(0, INST_CLEARSCREEN)
+
+'    repeat until not lockset(SCREENLOCK)
+          
+    'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+    '   word[@screen][imgpointer+frmflip] := 0
+    
+'    lockclr(SCREENLOCK) 
+
+
 
 PUB Blit(source)
 '' This command blits a 128x64 size image to the screen. The source image
@@ -231,19 +246,56 @@ PUB Blit(source)
 '    lockclr(SCREENLOCK) 
 
 
-PUB ClearScreen
-'' This command clears the screen to black. Recommended if your game
-'' display is sparse and not likely to be overdrawn every frame (like
-'' in a tile-based game).
 
-    SendASMCommand(0, INST_CLEARSCREEN)
 
-'    repeat until not lockset(SCREENLOCK)
-          
-    'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-    '   word[@screen][imgpointer+frmflip] := 0
+PUB Box(source, x, y)
+'' This function displays an 8x8 tile from an address. This address could
+'' be a single image or it could be full tileset; the user is responsible
+'' for structuring their data. However, take a look at some of the tile
+'' functions to see how Box can be used to build larger functionality
+'' like tile mapping.
+''
+'' This is the instruction mapping for Box.
+''
+'' <pre>
+''             y        x        instr
+''          -------- --------  --------
+'' 00000000 00000000 00000000  00000000
+'' </pre>
+''
+'' Here is the original Spin implementation for reference.
+''
+'' <pre>
+'' repeat until not lockset(SCREENLOCK)
+''
+'' temp := (x << 3) + (y << 7)
+''                       
+'' repeat indexer from 0 to 7 step 1
+''     word[@screen][temp+indexer+frmflip] := word[source][indexer] 
+''
+'' lockclr(SCREENLOCK)
+'' </pre>
+'' 
+''
+    SendASMCommand(source, INST_BOX + (x << 8) + (y << 16))     
     
-'    lockclr(SCREENLOCK) 
+
+
+PUB BoxEx(source, x, y, duration)
+'' This function is nearly identical to Box but allows you to display
+'' a clipped version of the sprite. I created it for the sole purpose
+'' of displaying a half-heart in the tank battle game.
+
+    repeat until not lockset(SCREENLOCK)  
+
+    duration := duration
+    temp := (x << 3) + (y << 7) 
+                        
+    repeat indexer from 0 to duration step 1
+        word[@screen][temp+indexer+frmflip] := word[source][indexer]
+
+    lockclr(SCREENLOCK)
+
 
 
 
@@ -359,53 +411,9 @@ PUB SpriteTrans(source, x, y, frame)
     lockclr(SCREENLOCK)    
 
 
-PUB Box(source, x, y)
-'' This function displays an 8x8 tile from an address. This address could
-'' be a single image or it could be full tileset; the user is responsible
-'' for structuring their data. However, take a look at some of the tile
-'' functions to see how Box can be used to build larger functionality
-'' like tile mapping.
-''
-'' This is the instruction mapping for Box.
-''
-'' <pre>
-''             y        x        instr
-''          -------- --------  --------
-'' 00000000 00000000 00000000  00000000
-'' </pre>
-''
-'' Here is the original Spin implementation for reference.
-''
-'' <pre>
-'' repeat until not lockset(SCREENLOCK)
-''
-'' temp := (x << 3) + (y << 7)
-''                       
-'' repeat indexer from 0 to 7 step 1
-''     word[@screen][temp+indexer+frmflip] := word[source][indexer] 
-''
-'' lockclr(SCREENLOCK)
-'' </pre>
-'' 
-''
-    SendASMCommand(source, INST_BOX + (x << 8) + (y << 16))     
-    
 
 
-PUB BoxEx(source, x, y, duration)
-'' This function is nearly identical to Box but allows you to display
-'' a clipped version of the sprite. I created it for the sole purpose
-'' of displaying a half-heart in the tank battle game.
 
-    repeat until not lockset(SCREENLOCK)  
-
-    duration := duration
-    temp := (x << 3) + (y << 7) 
-                        
-    repeat indexer from 0 to duration step 1
-        word[@screen][temp+indexer+frmflip] := word[source][indexer]
-
-    lockclr(SCREENLOCK)
 
 
 PUB TextBox(teststring, boxx, boxy)
