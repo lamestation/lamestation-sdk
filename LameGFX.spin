@@ -163,6 +163,7 @@ PUB Start
     screenframe := 1
 
     clearScreen
+    SwitchFrame
     
     lcd.Start(@screen)
     
@@ -300,21 +301,39 @@ PUB BoxEx(source, x, y, duration)
 
 
 
-PUB Sprite(source, x, y)
-'' **BROKEN - this command currently does not work**
-''
+PUB Sprite(source, x, y, frame)
 '' This is the original sprite function and has been
 '' largely superseded by SpriteTrans, which supports
 '' transparency and frames.
+''
+'' * **source** - Memory address of the source image
+'' * **x** - Horizontal destination position (0-15)
+'' * **y** - Vertical destination position (0-7)
+''
 
     repeat until not lockset(SCREENLOCK)
+ 
+    frameboost := word[source][0] 
+    w := word[source][1]
+    h := word[source][2]
 
-    x := x << 3
-    w := 16
-    h := 2
+    w := w << 3
 
     'temp := x + (y << 7)
-    temp3 := 0
+    
+    repeat temp3 from 0 to frame step 1
+        source += frameboost
+    source -= frameboost    
+    
+    x := x << 3
+   ' x += x  'why is this here?
+    temp3 := 3
+    
+    
+    ' Looks like the frame flip is scaled by 2 because
+    ' sprites have transparency data, while blocks don't
+    
+    ' The sprite command is word aligned, while the spritetrans command is byte-aligned.
 
     repeat indexh from 0 to h-1 step 1
         temp := x + ((y+indexh) << 7)
@@ -322,8 +341,9 @@ PUB Sprite(source, x, y)
                 word[@screen][temp+indexer+frmflip] := word[source][indexer + temp3]
         temp3 += w
 
-
     lockclr(SCREENLOCK)
+
+
 
 PUB SpriteTrans(source, x, y, frame)
 '' This function allows the user to blit an arbitrarily-sized image
@@ -344,6 +364,7 @@ PUB SpriteTrans(source, x, y, frame)
 ''
     repeat until not lockset(SCREENLOCK)
 
+    ' extract values from data block
     frameboost := word[source][0] 
     w := word[source][1]
     h := word[source][2]
@@ -353,14 +374,14 @@ PUB SpriteTrans(source, x, y, frame)
 
 
     repeat temp3 from 0 to frame step 1
-      source += frameboost
-
+        source += frameboost
     source -= frameboost
 
     temp3 := 6  'offset from size words
-    x := x << 3
-    x += x
+    x := x << 4
 
+
+    '' Prevent the image from being drawn offscreen.
     frmtemp := w + x
     if frmtemp => SCREENSPACER
       x := SCREENSPACER - w
@@ -380,10 +401,12 @@ PUB SpriteTrans(source, x, y, frame)
         temp := x + ((y+indexh) << 8)
         repeat indexer from 0 to w-1 step 2
              
+            ' get old and new image data
             oldcolorbyte := byte[@screen][temp+indexer+frmtemp]
             oldflipbyte := byte[@screen][temp+indexer+frmtemp+1]
             colorbyte := byte[source][indexer + temp3]
             flipbyte := byte[source][indexer + temp3 + 1]
+            
             selectbyte := flipbyte
             selectbyte &= !colorbyte
                           
