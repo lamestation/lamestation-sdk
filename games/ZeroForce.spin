@@ -17,21 +17,7 @@ CON
     SCREEN_BW = 16   
     SCREEN_BH = 8
     
-    SW1 = 1 << 24
-    SW2 = 1 << 25
-    SW3 = 1 << 26
-    
-    J_U = 1 << 12
-    J_D = 1 << 13
-    J_R = 1 << 14
-    J_L = 1 << 15
-    
-    DIR_U = 2
-    DIR_D = 3
-    DIR_L = 0
-    DIR_R = 1
-    
-    NL = 10
+    BULLETS = 10
 
     'SONG PLAYER
     ENDOFSONG = 0
@@ -62,9 +48,21 @@ VAR
     long    playery
     
     long    enemyx
-    long    enemyy    
+    long    enemyy
+    
+    long    bulletx[BULLETS]
+    long    bullety[BULLETS]
+    long    bulleton[BULLETS]
+    long    bulletindex
+    long    nextbullet
     
     long    xoffset
+    
+    byte    blinkon
+    word    blinkcount
+    byte    blinkstate
+    byte    collided
+    byte    bosshealth
     
 PUB Main
 
@@ -77,8 +75,8 @@ PUB Main
     gfx.SwitchFrame
 
     clicked := 0
-    LogoScreen
-    TitleScreen 
+  '  LogoScreen
+   ' TitleScreen 
     GameLoop
 
 
@@ -140,24 +138,59 @@ PUB TitleScreen
               
     audio.StopSong
     
+
+
+PUB InitLevel
+
+    playerx := 3
+    playery := 3
+    
+    enemyx := 10
+    enemyy := 3
+    
+    nextbullet := 0
+    blinkon := 0
+    blinkcount := 0
+    
+    bosshealth := 10
+
+    repeat bulletindex from 0 to constant(BULLETS-1)
+        bulleton[bulletindex] := 0 
+        bulletx[bulletindex] := 0
+        bullety[bulletindex] := 0
     
     
+PUB BulletHandler
+
+    repeat bulletindex from 0 to constant(BULLETS-1)
+        if bulleton[bulletindex] == 1
+            bulletx[bulletindex]++
+            if bulletx[bulletindex] => SCREEN_BW
+                bulleton[bulletindex] := 0
+            else
+                gfx.Sprite(@gfx_laser, bulletx[bulletindex], bullety[bulletindex], 0)
+
+
+PUB SpawnBullet(dx, dy)
+    bulleton[nextbullet] := 1
+    bulletx[nextbullet] := dx
+    bullety[nextbullet] := dy    
     
+    nextbullet++
+    if nextbullet => BULLETS
+        nextbullet := 0
     
 PUB GameLoop
 
-  '  audio.SetWaveform(1, 127)
+    'audio.SetWaveform(1, 127)
    ' audio.SetADSR(127, 100, 40, 100) 
     audio.LoadSong(@lastBossSong)
     audio.PlaySong
 
     gfx.ClearScreen
     
-    playerx := 3
-    playery := 3
-    
-    enemyx := 10
-    enemyy := 3
+    InitLevel
+
 
     repeat
         gfx.SwitchFrame
@@ -187,16 +220,66 @@ PUB GameLoop
                 playery := 6
 
                
-        if ctrl.A or ctrl.B or ctrl.Menu
+        if ctrl.Menu
              if clicked == 0
+                SpawnBullet(playerx+2,playery+1)
                   
                 clicked := 1
-             else
-                clicked := 0
+        else
+            clicked := 0
 
      '   gfx.SpriteTrans(@gfx_planet, 5, 6, 0)
 
-        gfx.SpriteTrans(@gfx_zeroforce, playerx, playery, 0)
+'        gfx.SpriteTrans(@gfx_zeroforce, playerx, playery, 0)
+        repeat bulletindex from 0 to constant(BULLETS-1)
+            if bulleton[bulletindex]
+                collided := 1
+                if bulletx[bulletindex] < 8
+                    collided := 0
+
+                if bosshealth > 0
+                    if collided == 1
+                        bulleton[bulletindex] := 0
+                        blinkon := 1
+                    
+                        bosshealth--
+
+
+        gfx.Sprite(@gfx_planet, 5,6, 0)
+                        
+        gfx.Sprite(@gfx_zeroforce, playerx, playery, 0)                
+                 
+        if bosshealth > 0   
+            if blinkon
+    
+                blinkstate := blinkcount / 20 // 2
+                
+                if not blinkstate
+                    blinkcount++
+                else
+                    blinkcount += 5
+                    gfx.Sprite(@gfx_vortex, 8, 0, 0)  
+                    
+                    
+                if blinkcount > 100
+                    blinkcount := 0
+                    blinkon := 0
+                              
+            else
+                gfx.Sprite(@gfx_vortex, 8, 0, 0)
+        else
+            gfx.TextBox(string("THIS IS THE END"), 3, 2)
+            gfx.TextBox(string("Or is it?"),6,4)
+            
+        
+
+
+
+        
+        
+        BulletHandler
+        
+
      '   gfx.SpriteTrans(@gfx_blackhole, enemyx, enemyy, 0)
         
      '   gfx.SpriteTrans(@gfx_spacetank, 6, 1, 0)
@@ -206,7 +289,8 @@ PUB GameLoop
       '  gfx.TextBox(string("There Is No Escape This Time... Only Fate"), 0, 0)
         
         
-        gfx.SpriteTrans(@gfx_vortex, 8, 0, 0)
+'        gfx.SpriteTrans(@gfx_vortex, 8, 0, 0)
+        
 
 
 
@@ -263,6 +347,14 @@ byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, 
 byte    $0, $C3, $78, $7B, $F8, $8B, $F8, $B, $F0, $13, $F0, $17, $F0, $17, $60, $27, $60, $27, $60, $2F, $60, $2F, $60, $2F, $60, $2F, $60, $2F, $E0, $27, $E0, $27, $E0, $23, $E0, $20, $E8, $28, $E8, $28, $6E, $6E, $F, $F, $E7, $E6, $F7, $F5, $FB, $7B, $FD, $3C, $DE, $9E, $FE, $E, $FE, $0, $CF, $0, $DF, $10, $FF, $38, $FF, $0, $FF, $4, $FF, $3D, $FF, $FF, $FF, $64, $BF, $80, $E, $0, $EF, $60, $EF, $60, $EF, $20, $FE, $30, $AE, $20, $EE, $20, $EE, $20, $EE, $20, $EE, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $FC, $0, $EC, $0, $EC, $80, $EC, $60, $FC, $F0, $EC, $20, $EC, $20, $FC, $F0, $F4, $F0, $F4, $F0
 byte    $0, $FF, $0, $FE, $1, $FD, $7, $F6, $7, $E6, $F, $CE, $1F, $DC, $1D, $DC, $19, $98, $13, $10, $37, $30, $77, $70, $6F, $60, $7F, $40, $FF, $C0, $D3, $C0, $FB, $F8, $FD, $FC, $BF, $BE, $1F, $1F, $0, $0, $0, $0, $1, $1, $7F, $7F, $7F, $78, $FF, $C0, $FF, $D8, $1F, $1E, $1F, $17, $F, $A, $7, $1, $FF, $FF, $FF, $FC, $FF, $0, $FF, $E0, $7F, $7F, $6F, $60, $18, $18, $3, $3, $FF, $DE, $FF, $C0, $DC, $80, $FC, $3C, $0, $0, $F, $0, $BF, $30, $FF, $E0, $FF, $80, $FF, $20, $7F, $0, $1F, $0, $7, $0, $F, $0, $FF, $C0, $FF, $F8, $FF, $0, $7F, $7F, $7B, $30, $F, $F, $D, $C, $3, $3, $1, $1, $9, $9, $F, $F
 byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FE, $0, $FC, $0, $FC, $0, $FC, $0, $F0, $0, $C0, $1, $1, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $1, $1, $3, $3, $6, $6, $0, $0, $0, $0, $0, $0, $3, $1, $7, $7, $7, $7, $1, $1, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $3, $7, $7, $5, $4, $0, $0, $0, $0, $0, $0, $3, $3, $7, $7, $F, $6, $E, $C, $0, $0, $0, $0, $0, $0, $13, $3, $F, $F, $1, $1, $0, $0, $4, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+
+
+
+gfx_laser
+word    $10  'frameboost
+word    $1, $1   'width, height
+byte    $22, $FF, $66, $DD, $66, $DD, $66, $DD, $66, $DD, $66, $DD, $66, $DD, $22, $FF
+
 
 
 
