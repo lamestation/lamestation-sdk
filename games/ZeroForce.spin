@@ -18,6 +18,7 @@ CON
     SCREEN_BH = 8
     
     BULLETS = 10
+    ENEMIES = 8
 
     'SONG PLAYER
     ENDOFSONG = 0
@@ -46,9 +47,20 @@ VAR
     
     long    playerx
     long    playery
+
+    long    enemyindex
+    long    nextenemy
+    long    enemyon[ENEMIES]    
+    long    enemyx[ENEMIES]
+    long    enemyy[ENEMIES]
+    byte    enemytype[ENEMIES]
+    byte    enemyhealth[ENEMIES]
     
-    long    enemyx
-    long    enemyy
+    word    enemygraphics[3]
+    
+    word    currentenemies
+    word    currentenemiestmp
+    word    currentenemiesoffset
     
     long    bulletx[BULLETS]
     long    bullety[BULLETS]
@@ -64,6 +76,9 @@ VAR
     byte    collided
     byte    bosshealth
     
+    long    x
+
+    
 PUB Main
 
     dira~
@@ -75,16 +90,39 @@ PUB Main
     gfx.SwitchFrame
 
     clicked := 0
-  '  LogoScreen
-   ' TitleScreen 
-    GameLoop
+    StaticScreen
+'    LogoScreen
+    
+    repeat
+        TitleScreen
+        LevelStage
+        BossStage
 
+
+PUB StaticScreen
+
+    audio.SetWaveform(4, 127)
+    audio.SetADSR(127, 127, 127, 127) 
+    audio.LoadSong(@staticSong)
+    audio.PlaySong
+    
+    repeat x from 0 to 20
+        gfx.SwitchFrame
+        gfx.Static
+        
+    audio.StopSong
 
 
 PUB LogoScreen
 
+
+    
+
     gfx.ClearScreen
     gfx.SwitchFrame
+    
+    repeat x from 0 to 100000
+    
     gfx.ClearScreen
     gfx.SpriteTrans(@teamlamelogo, 0, 3, 0)
     gfx.SwitchFrame
@@ -93,7 +131,7 @@ PUB LogoScreen
     audio.SetADSR(127, 10, 0, 10)
     audio.PlaySequence(@logoScreenSound)  
 
-    'repeat x from 0 to 150000 
+    repeat x from 0 to 120000 
 
     audio.StopSong
 
@@ -123,15 +161,6 @@ PUB TitleScreen
               if clicked == 0
                 choice := 0
                 clicked := 1
-                
-  '              if choice == 0
-  '                  choice := 1
-  '                  audio.PlaySong
-  '              else
-  '                  choice := 0
-   '                 audio.StopSong
-
-
         else
               clicked := 0
               
@@ -140,13 +169,24 @@ PUB TitleScreen
     
 
 
+
 PUB InitLevel
 
     playerx := 3
     playery := 3
     
-    enemyx := 10
-    enemyy := 3
+    enemygraphics[0] := @gfx_krakken
+    enemygraphics[1] := @gfx_spacetank
+    enemygraphics[2] := @gfx_blackhole
+    
+    currentenemiesoffset := 0
+    
+    repeat enemyindex from 0 to constant(ENEMIES-1)
+        enemyon[enemyindex] := 0
+        enemyx[enemyindex] := 0
+        enemyy[enemyindex] := 0
+        enemytype[enemyindex] := 0
+        
     
     nextbullet := 0
     blinkon := 0
@@ -160,7 +200,7 @@ PUB InitLevel
         bullety[bulletindex] := 0
     
     
-PUB BulletHandler
+PUB HandleBullets
 
     repeat bulletindex from 0 to constant(BULLETS-1)
         if bulleton[bulletindex] == 1
@@ -169,34 +209,15 @@ PUB BulletHandler
                 bulleton[bulletindex] := 0
             else
                 gfx.Sprite(@gfx_laser, bulletx[bulletindex], bullety[bulletindex], 0)
+                
+PUB HandleEnemies
 
+    repeat enemyindex from 0 to constant(ENEMIES-1)
+        if enemyon[enemyindex]
+            enemyx[enemyindex]--
 
-PUB SpawnBullet(dx, dy)
-    bulleton[nextbullet] := 1
-    bulletx[nextbullet] := dx
-    bullety[nextbullet] := dy    
-    
-    nextbullet++
-    if nextbullet => BULLETS
-        nextbullet := 0
-    
-PUB GameLoop
+PUB HandlePlayer
 
-    'audio.SetWaveform(1, 127)
-   ' audio.SetADSR(127, 100, 40, 100) 
-    audio.LoadSong(@lastBossSong)
-    audio.PlaySong
-
-    gfx.ClearScreen
-    
-    InitLevel
-
-
-    repeat
-        gfx.SwitchFrame
-        
-        gfx.ClearScreen
-        
         ctrl.Update      
         
         if ctrl.Left
@@ -223,14 +244,95 @@ PUB GameLoop
         if ctrl.Menu
              if clicked == 0
                 SpawnBullet(playerx+2,playery+1)
+                currentenemiesoffset++
                   
                 clicked := 1
         else
             clicked := 0
+            
+        gfx.Sprite(@gfx_zeroforce, playerx, playery, 0) 
 
-     '   gfx.SpriteTrans(@gfx_planet, 5, 6, 0)
 
-'        gfx.SpriteTrans(@gfx_zeroforce, playerx, playery, 0)
+PUB SpawnBullet(dx, dy)
+    bulleton[nextbullet] := 1
+    bulletx[nextbullet] := dx
+    bullety[nextbullet] := dy    
+    
+    nextbullet++
+    if nextbullet => BULLETS
+        nextbullet := 0
+
+PUB SpawnEnemy(dx, dy, type)
+    enemyon[nextenemy] := type
+    enemyx[nextenemy] := dx
+    enemyy[nextenemy] := dy    
+    
+    nextenemy++
+    if nextenemy => ENEMIES
+        nextenemy := 0
+
+        
+PUB LevelStage
+    
+    InitLevel
+    
+    choice := 1
+    repeat until not choice
+        gfx.SwitchFrame    
+        gfx.ClearScreen
+       
+       
+        
+        HandlePlayer
+
+        repeat bulletindex from 0 to constant(BULLETS-1)
+            if bulleton[bulletindex]
+                if bosshealth > 0
+                    if collided == 1
+                        bulleton[bulletindex] := 0
+                        blinkon := 1
+                    
+                        bosshealth--
+                        
+                        
+        currentenemies := word[@level1][currentenemiesoffset]
+        currentenemiestmp := currentenemies
+        repeat x from 0 to 5
+            currentenemiestmp := currentenemies & 3
+            if currentenemiestmp > 0
+                SpawnEnemy(12,x,enemygraphics[currentenemiestmp-1])
+                gfx.Sprite(enemygraphics[currentenemiestmp-1], 11, x, 0)
+            currentenemies >>= 2
+        
+            
+        HandleEnemies                
+                       
+        
+        HandleBullets
+        
+        
+        
+        
+    
+PUB BossStage
+
+    audio.SetWaveform(1, 127)
+    audio.SetADSR(127, 100, 40, 100) 
+    audio.LoadSong(@lastBossSong)
+    audio.PlaySong
+    
+    InitLevel
+    
+    choice := 1
+    
+    repeat until not choice
+        gfx.SwitchFrame    
+        gfx.ClearScreen
+        
+        gfx.Sprite(@gfx_planet, 5,6, 0)
+        
+        HandlePlayer
+
         repeat bulletindex from 0 to constant(BULLETS-1)
             if bulleton[bulletindex]
                 collided := 1
@@ -245,10 +347,6 @@ PUB GameLoop
                         bosshealth--
 
 
-        gfx.Sprite(@gfx_planet, 5,6, 0)
-                        
-        gfx.Sprite(@gfx_zeroforce, playerx, playery, 0)                
-                 
         if bosshealth > 0   
             if blinkon
     
@@ -268,28 +366,22 @@ PUB GameLoop
             else
                 gfx.Sprite(@gfx_vortex, 8, 0, 0)
         else
+            gfx.Sprite(@gfx_blackhole, 11, 4, 0)  
+            
             gfx.TextBox(string("THIS IS THE END"), 3, 2)
             gfx.TextBox(string("Or is it?"),6,4)
             
+            gfx.SwitchFrame
+            repeat x from 0 to 600000
+            choice := 0
+  
         
-
-
-
-        
-        
-        BulletHandler
-        
-
-     '   gfx.SpriteTrans(@gfx_blackhole, enemyx, enemyy, 0)
-        
-     '   gfx.SpriteTrans(@gfx_spacetank, 6, 1, 0)
-     '   gfx.SpriteTrans(@gfx_spacetank, 13, 6, 0)
-
-
-      '  gfx.TextBox(string("There Is No Escape This Time... Only Fate"), 0, 0)
+        HandleBullets
         
         
-'        gfx.SpriteTrans(@gfx_vortex, 8, 0, 0)
+        
+    audio.StopSong
+        
         
 
 
@@ -455,6 +547,19 @@ byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, 
 
 
 
+level1
+'' how this works
+'' 3 types of enemies, 8 y positions, 0 is no enemy
+'' so each word is a row of enemies
+'' thank you propeller spin for having quaternary number support
+'' that's perfect for this
+
+word %%0010_1000
+word %%0001_0001
+
+word %%3333_3333 ' End level symbol
+
+
 
 
 
@@ -491,7 +596,15 @@ byte    ENDOFSONG
 
 
 
+staticSong
+byte    1
+byte    200
+byte    1
 
+byte    0,36
+
+byte    0,BAROFF
+byte    SONGOFF
 
 
 
