@@ -147,6 +147,9 @@ VAR
     word    w
     word    h
     word    frameboost
+    
+    
+    long    ran
 
 
 
@@ -170,7 +173,7 @@ PUB Start
     return @screen
 
 PUB SwitchFrame
-'' Lame LCD, when initialized, sets up a double-buffered drawing surface
+'' LameLCD, when initialized, sets up a double-buffered drawing surface
 '' to work with. It then switches back and forth between drawing to a
 '' buffer and outputting the contents of that buffer to the screen.
 '' This allows the screen to be redrawn at predictable intervals and
@@ -228,6 +231,19 @@ PUB ClearScreen
     '   word[@screen][imgpointer+frmflip] := 0
     
 '    lockclr(SCREENLOCK) 
+
+
+
+PUB Static
+'' This command sprays garbage data onto the framebuffer
+    repeat until not lockset(SCREENLOCK)
+    
+    ran := cnt
+    repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+         word[@screen][imgpointer+frmflip] := ran?
+       
+    lockclr(SCREENLOCK) 
+
 
 
 
