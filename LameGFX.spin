@@ -25,23 +25,24 @@
 
 CON
 
-    FRAMES = 2
-    FRAMERATE = 10
-    FRAMEPERIOD = 6000000 
 
+    ' screensize constants
     SCREEN_W = 128
     SCREEN_H = 64
     BITSPERPIXEL = 2
-    SCREEN_BW = 16   
-    SCREEN_BH = 8
+    FRAMES = 2    
+    
+    SCREEN_H_BYTES = SCREEN_H / 8
     SCREENSIZE = SCREEN_W*SCREEN_H
-    SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL*FRAMES
+    SCREENSIZEB = SCREEN_W*SCREEN_H_BYTES*BITSPERPIXEL*FRAMES
 
-    FRAMEFLIP = SCREENSIZEB/2/FRAMES
+    SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
+    SCREENSIZE_BYTES_END = SCREENSIZE_BYTES-1
 
     SCREENSPACER = SCREEN_W*2
 
 
+    ' text printing
     NL = 10
     TEXTPADDING = 2
 
@@ -49,6 +50,7 @@ CON
     SPACEWIDTH = 1
     MAXCHARWIDTH = 6
 
+    ' assembly interface constants
     INST_IDLE = 0
     INST_CLEARSCREEN = 1
     INST_BLITSCREEN = 2
@@ -57,6 +59,7 @@ CON
     INST_TEXTBOX = 5
 
 
+    ' locking semaphore
     SCREENLOCK = 0
     
     
@@ -83,16 +86,26 @@ CON
     TRANSPARENT = 2
     GRAY = 3
     
-    
-    
-
-OBJ
-
-    lcd     :               "LameLCD"
-
 
 VAR
 
+    long    imgpointer
+    long    temp
+    long    temp2
+    long    temp3
+
+    long    valuetemp
+    long    screencursor
+    long    screencursortemp
+    long    stringcursor
+    long    texttemp
+    
+    
+    long    ran
+    long    frmtemp
+    long    indexx
+    
+    
 '' These longs make up the interface between Spin and
 '' assembly, as well as between LameGFX and LameLCD.
 '' They must apppear in this order.
@@ -100,37 +113,26 @@ VAR
     long    instruction1
     long    instruction2
     long    outputlong
-    long    sourcegrfx
-    long    screenframe
-    long    screen[SCREENSIZEB/4]
+    word    sourcegrfx
+    word    screen
 '' ---------------------------------------------------
 
-
-    long    imgpointer
-    long    frmflip
-    long    temp
-    long    temp2
-    long    temp3
+    word     screenpointer    
 
 
 
 
-
-
-
-    byte    value
-    long    valuetemp
-    long    screencursor
-    long    screencursortemp
-    long    stringcursor
-    long    text_line
-    long    texttemp
-
+    word    text_line
     word    indexer
     word    indexstart
     word    indexend 
 
     word    indexh
+
+
+    word    w
+    word    h
+    word    frameboost
 
 
     byte    oldcolorbyte
@@ -141,20 +143,11 @@ VAR
     byte    tempcolorbyte
     byte    tempflipbyte
 
-    long    frmtemp
-    long    indexx
-
-    word    w
-    word    h
-    word    frameboost
+    byte    value
     
-    
-    long    ran
 
 
-
-
-PUB Start
+PUB Start(screenvar)
 '' This function initializes the library. It takes
 '' no parameters and takes care of setting up the LCD
 '' and frame buffer.
@@ -163,36 +156,9 @@ PUB Start
     instruction1 := INST_IDLE
     instruction2 := 0   
     
-    screenframe := 1
-
-    clearScreen
-    SwitchFrame
-    
-    lcd.Start(@screen)
-    
-    return @screen
-
-PUB SwitchFrame
-'' LameLCD, when initialized, sets up a double-buffered drawing surface
-'' to work with. It then switches back and forth between drawing to a
-'' buffer and outputting the contents of that buffer to the screen.
-'' This allows the screen to be redrawn at predictable intervals and
-'' eliminates screen tearing.
-''
-'' Whenever you wish to update the screen, simply call this function and it
-'' switch to the other frame. This command has no parameters.
-
-    repeat until not lockset(SCREENLOCK) 
-
-    if screenframe
-        screenframe := 0
-        frmflip := FRAMEFLIP
-    else
-        screenframe := 1
-        frmflip := 0
-
-    lockclr(SCREENLOCK)
-    
+    screenpointer := screenvar
+    screen := screenpointer
+      
 
 PRI SendASMCommand(source, instruction)
 '' This is just a little function to allow for reuse
@@ -204,18 +170,22 @@ PRI SendASMCommand(source, instruction)
 '' This command maintains the lock so it is not necessary
 '' to request it in your drawing function
 ''
+    
     repeat until not lockset(SCREENLOCK)  
-                
-    sourcegrfx := source
+    
+    screen := word[screenpointer]
+                                
+    sourcegrfx := source  
     
     instruction1 := instruction     'send instructions to cog
     instruction2 := 1               'receive reply
-   
+
     repeat while instruction2 <> 0  'cog will set instruction2 to 0 when finished
     instruction1 := INST_IDLE
-             
+      
+       
     lockclr(SCREENLOCK) 
-
+   
 
 
 PUB ClearScreen
@@ -228,7 +198,7 @@ PUB ClearScreen
 '    repeat until not lockset(SCREENLOCK)
           
     'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-    '   word[@screen][imgpointer+frmflip] := 0
+    '   word[screen][imgpointer] := 0
     
 '    lockclr(SCREENLOCK) 
 
@@ -237,10 +207,11 @@ PUB ClearScreen
 PUB Static
 '' This command sprays garbage data onto the framebuffer
     repeat until not lockset(SCREENLOCK)
+    screen := word[screenpointer]    
     
     ran := cnt
-    repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-         word[@screen][imgpointer+frmflip] := ran?
+    repeat imgpointer from 0 to constant(SCREENSIZE_BYTES/2-1) step 1
+         word[screen][imgpointer] := ran?
        
     lockclr(SCREENLOCK) 
 
@@ -252,15 +223,17 @@ PUB Blit(source)
 '' must not use the sprite header used in other commands. This command is
 '' primarily influenced for reference on drawing to the screen, not for
 '' its game utility so much.
-
+    
     SendASMCommand(source, INST_BLITSCREEN)
 
 '    repeat until not lockset(SCREENLOCK)               
-      
-    'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-    '    word[@screen][imgpointer+frmflip] := word[source][imgpointer]
-       
-'    lockclr(SCREENLOCK) 
+ '     
+  '  repeat imgpointer from 0 to constant(SCREENSIZE_BYTES/2-1) step 1
+   '     word[screen][imgpointer] := word[source][imgpointer]
+    '   
+    'lockclr(SCREENLOCK) 
+    
+    return source
 
 
 
@@ -288,7 +261,7 @@ PUB Box(source, x, y)
 '' temp := (x << 3) + (y << 7)
 ''                       
 '' repeat indexer from 0 to 7 step 1
-''     word[@screen][temp+indexer+frmflip] := word[source][indexer] 
+''     word[screen][temp+indexer] := word[source][indexer] 
 ''
 '' lockclr(SCREENLOCK)
 '' </pre>
@@ -304,12 +277,13 @@ PUB BoxEx(source, x, y, duration)
 '' of displaying a half-heart in the tank battle game.
 
     repeat until not lockset(SCREENLOCK)  
+    screen := word[screenpointer]
 
     duration := duration
     temp := (x << 3) + (y << 7) 
                         
     repeat indexer from 0 to duration step 1
-        word[@screen][temp+indexer+frmflip] := word[source][indexer]
+        word[screen][temp+indexer] := word[source][indexer]
 
     lockclr(SCREENLOCK)
 
@@ -328,6 +302,7 @@ PUB Sprite(source, x, y, frame)
 ''
 
     repeat until not lockset(SCREENLOCK)
+    screen := word[screenpointer]
  
     frameboost := word[source][0] 
     w := word[source][1]
@@ -354,7 +329,7 @@ PUB Sprite(source, x, y, frame)
     repeat indexh from 0 to h-1 step 1
         temp := x + ((y+indexh) << 7)
         repeat indexer from 0 to w-1 step 1
-                word[@screen][temp+indexer+frmflip] := word[source][indexer + temp3]
+                word[screen][temp+indexer] := word[source][indexer + temp3]
         temp3 += w
 
     lockclr(SCREENLOCK)
@@ -379,6 +354,7 @@ PUB SpriteTrans(source, x, y, frame)
 '' drawing command.
 ''
     repeat until not lockset(SCREENLOCK)
+    screen := word[screenpointer]
 
     ' extract values from data block
     frameboost := word[source][0] 
@@ -405,21 +381,19 @@ PUB SpriteTrans(source, x, y, frame)
       x := 0
 
     frmtemp := y + h
-    if frmtemp => SCREEN_BH
-      y := SCREEN_BH - h
+    if frmtemp => SCREEN_H_BYTES
+      y := SCREEN_H_BYTES - h
     elseif y < 0
       y := 0
 
-
-    frmtemp := frmflip << 1
 
     repeat indexh from 0 to h-1 step 1
         temp := x + ((y+indexh) << 8)
         repeat indexer from 0 to w-1 step 2
              
             ' get old and new image data
-            oldcolorbyte := byte[@screen][temp+indexer+frmtemp]
-            oldflipbyte := byte[@screen][temp+indexer+frmtemp+1]
+            oldcolorbyte := byte[screen][temp+indexer]
+            oldflipbyte := byte[screen][temp+indexer+1]
             colorbyte := byte[source][indexer + temp3]
             flipbyte := byte[source][indexer + temp3 + 1]
             
@@ -440,8 +414,8 @@ PUB SpriteTrans(source, x, y, frame)
 
 
 
-            byte[@screen][temp+indexer+frmtemp] := tempcolorbyte
-            byte[@screen][temp+indexer+frmtemp+1] := tempflipbyte
+            byte[screen][temp+indexer] := tempcolorbyte
+            byte[screen][temp+indexer+1] := tempflipbyte
 
                 
         temp3 += w
@@ -464,12 +438,13 @@ PUB TextBox(teststring, boxx, boxy)
 ''
 
     repeat until not lockset(SCREENLOCK)  
+    screen := word[screenpointer]
 
     text_line := (boxy << 8) + (boxx << 4)
     screencursor := 0
     stringcursor := 0 
 
-    temp3 := @screen + text_line + frmflip<<1             
+    temp3 := screen + text_line       
     value := 1
 
     repeat while screencursor < constant(TEXTPADDING)
@@ -490,7 +465,7 @@ PUB TextBox(teststring, boxx, boxy)
             text_line += SCREENSPACER
             screencursor := TEXTPADDING 
 
-        temp3 := @screen + frmflip<<1 + text_line
+        temp3 := screen + text_line
 
         if value == SPACEBAR
             repeat indexx from 0 to SPACEWIDTH step 1
@@ -668,17 +643,11 @@ graphicsdriver          mov     Addr, par
                         add     Addr, #4
                         
                         mov     sourceAddr, Addr       'get sourceaddr long
-                        add     Addr, #4
-
-                       'mov     frmpointAddr, Addr
-                       ' rdlong  frmpoint, frmpointAddr 'get frame pointer long 
-                        mov     frmpoint, Addr
-                        add     Addr, #4
- 
-                       ' mov     destscrnAddr, Addr     'get @screen long
-                      '  rdlong  destscrn, destscrnAddr
-                        mov     destscrn, Addr     'get @screen long
-
+                        add     Addr, #2
+                      
+                      ' deferenced pointer to screen address
+                        rdword  destscrnAddr, Addr
+                        
 
 'START MAIN LOOP                       
 loopytime               rdlong  instruct1full, instruct1Addr
@@ -689,13 +658,8 @@ loopytime               rdlong  instruct1full, instruct1Addr
 if_z                    jmp     #loopexit
 
 
-
-
-                        rdlong  frm, frmpoint
-                        cmp     frm, #0         wz
-if_z                    mov     frmflipcurrent, frmflip1
-if_nz                   mov     frmflipcurrent, #0
-
+                        ' read current frame value
+                        rdword  destscrn, destscrnAddr
 
 ' Decide which command to execute next
                          
@@ -726,13 +690,12 @@ if_z                    jmp     #box1
 
 'CLEAR THE SCREEN
 'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[@screen][imgpointer+frmflip] := 0
+ '   word[screen][imgpointer] := 0
 
 clearscreen1            mov     Addrtemp, destscrn
                         mov     valutemp, fulscreen
        
 :loop                   mov     datatemp, Addrtemp
-                        add     datatemp, frmflipcurrent
                         wrword  zero, datatemp
                         add     Addrtemp, #2
                         djnz    valutemp, #:loop
@@ -741,18 +704,20 @@ clearscreen1            mov     Addrtemp, destscrn
 
 'BLIT FULL SCREEN
 'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[@screen][imgpointer+frmflip] := word[source][imgpointer]
+ '   word[screen][imgpointer] := word[source][imgpointer]
 
 blitscreen1             mov     Addrtemp, destscrn
-                        rdlong  Addrtemp2, sourceAddr
+                        rdword  Addrtemp2, sourceAddr
                         mov     valutemp, fulscreen
+                        
+                        
        
 :loop                   mov     datatemp, Addrtemp
-                        add     datatemp, frmflipcurrent
            
                         rdword  datatemp2, Addrtemp2
 
                         wrword  datatemp2, datatemp
+                        
                         add     Addrtemp, #2
                         add     Addrtemp2, #2
                         djnz    valutemp, #:loop
@@ -772,10 +737,10 @@ sprite1
 'temp := (x << 3) + (y << 7)                         
 '
 'repeat indexer from 0 to 7 step 1
-'    word[@screen][temp+indexer+frmflip] := word[source][indexer]
+'    word[screen][temp+indexer] := word[source][indexer]
 
 box1                    mov     Addrtemp, destscrn
-                        rdlong  Addrtemp2, sourceAddr
+                        rdword  Addrtemp2, sourceAddr
                         mov     valutemp, #8
                         
                         
@@ -813,7 +778,6 @@ box1                    mov     Addrtemp, destscrn
 
                         '' Begin copying data       
 :loop                   mov     datatemp, Addrtemp
-                        add     datatemp, frmflipcurrent
            
                         rdword  datatemp2, Addrtemp2
 
@@ -829,7 +793,7 @@ box1                    mov     Addrtemp, destscrn
 
 
                         
-loopexit                wrlong  sourceAddr, outputAddr
+loopexit                wrlong  destscrn, outputAddr  'change this to get data back out of assembly
                         wrlong  zero, instruct2Addr
 
                         jmp     #loopytime
@@ -849,11 +813,9 @@ instruct1full           long    0
 instruct2               long    0
 frmpoint                long    0
 destscrn                long    0
+destscrnAddr            long    0
 
-frm                     long    0
-frmflipcurrent          long    0
-frmflip1                long    FRAMEFLIP*2
-fulscreen               long    SCREENSIZEB/BITSPERPIXEL/FRAMES
+fulscreen               long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
 valutemp                long    0
 datatemp                long    0
 datatemp2               long    0

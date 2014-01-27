@@ -34,6 +34,7 @@ CON
         
 
 OBJ
+    lcd     :               "LameLCD"
     gfx     :               "LameGFX"
     audio   :               "LameAudio"
     ctrl    :               "LameControl"
@@ -82,15 +83,15 @@ VAR
 PUB Main
 
     dira~
-    gfx.Start
+    gfx.Start(lcd.Start)
 
     audio.Start
 
     gfx.ClearScreen
-    gfx.SwitchFrame
+    lcd.SwitchFrame
 
     clicked := 0
-    StaticScreen
+'    StaticScreen
 '    LogoScreen
     
     repeat
@@ -107,7 +108,7 @@ PUB StaticScreen
     audio.PlaySong
     
     repeat x from 0 to 20
-        gfx.SwitchFrame
+        lcd.SwitchFrame
         gfx.Static
         
     audio.StopSong
@@ -119,13 +120,13 @@ PUB LogoScreen
     
 
     gfx.ClearScreen
-    gfx.SwitchFrame
+    lcd.SwitchFrame
     
     repeat x from 0 to 100000
     
     gfx.ClearScreen
     gfx.SpriteTrans(@teamlamelogo, 0, 3, 0)
-    gfx.SwitchFrame
+    lcd.SwitchFrame
 
     audio.SetWaveform(3, 127)
     audio.SetADSR(127, 10, 0, 10)
@@ -152,7 +153,7 @@ PUB TitleScreen
     choice := 1
     repeat until choice == 0  
  '   repeat
-        gfx.SwitchFrame
+        lcd.SwitchFrame
 
         gfx.Blit(@gfx_zeroforcelogo)
         ctrl.Update
@@ -278,7 +279,7 @@ PUB LevelStage
     
     choice := 1
     repeat until not choice
-        gfx.SwitchFrame    
+        lcd.SwitchFrame    
         gfx.ClearScreen
        
        
@@ -326,7 +327,7 @@ PUB BossStage
     choice := 1
     
     repeat until not choice
-        gfx.SwitchFrame    
+        lcd.SwitchFrame    
         gfx.ClearScreen
         
         gfx.Sprite(@gfx_planet, 5,6, 0)
@@ -371,7 +372,7 @@ PUB BossStage
             gfx.TextBox(string("THIS IS THE END"), 3, 2)
             gfx.TextBox(string("Or is it?"),6,4)
             
-            gfx.SwitchFrame
+            lcd.SwitchFrame
             repeat x from 0 to 600000
             choice := 0
   

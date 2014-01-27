@@ -41,7 +41,7 @@ CON
 '' however, in practice, I set it to some high value like 300
 '' so that the screen will refresh as fast as possible.
 ''
-  FRAMERATE = 300
+  FRAMERATE = 400
   
 '' For differences in LCD chipsets, set byte period to:
 ''
@@ -51,14 +51,23 @@ CON
 '' Some LCDs just can't be driven as fast.
 ''
   BYTEPERIOD = 220
+    
+    
+  
+    ' screensize constants
+    SCREEN_W = 128
+    SCREEN_H = 64
+    BITSPERPIXEL = 2
+    FRAMES = 2
 
+    SCREEN_H_BYTES = SCREEN_H / 8
+    SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
+    TOTALBUFFER_BYTES = SCREENSIZE_BYTES * FRAMES
 
-  SCREEN_W = 128
-  SCREEN_H = 64
-  SCREEN_BH = 8
-  SCREENSIZE = SCREEN_W*SCREEN_H  
-  SCREENSIZEB = SCREEN_W*SCREEN_BH
-  BITSPERPIXEL = 2
+    FRAMEFLIP = SCREENSIZE_BYTES
+    
+    SCREENLOCK = 0
+  
   
 '' Setting up the LCD requires the following variables to be
 '' defined in your application, and they must appear in this
@@ -71,12 +80,51 @@ CON
 '' long    screen[SCREENSIZEB/4]
 '' </pre>
 ''
-  
+
+VAR
 
 
-PUB Start(screenPointer)
+
+
+    word    screenpointer
+    word    screenframe
+    word    screen[TOTALBUFFER_BYTES/2]
+
+
+PUB Start
 '' 
-    cognew(@lcd_entry, screenPointer)
+    cognew(@lcd_entry, @screen)
+    
+    screenframe := 0
+    screenpointer := @screen
+    
+ '   pst.StartRxTx(16, 17, 0, 115200)    ' connected on EX0,EX1   
+    
+    return @screenpointer
+
+
+PUB SwitchFrame
+'' LameLCD, when initialized, sets up a double-buffered drawing surface
+'' to work with. It then switches back and forth between drawing to a
+'' buffer and outputting the contents of that buffer to the screen.
+'' This allows the screen to be redrawn at predictable intervals and
+'' eliminates screen tearing.
+''
+'' Whenever you wish to update the screen, simply call this function and it
+'' switch to the other frame. This command has no parameters.
+
+    repeat until not lockset(SCREENLOCK) 
+
+    if screenframe        
+        screenframe := 0
+        screenpointer := @screen+FRAMEFLIP
+    else        
+        screenframe := FRAMEFLIP
+        screenpointer := @screen
+
+    lockclr(SCREENLOCK)    
+    
+
 
 DAT
                         org
@@ -85,7 +133,7 @@ DAT
 lcd_entry               mov     dira, diravalue
                         mov     screenAddr, par
                         mov     frameAddr, screenAddr
-                        sub     frameAddr, #4                 
+                        sub     frameAddr, #2
 
                         mov     LCD_time, cnt
                         add     LCD_time, LCD_frameperiod
@@ -131,14 +179,14 @@ lcd_entry               mov     dira, diravalue
 'BEGIN SCREEN DRAWING LOOP ------------------------------
 restartloop             mov     addrcnt, #64
 
-                        rdlong  frame, frameAddr
+                        rdword  frame, frameAddr
 
 
 'DRAW STUFF LOOK ---------------------------------------     
             
 drawscreen              mov     Addrtemp, screenAddr
                         cmp     frame, #0       wz
-if_nz                   add     Addrtemp, one24
+if_nz                   add     Addrtemp, frameflip1
    
                         add     Addrtemp, screenindex 'inc screen index after using
                         add     screenindex, #2
@@ -255,7 +303,7 @@ LCD_enable              long    (1 << EN)          'already shifted
 
 LCD_pageToZero          long    (LCD_setPage + LCD_CE_B)
 LCD_addressToZero       long    (LCD_setAddress + LCD_CE_B)
-one24                   long    1024*BITSPERPIXEL
+frameflip1              long    SCREENSIZE_BYTES
 
 screenflags             long    1
 

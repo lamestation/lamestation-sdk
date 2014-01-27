@@ -25,6 +25,7 @@ CON
     SOFF = 252
   
 OBJ
+        lcd     :               "LameLCD" 
         gfx     :               "LameGFX" 
         audio   :               "LameAudio"
         ctrl    :               "LameControl"
@@ -49,7 +50,7 @@ VAR
 PUB MusicPlayer
 
     ' Initialize the video system
-    gfx.Start
+    gfx.Start(lcd.Start)
     
     ' Initialize the user controls
     ctrl.Start
@@ -81,7 +82,7 @@ PUB MusicPlayer
     repeat
         
         'To update the screen, you simply call switchFrame.
-        gfx.SwitchFrame
+        lcd.SwitchFrame
 
         'Make sure to call update before attempting to check values
         ctrl.Update

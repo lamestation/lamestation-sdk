@@ -100,6 +100,7 @@ CON
         
 
 OBJ
+    lcd     :               "LameLCD"
     gfx     :               "LameGFX"
     audio   :               "LameAudio"
     pst     :               "LameSerial"
@@ -192,13 +193,13 @@ VAR
 PUB Main
 
     dira~
-    gfx.Start
+    gfx.Start(lcd.Start)
     pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
 
     audio.Start
 
     gfx.ClearScreen
-    gfx.SwitchFrame
+    lcd.SwitchFrame
 
     InitData
 
@@ -222,10 +223,10 @@ PUB Main
 PUB LogoScreen
 
     gfx.ClearScreen
-    gfx.SwitchFrame
+    lcd.SwitchFrame
     gfx.ClearScreen
     gfx.SpriteTrans(@teamlamelogo, 0, 3, 0)
-    gfx.SwitchFrame
+    lcd.SwitchFrame
 
     audio.SetWaveform(3, 127)
     audio.SetADSR(127, 10, 0, 10)
@@ -247,7 +248,7 @@ PUB TitleScreen
     choice := 1
     repeat until choice == 0  
         controls := ina   
-        gfx.SwitchFrame
+        lcd.SwitchFrame
 
         gfx.Blit(@excitingtank)   
 
@@ -280,7 +281,7 @@ PUB TankSelect
     repeat until choice == 0
 
         controls := ina   
-        gfx.SwitchFrame         
+        lcd.SwitchFrame         
         gfx.ClearScreen
 
         if controls & (J_U+J_D) <> 0
@@ -363,7 +364,7 @@ PUB LevelSelect
     repeat until choice == 0
 
         controls := ina   
-        gfx.SwitchFrame
+        lcd.SwitchFrame
         gfx.ClearScreen         
 
 
@@ -437,7 +438,7 @@ PUB TankFaceOff
     repeat until choice == 0
 
         controls := ina   
-        gfx.SwitchFrame         
+        lcd.SwitchFrame         
         gfx.ClearScreen
 
         gfx.SpriteTrans(@tanklogo, 0, 0, 0)
@@ -473,7 +474,7 @@ PUB GameLoop : menureturn
     repeat while choice == 0
 
         controls := ina
-        gfx.SwitchFrame
+        lcd.SwitchFrame
 
           if tankon[yourtank] == 1   
               tankoldx := tankx[yourtank]
@@ -700,7 +701,7 @@ PUB PauseMenu : menureturn
     repeat while choice == 0
            
         controls := ina   
-        gfx.SwitchFrame         
+        lcd.SwitchFrame         
         gfx.ClearScreen
 
         gfx.SpriteTrans(@tanklogo, 0, 0, 0)
