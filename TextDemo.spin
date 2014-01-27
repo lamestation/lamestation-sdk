@@ -15,67 +15,48 @@ CON
   _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
   _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
 
-  FRAMES = 2
-  SCREEN_W = 128
-  SCREEN_H = 64
-  BITSPERPIXEL = 2
-  SCREEN_BW = 16   
-  SCREEN_BH = 8
-  SCREENSIZE = SCREEN_W*SCREEN_H
-  SCREENSIZEB = SCREEN_W*SCREEN_BH*BITSPERPIXEL*FRAMES
-
-  NL = 10
-  SPACEBAR = 32
-
 OBJ
         lcd     :               "LameLCD"
         gfx     :               "LameGFX" 
-
-VAR
-
-PUB TextMachine
-    gfx.Start
-
-    repeat
-         {{
-        'The LCD and graphics libraries enforce flipping between
-        'two pages in memory to prevent screen flicker, but this
-        'functionality is hidden from the user.
         
-        'To update the screen, you simply call switchFrame.
-        }}
-        gfx.SwitchFrame
+PUB TextMachine
 
-        {{
-        'Clears the screen to black.
-        'Nuffin' special.
-        }}
+
+    gfx.Start(lcd.Start)
+
+    '' The LCD and graphics libraries enforce flipping between
+    '' two pages in memory to prevent screen flicker, but this
+    '' functionality is hidden from the user.
+    '' 
+    '' To update the screen, you simply call switchFrame.
+    repeat
+        lcd.SwitchFrame
+
+        '' Clears the screen to black.
+        '' Nuffin' special.
+
         gfx.ClearScreen
-
-        {{
-        'First argument is the string.
-        'string() for sending text on the fly.
-        'Or pass the address of a null-terminated string in a DAT block.
-
-        'The next two arguments are the x and y position of the cursor,
-        'which both have a resolution of 8 pixels.  Be careful not to
-        'allow the cursor to overflow off the screen (bottom-right of
-        'screen), as there is no protection in place yet and you will
-        'probably overwrite something you like.
-
-        'x position is a feature I just added today, so when the cursor
-        'reaches the right side of the screen, it isn't behaving like I
-        'want it to yet, when x is nonzero.  Buyer beware.
-        }}
+        
+        '' First argument is the string.
+        '' string() for sending text on the fly.
+        '' Or pass the address of a null-terminated string in a DAT block.
+        '' 
+        '' The next two arguments are the x and y position of the cursor,
+        '' which both have a resolution of 8 pixels.  Be careful not to
+        '' allow the cursor to overflow off the screen (bottom-right of
+        '' screen), as there is no protection in place yet and you will
+        '' probably overwrite something you like.
+        '' 
+        '' x position is a feature I just added today, so when the cursor
+        '' reaches the right side of the screen, it isn't behaving like I
+        '' want it to yet, when x is nonzero.  Buyer beware.
+        
         gfx.TextBox(string("Super Texty Fun-Time?"), 0, 1)
-        gfx.TextBox(@yourmom, 0, 3) 
-
+        gfx.TextBox(@allcharacters, 0, 3) 
 
 DAT
 ''Strings need to be null-terminated
-yourmom        byte    "!",34,"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz",0   
-          
-
+allcharacters   byte    "!",34,"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz",0   
 
 {{
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
