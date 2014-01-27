@@ -108,6 +108,15 @@ PUB CharIn : bytechr
   Returns: $00..$FF}}
 
   repeat while (bytechr := RxCheck) < 0
+  
+  
+PUB Str(stringptr)
+{{Send zero terminated string.
+  Parameter:
+    stringptr - pointer to zero terminated string to send.}}
+
+  repeat strsize(stringptr)
+    Char(byte[stringptr++])
 
 PUB Dec(value) | i, x
 {{Send value as decimal characters.
