@@ -423,9 +423,6 @@ PUB SpriteTrans(source, x, y, frame)
             flipbyte &= !selectbyte
             tempflipbyte += flipbyte
 
-                           
-
-
 
             byte[screen][temp+indexer] := tempcolorbyte
             byte[screen][temp+indexer+1] := tempflipbyte
@@ -796,11 +793,49 @@ sprite1                 mov     Addrtemp, destscrn
 
 ' INNER LOOP --------------------------------------                        
                         mov     valutemp, w1
-:innerloop              
-                        
-
+:innerloop                                      
                         ' the copy operation           
                         rdword  datatemp2, sourceAddrTemp
+                        
+                        {{
+                        ' ---- TRANSPARENCY ---- COMMENT OUT FOR SPEED
+                        mov colorbyte1, datatemp2
+                        and colorbyte1, $FF
+                        
+                        mov flipbyte1, datatemp2
+                        shr flipbyte1, #8
+                        
+                        
+                        ' get bytes from destination
+                        rdword  datatemp2, datatemp
+                        
+                        mov oldcolorbyte1, datatemp2
+                        and oldcolorbyte1, $FF
+                        
+                        mov oldflipbyte1, datatemp2
+                        shr oldflipbyte1, #8
+                        
+
+                      '  mov selectbyte1, $00
+                        mov selectbyte1, flipbyte1
+                        andn selectbyte1, colorbyte1
+                        
+                        and oldcolorbyte1, selectbyte1
+                        andn colorbyte1, selectbyte1
+                        add oldcolorbyte1, colorbyte1
+                        
+                        and oldflipbyte1, selectbyte1
+                        andn flipbyte1, selectbyte1
+                        add oldflipbyte1, flipbyte1
+                        
+                        mov datatemp2, oldflipbyte1
+                        shl datatemp2, #8
+                        add datatemp2, oldcolorbyte1
+                      
+                        
+                        ' ---- TRANSPARENCY END ----
+                        }}
+                        
                         wrword  datatemp2, datatemp
                         
                         
@@ -840,8 +875,6 @@ sprite1                 mov     Addrtemp, destscrn
                 word[screen][temp+indexer] := word[source][indexer + temp3]
         temp3 += w
 }}
-
-
 
 
 
@@ -922,7 +955,7 @@ loopexit                wrlong  destscrn, outputAddr  'change this to get data b
                         
 Addr                    long    0
 Addrtemp                long    0
-sourceAddrTemp               long    0
+sourceAddrTemp          long    0
 instruct1Addr           long    0
 instruct2Addr           long    0
 outputAddr              long    0      
@@ -940,7 +973,6 @@ valutemp2               long    0
 datatemp                long    0
 datatemp2               long    0
 datatemp3               long    0
-datatemp4               long    0
 zero                    long    0
 trueth                  long    $FF
 
@@ -953,8 +985,12 @@ sourceAddr              long    0
 frameboost1             long    0
 w1                      long    0
 h1                      long    0
-                      
 
+colorbyte1              long    0
+flipbyte1               long    0
+oldcolorbyte1           long    0
+oldflipbyte1            long    0    
+selectbyte1             long    0
                         fit 496     
 
 
