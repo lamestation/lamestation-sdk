@@ -18,7 +18,9 @@ CON
     SCREEN_BH = 8
     
     BULLETS = 10
-    ENEMIES = 8
+    ENEMIES = 10
+    
+    PLAYERSPEED = 1
 
     'SONG PLAYER
     ENDOFSONG = 0
@@ -54,7 +56,7 @@ VAR
     long    enemyon[ENEMIES]    
     long    enemyx[ENEMIES]
     long    enemyy[ENEMIES]
-    byte    enemytype[ENEMIES]
+    long    enemyspeed[BULLETS]    
     byte    enemyhealth[ENEMIES]
     
     word    enemygraphics[3]
@@ -66,8 +68,10 @@ VAR
     long    bulletx[BULLETS]
     long    bullety[BULLETS]
     long    bulleton[BULLETS]
+    long    bulletspeed[BULLETS]
     long    bulletindex
     long    nextbullet
+    long    bullettiming
     
     long    xoffset
     
@@ -95,8 +99,8 @@ PUB Main
 '    LogoScreen
     
     repeat
-        TitleScreen
-        LevelStage
+   '     TitleScreen
+   '     LevelStage
         BossStage
 
 
@@ -186,7 +190,7 @@ PUB InitLevel
         enemyon[enemyindex] := 0
         enemyx[enemyindex] := 0
         enemyy[enemyindex] := 0
-        enemytype[enemyindex] := 0
+        enemyspeed[enemyindex] := 0
         
     
     nextbullet := 0
@@ -199,65 +203,69 @@ PUB InitLevel
         bulleton[bulletindex] := 0 
         bulletx[bulletindex] := 0
         bullety[bulletindex] := 0
+        bulletspeed[bulletindex] := 0
     
     
 PUB HandleBullets
 
     repeat bulletindex from 0 to constant(BULLETS-1)
-        if bulleton[bulletindex] == 1
-            bulletx[bulletindex]++
-            if bulletx[bulletindex] => SCREEN_BW
+        if bulleton[bulletindex]
+            bulletx[bulletindex] += bulletspeed[bulletindex]
+            if bulletx[bulletindex] => SCREEN_BW << 3
                 bulleton[bulletindex] := 0
             else
-                gfx.Sprite(@gfx_laser, bulletx[bulletindex], bullety[bulletindex], 0)
+                gfx.Sprite(@gfx_laser, bulletx[bulletindex] >> 3, bullety[bulletindex] >> 3, 0, 0)
                 
 PUB HandleEnemies
 
     repeat enemyindex from 0 to constant(ENEMIES-1)
         if enemyon[enemyindex]
-            enemyx[enemyindex]--
+            enemyx[enemyindex] -= enemyspeed[enemyindex]
+            if enemyx[enemyindex] => 0
+                gfx.Sprite(enemygraphics[enemyon[enemyindex]], enemyx[enemyindex] >> 4, enemyy[enemyindex] >> 4, 0, 0)
+            else
+                enemyon[enemyindex] := 0
 
 PUB HandlePlayer
 
         ctrl.Update      
         
         if ctrl.Left
-             playerx--
+             playerx -= PLAYERSPEED
              if playerx < 0
                 playerx := 0
         if ctrl.Right
-            playerx++
-             if playerx > 14
-                playerx := 14
+            playerx += PLAYERSPEED
+             if playerx  > 14 << 3
+                playerx := 14 << 3
 
                       
         'UP AND DOWN   
         if ctrl.Up
-             playery--
+             playery -= PLAYERSPEED
              if playery < 0
                 playery := 0
         if ctrl.Down
-             playery++
-             if playery > 6
-                playery := 6
+             playery += PLAYERSPEED
+             if playery > 6 << 3
+                playery := 6 << 3
 
                
-        if ctrl.Menu
-             if clicked == 0
-                SpawnBullet(playerx+2,playery+1)
-                currentenemiesoffset++
-                  
-                clicked := 1
-        else
-            clicked := 0
+        if ctrl.Any
+            bullettiming++
+            if bullettiming > 30
+                SpawnBullet(playerx >> 3 + 2,playery >> 3 + 1)                
+                bullettiming := 0
             
-        gfx.Sprite(@gfx_zeroforce, playerx, playery, 0) 
+        gfx.Sprite(@gfx_zeroforce, playerx >> 3, playery >> 3, 0, 0)             
+        
 
 
 PUB SpawnBullet(dx, dy)
     bulleton[nextbullet] := 1
-    bulletx[nextbullet] := dx
-    bullety[nextbullet] := dy    
+    bulletx[nextbullet] := dx << 3
+    bullety[nextbullet] := dy << 3    
+    bulletspeed[nextbullet] := 1
     
     nextbullet++
     if nextbullet => BULLETS
@@ -265,12 +273,35 @@ PUB SpawnBullet(dx, dy)
 
 PUB SpawnEnemy(dx, dy, type)
     enemyon[nextenemy] := type
-    enemyx[nextenemy] := dx
-    enemyy[nextenemy] := dy    
+    enemyx[nextenemy] := dx << 4
+    enemyy[nextenemy] := dy << 4    
+    enemyspeed[nextenemy] := 1
+    enemyhealth[nextenemy] := 1
     
     nextenemy++
     if nextenemy => ENEMIES
         nextenemy := 0
+        
+        
+PUB CreateFixedEnemies
+        currentenemies := word[@level1][currentenemiesoffset]
+        currentenemiestmp := currentenemies
+        repeat x from 0 to 5
+            currentenemiestmp := currentenemies & 3
+            if currentenemiestmp > 0
+                SpawnEnemy(13,x,currentenemiestmp-1)
+            currentenemies >>= 2
+            
+            
+PUB CreateRandomEnemies | ran
+    ran := cnt
+    
+    currentenemies := ran?    
+    repeat x from 1 to 6
+        currentenemiestmp := currentenemies & 3
+        if currentenemiestmp > 0 and currentenemiestmp < 3
+            SpawnEnemy(14,x,currentenemiestmp-1)    
+        currentenemies >>= 2
 
         
 PUB LevelStage
@@ -282,33 +313,20 @@ PUB LevelStage
         lcd.SwitchFrame    
         gfx.ClearScreen
        
+             
        
         
-        HandlePlayer
+        HandlePlayer                        
+                        
+     '   CreateFixedEnemies
+        currentenemiesoffset++
+        if currentenemiesoffset > 700     
+            CreateRandomEnemies
+            currentenemiesoffset := 0
 
-        repeat bulletindex from 0 to constant(BULLETS-1)
-            if bulleton[bulletindex]
-                if bosshealth > 0
-                    if collided == 1
-                        bulleton[bulletindex] := 0
-                        blinkon := 1
-                    
-                        bosshealth--
-                        
-                        
-        currentenemies := word[@level1][currentenemiesoffset]
-        currentenemiestmp := currentenemies
-        repeat x from 0 to 5
-            currentenemiestmp := currentenemies & 3
-            if currentenemiestmp > 0
-                SpawnEnemy(12,x,enemygraphics[currentenemiestmp-1])
-                gfx.Sprite(enemygraphics[currentenemiestmp-1], 11, x, 0)
-            currentenemies >>= 2
-        
             
         HandleEnemies                
                        
-        
         HandleBullets
         
         
@@ -330,10 +348,10 @@ PUB BossStage
         lcd.SwitchFrame    
         gfx.ClearScreen
         
-        gfx.Sprite(@gfx_planet, 5,6, 0)
+     '   gfx.Sprite(@gfx_planet, 5,6, 0, 0)
         
         HandlePlayer
-
+{{
         repeat bulletindex from 0 to constant(BULLETS-1)
             if bulleton[bulletindex]
                 collided := 1
@@ -346,7 +364,7 @@ PUB BossStage
                         blinkon := 1
                     
                         bosshealth--
-
+}}
 
         if bosshealth > 0   
             if blinkon
@@ -357,7 +375,7 @@ PUB BossStage
                     blinkcount++
                 else
                     blinkcount += 5
-                    gfx.Sprite(@gfx_vortex, 8, 0, 0)  
+                    gfx.Sprite(@gfx_vortex, 8, 0, 0, 0)  
                     
                     
                 if blinkcount > 100
@@ -365,9 +383,10 @@ PUB BossStage
                     blinkon := 0
                               
             else
-                gfx.Sprite(@gfx_vortex, 8, 0, 0)
+                gfx.Sprite(@gfx_vortex, 8, 0, 0, 0)
+                gfx.Sprite(@gfx_vortex_hand, 12, 3, 0, 0)
         else
-            gfx.Sprite(@gfx_blackhole, 11, 4, 0)  
+            gfx.Sprite(@gfx_blackhole, 11, 4, 0, 0)  
             
             gfx.TextBox(string("THIS IS THE END"), 3, 2)
             gfx.TextBox(string("Or is it?"),6,4)
@@ -440,6 +459,16 @@ byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, 
 byte    $0, $C3, $78, $7B, $F8, $8B, $F8, $B, $F0, $13, $F0, $17, $F0, $17, $60, $27, $60, $27, $60, $2F, $60, $2F, $60, $2F, $60, $2F, $60, $2F, $E0, $27, $E0, $27, $E0, $23, $E0, $20, $E8, $28, $E8, $28, $6E, $6E, $F, $F, $E7, $E6, $F7, $F5, $FB, $7B, $FD, $3C, $DE, $9E, $FE, $E, $FE, $0, $CF, $0, $DF, $10, $FF, $38, $FF, $0, $FF, $4, $FF, $3D, $FF, $FF, $FF, $64, $BF, $80, $E, $0, $EF, $60, $EF, $60, $EF, $20, $FE, $30, $AE, $20, $EE, $20, $EE, $20, $EE, $20, $EE, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $FC, $0, $EC, $0, $EC, $80, $EC, $60, $FC, $F0, $EC, $20, $EC, $20, $FC, $F0, $F4, $F0, $F4, $F0
 byte    $0, $FF, $0, $FE, $1, $FD, $7, $F6, $7, $E6, $F, $CE, $1F, $DC, $1D, $DC, $19, $98, $13, $10, $37, $30, $77, $70, $6F, $60, $7F, $40, $FF, $C0, $D3, $C0, $FB, $F8, $FD, $FC, $BF, $BE, $1F, $1F, $0, $0, $0, $0, $1, $1, $7F, $7F, $7F, $78, $FF, $C0, $FF, $D8, $1F, $1E, $1F, $17, $F, $A, $7, $1, $FF, $FF, $FF, $FC, $FF, $0, $FF, $E0, $7F, $7F, $6F, $60, $18, $18, $3, $3, $FF, $DE, $FF, $C0, $DC, $80, $FC, $3C, $0, $0, $F, $0, $BF, $30, $FF, $E0, $FF, $80, $FF, $20, $7F, $0, $1F, $0, $7, $0, $F, $0, $FF, $C0, $FF, $F8, $FF, $0, $7F, $7F, $7B, $30, $F, $F, $D, $C, $3, $3, $1, $1, $9, $9, $F, $F
 byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FE, $0, $FC, $0, $FC, $0, $FC, $0, $F0, $0, $C0, $1, $1, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $1, $1, $3, $3, $6, $6, $0, $0, $0, $0, $0, $0, $3, $1, $7, $7, $7, $7, $1, $1, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $3, $7, $7, $5, $4, $0, $0, $0, $0, $0, $0, $3, $3, $7, $7, $F, $6, $E, $C, $0, $0, $0, $0, $0, $0, $13, $3, $F, $F, $1, $1, $0, $0, $4, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+
+
+
+gfx_vortex_hand
+word    $90  'frameboost
+word    $3, $3   'width, height
+byte    $0, $7, $0, $3, $CC, $CD, $EE, $86, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $EE, $86, $CC, $CC, $0, $1, $0, $3, $F8, $61, $F8, $31, $F0, $30, $E6, $4, $8E, $C, $1E, $1A, $70, $71, $0, $7
+byte    $0, $0, $0, $0, $78, $78, $FD, $E5, $FD, $C5, $FF, $C7, $FD, $81, $FD, $81, $FD, $81, $FD, $81, $FD, $C1, $FD, $C5, $FD, $E5, $78, $78, $0, $0, $0, $0, $1F, $18, $7F, $78, $FF, $FC, $8F, $F, $C3, $43, $E1, $E1, $8, $8, $0, $0
+byte    $0, $E0, $0, $C0, $4, $C4, $E, $8E, $E, $C, $2E, $28, $2E, $28, $2E, $28, $2E, $28, $2E, $28, $2E, $28, $E, $8, $E, $C, $6, $6, $0, $80, $0, $C0, $2, $C2, $F, $CD, $7, $E4, $7, $E6, $3, $F3, $0, $F8, $0, $FC, $0, $FE
+
 
 
 
@@ -555,8 +584,14 @@ level1
 '' thank you propeller spin for having quaternary number support
 '' that's perfect for this
 
-word %%0010_1000
-word %%0001_0001
+word %%0010_1010
+word %%0002_0002
+word %%0002_0002
+word %%0002_0002
+word %%0002_0002
+word %%0002_0002
+word %%0002_0002
+word %%0003_0000
 
 word %%3333_3333 ' End level symbol
 

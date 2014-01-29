@@ -291,7 +291,7 @@ PUB BoxEx(source, x, y, duration)
 
 
 
-PUB Sprite(source, x, y, frame)
+PUB Sprite(source, x, y, frame, clip) | cw, ch
 '' This is the original sprite function and has been
 '' largely superseded by SpriteTrans, which supports
 '' transparency and frames.
@@ -299,8 +299,20 @@ PUB Sprite(source, x, y, frame)
 '' * **source** - Memory address of the source image
 '' * **x** - Horizontal destination position (0-15)
 '' * **y** - Vertical destination position (0-7)
+'' * **frame** - If the image has multiple frames, this integer will select which to use.
+'' * **clip** (boolean) - Turn sprite clipping on/off; prevents images from drawing outside frame buffer.
 ''
-
+'' This is the instruction mapping for Sprite.
+''
+'' <pre>
+'' clip  frame     y        x        instr
+''  -   ------- -------- --------  --------
+''  0   0000000 00000000 00000000  00000000
+'' </pre>
+''
+    SendASMCommand(source, INST_SPRITE + (x << 8) + (y << 16) + (frame << 24) + (clip << 31))
+    
+    {{
     repeat until not lockset(SCREENLOCK)
     screen := word[screenpointer]
  
@@ -320,7 +332,7 @@ PUB Sprite(source, x, y, frame)
    ' x += x  'why is this here?
     temp3 := 3
     
-    
+        
     ' Looks like the frame flip is scaled by 2 because
     ' sprites have transparency data, while blocks don't
     
@@ -334,6 +346,7 @@ PUB Sprite(source, x, y, frame)
 
     lockclr(SCREENLOCK)
 
+    }}
 
 
 PUB SpriteTrans(source, x, y, frame)
@@ -688,9 +701,10 @@ if_z                    jmp     #box1
 
 
 
-'CLEAR THE SCREEN
-'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[screen][imgpointer] := 0
+' CLEAR THE SCREEN
+' --------------------------------------------------- 
+' repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+'     word[screen][imgpointer] := 0
 
 clearscreen1            mov     Addrtemp, destscrn
                         mov     valutemp, fulscreen
@@ -702,30 +716,130 @@ clearscreen1            mov     Addrtemp, destscrn
                         jmp     #loopexit
 
 
-'BLIT FULL SCREEN
-'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
- '   word[screen][imgpointer] := word[source][imgpointer]
+' BLIT FULL SCREEN
+' --------------------------------------------------- 
+' repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
+'     word[screen][imgpointer] := word[source][imgpointer]
+' --------------------------------------------------- 
 
 blitscreen1             mov     Addrtemp, destscrn
-                        rdword  Addrtemp2, sourceAddr
+                        rdword  sourceAddrTemp, sourceAddr
                         mov     valutemp, fulscreen
                         
                         
        
 :loop                   mov     datatemp, Addrtemp
            
-                        rdword  datatemp2, Addrtemp2
+                        rdword  datatemp2, sourceAddrTemp
 
                         wrword  datatemp2, datatemp
                         
                         add     Addrtemp, #2
-                        add     Addrtemp2, #2
+                        add     sourceAddrTemp, #2
                         djnz    valutemp, #:loop
                         jmp     #loopexit
 
 
 
-sprite1
+' BLIT SPRITE
+' ---------------------------------------------------
+' --------------------------------------------------- 
+sprite1                 mov     Addrtemp, destscrn
+
+                        ' get parameters from instruction1 and prepare for use
+                               
+                        ' clip  frame     y        x        instr
+                        '  -   ------- -------- --------  --------
+                        '  0   0000000 00000000 00000000  00000000                        
+                        
+                        ' x position              
+                        mov     instruct1, instruct1full
+                        and     instruct1, param1mask   ' get X position
+                        shr     instruct1, #4           ' x >> 4        (x >> 8 << 4)
+                        add     Addrtemp, instruct1
+
+                        ' y position
+                        mov     instruct1, instruct1full
+                        and     instruct1, param2mask   ' get Y position
+                        shr     instruct1, #8           ' y >> 8        (y >> 16 << 8)
+                        add     Addrtemp, instruct1
+                        
+                        'frame
+
+
+
+                        ' read header from sprite
+                        rdword  sourceAddrTemp, sourceAddr                        
+                        
+                        
+                        rdword  frameboost1, sourceAddrTemp
+                        
+                        add     sourceAddrTemp, #2                       
+                        rdword  w1, sourceAddrTemp
+                        shl     w1, #3              ' left-shift by 3 for 16x8 grid, 1 because assembly is always byte-aligned
+                       
+                        add     sourceAddrTemp, #2
+                        rdword  h1, sourceAddrTemp       ' only width is left-shifted because height has 8 pages only
+                        
+                        add     sourceAddrTemp, #2       'get ready to start reading data
+                                                
+                      
+
+
+
+
+                        ' Begin copying data       
+' OUTER LOOP --------------------------------------
+                        mov     valutemp2, h1 
+:outerloop              mov     datatemp, Addrtemp
+
+
+' INNER LOOP --------------------------------------                        
+                        mov     valutemp, w1
+:innerloop              
+                        
+
+                        ' the copy operation           
+                        rdword  datatemp2, sourceAddrTemp
+                        wrword  datatemp2, datatemp
+                        
+                        
+                        'add     Addrtemp, #2
+                        add     datatemp, #2
+                        add     sourceAddrTemp, #2
+                        
+                        djnz    valutemp, #:innerloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+' INNER LOOP END ----------------------------------                                                
+                        'add     sourceAddrTemp, w1     ' this isn't necessary because the loop increments it for us
+                        add     Addrtemp, #256           ' add width of screen in bytes
+                        
+
+                        djnz    valutemp2, #:outerloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+' OUTER LOOP END ----------------------------------
+
+                        jmp     #loopexit
+
+
+{{
+  frameboost := word[source][0] 
+    w := word[source][1]
+    h := word[source][2]
+
+    w := w << 3
+    
+    repeat temp3 from 0 to frame step 1
+        source += frameboost
+    source -= frameboost    
+    
+    x := x << 3
+    temp3 := 3
+    
+    repeat indexh from 0 to h-1 step 1
+        temp := x + ((y+indexh) << 7)
+        repeat indexer from 0 to w-1 step 1
+                word[screen][temp+indexer] := word[source][indexer + temp3]
+        temp3 += w
+}}
 
 
 
@@ -733,14 +847,21 @@ sprite1
 
 
 
-'BLIT BOX
-'temp := (x << 3) + (y << 7)                         
+
+
+
+
+
+
+' BLIT BOX
+' --------------------------------------------------- 
+' temp := (x << 3) + (y << 7)                         
 '
-'repeat indexer from 0 to 7 step 1
-'    word[screen][temp+indexer] := word[source][indexer]
-
+' repeat indexer from 0 to 7 step 1
+'     word[screen][temp+indexer] := word[source][indexer]
+' --------------------------------------------------- 
 box1                    mov     Addrtemp, destscrn
-                        rdword  Addrtemp2, sourceAddr
+                        rdword  sourceAddrTemp, sourceAddr
                         mov     valutemp, #8
                         
                         
@@ -763,8 +884,6 @@ box1                    mov     Addrtemp, destscrn
                         '' x >> 5 << 1 = x >> 4
                         '' y >> 9 << 1 = x >> 8
                      
-                      
-                        
                         mov     instruct1, instruct1full
                         and     instruct1, param1mask   ' get X position
                         shr     instruct1, #4           ' x >> 4
@@ -779,11 +898,11 @@ box1                    mov     Addrtemp, destscrn
                         '' Begin copying data       
 :loop                   mov     datatemp, Addrtemp
            
-                        rdword  datatemp2, Addrtemp2
+                        rdword  datatemp2, sourceAddrTemp
 
                         wrword  datatemp2, datatemp
                         add     Addrtemp, #2
-                        add     Addrtemp2, #2
+                        add     sourceAddrTemp, #2
                         djnz    valutemp, #:loop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
                         jmp     #loopexit
 
@@ -803,7 +922,7 @@ loopexit                wrlong  destscrn, outputAddr  'change this to get data b
                         
 Addr                    long    0
 Addrtemp                long    0
-Addrtemp2               long    0
+sourceAddrTemp               long    0
 instruct1Addr           long    0
 instruct2Addr           long    0
 outputAddr              long    0      
@@ -817,8 +936,11 @@ destscrnAddr            long    0
 
 fulscreen               long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
 valutemp                long    0
+valutemp2               long    0
 datatemp                long    0
 datatemp2               long    0
+datatemp3               long    0
+datatemp4               long    0
 zero                    long    0
 trueth                  long    $FF
 
@@ -828,6 +950,9 @@ param3mask              long    $FF000000
 
 'sourceaddr              long    2260
 sourceAddr              long    0
+frameboost1             long    0
+w1                      long    0
+h1                      long    0
                       
 
                         fit 496     
