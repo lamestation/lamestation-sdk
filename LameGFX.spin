@@ -44,6 +44,7 @@ CON
 
     ' text printing
     NL = 10
+    LF = 13
     TEXTPADDING = 2
 
     SPACEBAR = 32
@@ -85,6 +86,7 @@ CON
     WHITE = 1
     TRANSPARENT = 2
     GRAY = 3
+    
     
 
 VAR
@@ -291,7 +293,7 @@ PUB BoxEx(source, x, y, duration)
 
 
 
-PUB Sprite(source, x, y, frame, clip) | cw, ch
+PUB Sprite(source, x, y, frame, trans, clip) | cw, ch
 '' This is the original sprite function and has been
 '' largely superseded by SpriteTrans, which supports
 '' transparency and frames.
@@ -300,6 +302,7 @@ PUB Sprite(source, x, y, frame, clip) | cw, ch
 '' * **x** - Horizontal destination position (0-15)
 '' * **y** - Vertical destination position (0-7)
 '' * **frame** - If the image has multiple frames, this integer will select which to use.
+'' * **trans** - Turn transparency keying on/off, allowing seamless copying.
 '' * **clip** (boolean) - Turn sprite clipping on/off; prevents images from drawing outside frame buffer.
 ''
 '' This is the instruction mapping for Sprite.
@@ -310,131 +313,15 @@ PUB Sprite(source, x, y, frame, clip) | cw, ch
 ''  0   0000000 00000000 00000000  00000000
 '' </pre>
 ''
-    SendASMCommand(source, INST_SPRITE + (x << 8) + (y << 16) + (frame << 24) + (clip << 31))
-    
-    {{
-    repeat until not lockset(SCREENLOCK)
-    screen := word[screenpointer]
- 
-    frameboost := word[source][0] 
-    w := word[source][1]
-    h := word[source][2]
-
-    w := w << 3
-
-    'temp := x + (y << 7)
-    
-    repeat temp3 from 0 to frame step 1
-        source += frameboost
-    source -= frameboost    
-    
-    x := x << 3
-   ' x += x  'why is this here?
-    temp3 := 3
-    
-        
-    ' Looks like the frame flip is scaled by 2 because
-    ' sprites have transparency data, while blocks don't
-    
-    ' The sprite command is word aligned, while the spritetrans command is byte-aligned.
-
-    repeat indexh from 0 to h-1 step 1
-        temp := x + ((y+indexh) << 7)
-        repeat indexer from 0 to w-1 step 1
-                word[screen][temp+indexer] := word[source][indexer + temp3]
-        temp3 += w
-
-    lockclr(SCREENLOCK)
-
-    }}
-
-
-PUB SpriteTrans(source, x, y, frame)
 '' This function allows the user to blit an arbitrarily-sized image
 '' from a memory address. It is designed to accept the sprite output from img2dat,
 '' and can handle multi-frame sprites, 3-color sprites, and sprites with transparency.
 ''
-'' * **source** - Memory address of the source image
-'' * **x** - Horizontal destination position (0-15)
-'' * **y** - Vertical destination position (0-7)
-'' * **frame** - If the image has multiple frames, this integer will select which to use
-''
-'' The only limitation on size is that per-pixel blitting is not yet supported, so
-'' image dimensions must be in multiples of 8 to be drawn correctly, and positions
-'' must be divided by 8 to fit on the screen grid.
 ''
 '' Read more on img2dat to see how you can generate source images to use with this
 '' drawing command.
-''
-    repeat until not lockset(SCREENLOCK)
-    screen := word[screenpointer]
 
-    ' extract values from data block
-    frameboost := word[source][0] 
-    w := word[source][1]
-    h := word[source][2]
-
-    w := w << 4
-
-
-
-    repeat temp3 from 0 to frame step 1
-        source += frameboost
-    source -= frameboost
-
-    temp3 := 6  'offset from size words
-    x := x << 4
-
-
-    '' Prevent the image from being drawn offscreen.
-    frmtemp := w + x
-    if frmtemp => SCREENSPACER
-      x := SCREENSPACER - w
-    elseif x < 0
-      x := 0
-
-    frmtemp := y + h
-    if frmtemp => SCREEN_H_BYTES
-      y := SCREEN_H_BYTES - h
-    elseif y < 0
-      y := 0
-
-
-    repeat indexh from 0 to h-1 step 1
-        temp := x + ((y+indexh) << 8)
-        repeat indexer from 0 to w-1 step 2
-             
-            ' get old and new image data
-            oldcolorbyte := byte[screen][temp+indexer]
-            oldflipbyte := byte[screen][temp+indexer+1]
-            colorbyte := byte[source][indexer + temp3]
-            flipbyte := byte[source][indexer + temp3 + 1]
-            
-            selectbyte := flipbyte
-            selectbyte &= !colorbyte
-                          
-            oldcolorbyte &= selectbyte
-            tempcolorbyte := oldcolorbyte
-            colorbyte &= !selectbyte
-            tempcolorbyte += colorbyte
-            
-            oldflipbyte &= selectbyte
-            tempflipbyte := oldflipbyte
-            flipbyte &= !selectbyte
-            tempflipbyte += flipbyte
-
-
-            byte[screen][temp+indexer] := tempcolorbyte
-            byte[screen][temp+indexer+1] := tempflipbyte
-
-                
-        temp3 += w
-
-
-    lockclr(SCREENLOCK)    
-
-
-
+    SendASMCommand(source, INST_SPRITE + (x << 8) + (y << 16) + (frame << 24) + (trans << 30) + (clip << 31))
 
 
 
@@ -483,13 +370,14 @@ PUB TextBox(teststring, boxx, boxy)
                screencursor++
 
 
-        elseif value == NL
+        elseif value == NL or value == LF
             repeat while screencursor < constant(SCREEN_W + TEXTPADDING + 1)
                word[temp3][screencursor] := 0
                screencursor++
 
             text_line += SCREENSPACER 
             screencursor := TEXTPADDING
+
            
         else
 
@@ -740,16 +628,19 @@ blitscreen1             mov     Addrtemp, destscrn
 
 ' BLIT SPRITE
 ' ---------------------------------------------------
+' clip trans   frame     y        x        instr
+'  -     -     ------ -------- --------  --------
+'  0     0     000000 00000000 00000000  00000000   
 ' --------------------------------------------------- 
 sprite1                 mov     Addrtemp, destscrn
 
                         ' get parameters from instruction1 and prepare for use
                                
-                        ' clip  frame     y        x        instr
-                        '  -   ------- -------- --------  --------
-                        '  0   0000000 00000000 00000000  00000000                        
+                        ' clip trans   frame     y        x        instr
+                        '  -     -     ------ -------- --------  --------
+                        '  0     0     000000 00000000 00000000  00000000                        
                         
-                        ' x position              
+                        ' x position
                         mov     instruct1, instruct1full
                         and     instruct1, param1mask   ' get X position
                         shr     instruct1, #4           ' x >> 4        (x >> 8 << 4)
@@ -762,26 +653,32 @@ sprite1                 mov     Addrtemp, destscrn
                         add     Addrtemp, instruct1
                         
                         'frame
+                        mov     instruct1, instruct1full
+                        shr     instruct1, #24
+                        and     instruct1, #$3F   ' get frame number
 
 
 
                         ' read header from sprite
-                        rdword  sourceAddrTemp, sourceAddr                        
-                        
-                        
+                        rdword  sourceAddrTemp, sourceAddr                             
                         rdword  frameboost1, sourceAddrTemp
+                        add     sourceAddrTemp, #2 
                         
-                        add     sourceAddrTemp, #2                       
+
+                        ' get image width                                               
                         rdword  w1, sourceAddrTemp
                         shl     w1, #3              ' left-shift by 3 for 16x8 grid, 1 because assembly is always byte-aligned
-                       
                         add     sourceAddrTemp, #2
-                        rdword  h1, sourceAddrTemp       ' only width is left-shifted because height has 8 pages only
                         
+                        rdword  h1, sourceAddrTemp       ' only width is left-shifted because height has 8 pages only
                         add     sourceAddrTemp, #2       'get ready to start reading data
                                                 
-                      
 
+                        'add frameboost to sourceAddr (frame) number of times
+:frameboostloop         cmp     instruct1, #0   wz
+if_nz                   add     sourceAddrTemp, frameboost1
+if_nz                   sub     instruct1, #1
+if_nz                   jmp     #:frameboostloop
 
 
 
@@ -797,10 +694,17 @@ sprite1                 mov     Addrtemp, destscrn
                         ' the copy operation           
                         rdword  datatemp2, sourceAddrTemp
                         
-                        {{
-                        ' ---- TRANSPARENCY ---- COMMENT OUT FOR SPEED
+                        
+                        
+                        
+                        ' check if transparency enabled
+                        ' if not, skip this block
+                        cmp     instruct1full, bit_transparent   wz      
+if_z                    jmp     #:skiptransparency
+                        
+                        ' ---- TRANSPARENCY ----
                         mov colorbyte1, datatemp2
-                        and colorbyte1, $FF
+                        and colorbyte1, #$FF
                         
                         mov flipbyte1, datatemp2
                         shr flipbyte1, #8
@@ -810,13 +714,14 @@ sprite1                 mov     Addrtemp, destscrn
                         rdword  datatemp2, datatemp
                         
                         mov oldcolorbyte1, datatemp2
-                        and oldcolorbyte1, $FF
+                        and oldcolorbyte1, #$FF
                         
                         mov oldflipbyte1, datatemp2
                         shr oldflipbyte1, #8
                         
-
-                      '  mov selectbyte1, $00
+                        
+                        
+                        
                         mov selectbyte1, flipbyte1
                         andn selectbyte1, colorbyte1
                         
@@ -828,25 +733,25 @@ sprite1                 mov     Addrtemp, destscrn
                         andn flipbyte1, selectbyte1
                         add oldflipbyte1, flipbyte1
                         
+       
                         mov datatemp2, oldflipbyte1
                         shl datatemp2, #8
                         add datatemp2, oldcolorbyte1
-                      
+                                          
                         
-                        ' ---- TRANSPARENCY END ----
-                        }}
+                        
+:skiptransparency       ' ---- TRANSPARENCY END ----       
+                        
                         
                         wrword  datatemp2, datatemp
                         
                         
-                        'add     Addrtemp, #2
                         add     datatemp, #2
                         add     sourceAddrTemp, #2
                         
                         djnz    valutemp, #:innerloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
 ' INNER LOOP END ----------------------------------                                                
-                        'add     sourceAddrTemp, w1     ' this isn't necessary because the loop increments it for us
-                        add     Addrtemp, #256           ' add width of screen in bytes
+                        add     Addrtemp, #$100           ' add width of screen in bytes
                         
 
                         djnz    valutemp2, #:outerloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
@@ -991,9 +896,11 @@ flipbyte1               long    0
 oldcolorbyte1           long    0
 oldflipbyte1            long    0    
 selectbyte1             long    0
-                        fit 496     
+bit_clipping            long    1 << 31
+bit_transparent         long    1 << 30  
 
 
+                        fit 496   
 
 
 

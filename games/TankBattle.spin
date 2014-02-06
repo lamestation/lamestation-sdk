@@ -225,7 +225,7 @@ PUB LogoScreen
     gfx.ClearScreen
     lcd.SwitchFrame
     gfx.ClearScreen
-    gfx.SpriteTrans(@teamlamelogo, 0, 3, 0)
+    gfx.Sprite(@teamlamelogo, 0, 3, 0, 1, 0)
     lcd.SwitchFrame
 
     audio.SetWaveform(3, 127)
@@ -326,7 +326,7 @@ PUB TankSelect
             
 
 
-        gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+        gfx.Sprite(@tanklogo, 0, 0, 0, 1, 0)
         gfx.TextBox(string("CHOOSE"), 6, 2)
 
         gfx.TextBox(string("You"),2,3)
@@ -337,8 +337,8 @@ PUB TankSelect
            
         gfx.TextBox(string("vs."),7,5)
             
-        gfx.SpriteTrans(tanktypegfx[yourtype], 3, 4, 3) 
-        gfx.SpriteTrans(tanktypegfx[theirtype], 11, 4, 2) 
+        gfx.Sprite(tanktypegfx[yourtype], 3, 4, 3, 1, 0) 
+        gfx.Sprite(tanktypegfx[theirtype], 11, 4, 2, 1, 0) 
 
        ' gfx.TextBox(string("At"),3,7)   
         'gfx.TextBox(levelname[currentlevel],5,7)  
@@ -412,7 +412,7 @@ PUB LevelSelect
               clicked := 1       
 
 
-        gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+        gfx.Sprite(@tanklogo, 0, 0, 0, 1, 0)
         gfx.TextBox(string("Level:"),0,2)                  
         gfx.TextBox(levelname[currentlevel],5,2)
 
@@ -441,7 +441,7 @@ PUB TankFaceOff
         lcd.SwitchFrame         
         gfx.ClearScreen
 
-        gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+        gfx.Sprite(@tanklogo, 0, 0, 0, 0, 0)
         gfx.TextBox(string("Prepare for battle..."),2,3)
         
         if controls & (SW1+SW2+SW3) <> 0
@@ -678,13 +678,13 @@ PUB GameLoop : menureturn
                   if (tankxtemp => 0) and (tankxtemp =< SCREEN_BW-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_BH - tankh[yourtank])
 
                     if tankdir[tankindex] == DIR_D
-                        gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 0)
+                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 0, 1, 0)
                     elseif tankdir[tankindex] == DIR_U       
-                        gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 1)
+                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 1, 1, 0)
                     elseif tankdir[tankindex] == DIR_L       
-                        gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 2)
+                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 2, 1, 0)
                     elseif tankdir[tankindex] == DIR_R       
-                        gfx.SpriteTrans(tankgfx[tankindex], tankxtemp, tankytemp, 3)
+                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 3, 1, 0)
               
                                                              
           'CONTROL EXISTING BULLETS -----
@@ -704,7 +704,7 @@ PUB PauseMenu : menureturn
         lcd.SwitchFrame         
         gfx.ClearScreen
 
-        gfx.SpriteTrans(@tanklogo, 0, 0, 0)
+        gfx.Sprite(@tanklogo, 0, 0, 0, 0, 0)
         gfx.TextBox(string(" PAUSE!"),5,2)
 
 
@@ -731,7 +731,7 @@ PUB PauseMenu : menureturn
         else
           clicked := 0
           
-        gfx.SpriteTrans(@bulletgfx, 3, 4+menuchoice, 0)
+        gfx.Sprite(@bulletgfx, 3, 4+menuchoice, 0, 1, 0)
         gfx.TextBox(string("Return to Game"),4,4)
         gfx.TextBox(string("Change Level"),4,5)
         gfx.TextBox(string("Change Tank"),4,6)
@@ -968,7 +968,7 @@ PUB BulletHandler
           
 
 
-             gfx.SpriteTrans(@bulletgfx, bulletxtemp , bulletytemp, 0)
+             gfx.Sprite(@bulletgfx, bulletxtemp , bulletytemp, 0, 1, 0)
 
 
              repeat tankindex from 0 to TANKSMASK
@@ -1265,24 +1265,11 @@ byte    $0, $E1, $F, $CE, $1F, $9E, $3E, $39, $38, $39, $3F, $BE, $1F, $DE, $E, 
 
 
 teamlamelogo
-word    $200  'frameboost
-word    $10, $2   'width, height
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $18, $10, $18, $10, $18, $10, $18, $10, $F8, $0, $F8, $0, $18, $10, $18, $10, $18, $10, $18, $10, $0, $0, $F8, $40, $F8, $0, $D8, $90, $D8, $90, $D8, $90
-byte    $D8, $90, $D8, $90, $D8, $90, $D8, $90, $D8, $90, $0, $0, $0, $0, $80, $0, $E0, $0, $F8, $80, $38, $20, $F8, $80, $E0, $0, $80, $0, $0, $0, $0, $0
-byte    $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $80, $0
-byte    $E0, $0, $F8, $80, $38, $20, $F8, $80, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0
-byte    $F8, $0, $F8, $0, $F8, $0, $0, $0, $F8, $40, $F8, $0, $D8, $90, $D8, $90, $D8, $90, $D8, $90, $D8, $90, $D8, $90, $D8, $90, $D8, $90, $0, $0, $18, $10
-byte    $78, $40, $18, $10, $0, $0, $78, $40, $18, $10, $70, $40, $18, $10, $70, $40, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $F, $8, $F, $8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $7, $4, $F, $8, $C, $8, $C, $8, $C, $8
-byte    $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $E, $8, $F, $8, $3, $2, $0, $0, $0, $0, $0, $0, $3, $2, $F, $8, $E, $8, $C, $8
-byte    $F, $8, $F, $8, $1, $1, $7, $4, $F, $8, $E, $8, $F, $8, $7, $4, $1, $1, $F, $8, $F, $8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $7, $4, $F, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $0, $0, $C, $8, $E, $8, $F, $8
-byte    $3, $2, $0, $0, $0, $0, $0, $0, $3, $2, $F, $8, $E, $8, $C, $8, $F, $8, $F, $8, $1, $1, $7, $4, $F, $8, $E, $8, $F, $8, $7, $4
-byte    $1, $1, $F, $8, $F, $8, $0, $0, $7, $4, $F, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $C, $8, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+word	$200  'frameboost
+word	$10, $2   'width, height
+byte	$0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $8, $0, $8, $0, $8, $0, $8, $0, $F8, $0, $F8, $0, $8, $0, $8, $0, $8, $0, $8, $0, $0, $0, $B8, $0, $F8, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $0, $0, $0, $0, $80, $0, $E0, $0, $78, $0, $18, $0, $78, $0, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $80, $0, $E0, $0, $78, $0, $18, $0, $78, $0, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $B8, $0, $F8, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $0, $0, $8, $0, $38, $0, $8, $0, $0, $0, $38, $0, $8, $0, $30, $0, $8, $0, $30, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+byte	$0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $7, $0, $7, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $6, $0, $7, $0, $1, $0, $0, $0, $0, $0, $0, $0, $1, $0, $7, $0, $6, $0, $4, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $6, $0, $7, $0, $3, $0, $0, $0, $7, $0, $7, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $0, $0, $4, $0, $6, $0, $7, $0, $1, $0, $0, $0, $0, $0, $0, $0, $1, $0, $7, $0, $6, $0, $4, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $6, $0, $7, $0, $3, $0, $0, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+
 
 
 

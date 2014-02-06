@@ -21,6 +21,8 @@ CON
     ENEMIES = 10
     
     PLAYERSPEED = 1
+    BULLSPEED = 2
+    ENEMSPEED = 1
 
     'SONG PLAYER
     ENDOFSONG = 0
@@ -95,12 +97,12 @@ PUB Main
     lcd.SwitchFrame
 
     clicked := 0
-'    StaticScreen
-'    LogoScreen
+    StaticScreen
+    LogoScreen
     
     repeat
-   '     TitleScreen
-   '     LevelStage
+        TitleScreen
+    '    LevelStage
         BossStage
 
 
@@ -111,7 +113,7 @@ PUB StaticScreen
     audio.LoadSong(@staticSong)
     audio.PlaySong
     
-    repeat x from 0 to 20
+    repeat x from 0 to 100
         lcd.SwitchFrame
         gfx.Static
         
@@ -214,7 +216,7 @@ PUB HandleBullets
             if bulletx[bulletindex] => SCREEN_BW << 3
                 bulleton[bulletindex] := 0
             else
-                gfx.Sprite(@gfx_laser, bulletx[bulletindex] >> 3, bullety[bulletindex] >> 3, 0, 0)
+                gfx.Sprite(@gfx_laser, bulletx[bulletindex] >> 3, bullety[bulletindex] >> 3, 0, 1, 0)
                 
 PUB HandleEnemies
 
@@ -222,7 +224,7 @@ PUB HandleEnemies
         if enemyon[enemyindex]
             enemyx[enemyindex] -= enemyspeed[enemyindex]
             if enemyx[enemyindex] => 0
-                gfx.Sprite(enemygraphics[enemyon[enemyindex]], enemyx[enemyindex] >> 4, enemyy[enemyindex] >> 4, 0, 0)
+                gfx.Sprite(enemygraphics[enemyon[enemyindex]], enemyx[enemyindex] >> 4, enemyy[enemyindex] >> 4, 0, 1, 0)
             else
                 enemyon[enemyindex] := 0
 
@@ -257,7 +259,7 @@ PUB HandlePlayer
                 SpawnBullet(playerx >> 3 + 2,playery >> 3 + 1)                
                 bullettiming := 0
             
-        gfx.Sprite(@gfx_zeroforce, playerx >> 3, playery >> 3, 0, 0)             
+        gfx.Sprite(@gfx_zeroforce, playerx >> 3, playery >> 3, 0, 1, 0)             
         
 
 
@@ -265,7 +267,7 @@ PUB SpawnBullet(dx, dy)
     bulleton[nextbullet] := 1
     bulletx[nextbullet] := dx << 3
     bullety[nextbullet] := dy << 3    
-    bulletspeed[nextbullet] := 1
+    bulletspeed[nextbullet] := BULLSPEED
     
     nextbullet++
     if nextbullet => BULLETS
@@ -275,7 +277,7 @@ PUB SpawnEnemy(dx, dy, type)
     enemyon[nextenemy] := type
     enemyx[nextenemy] := dx << 4
     enemyy[nextenemy] := dy << 4    
-    enemyspeed[nextenemy] := 1
+    enemyspeed[nextenemy] := ENEMSPEED
     enemyhealth[nextenemy] := 1
     
     nextenemy++
@@ -350,7 +352,7 @@ PUB BossStage
         
      '   gfx.Sprite(@gfx_planet, 5,6, 0, 0)
         
-        HandlePlayer
+
 {{
         repeat bulletindex from 0 to constant(BULLETS-1)
             if bulleton[bulletindex]
@@ -375,7 +377,7 @@ PUB BossStage
                     blinkcount++
                 else
                     blinkcount += 5
-                    gfx.Sprite(@gfx_vortex, 8, 0, 0, 0)  
+                    gfx.Sprite(@gfx_vortex, 8, 0, 0, 0, 0)  
                     
                     
                 if blinkcount > 100
@@ -383,10 +385,10 @@ PUB BossStage
                     blinkon := 0
                               
             else
-                gfx.Sprite(@gfx_vortex, 8, 0, 0, 0)
-                gfx.Sprite(@gfx_vortex_hand, 12, 3, 0, 0)
+                gfx.Sprite(@gfx_vortex, 8, 0, 0, 0, 0)
+                gfx.Sprite(@gfx_vortex_hand, 12, 3, 0, 1, 0)
         else
-            gfx.Sprite(@gfx_blackhole, 11, 4, 0, 0)  
+            gfx.Sprite(@gfx_blackhole, 11, 4, 0, 0, 0)  
             
             gfx.TextBox(string("THIS IS THE END"), 3, 2)
             gfx.TextBox(string("Or is it?"),6,4)
@@ -395,7 +397,7 @@ PUB BossStage
             repeat x from 0 to 600000
             choice := 0
   
-        
+        HandlePlayer   
         HandleBullets
         
         
