@@ -67,24 +67,8 @@ CON
     FRAMEFLIP = SCREENSIZE_BYTES
     
     SCREENLOCK = 0
-  
-  
-'' Setting up the LCD requires the following variables to be
-'' defined in your application, and they must appear in this
-'' order. The names are not important; only the address of the
-'' framebuffer (screen) is passed to the LCD driver when
-'' initialized.
-''
-'' <pre>
-'' long    screenframe
-'' long    screen[SCREENSIZEB/4]
-'' </pre>
-''
 
 VAR
-
-
-
 
     word    screenpointer
     word    screenframe
@@ -103,7 +87,7 @@ PUB Start
     return @screenpointer
 
 
-PUB SwitchFrame
+PUB SwitchFrame | x
 '' LameLCD, when initialized, sets up a double-buffered drawing surface
 '' to work with. It then switches back and forth between drawing to a
 '' buffer and outputting the contents of that buffer to the screen.
@@ -121,6 +105,8 @@ PUB SwitchFrame
     else        
         screenframe := FRAMEFLIP
         screenpointer := @screen
+        
+    repeat x from 0 to 0    ' I haven't yet figured out why this delay is needed
 
     lockclr(SCREENLOCK)    
     
