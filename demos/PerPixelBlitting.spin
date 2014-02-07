@@ -56,47 +56,24 @@ VAR
 
     word    rotate
 
+
+
+
+            
+
+
+
+
+
 PUB Graphics_Demo
 
     dira~
     gfx.Start(lcd.Start)
     
-    sourcegfx := @gfx_test_checker
-      
-      
-    ' one to one
-'    repeat imgpointer from 0 to TOTALBUFFER_BYTES/2-1 step 1
- '       word[@blahscreen][imgpointer] := word[sourcegfx][imgpointer]   
-
-    ' 8x8 blocks
-
-    repeat index_y from 0 to 7 step 1
-      repeat index_x from 0 to 15
-    
-     '   index := index_x + index_y*16*8
-       ' index := index_x
-        repeat index1 from 0 to 15
-            translatematrix_dest[index1] := 0
-        
-        repeat index1 from 0 to 7
-          srcpointer := index_x + (index_y << 7) + (index1 << 4)     ' y is the long axis in linear mode; 256 bits/2 (word aligned here)
-
-          translatematrix_src[index1] := word[sourcegfx][srcpointer] 
-        
-          rotate := 1
-          repeat index2 from 0 to 15
-            translatematrix_dest[index2] += ( translatematrix_src[index1] & rotate ) >> index2 << index1
-            rotate <<= 1
-        
-        
-        repeat index1 from 0 to 15
-          destpointer := (index_x << 4) + (index_y << 8) + index1    ' x is long axis in LCD layout
-
-          byte[@blahscreen][destpointer] := translatematrix_dest[index1]
-            
-        
 
         
+
+    TranslateBuffer
     
 
     repeat
@@ -112,9 +89,62 @@ PUB Graphics_Demo
         
         repeat x from 0 to 100
 
+
+
+
+PUB TranslateBuffer
+
+    sourcegfx := @gfx_test_checker
+      
+      
+    ' one to one
+'    repeat imgpointer from 0 to TOTALBUFFER_BYTES/2-1 step 1
+ '       word[@blahscreen][imgpointer] := word[sourcegfx][imgpointer]   
+
+    ' 8x8 blocks
+    
+    srcpointer := 0
+    destpointer := 0
+
+    repeat index_y from 0 to 7 step 1
+      repeat index_x from 0 to 15
+    
+        srcpointer  := index_x + (index_y << 7)              ' y is the long axis in linear mode; 256 bits/2 (word aligned here)
+        destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
+
+
+
+
+        ' COPY FROM SRC        
+        repeat index1 from 0 to 15
+            translatematrix_dest[index1] := 0
         
         
+        ' TRANSLATION
+        repeat index1 from 0 to 7
+          translatematrix_src[index1] := word[sourcegfx][srcpointer + (index1 << 4)] 
         
+          rotate := 1
+          repeat index2 from 0 to 15
+            translatematrix_dest[index2] += ( translatematrix_src[index1] & rotate ) >> index2 << index1
+            rotate <<= 1
+        
+        
+        ' COPY TO DEST
+        repeat index1 from 0 to 15
+          byte[@blahscreen][destpointer + index1] := translatematrix_dest[index1]        
+        
+
+      '  srcpointer += 1
+       ' destpointer += (1 << 4)
+        
+
+    '  srcpointer += (1 << 7)
+    '  destpointer += (1 << 8)
+
+
+
+
 
 
 
