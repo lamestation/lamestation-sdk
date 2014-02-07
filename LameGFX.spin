@@ -234,8 +234,6 @@ PUB Blit(source)
    '     word[screen][imgpointer] := word[source][imgpointer]
     '   
     'lockclr(SCREENLOCK) 
-    
-    return source
 
 
 
