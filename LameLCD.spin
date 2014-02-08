@@ -58,32 +58,29 @@ CON
     SCREEN_W = 128
     SCREEN_H = 64
     BITSPERPIXEL = 2
-    FRAMES = 2
 
     SCREEN_H_BYTES = SCREEN_H / 8
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
-    TOTALBUFFER_BYTES = SCREENSIZE_BYTES * FRAMES
-
-    FRAMEFLIP = SCREENSIZE_BYTES
+    TOTALBUFFER_BYTES = SCREENSIZE_BYTES
     
     SCREENLOCK = 0
 
 VAR
 
-    word    screenpointer
     word    screenframe
-    word    screen[TOTALBUFFER_BYTES/2]
+    word    screenpointer
+    word    framepointer
+    word    screen1[TOTALBUFFER_BYTES/2]
+    word    screen2[TOTALBUFFER_BYTES/2]
+    
+OBJ
 
+    pst : "LameSerial"
 
 PUB Start
 '' 
-    cognew(@lcd_entry, @screen)
-    
-    screenframe := 0
-    screenpointer := @screen
-    
- '   pst.StartRxTx(16, 17, 0, 115200)    ' connected on EX0,EX1   
-    
+    cognew(@lcd_entry, @framepointer)
+    SwitchFrame    
     return @screenpointer
 
 
@@ -99,12 +96,14 @@ PUB SwitchFrame | x
 
     repeat until not lockset(SCREENLOCK) 
 
-    if screenframe        
+    if screenframe    
         screenframe := 0
-        screenpointer := @screen+FRAMEFLIP
+        framepointer := @screen1
+        screenpointer := @screen2
     else        
-        screenframe := FRAMEFLIP
-        screenpointer := @screen
+        screenframe := 1
+        framepointer := @screen2
+        screenpointer := @screen1
         
     repeat x from 0 to 0    ' I haven't yet figured out why this delay is needed
 
@@ -117,9 +116,7 @@ DAT
 
                         'get screen and dirrrr addresses        
 lcd_entry               mov     dira, diravalue
-                        mov     screenAddr, par
-                        mov     frameAddr, screenAddr
-                        sub     frameAddr, #2
+                        mov     frameAddr, par
 
                         mov     LCD_time, cnt
                         add     LCD_time, LCD_frameperiod
@@ -165,14 +162,12 @@ lcd_entry               mov     dira, diravalue
 'BEGIN SCREEN DRAWING LOOP ------------------------------
 restartloop             mov     addrcnt, #64
 
-                        rdword  frame, frameAddr
+                        rdword  screenAddr, frameAddr
 
 
 'DRAW STUFF LOOK ---------------------------------------     
             
 drawscreen              mov     Addrtemp, screenAddr
-                        cmp     frame, #0       wz
-if_nz                   add     Addrtemp, frameflip1
    
                         add     Addrtemp, screenindex 'inc screen index after using
                         add     screenindex, #2
@@ -289,7 +284,6 @@ LCD_enable              long    (1 << EN)          'already shifted
 
 LCD_pageToZero          long    (LCD_setPage + LCD_CE_B)
 LCD_addressToZero       long    (LCD_setAddress + LCD_CE_B)
-frameflip1              long    SCREENSIZE_BYTES
 
 screenflags             long    1
 
