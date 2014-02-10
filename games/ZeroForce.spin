@@ -102,7 +102,7 @@ PUB Main
     
     repeat
         TitleScreen
-    '    LevelStage
+        'LevelStage
         BossStage
 
 
@@ -131,7 +131,7 @@ PUB LogoScreen
     repeat x from 0 to 100000
     
     gfx.ClearScreen
-    gfx.SpriteTrans(@teamlamelogo, 0, 3, 0)
+    gfx.Sprite(@teamlamelogo, 0, 3, 0, 0, 0)
     lcd.SwitchFrame
 
     audio.SetWaveform(3, 127)
