@@ -1,16 +1,14 @@
-{{
-LameAudio Synthesizer
-─────────────────────────────────────────────────
-Version: 1.0
-Copyright (c) 2013 LameStation LLC
-See end of file for terms of use.
-
-Authors: Brett Weir
-─────────────────────────────────────────────────
-}}
-
+'' LameControl
+'' ─────────────────────────────────────────────────
+'' Version: 1.0
+'' Copyright (c) 2013 LameStation LLC
+'' See end of file for terms of use.
+'' 
+'' Authors: Brett Weir
+'' ─────────────────────────────────────────────────
+''
 '' LameControl? More like Game Control!
-
+''
 '' This library is a simple wrapper around the
 '' buttons and joystick used by the LameStation
 '' to both show how the controls work and make
@@ -66,3 +64,5 @@ PUB Down
     return controls & J_D
 
 
+PUB AnyJoy
+    return controls & (J_L+J_R+J_U+J_D)
