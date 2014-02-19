@@ -873,26 +873,36 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                        ' Begin copying data       
 ' INDEX_Y LOOP -------------------------------------
                         mov     index_y, #8                 
-:indexyloop             mov     datatemp, Addrtemp
+:indexyloop             
 
 
 ' INDEX_X LOOP -------------------------------------
                         mov     index_x, #16
 :indexxloop                 
           
-                        ' srcpointer  := (index_x << 2 )+ (index_y << 8)   (y is the long axis in linear mode; 256 bytes)
-                        '             := ((index_y << 6) + index_x) << 2     ' refactor to not need temp variables
-                        mov     srcpointer, index_y
-                        shl     srcpointer, #6
-                        add     srcpointer, index_x
-                        shl     srcpointer, #2
+                        ' srcpointer  := (index_x << 1 )+ (index_y << 8)   (y is the long axis in linear mode; 256 bytes)
+                        '             := ((index_y << 7) + index_x) << 1     ' refactor to not need temp variables
+                        mov     valutemp, #8
+                        sub     valutemp, index_y
+                        mov     valutemp2, #16
+                        sub     valutemp2, index_x                        
+                        
+                        
+                        mov     srcpointer, valutemp
+                        shl     srcpointer, #7
+                        add     srcpointer, valutemp2
+                        shl     srcpointer, #1
+
+                        add     srcpointer, sourceAddrTemp
                         
                         ' destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
                         '             := ((index_y << 4) + index_x) << 4          
-                        mov     destpointer, index_y
+                        mov     destpointer, valutemp
                         shl     destpointer, #4
-                        add     destpointer, index_x
+                        add     destpointer, valutemp2
                         shl     destpointer, #4
+                        add     destpointer, AddrTemp
+                       
           
 
                         ' COPY FROM SRC        
@@ -903,14 +913,7 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         ' http://forums.parallax.com/showthread.php/116075-indirect-addressing-in-assembly
                         ' "The "0-0" is just a placeholder. By convention, that implies that the instruction field will be modified somewhere else in the code."
                         ' Apparently when addressing, you add the length and subtract the index; that way, you can use
-                        ' djnz for your loop while still address from 0 onwards, instead of the other end.
-                        
-                        {{
-                        movs    :readarray,datatemp
-                        nop
-:readarray              mov     datatemp, 0-0
-}}
-                        
+                        ' djnz for your loop while still address from 0 onwards, instead of the other end.                        
                         
                         ' important note: all cog memory is long-addressed, so you add 1 to get
                         ' to the next long, not 4, as in the byte-addressed hub memory.
@@ -926,10 +929,90 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         
                         
                         djnz    index1, #:initmatrixloop
-' INDEX_X LOOP END -------------------------------------      
-
-
 ' INITMATRIX LOOP END -------------------------------------
+
+
+
+
+                        ' TRANSLATION
+                        ' repeat index1 from 0 to 7
+                        '   translatematrix_src[index1] := word[sourcebuffer][srcpointer + (index1 << 4)] 
+                        ' 
+                        '   rotate := 1
+                        '   repeat index2 from 0 to 15
+                        '     translatematrix_dest[index2] += ( translatematrix_src[index1] & rotate ) >> index2 << index1
+                        '     rotate <<= 1
+' TRANSLATE OUTER LOOP -------------------------------------
+                        
+                        mov     index1, #8
+:translateloop_outer
+
+                        mov     datatemp, #8
+                        sub     datatemp, index1
+                        shl     datatemp, #5            ' 16 words fit horizontally on the screen = 32 bytes
+                        add     datatemp, srcpointer        
+                        
+                        mov     valutemp, #8
+                        sub     valutemp, index1
+                        
+                        rdword  translatelong, datatemp
+                        mov     rotate, #1
+                
+' TRANSLATE INNER LOOP -------------------------------------    
+                        mov     index2, #16 
+:translateloop_inner
+
+                        mov     datatemp2, translatelong
+                        and     datatemp2, rotate
+                        
+                        mov     valutemp2, #16
+                        sub     valutemp2, index2
+                        
+                        shr     datatemp2, valutemp2
+                        shl     datatemp2, valutemp
+                        
+                        shl     rotate, #1
+      
+                        mov     datatemp, #translatematrix_dest                       
+                        add     datatemp, #16
+                        sub     datatemp, index2
+                        movd    :translatearray,datatemp
+                        nop
+:translatearray         add     0-0, datatemp2
+
+
+                        djnz    index2, #:translateloop_inner
+' TRANSLATE INNER LOOP END -------------------------------------   
+                        
+                        djnz    index1, #:translateloop_outer
+' TRANSLATE OUTER LOOP END -------------------------------------
+
+
+
+                        ' COPY TO DEST
+                        ' repeat index1 from 0 to 15
+                        '     byte[destbuffer][destpointer + index1] := translatematrix_dest[index1]
+' COPYMATRIX LOOP -------------------------------------
+                        mov     index1, #16
+:copymatrixloop          
+                        mov     datatemp, #translatematrix_dest                       
+                        add     datatemp, #16
+                        sub     datatemp, index1
+                        movs    :readarray,datatemp
+                        nop
+:readarray              mov     datatemp2, 0-0
+                        
+                        mov     datatemp3, destpointer
+                        add     datatemp3, #16
+                        sub     datatemp3, index1
+                        
+                        wrbyte  datatemp2, datatemp3
+
+                        
+                        djnz    index1, #:copymatrixloop
+' COPYMATRIX LOOP END -------------------------------------
+
+
 
 
 
@@ -945,48 +1028,6 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
 
 
 
-
-
-
-
-
-
-
-{{
-PUB TranslateBuffer(destbuffer, sourcebuffer)
-
-    srcpointer := 0
-    destpointer := 0
-
-    repeat index_y from 0 to 7 step 1
-      repeat index_x from 0 to 15
-    
-        srcpointer  := index_x + (index_y << 7)              ' y is the long axis in linear mode; 256 bits/2 (word aligned here)
-        destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
-                        (index_x << 4) + (index_y << 8) == (index_x + (y << 4)) << 4 == ((index_y << 4) + index_x) << 4
-
-
-
-
-        ' COPY FROM SRC        
-        repeat index1 from 0 to 15
-            translatematrix_dest[index1] := 0
-        
-        
-        ' TRANSLATION
-        repeat index1 from 0 to 7
-          translatematrix_src[index1] := word[sourcebuffer][srcpointer + (index1 << 4)] 
-        
-          rotate := 1
-          repeat index2 from 0 to 15
-            translatematrix_dest[index2] += ( translatematrix_src[index1] & rotate ) >> index2 << index1
-            rotate <<= 1
-        
-        
-        ' COPY TO DEST
-        repeat index1 from 0 to 15
-          byte[destbuffer][destpointer + index1] := translatematrix_dest[index1]
-}}
 
 
 
@@ -1062,7 +1103,8 @@ index_y                 long    0
 srcpointer              long    0
 destpointer             long    0
 
-translatematrix_src     res     8
+translatelong           long    0
+rotate                  long    0
 translatematrix_dest    res    16
 
 
