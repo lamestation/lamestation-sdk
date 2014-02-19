@@ -78,9 +78,9 @@ OBJ
     pst : "LameSerial"
 
 PUB Start
-'' 
+
     cognew(@lcd_entry, @framepointer)
-    SwitchFrame    
+    SwitchFrame
     return @screenpointer
 
 

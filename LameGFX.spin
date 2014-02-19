@@ -787,34 +787,34 @@ box1                    mov     Addrtemp, destscrn
                         rdword  sourceAddrTemp, sourceAddr
                         mov     valutemp, #8
                         
-                        
-                        '' (x << 3) + (y << 7)
+                        '' (x << 1) + (y << 5)
                         '' x and y are left-shifted in the instruction register
                         '' so they need to be shifted back so the above relation
                         '' is true.
-                        ''
-                        '' x << 3 = x << 8 >> 5
-                        '' y << 7 = y << 16 >> 9
-                        ''
-                        '' So it should be shifted x >> 5 and y >> 9
-                        '' Then add this data to the starting address position
                         ''
                         '' Another difference though is that the original code
                         '' is word-aligned, so to get the result here, we have to
                         '' left shift all values again once, to go from word
                         '' to byte aligned
                         ''
-                        '' x >> 5 << 1 = x >> 4
-                        '' y >> 9 << 1 = x >> 8
+                        '' x << 1 = x << 8 >> 7
+                        '' y << 5 = y << 16 >> 11
+                        ''
+                        '' So it should be shifted x >> 7 and y >> 11
+                        '' Then add this data to the starting address position
+                        ''
                      
                         mov     instruct1, instruct1full
                         and     instruct1, param1mask   ' get X position
-                        shr     instruct1, #4           ' x >> 4
-                        add     Addrtemp, instruct1
+                        shr     instruct1, #7           ' x >> 1
+                        mov     index_x, instruct1
+                        and     index_x, #$F            ' x % 8
+                        shr     instruct1, #3           ' x / 8    ' n pixels = 2*n bits
+                        add     Addrtemp, instruct1                        
 
                         mov     instruct1, instruct1full
                         and     instruct1, param2mask   ' get Y position
-                        shr     instruct1, #8           ' y >> 8
+                        shr     instruct1, #11           ' y >> 5
                         add     Addrtemp, instruct1
 
 
@@ -822,9 +822,18 @@ box1                    mov     Addrtemp, destscrn
 :loop                   mov     datatemp, Addrtemp
            
                         rdword  datatemp2, sourceAddrTemp
-
+                        shl     datatemp2, index_x      ' rotate source word
+                        mov     datatemp3, datatemp2    ' copy situation
+                        
+                        and     datatemp2, halfmask
+                        shr     datatemp3, #16
+                        and     datatemp3, halfmask
+                        
                         wrword  datatemp2, datatemp
-                        add     Addrtemp, #2
+                        add     datatemp, #2
+                        wrword  datatemp3, datatemp
+                        
+                        add     Addrtemp, #32               ' 16 words
                         add     sourceAddrTemp, #2
                         djnz    valutemp, #:loop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
                         jmp     #loopexit

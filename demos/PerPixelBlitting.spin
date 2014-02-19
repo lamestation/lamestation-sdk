@@ -27,7 +27,7 @@ CON
 
     SCREEN_H_BYTES = SCREEN_H / 8
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
-    TOTALBUFFER_BYTES = SCREENSIZE_BYTES * FRAMES
+    TOTALBUFFER_BYTES = SCREENSIZE_BYTES
 
     FRAMEFLIP = SCREENSIZE_BYTES
     
@@ -36,13 +36,14 @@ CON
 
 OBJ
         lcd     :               "LameLCD" 
-        gfx     :               "LameGFX" 
+        gfx     :               "LameGFX"
+        ctrl    :               "LameControl"
         pst     :               "LameSerial"
 
 VAR
 
     long    x  
-    long    prebuffer[TOTALBUFFER_BYTES/4]
+    word    prebuffer[TOTALBUFFER_BYTES/2]
     word    translatematrix_src[8]
     byte    translatematrix_dest[16]
     word    destpointer
@@ -59,6 +60,11 @@ VAR
     
     word    screenpointer
     word    screen
+    word    anotherpointer
+    
+    
+    byte    pos_x
+    byte    pos_y
 
 
 
@@ -66,43 +72,38 @@ PUB Graphics_Demo
 
     dira~
     screenpointer := lcd.Start
-    gfx.Start(screenpointer)
+    anotherpointer := @prebuffer
+    gfx.Start(@anotherpointer)
+    ctrl.Start
     
     repeat
-    
-    
-      '  TranslateBuffer(word[screenpointer], @gfx_test_rpgtown)
-   
+       { 
+        repeat x from 0 to 10000
+        gfx.Blit(@gfx_test_checker)        
+        gfx.TranslateBuffer(@prebuffer, word[screenpointer])
         lcd.SwitchFrame
+   }
+            ctrl.Update
+            
+            if ctrl.Right
+                pos_x += 1
 
-     '   TranslateBuffer(word[screenpointer], @gfx_test_checker)
-        
-        'gfx.Blit(@gfx_test_checker)
-        gfx.TranslateBuffer(@gfx_test_checker, word[screenpointer])
-        
-        'repeat x from 0 to 100000
-        
+            if ctrl.Left
+                pos_x -= 1
 
-   
-        lcd.SwitchFrame
-   
-        gfx.TranslateBuffer(@gfx_test_rpgtown, word[screenpointer])
-'        TranslateBuffer(word[screenpointer], @gfx_test_rpgtown)
-        
-        
-        
-        
-        
-       ' repeat x from 0 to 100000
+            if ctrl.Up
+                pos_y -= 1
 
-'        gfx.Blit(@gfx_test_rpgtown)
+            if ctrl.Down
+                pos_y += 1
         
-'        repeat x from 0 to 10000
+        'repeat pos_x from 0 to 63
+            repeat x from 0 to 1000
+            gfx.ClearScreen
+            gfx.Box(@gfx_test_box2,pos_x,pos_y)
+            gfx.TranslateBuffer(@prebuffer, word[screenpointer])
+            lcd.SwitchFrame
 
-   
-'        pst.Dec(cnt)
- '       pst.Char(pst#NL)
-  '      pst.Char(pst#LF)
 
 
 PUB TranslateBuffer(destbuffer, sourcebuffer)
@@ -114,8 +115,7 @@ PUB TranslateBuffer(destbuffer, sourcebuffer)
       repeat index_x from 0 to 15
     
         srcpointer  := ((index_y << 7) + index_x)       ' y is the long axis in linear mode; 256 bits/2 (word aligned here)
-'        destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
-        destpointer := ((index_y << 4) + index_x) << 4
+        destpointer := ((index_y << 4) + index_x) << 4      ' x is long axis in LCD layout
 
 
 
@@ -142,6 +142,13 @@ PUB TranslateBuffer(destbuffer, sourcebuffer)
 
 
 DAT
+
+
+gfx_test_box2
+word    $5554, $4001, $4dd1, $4dd1, $4dd1, $4dd1, $4001, $5555
+
+
+
 
 gfx_test_rpgtown
 word    $43c4, $d7c0, $d7c3, $d7c3, $c3d7, $c3d7, $03d7, $575c, $31f0, $43c4, $d7c0, $d7c3, $c3d7, $d7c3, $d7c3, $d7c3
@@ -280,6 +287,33 @@ word    $0004, $ffff, $0000, $ffff, $0000, $ffff, $0000, $ffff, $0000, $ffff, $0
 word    $0004, $ffff, $0000, $ffff, $0000, $ffff, $0000, $ffff, $0000, $ffff, $0000, $ffff, $0000, $ffff, $0000, $1fff
 word    $5554, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $1555
 word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+
+
+
+
+
+gfx_happyface
+word    64  'frameboost
+word    16, 16   'width, height
+
+word    $00aa, $aa00, $00aa, $aa00, $7ffa, $affd, $7ffa, $affd, $1c02, $8035, $1c02, $8035, $5002, $8004, $5002, $8004
+word    $4002, $8001, $4cc2, $8331, $ccce, $b333, $ccce, $b333, $cdde, $b773, $0ddc, $3770, $0cc0, $0330, $0000, $0000
+word    $0000, $0000, $3000, $000c, $33f0, $0fcc, $fff0, $0fff, $0d50, $0570, $0050, $0500, $fd1e, $b47f, $ff1e, $b4ff
+word    $547a, $ad15, $ff1e, $b4ff, $017a, $ad40, $f07a, $ad0f, $55ea, $ab55, $017a, $ad40, $ffaa, $aaff, $ffea, $abff
+word    $00aa, $aa00, $00aa, $aa00, $fffa, $afff, $fffa, $afff, $f002, $800f, $f002, $800f, $c002, $8003, $c002, $8003
+word    $c002, $8003, $c002, $8003, $c002, $8003, $c002, $8003, $c002, $8003, $c000, $0003, $c000, $0003, $c000, $0003
+word    $c000, $0003, $c000, $0003, $c000, $0003, $c000, $0003, $c000, $0003, $c000, $0003, $c00e, $8003, $c00e, $8003
+word    $c00a, $a003, $c00e, $b003, $c03a, $ac03, $c03a, $ac03, $f0ea, $ab0f, $f03a, $ac0f, $ffaa, $aaff, $ffea, $abff
+word    $0002, $aa00, $0002, $aa00, $fffd, $abff, $fffd, $abff, $003c, $ac00, $003c, $ac00, $000d, $b000, $000d, $b000
+word    $0001, $b000, $000d, $b000, $ccce, $b000, $ccce, $b000, $ddde, $b000, $ddc2, $c000, $ccc0, $c000, $c003, $c000
+word    $0000, $c000, $0000, $c000, $3f03, $c000, $3fff, $c000, $15c0, $c000, $1402, $c000, $117f, $b000, $13fa, $b000
+word    $1456, $ac00, $14fa, $b000, $f502, $ac00, $f4fa, $ac00, $fd56, $ab03, $fd02, $ac03, $fffe, $aaff, $fffe, $abff
+word    $00aa, $8000, $00aa, $8000, $ffea, $7fff, $ffea, $7fff, $003a, $3c00, $003a, $3c00, $000e, $7000, $000e, $7000
+word    $000e, $4000, $000e, $7000, $000e, $b333, $000e, $b333, $000e, $b777, $0003, $8377, $0003, $0333, $0003, $c003
+word    $0003, $0000, $0003, $0000, $0003, $c0fc, $0003, $fffc, $0003, $0354, $0003, $8014, $000e, $fd44, $000e, $afc4
+word    $003a, $9514, $000e, $af14, $003a, $805f, $003a, $af1f, $c0ea, $957f, $c03a, $807f, $ffaa, $bfff, $ffea, $bfff
+
+
 
 
 
