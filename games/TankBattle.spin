@@ -104,6 +104,7 @@ OBJ
     gfx     :               "LameGFX"
     audio   :               "LameAudio"
     pst     :               "LameSerial"
+    ctrl    :               "LameControl"
 
 VAR
 
@@ -121,8 +122,6 @@ VAR
     long    tilecnt
     long    tilecnttemp
 
-
-    long    controls
 
     long    xoffset
     long    yoffset
@@ -197,6 +196,7 @@ PUB Main
     pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
 
     audio.Start
+    ctrl.Start
 
     gfx.ClearScreen
     lcd.SwitchFrame
@@ -246,14 +246,14 @@ PUB TitleScreen
 
 
     choice := 1
-    repeat until choice == 0  
-        controls := ina   
+    repeat until not choice
+        ctrl.Update
         lcd.SwitchFrame
 
         gfx.Blit(@excitingtank)   
 
-        if controls & (SW1+SW2+SW3) <> 0
-              if clicked == 0
+        if ctrl.A or ctrl.B
+              if not clicked
                 choice := 0
                 clicked := 1
                
@@ -278,21 +278,21 @@ PUB TankSelect
 
     choice := 1
     joyclicked := 0
-    repeat until choice == 0
+    repeat until not choice
 
-        controls := ina   
+        ctrl.Update
         lcd.SwitchFrame         
         gfx.ClearScreen
 
-        if controls & (J_U+J_D) <> 0
+        if ctrl.Up or ctrl.Down
            if joyclicked == 0
               joyclicked := 1 
-              if controls & J_U <> 0
+              if ctrl.Up
                 if yourtype <> 0
                   yourtype--
                 else
                   yourtype := TANKTYPESMASK
-              if controls & J_D <> 0
+              if ctrl.Down
                 yourtype++
                 if yourtype > TANKTYPESMASK
                   yourtype := 0
@@ -303,8 +303,8 @@ PUB TankSelect
             joyclicked := 0
 
       
-        if controls & (SW1+SW2+SW3) <> 0
-          if clicked == 0
+        if ctrl.A or ctrl.B
+          if not clicked
             choice := 0
             clicked := 1
 
@@ -361,22 +361,22 @@ PUB LevelSelect
 
     choice := 1
     joyclicked := 0
-    repeat until choice == 0
+    repeat until not choice
 
-        controls := ina   
+        ctrl.Update
         lcd.SwitchFrame
         gfx.ClearScreen         
 
 
-        if controls & (J_U+J_D) <> 0
-           if joyclicked == 0
+        if ctrl.Up or ctrl.Down
+           if not joyclicked
               joyclicked := 1 
-              if controls & J_U <> 0
+              if ctrl.Up
                 if currentlevel <> 0
                   currentlevel--
                 else
                   currentlevel := LEVELSMASK
-              if controls & J_D <> 0
+              if ctrl.Down
                 currentlevel++
                 if currentlevel > LEVELSMASK
                   currentlevel := 0
@@ -388,8 +388,8 @@ PUB LevelSelect
               
 
         
-        if controls & (SW1+SW2+SW3) <> 0
-          if clicked == 0
+        if ctrl.A or ctrl.B
+          if not clicked
             choice := 0
             clicked := 1
 
@@ -435,17 +435,17 @@ PUB LevelSelect
 PUB TankFaceOff
          
     choice := 1
-    repeat until choice == 0
+    repeat until not choice
 
-        controls := ina   
+        ctrl.Update 
         lcd.SwitchFrame         
         gfx.ClearScreen
 
         gfx.Sprite(@tanklogo, 0, 0, 0, 0, 0)
         gfx.TextBox(string("Prepare for battle..."),2,3)
         
-        if controls & (SW1+SW2+SW3) <> 0
-          if clicked == 0
+        if ctrl.A or ctrl.B
+          if not clicked
             choice := 0
             clicked := 1
 
@@ -471,9 +471,9 @@ PUB GameLoop : menureturn
 
     clicked := 0
     choice := 0                               
-    repeat while choice == 0
+    repeat while not choice
 
-        controls := ina
+        ctrl.Update
         lcd.SwitchFrame
 
           if tankon[yourtank] == 1   
@@ -484,13 +484,13 @@ PUB GameLoop : menureturn
 
               'TANK CONTROL
               'LEFT AND RIGHT   
-              if controls & J_L <> 0
+              if ctrl.Left
                  tankdir[yourtank] := 0        
 
                  tankx[yourtank]--
                   if tankx[yourtank] < 0
                       tankx[yourtank] := 0
-              if controls & J_R <> 0
+              if ctrl.Right
                   tankdir[yourtank] := 1
               
                   tankx[yourtank]++
@@ -534,13 +534,13 @@ PUB GameLoop : menureturn
 
            
           'UP AND DOWN   
-              if controls & J_U <> 0
+              if ctrl.Up
                   tankdir[yourtank] := 2
                   
                   tanky[yourtank]--
                   if tanky[yourtank] < 0
                       tanky[yourtank] := 0
-              if controls & J_D <> 0
+              if ctrl.Down
                   tankdir[yourtank] := 3  
 
                   tanky[yourtank]++
@@ -588,8 +588,8 @@ PUB GameLoop : menureturn
      
                
                
-              if controls & SW1 <> 0
-                if clicked == 0
+              if ctrl.A
+                if not clicked
                   clicked := 1
                
                  ' choice := GO_MENU 'Go to menu
@@ -597,22 +597,11 @@ PUB GameLoop : menureturn
                 '  yourtank++
                  ' yourtank &= TANKSMASK
 
-              elseif controls & SW2 <> 0
+              elseif ctrl.B
                   if tankon[yourtank] == 1
                     SpawnBullet(yourtank)
                     bulletspawned := 1
                 
-              elseif controls & SW3 <> 0
-                if clicked == 0
-                  clicked := 1
-                  {
-                  yourtype++
-                  if yourtype > TANKTYPESMASK
-                    yourtype := 0
-                  tankgfx[yourtank] := tanktypegfx[yourtype]
-                  tankw[yourtank] := word[tankgfx[yourtank]][1]
-                  tankh[yourtank] := word[tankgfx[yourtank]][2]
-                   }
               else
                   clicked := 0
                
@@ -624,11 +613,11 @@ PUB GameLoop : menureturn
 
               'TANK CONTROL
               'LEFT AND RIGHT   
-              if controls & J_L <> 0
+              if ctrl.Left
                   xoffset--
                   if xoffset < 0
                       xoffset := 0 
-              if controls & J_R <> 0
+              if ctrl.Right
                   xoffset++
                   if xoffset > levelw-SCREEN_BW
                       xoffset := levelw-SCREEN_BW
@@ -636,17 +625,17 @@ PUB GameLoop : menureturn
 
                       
               'UP AND DOWN   
-              if controls & J_U <> 0
+              if ctrl.Up
                   yoffset-- 
                   if yoffset < 0
                       yoffset := 0  
-              if controls & J_D <> 0
+              if ctrl.Down
                   yoffset++
                   if yoffset > levelh-SCREEN_BH
                       yoffset := levelh-SCREEN_BH  
 
                
-              if controls & (SW1+SW2+SW3) <> 0
+              if ctrl.A or ctrl.B
                 if clicked == 0
                   SpawnTank(yourtank, 0, 1)
                   tankspawned := 1      
@@ -698,9 +687,9 @@ PUB GameLoop : menureturn
 PUB PauseMenu : menureturn
 
     choice := 0
-    repeat while choice == 0
+    repeat while not choice
            
-        controls := ina   
+        ctrl.Update 
         lcd.SwitchFrame         
         gfx.ClearScreen
 
@@ -708,15 +697,15 @@ PUB PauseMenu : menureturn
         gfx.TextBox(string(" PAUSE!"),5,2)
 
 
-        if controls & (J_U+J_D) <> 0
-           if joyclicked == 0
+        if ctrl.Up or ctrl.Down
+           if not joyclicked
               joyclicked := 1 
-              if controls & J_U <> 0
+              if ctrl.Up
                 if menuchoice <> 0
                   menuchoice--
                 else
                   menuchoice := PAUSEMENU1_CHOICES
-              if controls & J_D <> 0
+              if ctrl.Down
                 menuchoice++
                 if menuchoice > PAUSEMENU1_CHOICES
                   menuchoice := 0 
@@ -724,8 +713,8 @@ PUB PauseMenu : menureturn
             joyclicked := 0
              
 
-        if controls & (SW1+SW2+SW3) <> 0
-          if clicked == 0
+        if ctrl.A or ctrl.B
+          if not clicked
             choice := GO_GAME
             clicked := 1
         else
@@ -1265,10 +1254,10 @@ byte    $0, $E1, $F, $CE, $1F, $9E, $3E, $39, $38, $39, $3F, $BE, $1F, $DE, $E, 
 
 
 teamlamelogo
-word	$200  'frameboost
-word	$10, $2   'width, height
-byte	$0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $8, $0, $8, $0, $8, $0, $8, $0, $F8, $0, $F8, $0, $8, $0, $8, $0, $8, $0, $8, $0, $0, $0, $B8, $0, $F8, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $0, $0, $0, $0, $80, $0, $E0, $0, $78, $0, $18, $0, $78, $0, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $80, $0, $E0, $0, $78, $0, $18, $0, $78, $0, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $B8, $0, $F8, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $0, $0, $8, $0, $38, $0, $8, $0, $0, $0, $38, $0, $8, $0, $30, $0, $8, $0, $30, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte	$0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $7, $0, $7, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $6, $0, $7, $0, $1, $0, $0, $0, $0, $0, $0, $0, $1, $0, $7, $0, $6, $0, $4, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $6, $0, $7, $0, $3, $0, $0, $0, $7, $0, $7, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $0, $0, $4, $0, $6, $0, $7, $0, $1, $0, $0, $0, $0, $0, $0, $0, $1, $0, $7, $0, $6, $0, $4, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $6, $0, $7, $0, $3, $0, $0, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+word    $200  'frameboost
+word    $10, $2   'width, height
+byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $8, $0, $8, $0, $8, $0, $8, $0, $F8, $0, $F8, $0, $8, $0, $8, $0, $8, $0, $8, $0, $0, $0, $B8, $0, $F8, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $0, $0, $0, $0, $80, $0, $E0, $0, $78, $0, $18, $0, $78, $0, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $80, $0, $E0, $0, $78, $0, $18, $0, $78, $0, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $B8, $0, $F8, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $0, $0, $8, $0, $38, $0, $8, $0, $0, $0, $38, $0, $8, $0, $30, $0, $8, $0, $30, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $7, $0, $7, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $6, $0, $7, $0, $1, $0, $0, $0, $0, $0, $0, $0, $1, $0, $7, $0, $6, $0, $4, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $6, $0, $7, $0, $3, $0, $0, $0, $7, $0, $7, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $0, $0, $4, $0, $6, $0, $7, $0, $1, $0, $0, $0, $0, $0, $0, $0, $1, $0, $7, $0, $6, $0, $4, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $6, $0, $7, $0, $3, $0, $0, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
 
 
 

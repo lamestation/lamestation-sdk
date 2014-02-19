@@ -113,6 +113,8 @@ else:
         try:
             #leveldata['Collision']
             collision_data = Image.open(collisionmap_name).convert("RGB")
+        except IOError:
+            process_output(layer_no_collision)
         except KeyError:
 #            print "No collision layer"
             process_output(layer_no_collision)
@@ -140,7 +142,7 @@ for tilemap in mapsets:
     packfile = tilemap+".pack"
     f = open(packfile,'w')
 
-    f.write("\nmapTable_%s\nword\t@" % os.path.basename(tilemap.split('.')[0]))
+    f.write("\nmapTable_%s\nword\t@" % os.path.basename(tilemap).split('.')[0])
 
     flist = []
     for level in mapsets[tilemap]:
@@ -149,10 +151,10 @@ for tilemap in mapsets:
     f.write(", @".join(flist))
     f.write("\n\n")
 
-    f.write(open(tilemap).read())
+#    f.write(open(tilemap).read())
 
     for level in mapsets[tilemap]:
         f.write(open(level).read())
     f.close()
 
-    print open(packfile,'r').read()
+print open(packfile,'r').read()
