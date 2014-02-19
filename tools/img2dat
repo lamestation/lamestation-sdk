@@ -16,6 +16,8 @@ ADDRESSES = 128
 PIXELS_PER_ADDRESS = 8
 BITS_PER_PIXEL = 2
 
+BITS_PER_BLOCK = 8
+
 def multiply_tuple(scalar,tup):
     return tuple([scalar*x for x in tup])
 
@@ -28,7 +30,7 @@ parser.add_argument('-m','--mode', nargs=1, metavar=('MODE'), choices=['sprite',
             sprite - An image with custom width/height and that may have multiple frames
             font - A bitmap font to be used with lame_text
         """)
-parser.add_argument('-b','--bits', nargs=1, metavar=('BITS'), type=int, choices=[2,8],default=2,
+parser.add_argument('-b','--bits', nargs=1, metavar=('BITS'), type=int, choices=[2,8],default=[2],
         help="Bit depth of images.")
 
 parser.add_argument('-f','--framesize', nargs=2, metavar=('WIDTH','HEIGHT'), type=int,
@@ -36,9 +38,6 @@ parser.add_argument('-f','--framesize', nargs=2, metavar=('WIDTH','HEIGHT'), typ
 
 parser.add_argument('-d','--display', action='store_true',
         help="Show graphic comparison of old and new images.")
-
-parser.add_argument('-o','--output', action='store_true',
-        help="Print data output to screen.")
 
 parser.add_argument('filenames', metavar='FILE', nargs='+', help='Files to convert')
 
@@ -66,7 +65,7 @@ else:
 
         output_txt.write("gfx_%s\n" % os.path.splitext(os.path.basename(filename))[0])
 
-        
+
         if args.mode[0] == 'sprite':
 
             # Check if framesize passed in arguments
@@ -78,74 +77,97 @@ else:
             else:
                 framesize = im.size
 
-            
+
             # Calculate frameboost constant, the precalculated frame size so 
             # that jumping to a frame requires only one multiplication, not three.
             frameboost = (framesize[0]*BITS_PER_PIXEL*framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF
-            dimensions = ((framesize[0]/PIXELS_PER_ADDRESS) & 0xFFFF , (framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF) 
+            dimensions = (framesize[0] & 0xFFFF , framesize[1] & 0xFFFF) 
 
-            output_txt.write("word\t$%X" % frameboost + "  'frameboost\n")
-            output_txt.write("word\t$%X, $%X   'width, height\n" % dimensions )
+            output_txt.write("word    %i" % frameboost + "  'frameboost\n")
+            output_txt.write("word    %i, %i   'width, height\n" % dimensions )
 
         elif args.mode[0] == 'block':
             framesize = im.size
 
 
 
-        bytecount = 0
+        wordcount = 0
+        colordata = 0
 
-        for page in range(0,im.size[1]/PIXELS_PER_ADDRESS):
-            for address in range(0,im.size[0]):
+        for y in range(0,im.size[1]):
+            for x in range(0,im.size[0]):
+
+                if x % BITS_PER_BLOCK == 0:
+                    colordata = 0
 
                 colorchar = 0
+                pixeldata = im.getpixel((x,y))
 
-                for pixel in range(0,PIXELS_PER_ADDRESS):
-
-                    x = address
-                    y = page*PIXELS_PER_ADDRESS + pixel
-
-                    pixeldata = im.getpixel((x,y))
-
+                if args.bits[0] == 2:
                     if type(pixeldata) is tuple:
                         coloravg = sum(pixeldata)/3
+
                     else:
                         coloravg = pixeldata
+# BLACK = 0
+# WHITE = 1
+# TRANSPARENT = 2
+# GRAY = 3
 
+                    # Pink is the alpha color
+                    if pixeldata == (255,0,255):
+                        output_im.putpixel((x,y), (255, 0, 255))
+                        colorchar = 2
+                    else:
+                        # if color is not black
+                        if coloravg > 40:
 
-                    # if color is not black
-                    if coloravg > 40:
-
-                        if coloravg < 210:
-                            colorchar += (1 << (pixel+8))
-
-                            # Pink is the alpha color
-                            if pixeldata == (255,0,255):
-                                output_im.putpixel((x,y), (255, 0, 255))
-                            else:
+                            # if not white, gray
+                            if coloravg < 210:
                                 output_im.putpixel((x,y), (139, 138, 116))
-                                colorchar += (1 << pixel)
+                                colorchar = 3
+                            else:
+                                output_im.putpixel((x,y), (255, 233, 166))
+                                colorchar = 1
 
                         else:
-                            output_im.putpixel((x,y), (255, 233, 166))
-                            colorchar += (1 << pixel)
+                            ## if black
+                            output_im.putpixel((x,y), (23,43,66))
+                            colorchar = 0
 
+                    colordata += (colorchar << ((x % BITS_PER_BLOCK)*2))
+
+
+                    if x % BITS_PER_BLOCK == BITS_PER_BLOCK-1 or x == im.size[0]-1:
+                        output_txt.write("$"+hex(colordata)[2:].zfill(BITS_PER_BLOCK/2))
+
+                    if x % BITS_PER_BLOCK == 0:
+                        if wordcount % (BITS_PER_BLOCK*2) == 0:
+                            output_txt.write("\nword    ")
+                        else:
+                            if x < im.size[0]-1:
+                                output_txt.write(", ")
+
+                        wordcount += 1
+
+
+
+
+
+
+
+                elif args.bits[0] == 8:
+                    if type(pixeldata) is tuple:
+                        r = pixeldata[0] >> 6 << 6
+                        g = pixeldata[1] >> 6 << 6
+                        b = pixeldata[2] >> 6 << 6
+                        output_im.putpixel((x,y), (r, g, b))
+                        colorchar = (r) + (g >> 2) + (b >> 4)
                     else:
-                        ## if black
-                        output_im.putpixel((x,y), (23,43,66))
+                        print "Color data not in tuple format?"
+                        sys.exit(1)
 
-
-                if bytecount % framesize[0] == 0:
-                    output_txt.write("byte\t")
-                output_txt.write("$%X" % (colorchar & 0xFF))
-                output_txt.write(", ")
-                output_txt.write("$%X" % (colorchar >> 8))
-                if not bytecount % framesize[0] == framesize[0]-1:
-                    output_txt.write(", ")
-                else:
-                    output_txt.write("\n")
-
-                bytecount += 1
-
+        output_txt.close()
 
         if args.display:
             # Create a canvas to paste both the input and output images onto
@@ -157,15 +179,11 @@ else:
             output_canvas = output_canvas.resize(multiply_tuple(SCALEFACTOR,(im.size[0],im.size[1]*2)))
             output_canvas.show()
 
+        print "'   Creating:",newfilename
+        print "'  Bit depth:", args.bits[0]
+        print "' Image Type:", args.mode[0]
+        print "' Image size:",im.size
+        print "' Frame size:",framesize
+        print "'------------------- COPY AFTER THIS LINE --------------------"
 
-            output_txt.close()
-
-
-        if args.output:
-            print "   Creating:",newfilename
-            print "  Bit depth:", args.bits
-            print " Image Type:", args.mode[0]
-            print " Image size:",im.size
-            print " Frame size:",framesize
-
-            print open(newfilename,'r').read()
+        print open(newfilename,'r').read()
