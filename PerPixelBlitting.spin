@@ -65,6 +65,16 @@ VAR
     
     byte    pos_x
     byte    pos_y
+    byte    pos_dir
+    byte    pos_speed
+    
+    byte    bulletbox_x
+    byte    bulletbox_y
+    byte    bulletbox
+    byte    bulletbox_dir
+    byte    bulletbox_speed
+    
+
 
 
 
@@ -83,26 +93,76 @@ PUB Graphics_Demo
         gfx.TranslateBuffer(@prebuffer, word[screenpointer])
         lcd.SwitchFrame
    }
+
+            lcd.SwitchFrame
             ctrl.Update
+
+            
+            gfx.ClearScreen
+            
+            
+            gfx.Box(@gfx_test_box2,pos_x,pos_y)
             
             if ctrl.Right
                 pos_x += 1
+                pos_dir := 1
 
             if ctrl.Left
                 pos_x -= 1
+                pos_dir := 3
 
-            if ctrl.Up
-                pos_y -= 1
+
+
+                
+            pos_y += pos_speed
+                
+            if pos_y < 50
+                pos_speed += 1
+            else
+                pos_y := 50
+                pos_speed := 0
+ 
+                 if ctrl.Up
+                    pos_dir := 0            
+                    pos_speed := -8
+            
+
 
             if ctrl.Down
-                pos_y += 1
+                pos_dir := 2
+                
+                
+            if ctrl.B or ctrl.A
+                bulletbox := 1
+                bulletbox_dir := pos_dir
+                bulletbox_x := pos_x
+                bulletbox_y := pos_y
+                bulletbox_speed := 1
+                
+                
+            if bulletbox
+
+                if bulletbox_speed < 5
+                    bulletbox_speed += 1
+               
+                if bulletbox_dir == 0
+                    bulletbox_y -= bulletbox_speed                
+                if bulletbox_dir == 1
+                    bulletbox_x += bulletbox_speed                
+                if bulletbox_dir == 2
+                    bulletbox_y += bulletbox_speed                
+                if bulletbox_dir == 3
+                    bulletbox_x -= bulletbox_speed                                    
+
+                if bulletbox_x =< 0 or bulletbox_x => 120 or bulletbox_y =< 0 or bulletbox_y => 56
+                    bulletbox := 0
+                else              
+                    gfx.Box(@gfx_test_box2,bulletbox_x,bulletbox_y)
         
-        'repeat pos_x from 0 to 63
-            repeat x from 0 to 1000
-            gfx.ClearScreen
-            gfx.Box(@gfx_test_box2,pos_x,pos_y)
+            repeat x from 0 to 1000            
+            
             gfx.TranslateBuffer(@prebuffer, word[screenpointer])
-            lcd.SwitchFrame
+
 
 
 
