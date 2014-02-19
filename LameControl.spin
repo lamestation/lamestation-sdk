@@ -17,14 +17,13 @@
 
 CON
 
-    J_U = 1 << 12
-    J_D = 1 << 13
-    J_R = 1 << 14
-    J_L = 1 << 15
+    J_U = |< 12
+    J_D = |< 13
+    J_L = |< 14
+    J_R = |< 15
    
-    SW1 = 1 << 24
-    SW2 = 1 << 25
-    SW3 = 1 << 26
+    SW_A = |< 25
+    SW_B = |< 26
      
 VAR
 
@@ -39,17 +38,11 @@ PUB Start
 PUB Update
     controls := ina
     
-PUB Menu
-    return controls & SW1
-    
 PUB A
-    return controls & SW2
+    return not controls & SW_A
     
 PUB B
-    return controls & SW3
-    
-PUB Any
-    return controls & (SW1+SW2+SW3)
+    return not controls & SW_B
 
 PUB Left
     return controls & J_L    
@@ -62,7 +55,3 @@ PUB Up
 
 PUB Down
     return controls & J_D
-
-
-PUB AnyJoy
-    return controls & (J_L+J_R+J_U+J_D)

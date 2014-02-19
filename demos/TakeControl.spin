@@ -29,10 +29,7 @@ PUB TakeControl | x
     repeat
         ctrl.Update
 
-        if ctrl.Any or ctrl.AnyJoy
+        if ctrl.A or ctrl.B or ctrl.Up or ctrl.Down or ctrl.Left or ctrl.Right
             outa[LED_PIN]~~
         else
             outa[LED_PIN]~
-        
-
-        repeat x from 0 to LED_PERIOD

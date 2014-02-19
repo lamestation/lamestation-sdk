@@ -70,34 +70,35 @@ PUB Graphics_Demo
     
     repeat
     
-        TranslateBuffer(word[screenpointer], @gfx_test_checker)
-   
-        lcd.SwitchFrame
     
-        TranslateBuffer(word[screenpointer], @gfx_test_rpgtown)
+      '  TranslateBuffer(word[screenpointer], @gfx_test_rpgtown)
    
         lcd.SwitchFrame
-   
-   
-        {
+
+     '   TranslateBuffer(word[screenpointer], @gfx_test_checker)
+        
         gfx.Blit(@gfx_test_checker)
         
-        repeat x from 0 to 1000
-    
-        lcd.SwitchFrame
+        repeat x from 0 to 10000
+        
 
-        repeat x from 0 to 1000
-        
-        TranslateBuffer(word[screenpointer], @gfx_test_checker)
-        
-        repeat x from 0 to 1000
-    
+   
         lcd.SwitchFrame
-
-        repeat x from 0 to 1000       
+   
+'        gfx.TranslateBuffer(@gfx_test_rpgtown, word[screenpointer])
+        TranslateBuffer(word[screenpointer], @gfx_test_rpgtown)
         
-        }
-      
+        
+        
+        
+        
+        repeat x from 0 to 10000
+
+'        gfx.Blit(@gfx_test_rpgtown)
+        
+'        repeat x from 0 to 10000
+
+   
 '        pst.Dec(cnt)
  '       pst.Char(pst#NL)
   '      pst.Char(pst#LF)
@@ -112,7 +113,8 @@ PUB TranslateBuffer(destbuffer, sourcebuffer)
       repeat index_x from 0 to 15
     
         srcpointer  := index_x + (index_y << 7)              ' y is the long axis in linear mode; 256 bits/2 (word aligned here)
-        destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
+'        destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
+        destpointer := (index_x + (index_y << 4)) << 4
 
 
 
@@ -134,19 +136,7 @@ PUB TranslateBuffer(destbuffer, sourcebuffer)
         
         ' COPY TO DEST
         repeat index1 from 0 to 15
-          byte[destbuffer][destpointer + index1] := translatematrix_dest[index1]        
-        
-
-      '  srcpointer += 1
-       ' destpointer += (1 << 4)
-        
-
-    '  srcpointer += (1 << 7)
-    '  destpointer += (1 << 8)
-
-
-
-
+          byte[destbuffer][destpointer + index1] := translatematrix_dest[index1]
 
 
 

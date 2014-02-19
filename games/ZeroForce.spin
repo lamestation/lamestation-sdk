@@ -157,14 +157,14 @@ PUB TitleScreen
 
 
     choice := 1
-  '  repeat until choice == 0  
-    repeat
+    repeat until choice == 0  
+  '  repeat
         lcd.SwitchFrame
 
         gfx.Blit(@gfx_zeroforcelogo)
         ctrl.Update
 
-        if ctrl.Any
+        if ctrl.A or ctrl.B
               if clicked == 0
                 choice := 0
                 clicked := 1
@@ -253,7 +253,7 @@ PUB HandlePlayer
                 playery := 6 << 3
 
                
-        if ctrl.Any
+        if ctrl.A or ctrl.B
             bullettiming++
             if bullettiming > 30
                 SpawnBullet(playerx >> 3 + 2,playery >> 3 + 1)                
