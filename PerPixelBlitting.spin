@@ -77,22 +77,23 @@ PUB Graphics_Demo
 
      '   TranslateBuffer(word[screenpointer], @gfx_test_checker)
         
-        gfx.Blit(@gfx_test_checker)
+        'gfx.Blit(@gfx_test_checker)
+        gfx.TranslateBuffer(@gfx_test_checker, word[screenpointer])
         
-        repeat x from 0 to 10000
+        'repeat x from 0 to 100000
         
 
    
         lcd.SwitchFrame
    
-'        gfx.TranslateBuffer(@gfx_test_rpgtown, word[screenpointer])
-        TranslateBuffer(word[screenpointer], @gfx_test_rpgtown)
+        gfx.TranslateBuffer(@gfx_test_rpgtown, word[screenpointer])
+'        TranslateBuffer(word[screenpointer], @gfx_test_rpgtown)
         
         
         
         
         
-        repeat x from 0 to 10000
+       ' repeat x from 0 to 100000
 
 '        gfx.Blit(@gfx_test_rpgtown)
         
@@ -112,9 +113,9 @@ PUB TranslateBuffer(destbuffer, sourcebuffer)
     repeat index_y from 0 to 7 step 1
       repeat index_x from 0 to 15
     
-        srcpointer  := index_x + (index_y << 7)              ' y is the long axis in linear mode; 256 bits/2 (word aligned here)
+        srcpointer  := ((index_y << 7) + index_x)       ' y is the long axis in linear mode; 256 bits/2 (word aligned here)
 '        destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
-        destpointer := (index_x + (index_y << 4)) << 4
+        destpointer := ((index_y << 4) + index_x) << 4
 
 
 
