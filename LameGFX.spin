@@ -806,7 +806,7 @@ box1                    mov     Addrtemp, destscrn
                      
                         mov     instruct1, instruct1full
                         and     instruct1, param1mask   ' get X position
-                        shr     instruct1, #7           ' x >> 1
+                        shr     instruct1, #7           ' x << 1
                         mov     index_x, instruct1
                         and     index_x, #$F            ' x % 8
                         shr     instruct1, #3           ' x / 8    ' n pixels = 2*n bits
@@ -818,18 +818,40 @@ box1                    mov     Addrtemp, destscrn
                         add     Addrtemp, instruct1
 
 
-                        '' Begin copying data       
+                        '' Begin copying data
 :loop                   mov     datatemp, Addrtemp
            
+                        '' Read old data in display buffer
+                        rdword  datatemp2, datatemp
+                        add     datatemp, #2
+                        rdword  blender1, datatemp
+                        shl     blender1, #16
+                        add     blender1, datatemp2
+                        
+                        
+                        ' read new word
                         rdword  datatemp2, sourceAddrTemp
                         shl     datatemp2, index_x      ' rotate source word
-                        mov     datatemp3, datatemp2    ' copy situation
+
+
+                        ' prepare mask for blending old and new
+                        mov     blendermask, halfmask
+                        shl     blendermask, index_x
                         
-                        and     datatemp2, halfmask
+                        andn    blender1, blendermask
+                        add     blender1, datatemp2
+
+
+                        ' split long into two words because we don't know whether this word
+                        ' falls on a long boundary, so we have to write it one at a time.
+                        mov     datatemp3, blender1    ' copy situation
+
+                        and     blender1, halfmask
                         shr     datatemp3, #16
                         and     datatemp3, halfmask
                         
-                        wrword  datatemp2, datatemp
+                        mov     datatemp, Addrtemp
+                        wrword  blender1, datatemp
                         add     datatemp, #2
                         wrword  datatemp3, datatemp
                         
@@ -1111,6 +1133,10 @@ index_x                 long    0
 index_y                 long    0
 srcpointer              long    0
 destpointer             long    0
+
+blender1                long    0
+blender2                long    0
+blendermask
 
 translatelong           long    0
 rotate                  long    0
