@@ -18,13 +18,16 @@ BITS_PER_PIXEL = 2
 
 BITS_PER_BLOCK = 8
 
+
+DEFAULT_FRAME=(8,8)
+
 def multiply_tuple(scalar,tup):
     return tuple([scalar*x for x in tup])
 
 
 parser = argparse.ArgumentParser(description='Convert images to Propeller Spin data blocks for use with Lame Graphics.')
 
-parser.add_argument('-m','--mode', nargs=1, metavar=('MODE'), choices=['sprite','font','block'], default=['sprite'],
+parser.add_argument('-m','--mode', nargs=1, metavar=('MODE'), choices=['sprite','font','block','tilemap'], default=['sprite'],
         help="""Indicates what the image is to be converted into:
             block - Image with no header, often used for tilemaps
             sprite - An image with custom width/height and that may have multiple frames
@@ -89,83 +92,91 @@ else:
         elif args.mode[0] == 'block':
             framesize = im.size
 
+        elif args.mode[0] == 'tilemap':
+            framesize = DEFAULT_FRAME
 
 
         wordcount = 0
         colordata = 0
 
-        for y in range(0,im.size[1]):
-            for x in range(0,im.size[0]):
+        for frame_y in range(0,im.size[1]/framesize[1]):
+            for frame_x in range(0,im.size[0]/framesize[0]):
 
-                if x % BITS_PER_BLOCK == 0:
-                    colordata = 0
+                for py in range(0,framesize[1]):
+                    for px in range(0,framesize[0]):
 
-                colorchar = 0
-                pixeldata = im.getpixel((x,y))
+                        x = frame_x*framesize[0] + px
+                        y = frame_y*framesize[1] + py
 
-                if args.bits[0] == 2:
-                    if type(pixeldata) is tuple:
-                        coloravg = sum(pixeldata)/3
+                        if x % BITS_PER_BLOCK == 0:
+                            colordata = 0
 
-                    else:
-                        coloravg = pixeldata
-# BLACK = 0
-# WHITE = 1
-# TRANSPARENT = 2
-# GRAY = 3
+                        colorchar = 0
+                        pixeldata = im.getpixel((x,y))
 
-                    # Pink is the alpha color
-                    if pixeldata == (255,0,255):
-                        output_im.putpixel((x,y), (255, 0, 255))
-                        colorchar = 2
-                    else:
-                        # if color is not black
-                        if coloravg > 40:
+                        if args.bits[0] == 2:
+                            if type(pixeldata) is tuple:
+                                coloravg = sum(pixeldata)/3
 
-                            # if not white, gray
-                            if coloravg < 210:
-                                output_im.putpixel((x,y), (139, 138, 116))
-                                colorchar = 3
                             else:
-                                output_im.putpixel((x,y), (255, 233, 166))
-                                colorchar = 1
+                                coloravg = pixeldata
+        # BLACK = 0
+        # WHITE = 1
+        # TRANSPARENT = 2
+        # GRAY = 3
 
-                        else:
-                            ## if black
-                            output_im.putpixel((x,y), (23,43,66))
-                            colorchar = 0
+                            # Pink is the alpha color
+                            if pixeldata == (255,0,255):
+                                output_im.putpixel((x,y), (255, 0, 255))
+                                colorchar = 2
+                            else:
+                                # if color is not black
+                                if coloravg > 40:
 
-                    colordata += (colorchar << ((x % BITS_PER_BLOCK)*2))
+                                    # if not white, gray
+                                    if coloravg < 210:
+                                        output_im.putpixel((x,y), (139, 138, 116))
+                                        colorchar = 3
+                                    else:
+                                        output_im.putpixel((x,y), (255, 233, 166))
+                                        colorchar = 1
 
+                                else:
+                                    ## if black
+                                    output_im.putpixel((x,y), (23,43,66))
+                                    colorchar = 0
 
-                    if x % BITS_PER_BLOCK == BITS_PER_BLOCK-1 or x == im.size[0]-1:
-                        output_txt.write("$"+hex(colordata)[2:].zfill(BITS_PER_BLOCK/2))
-
-                    if x % BITS_PER_BLOCK == 0:
-                        if wordcount % (BITS_PER_BLOCK*2) == 0:
-                            output_txt.write("\nword    ")
-                        else:
-                            if x < im.size[0]-1:
-                                output_txt.write(", ")
-
-                        wordcount += 1
-
-
-
-
-
+                            colordata += (colorchar << ((x % BITS_PER_BLOCK)*2))
 
 
-                elif args.bits[0] == 8:
-                    if type(pixeldata) is tuple:
-                        r = pixeldata[0] >> 6 << 6
-                        g = pixeldata[1] >> 6 << 6
-                        b = pixeldata[2] >> 6 << 6
-                        output_im.putpixel((x,y), (r, g, b))
-                        colorchar = (r) + (g >> 2) + (b >> 4)
-                    else:
-                        print "Color data not in tuple format?"
-                        sys.exit(1)
+                            if x % BITS_PER_BLOCK == BITS_PER_BLOCK-1 or x == im.size[0]-1:
+                                output_txt.write("$"+hex(colordata)[2:].zfill(BITS_PER_BLOCK/2))
+
+                            if x % BITS_PER_BLOCK == 0:
+                                if wordcount % (BITS_PER_BLOCK*2) == 0:
+                                    output_txt.write("\nword    ")
+                                else:
+                                    if x < im.size[0]-1:
+                                        output_txt.write(", ")
+
+                                wordcount += 1
+
+
+
+
+
+
+
+                        elif args.bits[0] == 8:
+                            if type(pixeldata) is tuple:
+                                r = pixeldata[0] >> 6 << 6
+                                g = pixeldata[1] >> 6 << 6
+                                b = pixeldata[2] >> 6 << 6
+                                output_im.putpixel((x,y), (r, g, b))
+                                colorchar = (r) + (g >> 2) + (b >> 4)
+                            else:
+                                print "Color data not in tuple format?"
+                                sys.exit(1)
 
         output_txt.close()
 
@@ -184,6 +195,7 @@ else:
         print "' Image Type:", args.mode[0]
         print "' Image size:",im.size
         print "' Frame size:",framesize
+        print "'     Frames:",im.size[1]/framesize[1],",",im.size[0]/framesize[0]
         print "'------------------- COPY AFTER THIS LINE --------------------"
 
         print open(newfilename,'r').read()
