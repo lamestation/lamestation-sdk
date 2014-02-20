@@ -36,12 +36,25 @@ CON
     COLLIDEBIT = $80
     TILEBYTE = COLLIDEBIT-1    
     
-    SPEED = 1
+    SPEED = 2
+    
+    
+    
+    
+    SONGS = 1
+    SONGOFF = 255
+    BAROFF = 254
+    SNOP = 253
+    SOFF = 252
+    
+    BARRESOLUTION = 8
+    MAXBARS = 18    
 
 
 OBJ
         lcd     :               "LameLCD" 
         gfx     :               "LameGFX"
+        audio   :               "LameAudio"        
         ctrl    :               "LameControl"
         pst     :               "LameSerial"
 
@@ -99,6 +112,12 @@ PUB Graphics_Demo
     anotherpointer := @prebuffer
     gfx.Start(@anotherpointer)
     ctrl.Start
+    audio.Start
+    
+    audio.SetWaveform(0, 127)
+    audio.SetADSR(127, 100, 40, 100)
+    audio.LoadSong(@pixel_theme)
+    audio.PlaySong
     
     repeat
        { 
@@ -286,6 +305,97 @@ byte      9,  9,  9,  3,  3,  3,  3,  3,  3,  5,  3,  3,  3,  3,  3,  3,  3,  3,
 byte      9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  3,  3,  3,  3,  3,  3,  3,  3,  3, 19,  1,  1,  9,  9,  9,  1,  1, 19,  1,  1,  1,  1,  1,  1, 19,  2,  2, 19,  2,  2, 19,  1,  1, 19,  1,  1,  1,  1,  1,  1,  2,  7,  7,  7,  7,  7,  7,  7,  7,  6,  6,  6,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7
 byte      9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  1,  1, 19,  1,  1,  1,  1,  2,  2, 19,  1,  1, 19,  1,  1, 19,  1,  1, 19,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8
 
+
+
+
+
+
+
+pixel_theme
+
+byte    14     'number of bars
+byte    40     'tempo
+byte    8      'bar resolution
+
+'MAIN SECTION
+byte    0, 26,  26,  26,  38,   26,  26,  39,  26
+byte    0, 26,  36,  26,  26,   36,  26,  36,  38
+byte    0, 26,  26,  26,  33,   26,  26,  34,  26
+byte    0, 31,  26,  33,  26,   29,  26,  31,  28
+
+byte    1, 14, SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
+byte    1,SOFF,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
+
+byte    2, 33,  33,  33,  36,   33,  33,  36,  33
+byte    2, 33,  36,  33,  33,   36,  33,  36,  38
+
+byte    1, 14,  14,  14,  17,   14,  14,  17,  14
+byte    1, 14,  17,  14,  14,   17,  14,  17,  19
+
+'UPLIFTING
+byte    0, 31,  31,  31,  34,   31,  31,  34,  31
+byte    0, 31,  34,  31,  31,   34,  31,  34,  36
+
+
+
+byte    1, 19,  19,  19,  22,   19,  19,  22,  19
+byte    1, 19,  22,  19,  19,   22,  19,  22,  24
+
+
+
+
+'SONG ------
+
+byte    0,BAROFF
+byte    1,BAROFF
+byte    2,BAROFF
+byte    3,BAROFF
+byte    0,BAROFF
+byte    1,BAROFF
+byte    2,BAROFF
+byte    3,BAROFF
+
+byte    0,4,BAROFF
+byte    1,4,BAROFF
+byte    2,5,BAROFF
+byte    3,5,BAROFF
+
+byte    0,4,BAROFF
+byte    1,4,BAROFF
+byte    2,5,BAROFF
+byte    3,5,BAROFF
+
+byte    0,6,BAROFF
+byte    1,7,BAROFF
+byte    2,6,BAROFF
+byte    3,7,BAROFF
+
+byte    0,6,8,BAROFF
+byte    1,7,9,BAROFF
+byte    2,6,8,BAROFF
+byte    3,7,9,BAROFF
+
+byte    10,12,BAROFF
+byte    11,13,BAROFF
+byte    10,12,BAROFF
+byte    11,13,BAROFF
+
+byte    0,6,8,BAROFF
+byte    1,7,9,BAROFF
+byte    2,6,8,BAROFF
+byte    3,7,9,BAROFF
+
+byte    10,12,BAROFF
+byte    11,13,BAROFF
+byte    10,12,BAROFF
+byte    11,13,BAROFF
+
+byte    0,6,8,BAROFF
+byte    1,7,9,BAROFF
+byte    2,6,8,BAROFF
+byte    3,7,9,BAROFF
+
+byte    SONGOFF
 
 
 
