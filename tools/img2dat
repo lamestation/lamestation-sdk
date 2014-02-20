@@ -96,6 +96,17 @@ else:
             framesize = DEFAULT_FRAME
 
 
+        if args.bits[0] == 2:
+            if not framesize[0] % 8 == 0:
+                print "Error: frame size x must be multiple of 8. Aborting."
+                sys.exit(1)
+
+
+            if not framesize[1] %8 == 0:
+                print "Error: frame size y must be multiple of 8. Aborting."
+                sys.exit(1)
+
+
         wordcount = 0
         colordata = 0
 
