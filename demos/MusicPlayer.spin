@@ -127,7 +127,7 @@ PUB MusicPlayer
             joymoved := 0
         
         ' If the player presses any button, act
-        if ctrl.Any
+        if ctrl.A or ctrl.B
             if not buttonpressed
                 buttonpressed := 1
                 if audio.SongPlaying and songplaying == songchoice
