@@ -41,7 +41,7 @@ CON
 '' however, in practice, I set it to some high value like 300
 '' so that the screen will refresh as fast as possible.
 ''
-  FRAMERATE = 400
+  FRAMERATE = 200
   
 '' For differences in LCD chipsets, set byte period to:
 ''
