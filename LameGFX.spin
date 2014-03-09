@@ -908,30 +908,30 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
 
 
 ' INDEX_X LOOP -------------------------------------
-                        mov     index_x, #16
+                        mov     index_x, #8
 :indexxloop                 
           
                         ' srcpointer  := (index_x << 1 )+ (index_y << 8)   (y is the long axis in linear mode; 256 bytes)
                         '             := ((index_y << 7) + index_x) << 1     ' refactor to not need temp variables
                         mov     valutemp, #8
                         sub     valutemp, index_y
-                        mov     valutemp2, #16
+                        mov     valutemp2, #8
                         sub     valutemp2, index_x                        
                         
                         
                         mov     srcpointer, valutemp
-                        shl     srcpointer, #7
+                        shl     srcpointer, #6
                         add     srcpointer, valutemp2
-                        shl     srcpointer, #1
+                        shl     srcpointer, #2
 
                         add     srcpointer, sourceAddrTemp
                         
                         ' destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
                         '             := ((index_y << 4) + index_x) << 4          
                         mov     destpointer, valutemp
-                        shl     destpointer, #4
+                        shl     destpointer, #3
                         add     destpointer, valutemp2
-                        shl     destpointer, #4
+                        shl     destpointer, #5
                         add     destpointer, AddrTemp
                        
           
@@ -949,10 +949,10 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         ' important note: all cog memory is long-addressed, so you add 1 to get
                         ' to the next long, not 4, as in the byte-addressed hub memory.
 ' INITMATRIX LOOP -------------------------------------
-                        mov     index1, #16
+                        mov     index1, #32
 :initmatrixloop                                 
                         mov     datatemp, #translatematrix_dest
-                        add     datatemp, #16
+                        add     datatemp, #32
                         sub     datatemp, index1
                         movd    :writearray,datatemp
                         nop
@@ -980,23 +980,23 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
 
                         mov     datatemp, #8
                         sub     datatemp, index1
-                        shl     datatemp, #5            ' 16 words fit horizontally on the screen = 32 bytes
+                        shl     datatemp, #5           ' 16 words fit horizontally on the screen = 32 bytes
                         add     datatemp, srcpointer        
                         
                         mov     valutemp, #8
                         sub     valutemp, index1
                         
-                        rdword  translatelong, datatemp
+                        rdlong  translatelong, datatemp
                         mov     rotate, #1
                 
 ' TRANSLATE INNER LOOP -------------------------------------    
-                        mov     index2, #16 
+                        mov     index2, #32
 :translateloop_inner
 
                         mov     datatemp2, translatelong
                         and     datatemp2, rotate
                         
-                        mov     valutemp2, #16
+                        mov     valutemp2, #32
                         sub     valutemp2, index2
                         
                         shr     datatemp2, valutemp2
@@ -1005,7 +1005,7 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         shl     rotate, #1
       
                         mov     datatemp, #translatematrix_dest                       
-                        add     datatemp, #16
+                        add     datatemp, #32
                         sub     datatemp, index2
                         movd    :translatearray,datatemp
                         nop
@@ -1024,17 +1024,17 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         ' repeat index1 from 0 to 15
                         '     byte[destbuffer][destpointer + index1] := translatematrix_dest[index1]
 ' COPYMATRIX LOOP -------------------------------------
-                        mov     index1, #16
+                        mov     index1, #32
 :copymatrixloop          
                         mov     datatemp, #translatematrix_dest                       
-                        add     datatemp, #16
+                        add     datatemp, #32
                         sub     datatemp, index1
                         movs    :readarray,datatemp
                         nop
 :readarray              mov     datatemp2, 0-0
                         
                         mov     datatemp3, destpointer
-                        add     datatemp3, #16
+                        add     datatemp3, #32
                         sub     datatemp3, index1
                         
                         wrbyte  datatemp2, datatemp3
@@ -1140,7 +1140,7 @@ blendermask
 
 translatelong           long    0
 rotate                  long    0
-translatematrix_dest    res    16
+translatematrix_dest    res    32
 
 
 
