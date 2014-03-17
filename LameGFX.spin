@@ -622,7 +622,7 @@ blitscreen1             mov     Addrtemp, destscrn
                         rdword  sourceAddrTemp, sourceAddr
                         mov     valutemp, fulscreen
                         
-                        
+                        add     sourceAddrTemp, #6
        
 :loop                   mov     datatemp, Addrtemp
            

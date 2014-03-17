@@ -508,6 +508,8 @@ byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, 
 
 
 gfx_zeroforcelogo
+word    2048  'frameboost
+word    128, 64   'width, height
 byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $1F, $FF, $E0, $FF, $0, $FF, $0, $FF, $0, $FF, $3, $FF, $FC, $FF, $0, $FF, $0, $FF, $0, $FF, $0
 byte    $FF, $0, $FF, $2, $FF, $1A, $FF, $20, $FF, $4, $FF, $1, $FF, $0, $FF, $40, $FF, $40, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $7, $FF, $3F, $FF, $FE
 byte    $FF, $FC, $FF, $F8, $FF, $E0, $FF, $C0, $FF, $C0, $FF, $80, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $1
