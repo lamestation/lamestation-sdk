@@ -8,7 +8,7 @@ See end of file for terms of use.
 Authors: Jeff Martin, Andy Lindsay, Chip Gracey
 ─────────────────────────────────────────────────
 This is a modified version of the Parallax Serial
-Terminal, with most functionality removed to
+Terminal, with some functionality removed to
 save space.
 ─────────────────────────────────────────────────
 }}
