@@ -16,16 +16,7 @@ CON
                           
     SCREEN_BW = 16   
     SCREEN_BH = 8
-    
-    SW1 = 1 << 24
-    SW2 = 1 << 25
-    SW3 = 1 << 26
-    
-    J_U = 1 << 12
-    J_D = 1 << 13
-    J_R = 1 << 14
-    J_L = 1 << 15
-    
+            
     DIR_U = 2
     DIR_D = 3
     DIR_L = 0
