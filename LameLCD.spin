@@ -72,10 +72,6 @@ VAR
     word    framepointer
     word    screen1[TOTALBUFFER_BYTES/2]
     word    screen2[TOTALBUFFER_BYTES/2]
-    
-OBJ
-
-    pst : "LameSerial"
 
 PUB Start
 
