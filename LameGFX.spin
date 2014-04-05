@@ -89,6 +89,10 @@ CON
     GRAY = 3
     
     
+    ' draw map function    
+    COLLIDEBIT = $80
+    TILEBYTE = COLLIDEBIT-1
+    
 
 VAR
 
@@ -268,26 +272,37 @@ PUB Box(source, x, y)
 '' </pre>
 '' 
 ''
-    SendASMCommand(source, INST_BOX + (x << 8) + (y << 16))     
+    SendASMCommand(source, INST_BOX + (x << 8) + (y << 16))
     
+    
+    
+PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, width, height) | tile, tilecnt, tilecnttemp, x, y
+'' This function uses the Box command to draw an array of tiles to the screen.
+'' Used in conjunction with the map2dat program included with this kit, it is
+'' an easy way to draw your first game world to the screen.
+''
+'' * **source_tilemap** - 
+'' * **source_levelmap** -
+'' * **offset_x** -
+'' * **offset_y** -
+'' * **width** -
+'' * **height** -
+''
+''
 
+    tilecnt := 0
+    tilecnttemp := 2
+                    
+    repeat y from 0 to (offset_y>>3)
+        tilecnttemp += byte[source_levelmap][1]
+    repeat y from 1 to 7
+        repeat x from 1 to 15
+            tilecnt := tilecnttemp + (offset_x >> 3) + x
+            tile := (byte[source_levelmap][tilecnt] & TILEBYTE) -1 
+            if tile > 0
+                 Box(source_tilemap + (tile << 4), (x << 3) - (offset_x & $7), (y<<3) - (offset_y & $7))
 
-PUB BoxEx(source, x, y, duration)
-'' This function is nearly identical to Box but allows you to display
-'' a clipped version of the sprite. I created it for the sole purpose
-'' of displaying a half-heart in the tank battle game.
-
-    repeat until not lockset(SCREENLOCK)  
-    screen := word[screenpointer]
-
-    duration := duration
-    temp := (x << 3) + (y << 7) 
-                        
-    repeat indexer from 0 to duration step 1
-        word[screen][temp+indexer] := word[source][indexer]
-
-    lockclr(SCREENLOCK)
-
+        tilecnttemp += byte[source_levelmap][0]
 
 
 
@@ -859,6 +874,11 @@ box1                    mov     Addrtemp, destscrn
                         add     sourceAddrTemp, #2
                         djnz    valutemp, #:loop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
                         jmp     #loopexit
+
+
+
+
+
 
 
 
