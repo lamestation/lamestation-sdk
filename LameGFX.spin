@@ -1,4 +1,4 @@
-'' Lame Graphics Library
+'' LameGFX Fast Drawing Library
 '' ─────────────────────────────────────────────────
 '' Version: 1.0
 '' Copyright (c) 2013-2014 LameStation LLC
@@ -156,7 +156,7 @@ PUB Start(screenvar)
 
     cognew(@graphicsdriver, @instruction1)
     instruction1 := INST_IDLE
-    instruction2 := 0   
+    instruction2 := 0
     
     screen := screenvar
       
@@ -563,7 +563,7 @@ graphicsdriver          mov     Addr, par
                         
 
 'START MAIN LOOP                       
-loopytime               rdlong  instruct1full, instruct1Addr
+mainloop                rdlong  instruct1full, instruct1Addr
 
                         mov     instruct1, instruct1full
                         and     instruct1, #255
@@ -1112,7 +1112,7 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
 loopexit                wrlong  destscrn, outputAddr  'change this to get data back out of assembly
                         wrlong  zero, instruct2Addr
 
-                        jmp     #loopytime
+                        jmp     #mainloop
 
 
 

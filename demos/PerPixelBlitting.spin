@@ -59,7 +59,6 @@ VAR
     word    prebuffer[TOTALBUFFER_BYTES/2]
     
     word    screen
-    word    anotherpointer
     
     
     long    pos_x
@@ -95,9 +94,10 @@ PUB Graphics_Demo
     
     ctrl.Start
     
-    dira[24]~~
+'    dira[24]~~
         
     repeat
+    {{
             outa[24]~
         
             repeat x from 0 to 1000
@@ -105,6 +105,7 @@ PUB Graphics_Demo
             outa[24]~~
             
             repeat x from 0 to 1000
+            }}
             ctrl.Update
 
             
