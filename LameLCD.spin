@@ -52,8 +52,6 @@ CON
 ''
   BYTEPERIOD = 220
     
-    
-  
     ' screensize constants
     SCREEN_W = 128
     SCREEN_H = 64
@@ -62,49 +60,20 @@ CON
     SCREEN_H_BYTES = SCREEN_H / 8
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
     TOTALBUFFER_BYTES = SCREENSIZE_BYTES
-    
-    SCREENLOCK = 0
 
 VAR
-
-    word    screenframe
-    word    screenpointer
-    word    framepointer
-    word    screen1[TOTALBUFFER_BYTES/2]
-    word    screen2[TOTALBUFFER_BYTES/2]
+    word    screen[TOTALBUFFER_BYTES/2]
 
 PUB Start
 
-    cognew(@lcd_entry, @framepointer)
-    SwitchFrame
-    return @screenpointer
+    cognew(@lcd_entry, @screen)
+    return @screen    
+
+PUB ScreenAddress
+'' Return address of the current drawing surface
+    return screen
 
 
-PUB SwitchFrame | x
-'' LameLCD, when initialized, sets up a double-buffered drawing surface
-'' to work with. It then switches back and forth between drawing to a
-'' buffer and outputting the contents of that buffer to the screen.
-'' This allows the screen to be redrawn at predictable intervals and
-'' eliminates screen tearing.
-''
-'' Whenever you wish to update the screen, simply call this function and it
-'' switch to the other frame. This command has no parameters.
-
-    repeat until not lockset(SCREENLOCK) 
-
-    if screenframe    
-        screenframe := 0
-        framepointer := @screen1
-        screenpointer := @screen2
-    else        
-        screenframe := 1
-        framepointer := @screen2
-        screenpointer := @screen1
-        
-    repeat x from 0 to 0    ' I haven't yet figured out why this delay is needed
-
-    lockclr(SCREENLOCK)    
-    
 
 
 DAT
@@ -112,7 +81,7 @@ DAT
 
                         'get screen and dirrrr addresses        
 lcd_entry               mov     dira, diravalue
-                        mov     frameAddr, par
+                        mov     screenAddr, par
 
                         mov     LCD_time, cnt
                         add     LCD_time, LCD_frameperiod
@@ -157,8 +126,6 @@ lcd_entry               mov     dira, diravalue
 
 'BEGIN SCREEN DRAWING LOOP ------------------------------
 restartloop             mov     addrcnt, #64
-
-                        rdword  screenAddr, frameAddr
 
 
 'DRAW STUFF LOOK ---------------------------------------     
@@ -256,7 +223,6 @@ datatemp2               long    0
 
 Addr                    long    0
 screenAddr              long    0
-frameAddr               long    0
 Addrtemp                long    0
 
 'complete commands
@@ -287,7 +253,6 @@ pagecnt                 long    0
 addrcnt                 long    0
 screenindex             long    0
 cselect                 long    0
-frame                   long    0
 
                         fit 496
 

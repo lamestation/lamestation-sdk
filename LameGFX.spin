@@ -124,11 +124,6 @@ VAR
     word    screen
 '' ---------------------------------------------------
 
-    word     screenpointer    
-
-
-
-
     word    text_line
     word    indexer
     word    indexstart
@@ -163,8 +158,7 @@ PUB Start(screenvar)
     instruction1 := INST_IDLE
     instruction2 := 0   
     
-    screenpointer := screenvar
-    screen := screenpointer
+    screen := screenvar
       
 
 PRI SendASMCommand(source, instruction)
@@ -179,8 +173,6 @@ PRI SendASMCommand(source, instruction)
 ''
     
     repeat until not lockset(SCREENLOCK)  
-    
-    screen := word[screenpointer]
                                 
     sourcegfx := source  
     
@@ -214,7 +206,6 @@ PUB ClearScreen
 PUB Static
 '' This command sprays garbage data onto the framebuffer
     repeat until not lockset(SCREENLOCK)
-    screen := word[screenpointer]    
     
     ran := cnt
     repeat imgpointer from 0 to constant(SCREENSIZE_BYTES/2-1) step 1
@@ -348,7 +339,6 @@ PUB TextBox(teststring, boxx, boxy)
 ''
 
     repeat until not lockset(SCREENLOCK)  
-    screen := word[screenpointer]
 
     text_line := (boxy << 8) + (boxx << 4)
     screencursor := 0
@@ -621,8 +611,7 @@ if_z                    jmp     #translatebuffer1
 clearscreen1            mov     Addrtemp, destscrn
                         mov     valutemp, fulscreen
        
-:loop                   mov     datatemp, Addrtemp
-                        wrword  zero, datatemp
+:loop                   wrword  zero, Addrtemp
                         add     Addrtemp, #2
                         djnz    valutemp, #:loop
                         jmp     #loopexit
@@ -1152,7 +1141,6 @@ datatemp                long    0
 datatemp2               long    0
 datatemp3               long    0
 zero                    long    0
-trueth                  long    $FF
 
 param1mask              long    $0000FF00
 param2mask              long    $00FF0000
