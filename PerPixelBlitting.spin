@@ -58,7 +58,7 @@ VAR
 
     word    prebuffer[TOTALBUFFER_BYTES/2]
     
-    word    screenpointer
+    word    screen
     word    anotherpointer
     
     
@@ -90,18 +90,21 @@ PUB Graphics_Demo
 
     dira~
     
-    screenpointer := lcd.Start
-    anotherpointer := @prebuffer
-    gfx.Start(@anotherpointer)
-
-'    screenpointer := lcd.Start
- '   anotherpointer := @prebuffer
-   ' gfx.Start(lcd.Start)    
+    screen := lcd.Start
+    gfx.Start(@prebuffer) 
     
     ctrl.Start
+    
+    dira[24]~~
         
     repeat
-            lcd.SwitchFrame
+            outa[24]~
+        
+            repeat x from 0 to 1000
+        
+            outa[24]~~
+            
+            repeat x from 0 to 1000
             ctrl.Update
 
             
@@ -178,8 +181,7 @@ PUB Graphics_Demo
         
            ' repeat x from 0 to 1000            
             
-            gfx.TranslateBuffer(@prebuffer, word[screenpointer])
- '           gfx.TranslateBuffer(word[screenpointer], word[screenpointer])
+            gfx.TranslateBuffer(@prebuffer, screen)
 
 DAT
 
