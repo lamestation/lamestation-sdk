@@ -568,7 +568,8 @@ graphicsdriver          mov     Addr, par
                         add     Addr, #4
                       
                       ' deferenced pointer to screen address
-                        rdword  destscrnAddr, Addr
+'                        rdword  destscrnAddr, Addr
+                        mov destscrnAddr, Addr
                         
 
 'START MAIN LOOP                       
@@ -957,7 +958,7 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
           
 
                         ' COPY FROM SRC        
-                        ' repeat index1 from 0 to 15
+                        ' repeat index1 from 0 to 31
                         '     translatematrix_dest[index1] := 0
                         
                         ' attempt at pointers; read with movs, write with movd
@@ -968,7 +969,7 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         
                         ' important note: all cog memory is long-addressed, so you add 1 to get
                         ' to the next long, not 4, as in the byte-addressed hub memory.
-' INITMATRIX LOOP -------------------------------------
+' INITDESTMATRIX LOOP -------------------------------------
                         mov     index1, #32
 :initmatrixloop                                 
                         mov     datatemp, #translatematrix_dest
@@ -980,7 +981,33 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         
                         
                         djnz    index1, #:initmatrixloop
-' INITMATRIX LOOP END -------------------------------------
+' INITDESTMATRIX LOOP END -------------------------------------
+
+
+
+' READSRCMATRIX LOOP -------------------------------------
+                        mov     index1, #8
+:readsrcmatrixloop      
+                        mov     datatemp, #8
+                        sub     datatemp, index1
+                        shl     datatemp, #5           ' 16 words fit horizontally on the screen = 32 bytes
+                        add     datatemp, srcpointer                                
+
+                        rdlong  translatelong, datatemp
+
+                        mov     datatemp2, #translatematrix_src
+                        add     datatemp2, #8
+                        sub     datatemp2, index1
+
+                        
+
+                        movd    :readsrcarray,datatemp2
+                        nop
+:readsrcarray           mov     0-0, translatelong
+                        
+                        djnz    index1, #:readsrcmatrixloop
+' READSRCMATRIX LOOP END -------------------------------------
+
 
 
 
@@ -996,17 +1023,17 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
 ' TRANSLATE OUTER LOOP -------------------------------------
                         
                         mov     index1, #8
-:translateloop_outer
-
-                        mov     datatemp, #8
-                        sub     datatemp, index1
-                        shl     datatemp, #5           ' 16 words fit horizontally on the screen = 32 bytes
-                        add     datatemp, srcpointer        
-                        
+:translateloop_outer                        
                         mov     valutemp, #8
                         sub     valutemp, index1
-                        
-                        rdlong  translatelong, datatemp
+
+                        mov     datatemp, #translatematrix_src
+                        add     datatemp, #8
+                        sub     datatemp, index1                        
+                        movs    :readsrcarray_2, datatemp
+                        nop
+:readsrcarray_2         mov     translatelong, 0-0
+
                         mov     rotate, #1
                 
 ' TRANSLATE INNER LOOP -------------------------------------    
@@ -1046,7 +1073,7 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
 ' COPYMATRIX LOOP -------------------------------------
                         mov     index1, #32
 :copymatrixloop          
-                        mov     datatemp, #translatematrix_dest                       
+                        mov     datatemp, #translatematrix_dest
                         add     datatemp, #32
                         sub     datatemp, index1
                         movs    :readarray,datatemp
@@ -1160,6 +1187,7 @@ blendermask
 
 translatelong           long    0
 rotate                  long    0
+translatematrix_src     res    8
 translatematrix_dest    res    32
 
 
