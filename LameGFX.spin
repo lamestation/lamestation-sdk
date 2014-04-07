@@ -97,20 +97,7 @@ CON
 VAR
 
     long    imgpointer
-    long    temp
-    long    temp2
     long    temp3
-
-    long    valuetemp
-    long    screencursor
-    long    screencursortemp
-    long    stringcursor
-    long    texttemp
-    
-    
-    long    ran
-    long    frmtemp
-    long    indexx
     
     
 '' These longs make up the interface between Spin and
@@ -123,30 +110,6 @@ VAR
     long    sourcegfx
     word    screen
 '' ---------------------------------------------------
-
-    word    text_line
-    word    indexer
-    word    indexstart
-    word    indexend 
-
-    word    indexh
-
-
-    word    w
-    word    h
-    word    frameboost
-
-
-    byte    oldcolorbyte
-    byte    oldflipbyte
-    byte    colorbyte
-    byte    flipbyte
-    byte    selectbyte
-    byte    tempcolorbyte
-    byte    tempflipbyte
-
-    byte    value
-    
 
 
 PUB Start(screenvar)
@@ -203,7 +166,7 @@ PUB ClearScreen
 
 
 
-PUB Static
+PUB Static | ran
 '' This command sprays garbage data onto the framebuffer
     repeat until not lockset(SCREENLOCK)
     
@@ -330,7 +293,7 @@ PUB Sprite(source, x, y, frame, trans, clip) | cw, ch
 
 
 
-PUB TextBox(teststring, boxx, boxy)
+PUB TextBox(teststring, boxx, boxy) | text_line, stringcursor, screencursor, valuetemp, value, indexx
 '' This function creates a text with a black background.
 ''
 '' * **teststring** - Address of source string
@@ -1150,6 +1113,8 @@ halfmask                long    $FFFF
 
 sourceAddr              long    0
 frameboost1             long    0
+x1                      long    0
+y1                      long    0
 w1                      long    0
 h1                      long    0
 

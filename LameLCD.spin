@@ -216,7 +216,6 @@ sendLCDcommand_ret      ret
 
 
 
-allon                   long    $FFFFFFFF
 diravalue               long    (((1 << (LCDend+1))-1)-((1 << LCDstart)-1))
 datatemp                long    0        'stores data for intermediate calculations
 datatemp2               long    0
