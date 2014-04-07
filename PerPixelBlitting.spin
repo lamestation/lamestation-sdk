@@ -28,8 +28,6 @@ CON
     SCREEN_H_BYTES = SCREEN_H / 8
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
     TOTALBUFFER_BYTES = SCREENSIZE_BYTES
-
-    FRAMEFLIP = SCREENSIZE_BYTES
     
     SCREENLOCK = 0
     
@@ -53,30 +51,14 @@ CON
 
 OBJ
         lcd     :               "LameLCD" 
-        gfx     :               "LameGFX"
-        audio   :               "LameAudio"        
+        gfx     :               "LameGFX"  
         ctrl    :               "LameControl"
-        pst     :               "LameSerial"
 
 VAR
 
     word    prebuffer[TOTALBUFFER_BYTES/2]
-    word    translatematrix_src[8]
-    byte    translatematrix_dest[16]
-    word    destpointer
-    word    srcpointer    
-    word    sourcegfx
-
-    word    index
-    word    index_x
-    word    index_y    
-    word    index1
-    word    index2
-
-    word    rotate
     
     word    screenpointer
-    word    screen
     word    anotherpointer
     
     
@@ -99,16 +81,7 @@ VAR
     long    tilecnt
     long    tilecnttemp
     
-    long    bounce_x
-    long    bounce_y
-    long    bounce_speedx
-    long    bounce_speedy
-    long    bounce_forcex
-    long    bounce_forcey
-    
     long    xoffset
-    
-    byte    tiles_on
 
 
 
@@ -116,67 +89,26 @@ VAR
 PUB Graphics_Demo
 
     dira~
+    
     screenpointer := lcd.Start
     anotherpointer := @prebuffer
     gfx.Start(@anotherpointer)
-    ctrl.Start
-    audio.Start
-    
-    audio.SetWaveform(0, 127)
-    audio.SetADSR(127, 100, 40, 100)
-    audio.LoadSong(@pixel_theme)
-    audio.PlaySong
-    
-    
-    bounce_x := 40
-    bounce_y := 5
-    bounce_speedx := 10
-    
-    'gfx.Blit(@gfx_logo_tankbattle)
-    
-    'gfx.TranslateBuffer(@prebuffer, word[screenpointer])
-    
-    'lcd.SwitchFrame
-    
-    'repeat x from 0 to 500000
-    
-    repeat
-       { 
-        repeat x from 0 to 10000
-        gfx.Blit(@gfx_test_checker)        
-        gfx.TranslateBuffer(@prebuffer, word[screenpointer])
-        lcd.SwitchFrame
-   }
 
+'    screenpointer := lcd.Start
+ '   anotherpointer := @prebuffer
+   ' gfx.Start(lcd.Start)    
+    
+    ctrl.Start
+        
+    repeat
             lcd.SwitchFrame
             ctrl.Update
 
             
             gfx.ClearScreen
-            
-            if ctrl.A
-                if tiles_on
-                    tiles_on := 0
-                else
-                    tiles_on := 1
-                
 
-
-
-            if tiles_on
-                gfx.DrawMap(@gfx_tiles_2b_tuxor, @map_supersidescroll, xoffset, 0, 15, 7)
-            
-            
-            {
-            bounce_forcex := (60 - bounce_x) >> 3
-            bounce_forcey := (28 - bounce_y) >> 3
-            bounce_speedx += bounce_forcex
-            bounce_speedy += bounce_forcey
-            bounce_x += bounce_speedx
-            bounce_y += bounce_speedy            
-            gfx.Box(@gfx_test_box2,bounce_x,bounce_y)
-            }
-            'gfx.Sprite(@gfx_player, pos_x, pos_y, 0, 1, 0)              
+            gfx.DrawMap(@gfx_tiles_2b_tuxor, @map_supersidescroll, xoffset, 0, 15, 7)
+                       
             gfx.Box(@gfx_test_box2,pos_x,pos_y)
             
             
@@ -199,16 +131,6 @@ PUB Graphics_Demo
                    pos_x -= SPEED
                     
                 pos_dir := 3
-
-
-        {    if ctrl.Up
-                pos_y -= SPEED
-                pos_dir := 0
-
-            if ctrl.Down
-                pos_y += SPEED
-                pos_dir := 2
-         }       
 
             pos_speed += 1
             pos_y += pos_speed
@@ -257,7 +179,7 @@ PUB Graphics_Demo
            ' repeat x from 0 to 1000            
             
             gfx.TranslateBuffer(@prebuffer, word[screenpointer])
-
+ '           gfx.TranslateBuffer(word[screenpointer], word[screenpointer])
 
 DAT
 
@@ -328,98 +250,6 @@ byte      3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,
 byte      9,  9,  9,  3,  3,  3,  3,  3,  3,  5,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  2, 10, 10, 10,  9,  1,  1,  1,  1, 19,  1,  1,  1,  1,  1,  1, 19,  2,  2, 19,  2,  2, 19,  2, 13, 19, 12,  1,  1,  1,  1,  1,  1,  5,  5,  5,  5,  5,  5,  1,  2,  6,  6,  6,  2,  2,  2,  3,  3,  3,  3,  3,  3,  2,  2,  1,  1,  2,  3,  3, 20, 24,  3,  3,  4, 19,  2,  3,  4, 19,  2,  3,  4, 19,  2,  3,  4, 19,  2,  3
 byte      9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  3,  3,  3,  3,  3,  3,  3,  3,  3, 19,  1,  1,  9,  9,  9,  1,  1, 19,  1,  1,  1,  1,  1,  1, 19,  2,  2, 19,  2,  2, 19,  1,  1, 19,  1,  1,  1,  1,  1,  1,  2,  7,  7,  7,  7,  7,  7,  7,  7,  6,  6,  6,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7
 byte      9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  9,  1,  1, 19,  1,  1,  1,  1,  2,  2, 19,  1,  1, 19,  1,  1, 19,  1,  1, 19,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8
-
-
-
-
-
-
-
-pixel_theme
-
-byte    14     'number of bars
-byte    40     'tempo
-byte    8      'bar resolution
-
-'MAIN SECTION
-byte    0, 26,  26,  26,  38,   26,  26,  39,  26
-byte    0, 26,  36,  26,  26,   36,  26,  36,  38
-byte    0, 26,  26,  26,  33,   26,  26,  34,  26
-byte    0, 31,  26,  33,  26,   29,  26,  31,  28
-
-byte    1, 14, SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
-byte    1,SOFF,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
-
-byte    2, 33,  33,  33,  36,   33,  33,  36,  33
-byte    2, 33,  36,  33,  33,   36,  33,  36,  38
-
-byte    1, 14,  14,  14,  17,   14,  14,  17,  14
-byte    1, 14,  17,  14,  14,   17,  14,  17,  19
-
-'UPLIFTING
-byte    0, 31,  31,  31,  34,   31,  31,  34,  31
-byte    0, 31,  34,  31,  31,   34,  31,  34,  36
-
-
-
-byte    1, 19,  19,  19,  22,   19,  19,  22,  19
-byte    1, 19,  22,  19,  19,   22,  19,  22,  24
-
-
-
-
-'SONG ------
-
-byte    0,BAROFF
-byte    1,BAROFF
-byte    2,BAROFF
-byte    3,BAROFF
-byte    0,BAROFF
-byte    1,BAROFF
-byte    2,BAROFF
-byte    3,BAROFF
-
-byte    0,4,BAROFF
-byte    1,4,BAROFF
-byte    2,5,BAROFF
-byte    3,5,BAROFF
-
-byte    0,4,BAROFF
-byte    1,4,BAROFF
-byte    2,5,BAROFF
-byte    3,5,BAROFF
-
-byte    0,6,BAROFF
-byte    1,7,BAROFF
-byte    2,6,BAROFF
-byte    3,7,BAROFF
-
-byte    0,6,8,BAROFF
-byte    1,7,9,BAROFF
-byte    2,6,8,BAROFF
-byte    3,7,9,BAROFF
-
-byte    10,12,BAROFF
-byte    11,13,BAROFF
-byte    10,12,BAROFF
-byte    11,13,BAROFF
-
-byte    0,6,8,BAROFF
-byte    1,7,9,BAROFF
-byte    2,6,8,BAROFF
-byte    3,7,9,BAROFF
-
-byte    10,12,BAROFF
-byte    11,13,BAROFF
-byte    10,12,BAROFF
-byte    11,13,BAROFF
-
-byte    0,6,8,BAROFF
-byte    1,7,9,BAROFF
-byte    2,6,8,BAROFF
-byte    3,7,9,BAROFF
-
-byte    SONGOFF
 
 
 
