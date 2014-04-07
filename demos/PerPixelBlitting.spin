@@ -108,7 +108,7 @@ PUB Graphics_Demo
             
             gfx.ClearScreen
 
-            gfx.DrawMap(@gfx_tiles_2b_tuxor, @map_supersidescroll, xoffset, 0, 15, 7)
+            gfx.DrawMap(@gfx_tiles_2b_tuxor, @map_supersidescroll, xoffset, 0, 0,0, 16, 8)
                        
             gfx.Box(@gfx_test_box2,pos_x,pos_y)
             

@@ -46,6 +46,7 @@ CON
     BULLETSMASK = BULLETS-1
     
     BULLETINGSPEED = 2
+    _TANKSPEED = 8
     
     XOFFSET1 = 16
     YOFFSET1 = 20
@@ -89,9 +90,7 @@ VAR
 
     word    prebuffer[TOTALBUFFER_BYTES/2]
     
-    word    screenpointer
     word    screen
-    word    anotherpointer
 
     byte    levelw
     byte    levelh
@@ -111,6 +110,8 @@ VAR
 
     long    xoffset
     long    yoffset
+    
+    long    tankspeed
 
     long    tankgfx[TANKS]
     long    tankx[TANKS]
@@ -148,8 +149,6 @@ VAR
     long    bulletxtemp
     long    bulletytemp
 
-    long    bacon
-
     byte    collided
     byte    yourtank
     byte    theirtank
@@ -178,15 +177,14 @@ VAR
 PUB Main
 
     dira~    
-    screenpointer := lcd.Start
-    anotherpointer := @prebuffer
-    gfx.Start(@anotherpointer)
+    screen := lcd.Start
+    gfx.Start(@prebuffer)
 
     audio.Start
     ctrl.Start
 
     gfx.ClearScreen
-    lcd.SwitchFrame
+    gfx.TranslateBuffer(@prebuffer, screen)
 
     InitData
 
@@ -210,10 +208,10 @@ PUB Main
 PUB LogoScreen
 
     gfx.ClearScreen
-    lcd.SwitchFrame
+    gfx.TranslateBuffer(@prebuffer, screen)
     gfx.ClearScreen
     gfx.Sprite(@teamlamelogo, 0, 3, 0, 1, 0)
-    lcd.SwitchFrame
+    gfx.TranslateBuffer(@prebuffer, screen)
 
     audio.SetWaveform(3, 127)
     audio.SetADSR(127, 10, 0, 10)
@@ -235,7 +233,7 @@ PUB TitleScreen
     choice := 1
     repeat until not choice
         ctrl.Update
-        lcd.SwitchFrame
+        gfx.TranslateBuffer(@prebuffer, screen)
 
         gfx.Blit(@excitingtank)   
 
@@ -257,7 +255,7 @@ PUB TankSelect
     repeat until not choice
 
         ctrl.Update
-        lcd.SwitchFrame         
+        gfx.TranslateBuffer(@prebuffer, screen)         
         gfx.ClearScreen
 
         if ctrl.Up or ctrl.Down
@@ -324,7 +322,7 @@ PUB LevelSelect
     repeat until not choice
 
         ctrl.Update
-        lcd.SwitchFrame
+        gfx.TranslateBuffer(@prebuffer, screen)
         gfx.ClearScreen         
 
 
@@ -364,11 +362,11 @@ PUB LevelSelect
         levelw := byte[leveldata[currentlevel]][0] 
         levelh := byte[leveldata[currentlevel]][1]
         
-        gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,SCREEN_BW,5)
+        gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,3,SCREEN_BW,5)
 
 
         
-    InitLevel
+
 
 
 
@@ -379,7 +377,7 @@ PUB TankFaceOff
     repeat until not choice
 
         ctrl.Update 
-        lcd.SwitchFrame         
+        gfx.TranslateBuffer(@prebuffer, screen)         
         gfx.ClearScreen
 
         gfx.Sprite(@tanklogo, 0, 0, 0, 0, 0)
@@ -395,6 +393,8 @@ PUB TankFaceOff
     
 PUB GameLoop : menureturn
 
+    tankspeed := _TANKSPEED
+
     audio.StopSong
     audio.SetWaveform(4, 127)
     audio.SetADSR(127, 70, 0, 70)
@@ -403,8 +403,7 @@ PUB GameLoop : menureturn
     choice := 0                               
     repeat while not choice
         
-        gfx.TranslateBuffer(@prebuffer, word[screenpointer])
-        lcd.SwitchFrame
+        gfx.TranslateBuffer(@prebuffer, screen)
         
         gfx.ClearScreen
 
@@ -421,13 +420,13 @@ PUB GameLoop : menureturn
               if ctrl.Left
                  tankdir[yourtank] := 0        
 
-                 tankx[yourtank]--
+                 tankx[yourtank] -= tankspeed
                   if tankx[yourtank] < 0
                       tankx[yourtank] := 0
               if ctrl.Right
                   tankdir[yourtank] := 1
               
-                  tankx[yourtank]++
+                  tankx[yourtank] += tankspeed
                   if tankx[yourtank] > levelw - tankw[yourtank]
                       tankx[yourtank] := levelw - tankw[yourtank] 
 
@@ -475,13 +474,13 @@ PUB GameLoop : menureturn
               if ctrl.Up
                   tankdir[yourtank] := 2
                   
-                  tanky[yourtank]--
+                  tanky[yourtank] -= tankspeed
                   if tanky[yourtank] < 0
                       tanky[yourtank] := 0
               if ctrl.Down
                   tankdir[yourtank] := 3  
 
-                  tanky[yourtank]++
+                  tanky[yourtank] += tankspeed
                   if tanky[yourtank] > levelh - tankh[yourtank]
                       tanky[yourtank] := levelh - tankh[yourtank]
        
@@ -527,8 +526,10 @@ PUB GameLoop : menureturn
                
                
               if ctrl.A
-                if not clicked
-                  clicked := 1
+                if tankspeed > 0
+                    tankspeed--
+                'if not clicked
+                 ' clicked := 1
                
                  ' choice := GO_MENU 'Go to menu
                   
@@ -536,9 +537,11 @@ PUB GameLoop : menureturn
                  ' yourtank &= TANKSMASK
 
               elseif ctrl.B
-                  if tankon[yourtank] == 1
-                    SpawnBullet(yourtank)
-                    bulletspawned := 1
+                   if tankspeed < 20
+                    tankspeed++    
+'                  if tankon[yourtank] == 1
+ '                   SpawnBullet(yourtank)
+  '                  bulletspawned := 1
                 
               else
                   clicked := 0
@@ -552,41 +555,47 @@ PUB GameLoop : menureturn
               'TANK CONTROL
               'LEFT AND RIGHT   
               if ctrl.Left
-                  xoffset--
+                  xoffset -= tankspeed
                   if xoffset < 0
                       xoffset := 0 
               if ctrl.Right
-                  xoffset++
-                  if xoffset > (levelw<<3)-SCREEN_W
+                  xoffset += tankspeed
+                  if xoffset > (levelw<<3)-SCREEN_W-8
                       xoffset := (levelw<<3)-SCREEN_W
 
 
                       
               'UP AND DOWN   
               if ctrl.Up
-                  yoffset-- 
+                  yoffset -= tankspeed
                   if yoffset < 0
                       yoffset := 0  
               if ctrl.Down
-                  yoffset++
-                  if yoffset > (levelh<<3)-SCREEN_H
-                      yoffset := (levelh<<3)-SCREEN_H  
+                  yoffset += tankspeed
+                  if yoffset > (levelh<<3)-SCREEN_H-8
+                      yoffset := (levelh<<3)-SCREEN_H-8
 
                
-              if ctrl.A or ctrl.B
-                if clicked == 0
-                  SpawnTank(yourtank, 0, 1)
-                  tankspawned := 1      
-                  
-                  clicked := 1
+              if ctrl.A
+                if tankspeed > 0
+                  tankspeed--
+              
+              if ctrl.B
+                if tankspeed < 20
+                    tankspeed++    
+'                if clicked == 0
+ '                 SpawnTank(yourtank, 0, 1)
+  '                tankspawned := 1      
+   '               
+    '              clicked := 1
               else
                 clicked := 0
                
                
                       
           'DRAW TILES TO SCREEN
-          gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,SCREEN_BW-2,SCREEN_BH-2)
-
+         ' gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,1,1,SCREEN_BW-1,SCREEN_BH-1)
+          gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,0,SCREEN_BW,SCREEN_BH)
           
 
           'DRAW TANKS TO SCREEN        
@@ -625,7 +634,7 @@ PUB PauseMenu : menureturn
     repeat while not choice
            
         ctrl.Update 
-        lcd.SwitchFrame         
+        gfx.TranslateBuffer(@prebuffer, screen)         
         gfx.ClearScreen
 
         gfx.Sprite(@tanklogo, 0, 0, 0, 0, 0)
@@ -721,6 +730,7 @@ PUB InitLevel
 
     tankspawned := 0
     respawnindex := yourtank
+    tankspeed := _TANKSPEED
 
     ControlOffset(yourtank)
 

@@ -122,6 +122,12 @@ PUB Start(screenvar)
     instruction2 := 0
     
     screen := screenvar
+    
+'PUB SetClipRectangle(x, y, w, h)
+' Rectangles are composed of 8x8 tiles
+
+
+
       
 
 PRI SendASMCommand(source, instruction)
@@ -230,7 +236,7 @@ PUB Box(source, x, y)
     
     
     
-PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, width, height) | tile, tilecnt, tilecnttemp, x, y
+PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
 '' This function uses the Box command to draw an array of tiles to the screen.
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
@@ -249,12 +255,13 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, width, height) 
                     
     repeat y from 0 to (offset_y>>3)
         tilecnttemp += byte[source_levelmap][1]
-    repeat y from 1 to 7
-        repeat x from 1 to 15
+        
+    repeat y from 0 to box_y2-box_y1
+        repeat x from 0 to box_x2-box_x1
             tilecnt := tilecnttemp + (offset_x >> 3) + x
             tile := (byte[source_levelmap][tilecnt] & TILEBYTE) -1 
             if tile > 0
-                 Box(source_tilemap + (tile << 4), (x << 3) - (offset_x & $7), (y<<3) - (offset_y & $7))
+                 Box(source_tilemap + (tile << 4), (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7))
 
         tilecnttemp += byte[source_levelmap][0]
 
@@ -774,7 +781,14 @@ box1                    mov     Addrtemp, destscrn
                      
                         mov     instruct1, instruct1full
                         and     instruct1, param1mask   ' get X position
-                        shr     instruct1, #7           ' x << 1
+                        shr     instruct1, #8           ' x << 1
+                        
+                        mov     x1, instruct1           ' store x positions for later
+                        mov     x2, x1
+                        add     x2, #8
+                        
+                        shl     instruct1, #1           ' x << 1                        
+
                         mov     index_x, instruct1
                         and     index_x, #$F            ' x % 8
                         shr     instruct1, #3           ' x / 8    ' n pixels = 2*n bits
@@ -782,13 +796,31 @@ box1                    mov     Addrtemp, destscrn
 
                         mov     instruct1, instruct1full
                         and     instruct1, param2mask   ' get Y position
-                        shr     instruct1, #11           ' y >> 5
+                        shr     instruct1, #16          ' y << 5
+                        
+                        mov     y1, instruct1           ' store y positions for later
+                        mov     y2, y1
+                        add     y2, #8
+                        
+                        ' match against clip rectangle
+
+                        mov     index_y, y1
+                        
+                        shl     instruct1, #5
                         add     Addrtemp, instruct1
+                        
+                        shr     instruct1, #5
 
-
+'' ---------------------------------------------------
                         '' Begin copying data
 :loop                   mov     datatemp, Addrtemp
-           
+
+                        cmps    index_y, clipy1             wc
+if_c                    jmp     #:skipall
+                        cmps    index_y, clipy2             wc
+if_nc                   jmp     #:skipall
+
+
                         '' Read old data in display buffer
                         rdword  datatemp2, datatemp
                         add     datatemp, #2
@@ -803,7 +835,7 @@ box1                    mov     Addrtemp, destscrn
 
 
                         ' prepare mask for blending old and new
-                        mov     blendermask, halfmask
+                        mov     blendermask, hFFFF
                         shl     blendermask, index_x
                         
                         andn    blender1, blendermask
@@ -812,20 +844,39 @@ box1                    mov     Addrtemp, destscrn
 
                         ' split long into two words because we don't know whether this word
                         ' falls on a long boundary, so we have to write it one at a time.
-                        mov     datatemp3, blender1    ' copy situation
+                        mov     blender2, blender1    ' copy situation
 
-                        and     blender1, halfmask
-                        shr     datatemp3, #16
-                        and     datatemp3, halfmask
+                        and     blender1, hFFFF
+                        shr     blender2, #16
+                        and     blender2, hFFFF
+                        
+                        
+                        
                         
                         mov     datatemp, Addrtemp
-                        wrword  blender1, datatemp
-                        add     datatemp, #2
-                        wrword  datatemp3, datatemp
                         
-                        add     Addrtemp, #32               ' 16 words
+                        cmps    x1, clipx1                  wc
+if_c                    jmp     #:skipblender1
+                        cmps    x1, clipx2                  wc
+if_nc                   jmp     #:skipblender1
+                        wrword  blender1, datatemp
+:skipblender1
+                        add     datatemp, #2
+                        
+                        cmps    x2, clipx1                  wc
+if_c                    jmp     #:skipblender2
+                        cmps    x2, clipx2                  wc
+if_nc                   jmp     #:skipblender2
+                        wrword  blender2, datatemp
+:skipblender2
+
+                        
+:skipall                add     Addrtemp, #32               ' 16 words
                         add     sourceAddrTemp, #2
+                        add     index_y, #1
                         djnz    valutemp, #:loop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+'' ---------------------------------------------------
+                        
                         jmp     #loopexit
 
 
@@ -865,9 +916,9 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         mov     Addrtemp, sourceAddrTemp
                         
                         
-                        and     sourceAddrTemp, halfmask
+                        and     sourceAddrTemp, hFFFF
                         shr     Addrtemp, #16
-                        and     Addrtemp, halfmask
+                        and     Addrtemp, hFFFF
 
 
                         ' to translate the linear framebuffer, we divide the
@@ -1109,12 +1160,10 @@ param1mask              long    $0000FF00
 param2mask              long    $00FF0000
 param3mask              long    $FF000000
 
-halfmask                long    $FFFF
+hFFFF                long    $FFFF
 
 sourceAddr              long    0
 frameboost1             long    0
-x1                      long    0
-y1                      long    0
 w1                      long    0
 h1                      long    0
 
@@ -1134,15 +1183,30 @@ index_y                 long    0
 srcpointer              long    0
 destpointer             long    0
 
+{{
+clipx1                  long    8
+clipy1                  long    8
+clipx2                  long    SCREEN_W-8
+clipy2                  long    SCREEN_H-8
+}}
+
+clipx1                  long    0
+clipy1                  long    0
+clipx2                  long    SCREEN_W
+clipy2                  long    SCREEN_H
+
 blender1                long    0
 blender2                long    0
 blendermask
 
 translatelong           long    0
 rotate                  long    0
-translatematrix_src     res    8
-translatematrix_dest    res    32
-
+translatematrix_src     res     8
+translatematrix_dest    res     32
+x1                      res     1
+y1                      res     1
+x2                      res     1
+y2                      res     1
 
 
 
