@@ -91,7 +91,7 @@ PUB Graphics_Demo
     
     ctrl.Start
     
-'    dira[24]~~
+   ' dira[24]~~
         
     repeat
     {{
@@ -112,8 +112,21 @@ PUB Graphics_Demo
                        
             gfx.Box(@gfx_test_box2,pos_x,pos_y)
             
-            
-            
+            {{
+            if ctrl.Right
+                pos_x += SPEED
+
+            if ctrl.Left
+                pos_x -= SPEED
+
+            if ctrl.Down
+                pos_y += SPEED
+
+            if ctrl.Up
+                pos_y -= SPEED
+                
+                }}
+                    
             
             if ctrl.Right
                 if pos_x < 56
@@ -148,8 +161,7 @@ PUB Graphics_Demo
 
             if ctrl.Down
                 pos_dir := 2
-            
-                
+               
             if ctrl.B
                 bulletbox := 1
                 bulletbox_dir := pos_dir

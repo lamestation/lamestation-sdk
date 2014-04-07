@@ -232,7 +232,7 @@ PUB Box(source, x, y)
 '' </pre>
 '' 
 ''
-    SendASMCommand(source, INST_BOX + (x << 8) + (y << 16))
+    SendASMCommand(source, INST_BOX + ((x & $FF) << 8) + ((y & $FF) << 16))
     
     
     
@@ -632,13 +632,13 @@ sprite1                 mov     Addrtemp, destscrn
 
                         ' x position
                         mov     instruct1, instruct1full
-                        and     instruct1, param1mask   ' get X position
+                        and     instruct1, h0000FF00   ' get X position
                         shr     instruct1, #4           ' x >> 4        (x >> 8 << 4)
                         add     Addrtemp, instruct1
 
                         ' y position
                         mov     instruct1, instruct1full
-                        and     instruct1, param2mask   ' get Y position
+                        and     instruct1, h00FF0000   ' get Y position
                         shr     instruct1, #8           ' y >> 8        (y >> 16 << 8)
                         add     Addrtemp, instruct1
                         
@@ -751,7 +751,16 @@ if_z                    jmp     #:skiptransparency
 
 
 
-' BLIT BOX
+'' #### BLIT BOX
+'' ---------------------------------------------------
+''
+'' ###### instruction1 format
+''
+'' <pre>
+'' clip trans   frame     y        x        instr
+''  -     -     ------ -------- --------  --------
+''  0     0     000000 00000000 00000000  00000000   
+'' </pre>
 ' --------------------------------------------------- 
 ' temp := (x << 3) + (y << 7)                         
 '
@@ -778,38 +787,34 @@ box1                    mov     Addrtemp, destscrn
                         '' So it should be shifted x >> 7 and y >> 11
                         '' Then add this data to the starting address position
                         ''
-                     
-                        mov     instruct1, instruct1full
-                        and     instruct1, param1mask   ' get X position
-                        shr     instruct1, #8           ' x << 1
                         
-                        mov     x1, instruct1           ' store x positions for later
+                        ' get x position of box
+                        mov     x1, instruct1full
+                        shl     x1, #16                 ' perform sign extend with masking
+                        sar     x1, #24
                         mov     x2, x1
-                        add     x2, #8
+                        adds    x2, #8
                         
-                        shl     instruct1, #1           ' x << 1                        
-
-                        mov     index_x, instruct1
+                        mov     index_x, x1             ' this value rotates the word for the blender
+                        shl     index_x, #1             ' x << 1                        
                         and     index_x, #$F            ' x % 8
-                        shr     instruct1, #3           ' x / 8    ' n pixels = 2*n bits
-                        add     Addrtemp, instruct1                        
-
-                        mov     instruct1, instruct1full
-                        and     instruct1, param2mask   ' get Y position
-                        shr     instruct1, #16          ' y << 5
                         
-                        mov     y1, instruct1           ' store y positions for later
+                        mov     datatemp, x1
+                        sar     datatemp, #2            ' x / 8    ' n pixels = 2*n bits
+                        adds    Addrtemp, datatemp                        
+
+                        ' get x position of box
+                        mov     y1, instruct1full
+                        shl     y1, #8                  ' perform sign extend with masking
+                        sar     y1, #24
                         mov     y2, y1
-                        add     y2, #8
+                        adds    y2, #8
                         
-                        ' match against clip rectangle
+                        mov     index_y, y1             ' this value iterates from y1 to y2
 
-                        mov     index_y, y1
-                        
-                        shl     instruct1, #5
-                        add     Addrtemp, instruct1
-                        
-                        shr     instruct1, #5
+                        mov     datatemp, y1
+                        shl     datatemp, #5
+                        adds    Addrtemp, datatemp
 
 '' ---------------------------------------------------
                         '' Begin copying data
@@ -854,11 +859,11 @@ if_nc                   jmp     #:skipall
                         
                         
                         mov     datatemp, Addrtemp
-                        
+
                         cmps    x1, clipx1                  wc
 if_c                    jmp     #:skipblender1
                         cmps    x1, clipx2                  wc
-if_nc                   jmp     #:skipblender1
+if_nc                   jmp     #:skipblender1 
                         wrword  blender1, datatemp
 :skipblender1
                         add     datatemp, #2
@@ -867,13 +872,14 @@ if_nc                   jmp     #:skipblender1
 if_c                    jmp     #:skipblender2
                         cmps    x2, clipx2                  wc
 if_nc                   jmp     #:skipblender2
+
                         wrword  blender2, datatemp
 :skipblender2
 
                         
 :skipall                add     Addrtemp, #32               ' 16 words
                         add     sourceAddrTemp, #2
-                        add     index_y, #1
+                        adds    index_y, #1
                         djnz    valutemp, #:loop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
 '' ---------------------------------------------------
                         
@@ -1156,9 +1162,9 @@ datatemp2               long    0
 datatemp3               long    0
 zero                    long    0
 
-param1mask              long    $0000FF00
-param2mask              long    $00FF0000
-param3mask              long    $FF000000
+h0000FF00              long    $0000FF00
+h00FF0000              long    $00FF0000
+hFF000000              long    $FF000000
 
 hFFFF                long    $FFFF
 
