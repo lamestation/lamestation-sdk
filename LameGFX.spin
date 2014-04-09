@@ -58,7 +58,8 @@ CON
     INST_SPRITE = 3
     INST_BOX = 4
     INST_TEXTBOX = 5
-    INST_TRANSLATE = 6
+    INST_SETCLIPRECT = 6
+    INST_TRANSLATE = 7
 
 
     ' locking semaphore
@@ -381,6 +382,17 @@ PUB TextBox(teststring, boxx, boxy) | text_line, stringcursor, screencursor, val
 
 
 
+PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
+'' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
+'' Defaults to 0, 0, 128, 64.
+'' Use only multiples of 8.
+
+    SendASMCommand( (clipx1 << 24) + (clipy1 << 16) + (clipx2 << 8) + clipy2, INST_SETCLIPRECT)
+
+
+
+
+
 
 PUB TranslateBuffer(sourcebuffer, destbuffer)
 '' This command converts a linear framebuffer to one formatted
@@ -536,7 +548,7 @@ graphicsdriver          mov     Addr, par
 mainloop                rdlong  instruct1full, instruct1Addr
 
                         mov     instruct1, instruct1full
-                        and     instruct1, #255
+                        and     instruct1, #$FF
                         cmp     instruct1, #0   wz
 if_z                    jmp     #loopexit
 
@@ -556,8 +568,13 @@ if_z                    jmp     #sprite1
 if_z                    jmp     #box1
 '                        cmp     instruct1, #5   wz      'TEXT
 'if_z                    jmp     #tex
-                        cmp     instruct1, #6   wz      'TRANSLATE
+                        cmp     instruct1, #6   wz      'SET CLIP RECT
+if_z                    jmp     #setcliprect1
+                        cmp     instruct1, #7   wz      'TRANSLATE
 if_z                    jmp     #translatebuffer1
+
+
+                        jmp     #loopexit
 
 
 
@@ -800,7 +817,7 @@ box1                    mov     Addrtemp, destscrn
                         and     index_x, #$F            ' x % 8
                         
                         mov     datatemp, x1
-                        sar     datatemp, #2            ' x / 8    ' n pixels = 2*n bits
+                        sar     datatemp, #2            ' x / 4    ' n pixels = 2*n bits
                         adds    Addrtemp, datatemp                        
 
                         ' get x position of box
@@ -820,9 +837,9 @@ box1                    mov     Addrtemp, destscrn
                         '' Begin copying data
 :loop                   mov     datatemp, Addrtemp
 
-                        cmps    index_y, clipy1             wc
+                        cmps    index_y, _clipy1             wc
 if_c                    jmp     #:skipall
-                        cmps    index_y, clipy2             wc
+                        cmps    index_y, _clipy2             wc
 if_nc                   jmp     #:skipall
 
 
@@ -860,17 +877,17 @@ if_nc                   jmp     #:skipall
                         
                         mov     datatemp, Addrtemp
 
-                        cmps    x1, clipx1                  wc
+                        cmps    x1, _clipx1                  wc
 if_c                    jmp     #:skipblender1
-                        cmps    x1, clipx2                  wc
+                        cmps    x1, _clipx2                  wc
 if_nc                   jmp     #:skipblender1 
                         wrword  blender1, datatemp
 :skipblender1
                         add     datatemp, #2
                         
-                        cmps    x2, clipx1                  wc
+                        cmps    x2, _clipx1                  wc
 if_c                    jmp     #:skipblender2
-                        cmps    x2, clipx2                  wc
+                        cmps    x2, _clipx2                  wc
 if_nc                   jmp     #:skipblender2
 
                         wrword  blender2, datatemp
@@ -910,6 +927,39 @@ textbox1
 
 
 
+
+
+'' #### SetClipRectangle
+'' ---------------------------------------------------
+''
+'' ###### instruction1 format
+''
+'' <pre>
+''  clipx1 clipy1  clipx2  clipy2  instr
+''  ------ ------ ------- -------  ------
+''  000000 000000 0000000 0000000  000000   
+'' </pre>
+
+setcliprect1            rdlong  sourceAddrTemp, sourceAddr  'use sourcegfx long since instruct1 is too small
+
+
+                        mov     _clipx1, sourceAddrTemp
+                        shr     _clipx1, #24
+                        and     _clipx1, #$FF
+
+                        mov     _clipy1, sourceAddrTemp
+                        shr     _clipy1, #16
+                        and     _clipy1, #$FF
+
+                        mov     _clipx2, sourceAddrTemp
+                        shr     _clipx2, #8
+                        and     _clipx2, #$FF
+
+                        mov     _clipy2, sourceAddrTemp
+                        and     _clipy2, #$FF
+
+
+                        jmp     #loopexit
 
 '' #### TRANSLATE BUFFER
 '' ---------------------------------------------------
@@ -1162,11 +1212,11 @@ datatemp2               long    0
 datatemp3               long    0
 zero                    long    0
 
-h0000FF00              long    $0000FF00
-h00FF0000              long    $00FF0000
-hFF000000              long    $FF000000
+h0000FF00               long    $0000FF00
+h00FF0000               long    $00FF0000
+hFF000000               long    $FF000000
 
-hFFFF                long    $FFFF
+hFFFF                   long    $FFFF
 
 sourceAddr              long    0
 frameboost1             long    0
@@ -1189,17 +1239,11 @@ index_y                 long    0
 srcpointer              long    0
 destpointer             long    0
 
-{{
-clipx1                  long    8
-clipy1                  long    8
-clipx2                  long    SCREEN_W-8
-clipy2                  long    SCREEN_H-8
-}}
 
-clipx1                  long    0
-clipy1                  long    0
-clipx2                  long    SCREEN_W
-clipy2                  long    SCREEN_H
+_clipx1                 long    0
+_clipy1                 long    0
+_clipx2                 long    128
+_clipy2                 long    64
 
 blender1                long    0
 blender2                long    0
