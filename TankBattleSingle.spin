@@ -393,6 +393,8 @@ PUB TankFaceOff
     
 PUB GameLoop : menureturn
 
+
+
     tankspeed := _TANKSPEED
 
     audio.StopSong
@@ -408,158 +410,6 @@ PUB GameLoop : menureturn
         gfx.ClearScreen
 
         ctrl.Update
-
-          if tankon[yourtank] == 1   
-              tankoldx := tankx[yourtank]
-              tankoldy := tanky[yourtank]
-              tankolddir := tankdir[yourtank]
-              oldscore := score[yourtank]
-
-              'TANK CONTROL
-              'LEFT AND RIGHT   
-              if ctrl.Left
-                 tankdir[yourtank] := 0        
-
-                 tankx[yourtank] -= tankspeed
-                  if tankx[yourtank] < 0
-                      tankx[yourtank] := 0
-              if ctrl.Right
-                  tankdir[yourtank] := 1
-              
-                  tankx[yourtank] += tankspeed
-                  if tankx[yourtank] > levelw - tankw[yourtank]
-                      tankx[yourtank] := levelw - tankw[yourtank] 
-
-
-              tankxtemp := tankx[yourtank] 
-              tankytemp := tanky[yourtank]
-              
-              
-              tilecnt := 0
-              tilecnttemp := 2
-              if tanky[yourtank] > 0
-                  repeat y from 0 to tanky[yourtank]-1
-                       tilecnttemp += levelw
-              repeat y from tankytemp to tankytemp+tankh[yourtank]-1
-                  repeat x from tankxtemp to tankxtemp+tankw[yourtank]-1 
-                      tilecnt := tilecnttemp + x
-               
-                      tile := (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
-                      if tile <> 0
-                             tankx[yourtank] := tankoldx 
-                  tilecnttemp += levelw
-
-
-
-              repeat tankindex from 0 to TANKSMASK
-                  if tankon[tankindex]
-                      if tankindex <> yourtank
-                          collided := 1
-                          if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
-                             collided := 0
-                          if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
-                             collided := 0
-                          if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
-                             collided := 0
-                          if tankytemp > tanky[tankindex]+tankh[tankindex]-1
-                             collided := 0
-
-                          if collided == 1
-                             tankx[yourtank] := tankoldx    
-
-
-
-           
-          'UP AND DOWN   
-              if ctrl.Up
-                  tankdir[yourtank] := 2
-                  
-                  tanky[yourtank] -= tankspeed
-                  if tanky[yourtank] < 0
-                      tanky[yourtank] := 0
-              if ctrl.Down
-                  tankdir[yourtank] := 3  
-
-                  tanky[yourtank] += tankspeed
-                  if tanky[yourtank] > levelh - tankh[yourtank]
-                      tanky[yourtank] := levelh - tankh[yourtank]
-       
-              tankxtemp := tankx[yourtank] 
-              tankytemp := tanky[yourtank]
-              tilecnt := 0
-              tilecnttemp := 2
-              if tanky[yourtank] > 0
-                  repeat y from 0 to tanky[yourtank]-1
-                      tilecnttemp += levelw
-              repeat y from tankytemp to tankytemp+tankw[yourtank]-1
-                  repeat x from tankxtemp to tankxtemp+tankh[yourtank]-1 
-                      tilecnt := tilecnttemp + x
-               
-                      tile := (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
-                      if tile <> 0
-                            tanky[yourtank] := tankoldy
-                  tilecnttemp += levelw
-
-              repeat tankindex from 0 to TANKSMASK
-                  if tankon[tankindex] 
-                      if tankindex <> yourtank
-                          collided := 1
-                          if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
-                             collided := 0
-                          if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
-                             collided := 0
-                          if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
-                             collided := 0
-                          if tankytemp > tanky[tankindex]+tankh[tankindex]-1
-                             collided := 0
-
-                          if collided == 1
-                             tanky[yourtank] := tankoldy    
-
-
-              'OFFSET CONTROL
-              ControlOffset(yourtank)
-     
-        
-              'if ctrl.A
-                'gfx.SetClipRectangle(0, 0, 128, 64)
-
-              'elseif ctrl.B
-
-              
-              
-              'else
-               ' gfx.SetClipRectangle(8, 8, 120, 56)
-     
-              {{ 
-               
-              if ctrl.A
-                if tankspeed > 0
-                    tankspeed--
-                'if not clicked
-                 ' clicked := 1
-               
-                 ' choice := GO_MENU 'Go to menu
-                  
-                '  yourtank++
-                 ' yourtank &= TANKSMASK
-
-              elseif ctrl.B
-                   if tankspeed < 20
-                    tankspeed++    
-'                  if tankon[yourtank] == 1
- '                   SpawnBullet(yourtank)
-  '                  bulletspawned := 1
-                
-              else
-                  clicked := 0
-               
-
-}}
-
-      
-          else
-
               'TANK CONTROL
               'LEFT AND RIGHT   
               if ctrl.Left
@@ -600,48 +450,20 @@ PUB GameLoop : menureturn
                 clicked := 0
                
            
-          
-          
-          if ctrl.A
-             gfx.SetClipRectangle(0, 0, 128, 64)
-
-          elseif ctrl.B
-             gfx.SetClipRectangle(8, 8, 120, 56)    
-              
-              
-          else
-             gfx.SetClipRectangle(24, 24, 104, 32)
-          
-          
-                      
-          'DRAW TILES TO SCREEN
-         ' gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,1,1,SCREEN_BW-1,SCREEN_BH-1)
+          'ControlOffset(yourtank)
+           
           gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,0,SCREEN_BW,SCREEN_BH)
           
           
           
 
-          'DRAW TANKS TO SCREEN        
-          {{
-          repeat tankindex from 0 to TANKS-1
-              if tankon[tankindex] == 1
-                  tankxtemp := tankx[tankindex] - xoffset
-                  tankytemp := tanky[tankindex] - yoffset
-                  tankwtemp := tankw[tankindex]
-                  tankhtemp := tankh[tankindex]        
-                                                                                        
-                  if (tankxtemp => 0) and (tankxtemp =< SCREEN_BW-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_BH - tankh[yourtank])
-
-                    if tankdir[tankindex] == DIR_D
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 0, 1, 0)
-                    elseif tankdir[tankindex] == DIR_U       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 1, 1, 0)
-                    elseif tankdir[tankindex] == DIR_L       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 2, 1, 0)
-                    elseif tankdir[tankindex] == DIR_R       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 3, 1, 0)
+          'DRAW TANKS TO SCREEN 
+          
+          
+          gfx.Sprite(@gfx_tank1, 8, 8, 0, 0, 0)       
+        
               
-              }}
+          
                                                              
           'CONTROL EXISTING BULLETS -----
           'BulletHandler
@@ -708,7 +530,9 @@ PUB InitData
 
     currentlevel := 0
     yourtype := 0
-    theirtype := 0
+    'theirtype := 0
+    tankgfx[yourtank] := tanktypegfx[yourtype]
+    tankgfx[theirtank] := tanktypegfx[theirtype]
 
     tilemap := @gfx_tiles_2b_poketron
 
@@ -729,16 +553,16 @@ PUB InitData
     levelh := byte[leveldata[currentlevel]][1]
 
     tanktypename[0] := @extremetankname   
-    tanktypename[1] := @extremethangname
-    tanktypename[2] := @gianttankname
-    tanktypename[3] := @happyfacename
-    tanktypename[4] := @moonmanname
+    'tanktypename[1] := @extremethangname
+    'tanktypename[2] := @gianttankname
+    'tanktypename[3] := @happyfacename
+    'tanktypename[4] := @moonmanname
 
-    tanktypegfx[0] := @extremetank
-    tanktypegfx[1] := @extremethang
-    tanktypegfx[2] := @gianttank
-    tanktypegfx[3] := @happyface
-    tanktypegfx[4] := @moonman
+    tanktypegfx[0] := @gfx_tank1
+    'tanktypegfx[1] := @extremethang
+    'tanktypegfx[2] := @gianttank
+    'tanktypegfx[3] := @happyface
+    'tanktypegfx[4] := @moonman
 
 
 PUB InitLevel
@@ -901,7 +725,7 @@ word    @map_supercastle
 
 
 map_supercastle
-byte     50,  50  'width, height
+byte    50, 50  'width, height
 byte    108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108
 byte    228,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,230
 byte    168, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,170
@@ -955,7 +779,7 @@ byte    194,208,208,208,196,108,108,108,108,108,158,159,108,108,108,108,108,158,
 
 startlocations
 
-byte    3
+byte    3, 3
 byte    3, 3
 byte    47, 44
 byte    46, 3
@@ -971,19 +795,20 @@ byte    46, 3
 
 DAT 'SPRITE DATA
 
-extremetank
-{{
-word    $40  'frameboost
-word    $2, $2   'width, height
-byte    $0, $1, $D6, $D6, $FE, $38, $FF, $E9, $0, $0, $1A, $12, $B7, $87, $B7, $85, $BF, $8D, $BF, $9, $DE, $D6, $0, $0, $D4, $D4, $FF, $39, $FF, $E8, $1E, $11
-byte    $E4, $A4, $C3, $83, $C3, $80, $E3, $A1, $1C, $90, $0, $C0, $4, $E4, $D, $ED, $D, $ED, $5, $E4, $0, $C0, $4, $84, $C3, $83, $C3, $80, $E3, $A1, $FC, $B0
-byte    $0, $1, $6F, $6F, $FF, $48, $17, $17, $38, $38, $7E, $66, $7E, $40, $7F, $41, $7F, $41, $7E, $40, $7E, $46, $38, $30, $7F, $5F, $FF, $48, $FF, $9F, $E0, $E1
-byte    $F0, $A0, $F7, $A7, $F7, $A7, $F0, $A0, $0, $80, $0, $C0, $12, $92, $37, $A7, $37, $A1, $12, $92, $0, $C0, $0, $80, $F0, $A0, $F7, $A4, $F7, $A4, $F3, $A3
-byte    $0, $3F, $80, $BF, $80, $87, $B0, $B1, $B6, $B0, $B6, $80, $B6, $80, $B2, $80, $B0, $80, $BD, $B5, $4F, $49, $EF, $D, $F6, $56, $F0, $11, $F0, $1F, $F0, $FF
-byte    $0, $F8, $33, $DA, $4B, $C2, $93, $12, $B3, $A2, $83, $2, $83, $82, $93, $12, $B3, $A2, $83, $2, $80, $80, $97, $17, $B7, $A4, $47, $85, $37, $E4, $2, $F2
-byte    $F0, $FF, $F0, $1F, $F0, $11, $F6, $56, $EF, $D, $4F, $49, $BD, $B5, $B0, $80, $B2, $80, $B6, $80, $B6, $80, $B6, $B0, $B0, $B1, $80, $87, $80, $BF, $0, $3F
-byte    $2, $F2, $37, $E4, $47, $85, $B7, $A4, $97, $17, $80, $80, $83, $2, $B3, $A2, $93, $12, $83, $82, $83, $2, $B3, $A2, $93, $12, $4B, $C2, $33, $DA, $0, $F8
-}}
+gfx_tank1
+word    64  'frameboost
+word    16, 16   'width, height
+
+word    $00aa, $a8fc, $552a, $a350, $552a, $a3dc, $000a, $a0f4, $57ca, $bfc1, $57ca, $b551, $0000, $bff0, $fffc, $b553
+word    $5554, $8771, $fffc, $b573, $0000, $8ff0, $001a, $8000, $c1ce, $91c1, $0306, $b303, $003a, $a400, $776a, $ab77
+word    $3f2a, $aa00, $05ca, $a855, $37ca, $a855, $1f0a, $a000, $43fe, $a3d5, $455e, $a3d5, $0ffe, $0000, $c55e, $3fff
+word    $4dd2, $1555, $cd5e, $3fff, $0ff2, $0000, $0002, $a400, $4346, $b343, $c0ce, $90c0, $001a, $ac00, $ddea, $a9dd
+word    $52de, $b785, $54dc, $3715, $00dc, $3700, $573c, $3f55, $57d0, $37d5, $5f1c, $d5d5, $fc3c, $df3f, $0010, $f400
+word    $c03c, $d403, $f03c, $d40d, $c03c, $3c01, $0000, $0000, $7055, $550d, $c0ff, $ff03, $0855, $5520, $aaff, $ffaa
+word    $70aa, $aa0d, $00c2, $9c00, $5c5c, $5435, $545c, $5715, $54f0, $7c15, $507c, $df05, $00f0, $3c30, $f0dc, $3737
+word    $c0dc, $3707, $005c, $1700, $f103, $40cf, $c100, $4003, $0300, $c000, $a0c3, $f00a, $a855, $552a, $aaff, $ffaa
+
+
 extremethang
 {{
 word    $40  'frameboost
