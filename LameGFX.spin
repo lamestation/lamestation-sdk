@@ -62,6 +62,7 @@ CON
     INST_TRANSLATE = 7
 
 
+
     ' locking semaphore
     SCREENLOCK = 0
     
@@ -296,7 +297,7 @@ PUB Sprite(source, x, y, frame, trans, clip) | cw, ch
 '' Read more on img2dat to see how you can generate source images to use with this
 '' drawing command.
 
-    SendASMCommand(source, INST_SPRITE + (x << 8) + (y << 16) + (frame << 24) + (trans << 30) + (clip << 31))
+    SendASMCommand(source, INST_SPRITE + ((x & $FF) << 8) + ((y & $FF) << 16) + (frame << 24) + (trans << 30) + (clip << 31))
 
 
 
@@ -643,6 +644,7 @@ blitscreen1             mov     Addrtemp, destscrn
 ''  0     0     000000 00000000 00000000  00000000   
 '' </pre>
 '' --------------------------------------------------- 
+{{
 sprite1                 mov     Addrtemp, destscrn
 
                         ' get parameters from instruction1 and prepare for use
@@ -668,7 +670,7 @@ sprite1                 mov     Addrtemp, destscrn
 
                         ' read header from sprite
                         rdword  sourceAddrTemp, sourceAddr                             
-                        rdword  frameboost1, sourceAddrTemp
+                        rdword  frameboost, sourceAddrTemp
                         add     sourceAddrTemp, #2 
                         
 
@@ -683,7 +685,7 @@ sprite1                 mov     Addrtemp, destscrn
 
                         'add frameboost to sourceAddr (frame) number of times
 :frameboostloop         cmp     instruct1, #0   wz
-if_nz                   add     sourceAddrTemp, frameboost1
+if_nz                   add     sourceAddrTemp, frameboost
 if_nz                   sub     instruct1, #1
 if_nz                   jmp     #:frameboostloop
 
@@ -765,6 +767,169 @@ if_z                    jmp     #:skiptransparency
 ' OUTER LOOP END ----------------------------------
 
                         jmp     #loopexit
+}}
+
+
+'' #### BLIT BOX
+'' ---------------------------------------------------
+''
+'' ###### instruction1 format
+''
+'' <pre>
+'' clip trans   frame     y        x        instr
+''  -     -     ------ -------- --------  --------
+''  0     0     000000 00000000 00000000  00000000   
+'' </pre>
+
+sprite1                 mov     Addrtemp, destscrn
+                        rdword  sourceAddrTemp, sourceAddr
+                        mov     valutemp, #8
+                        
+                        ' get x position of box
+                        mov     x1, instruct1full
+                        shl     x1, #16                 ' perform sign extend with masking
+                        sar     x1, #24
+
+                        
+                        mov     iter_x, x1             ' this value rotates the word for the blender
+                        shl     iter_x, #1             ' x << 1                        
+                        and     iter_x, #$F            ' x % 8
+                        
+                        mov     datatemp, x1
+                        sar     datatemp, #2            ' x / 4    ' n pixels = 2*n bits
+                        adds    Addrtemp, datatemp                        
+
+                        ' get y position of box
+                        mov     y1, instruct1full
+                        shl     y1, #8                  ' perform sign extend with masking
+                        sar     y1, #24
+
+                        mov     iter_y, y1             ' this value iterates from y1 to y2
+
+                        mov     datatemp, y1
+                        shl     datatemp, #5
+                        adds    Addrtemp, datatemp
+
+                        
+                        'frame
+                        mov     frame1, instruct1full
+                        shr     frame1, #24
+                        and     frame1, #$3F   ' get frame number
+
+                        ' read header from sprite
+                        rdword  sourceAddrTemp, sourceAddr                             
+                        rdword  frameboost, sourceAddrTemp
+                        add     sourceAddrTemp, #2 
+                        
+
+                        ' get image width and height
+                        rdword  w1, sourceAddrTemp
+                        add     sourceAddrTemp, #2
+                        rdword  h1, sourceAddrTemp       ' only width is left-shifted because height has 8 pages only
+                        add     sourceAddrTemp, #2       'get ready to start reading data
+                        
+                        mov     x2, x1
+                        adds    x2, #8
+                        mov     y2, y1
+                        adds    y2, h1
+
+                        'add frameboost to sourceAddr (frame) number of times
+:frameboostloop         cmp     frame1, #0                  wz
+if_nz                   add     sourceAddrTemp, frameboost
+if_nz                   sub     frame1, #1
+if_nz                   jmp     #:frameboostloop
+  
+                        
+
+                       ' Begin copying data       
+' INDEX_Y LOOP -------------------------------------
+                        mov     index_y, h1           
+:indexyloop             mov     datatemp3, Addrtemp
+                        mov     xtmp1, x1
+                        mov     xtmp2, x2
+
+' INDEX_X LOOP -------------------------------------
+                        mov     index_x, w1
+                        shr     index_x, #3                     '8 pixels in one word.
+:indexxloop             mov     datatemp, datatemp3                        
+                        
+                        cmps    iter_y, _clipy1             wc
+if_c                    jmp     #:skipall
+                        cmps    iter_y, _clipy2             wc
+if_nc                   jmp     #:skipall
+
+
+                        '' Read old data in display buffer
+                        '' only if this is first block in drawing operation
+                        rdword  datatemp2, datatemp
+                        add     datatemp, #2
+                        rdword  blender1, datatemp
+                        shl     blender1, #16
+                        add     blender1, datatemp2
+                        
+                        
+                        ' read new word
+                        rdword  datatemp2, sourceAddrTemp
+                        shl     datatemp2, iter_x      ' rotate source word
+
+
+                        ' prepare mask for blending old and new
+                        mov     blendermask, hFFFF
+                        shl     blendermask, iter_x
+                        
+                        andn    blender1, blendermask
+                        add     blender1, datatemp2
+
+
+                        ' split long into two words because we don't know whether this word
+                        ' falls on a long boundary, so we have to write it one at a time.
+                        mov     blender2, blender1    ' copy situation
+
+                        and     blender1, hFFFF
+                        shr     blender2, #16
+                        and     blender2, hFFFF
+                        
+                        mov     datatemp, datatemp3
+
+                        cmps    xtmp1, _clipx1                  wc
+if_c                    jmp     #:skipblender1
+                        cmps    xtmp1, _clipx2                  wc
+if_nc                   jmp     #:skipblender1 
+                        wrword  blender1, datatemp
+:skipblender1
+                        adds     datatemp, #2
+                        
+                        cmps    xtmp2, _clipx1                  wc
+if_c                    jmp     #:skipblender2
+                        cmps    xtmp2, _clipx2                  wc
+if_nc                   jmp     #:skipblender2
+
+                        wrword  blender2, datatemp
+:skipblender2
+
+                        adds    xtmp1, #8
+                        adds    xtmp2, #8
+
+                        
+:skipall                
+                        add     sourceAddrTemp, #2
+                        adds    datatemp3, #2
+
+                        
+                        djnz    index_x, #:indexxloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+' INDEX_X LOOP END -------------------------------------                                                
+                        adds    Addrtemp, #32
+                        adds    iter_y, #1
+                        
+                        
+                        djnz    index_y, #:indexyloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+' INDEX_Y LOOP END -------------------------------------                       
+                        
+                        jmp     #loopexit
+
+
+
+
 
 
 
@@ -778,32 +943,10 @@ if_z                    jmp     #:skiptransparency
 ''  -     -     ------ -------- --------  --------
 ''  0     0     000000 00000000 00000000  00000000   
 '' </pre>
-' --------------------------------------------------- 
-' temp := (x << 3) + (y << 7)                         
-'
-' repeat indexer from 0 to 7 step 1
-'     word[screen][temp+indexer] := word[source][indexer]
-' --------------------------------------------------- 
+
 box1                    mov     Addrtemp, destscrn
                         rdword  sourceAddrTemp, sourceAddr
-                        mov     valutemp, #8
-                        
-                        '' (x << 1) + (y << 5)
-                        '' x and y are left-shifted in the instruction register
-                        '' so they need to be shifted back so the above relation
-                        '' is true.
-                        ''
-                        '' Another difference though is that the original code
-                        '' is word-aligned, so to get the result here, we have to
-                        '' left shift all values again once, to go from word
-                        '' to byte aligned
-                        ''
-                        '' x << 1 = x << 8 >> 7
-                        '' y << 5 = y << 16 >> 11
-                        ''
-                        '' So it should be shifted x >> 7 and y >> 11
-                        '' Then add this data to the starting address position
-                        ''
+
                         
                         ' get x position of box
                         mov     x1, instruct1full
@@ -812,22 +955,22 @@ box1                    mov     Addrtemp, destscrn
                         mov     x2, x1
                         adds    x2, #8
                         
-                        mov     index_x, x1             ' this value rotates the word for the blender
-                        shl     index_x, #1             ' x << 1                        
-                        and     index_x, #$F            ' x % 8
+                        mov     iter_x, x1             ' this value rotates the word for the blender
+                        shl     iter_x, #1             ' x << 1                        
+                        and     iter_x, #$F            ' x % 8
                         
                         mov     datatemp, x1
                         sar     datatemp, #2            ' x / 4    ' n pixels = 2*n bits
                         adds    Addrtemp, datatemp                        
 
-                        ' get x position of box
+                        ' get y position of box
                         mov     y1, instruct1full
                         shl     y1, #8                  ' perform sign extend with masking
                         sar     y1, #24
                         mov     y2, y1
                         adds    y2, #8
                         
-                        mov     index_y, y1             ' this value iterates from y1 to y2
+                        mov     iter_y, y1             ' this value iterates from y1 to y2
 
                         mov     datatemp, y1
                         shl     datatemp, #5
@@ -835,11 +978,12 @@ box1                    mov     Addrtemp, destscrn
 
 '' ---------------------------------------------------
                         '' Begin copying data
+                        mov     valutemp, #8
 :loop                   mov     datatemp, Addrtemp
 
-                        cmps    index_y, _clipy1             wc
+                        cmps    iter_y, _clipy1             wc
 if_c                    jmp     #:skipall
-                        cmps    index_y, _clipy2             wc
+                        cmps    iter_y, _clipy2             wc
 if_nc                   jmp     #:skipall
 
 
@@ -853,12 +997,12 @@ if_nc                   jmp     #:skipall
                         
                         ' read new word
                         rdword  datatemp2, sourceAddrTemp
-                        shl     datatemp2, index_x      ' rotate source word
+                        shl     datatemp2, iter_x      ' rotate source word
 
 
                         ' prepare mask for blending old and new
                         mov     blendermask, hFFFF
-                        shl     blendermask, index_x
+                        shl     blendermask, iter_x
                         
                         andn    blender1, blendermask
                         add     blender1, datatemp2
@@ -896,7 +1040,7 @@ if_nc                   jmp     #:skipblender2
                         
 :skipall                add     Addrtemp, #32               ' 16 words
                         add     sourceAddrTemp, #2
-                        adds    index_y, #1
+                        adds    iter_y, #1
                         djnz    valutemp, #:loop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
 '' ---------------------------------------------------
                         
@@ -1219,7 +1363,8 @@ hFF000000               long    $FF000000
 hFFFF                   long    $FFFF
 
 sourceAddr              long    0
-frameboost1             long    0
+frame1                  long    0
+frameboost              long    0
 w1                      long    0
 h1                      long    0
 
@@ -1236,6 +1381,8 @@ index1                  long    0
 index2                  long    0
 index_x                 long    0
 index_y                 long    0
+iter_x                  long    0
+iter_y                  long    0
 srcpointer              long    0
 destpointer             long    0
 
@@ -1247,7 +1394,8 @@ _clipy2                 long    64
 
 blender1                long    0
 blender2                long    0
-blendermask
+blendermask             long    0
+blenderoffset           long    0
 
 translatelong           long    0
 rotate                  long    0
@@ -1257,6 +1405,8 @@ x1                      res     1
 y1                      res     1
 x2                      res     1
 y2                      res     1
+xtmp1                   res     1
+xtmp2                   res     1
 
 
 
