@@ -521,9 +521,17 @@ PUB GameLoop : menureturn
               ControlOffset(yourtank)
      
         
+              'if ctrl.A
+                'gfx.SetClipRectangle(0, 0, 128, 64)
 
+              'elseif ctrl.B
+
+              
+              
+              'else
+               ' gfx.SetClipRectangle(8, 8, 120, 56)
      
-               
+              {{ 
                
               if ctrl.A
                 if tankspeed > 0
@@ -547,7 +555,7 @@ PUB GameLoop : menureturn
                   clicked := 0
                
 
-
+}}
 
       
           else
@@ -591,15 +599,30 @@ PUB GameLoop : menureturn
               else
                 clicked := 0
                
-               
+           
+          
+          
+          if ctrl.A
+             gfx.SetClipRectangle(0, 0, 128, 64)
+
+          elseif ctrl.B
+             gfx.SetClipRectangle(8, 8, 120, 56)    
+              
+              
+          else
+             gfx.SetClipRectangle(24, 24, 104, 32)
+          
+          
                       
           'DRAW TILES TO SCREEN
          ' gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,1,1,SCREEN_BW-1,SCREEN_BH-1)
           gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,0,SCREEN_BW,SCREEN_BH)
           
+          
+          
 
           'DRAW TANKS TO SCREEN        
-          
+          {{
           repeat tankindex from 0 to TANKS-1
               if tankon[tankindex] == 1
                   tankxtemp := tankx[tankindex] - xoffset
@@ -618,7 +641,7 @@ PUB GameLoop : menureturn
                     elseif tankdir[tankindex] == DIR_R       
                         gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 3, 1, 0)
               
-              
+              }}
                                                              
           'CONTROL EXISTING BULLETS -----
           'BulletHandler
