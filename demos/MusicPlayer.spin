@@ -82,7 +82,7 @@ PUB MusicPlayer
     repeat
         
         'To update the screen, you simply call switchFrame.
-        lcd.SwitchFrame
+    '    lcd.SwitchFrame
 
         'Make sure to call update before attempting to check values
         ctrl.Update

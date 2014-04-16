@@ -41,17 +41,17 @@ CON
 '' however, in practice, I set it to some high value like 300
 '' so that the screen will refresh as fast as possible.
 ''
-  FRAMERATE = 200
-  
-'' For differences in LCD chipsets, set byte period to:
+'' ### Ideal settings
 ''
-'' - KS0108 - 220
-'' - SBN0064G - 300
+'' * LCD - (FRAMERATE,BYTEPERIOD)
 ''
-'' Some LCDs just can't be driven as fast.
+'' * KS0108, white on blue STN LCD - (133, 190)
 ''
-  BYTEPERIOD = 220
+    FRAMERATE = 133
+    BYTEPERIOD = 190
     
+  
+  
     ' screensize constants
     SCREEN_W = 128
     SCREEN_H = 64
