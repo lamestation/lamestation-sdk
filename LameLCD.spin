@@ -47,10 +47,11 @@ CON
 ''
 '' * KS0108, white on blue STN LCD - (133, 190)
 ''
-    FRAMERATE = 133
+    FRAMERATE = 134
     BYTEPERIOD = 190
     
-  
+   '   FRAMERATE = 171
+    'BYTEPERIOD = 220
   
     ' screensize constants
     SCREEN_W = 128

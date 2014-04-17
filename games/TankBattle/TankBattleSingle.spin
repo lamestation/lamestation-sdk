@@ -398,9 +398,10 @@ PUB GameLoop : menureturn
     tankspeed := _TANKSPEED
 
     audio.StopSong
-    audio.SetWaveform(4, 127)
-    audio.SetADSR(127, 70, 0, 70)
-
+    audio.SetWaveform(1, 127)
+    audio.SetADSR(127, 70, 80, 70)
+    audio.LoadSong(@titleScreenSong)
+    audio.PlaySong
     clicked := 0
     choice := 0                               
     repeat while not choice

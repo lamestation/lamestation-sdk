@@ -870,11 +870,24 @@ if_nc                   jmp     #:skipall
                         
                         ' read new word
                         rdword  datatemp2, sourceAddrTemp
-                        shl     datatemp2, iter_x      ' rotate source word
 
 
                         ' prepare mask for blending old and new
-                        mov     blendermask, hFFFF
+                        mov     flipbyte1, datatemp2
+                        shr     flipbyte1, #1
+                        andn    flipbyte1, datatemp2 'color bits
+                        and     flipbyte1, h5555                        
+                        
+                        mov     blendermask, flipbyte1
+                        shl     flipbyte1, #1
+                        add     blendermask, flipbyte1
+                        
+                        xor     blendermask, hFFFF
+                        and     datatemp2, blendermask
+                        
+                        
+                        
+                        shl     datatemp2, iter_x      ' rotate source words
                         shl     blendermask, iter_x
                         
                         andn    blender1, blendermask
@@ -1361,6 +1374,8 @@ h00FF0000               long    $00FF0000
 hFF000000               long    $FF000000
 
 hFFFF                   long    $FFFF
+hAAAA                   long    $AAAA
+h5555                   long    $5555
 
 sourceAddr              long    0
 frame1                  long    0
