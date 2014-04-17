@@ -13,16 +13,11 @@ Authors: Brett Weir
 CON
     _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
     _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
-                          
-    SCREEN_BW = 16   
-    SCREEN_BH = 8
     
     BULLETS = 10
-    ENEMIES = 10
     
-    PLAYERSPEED = 1
-    BULLSPEED = 2
-    ENEMSPEED = 1
+    PLAYERSPEED = 2
+    BULLSPEED = 8
 
     'SONG PLAYER
     ENDOFSONG = 0
@@ -39,7 +34,8 @@ CON
     SCREEN_W = 128
     SCREEN_H = 64
     BITSPERPIXEL = 2
-    FRAMES = 1
+    
+    FP_OFFSET = 3
 
     SCREEN_H_BYTES = SCREEN_H / 8
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
@@ -60,31 +56,7 @@ VAR
     byte    menuchoice
     byte    clicked           
     byte    joyclicked
-    
-    long    playerx
-    long    playery
 
-    long    enemyindex
-    long    nextenemy
-    long    enemyon[ENEMIES]    
-    long    enemyx[ENEMIES]
-    long    enemyy[ENEMIES]
-    long    enemyspeed[BULLETS]    
-    byte    enemyhealth[ENEMIES]
-    
-    word    enemygraphics[3]
-    
-    word    currentenemies
-    word    currentenemiestmp
-    word    currentenemiesoffset
-    
-    long    bulletx[BULLETS]
-    long    bullety[BULLETS]
-    long    bulleton[BULLETS]
-    long    bulletspeed[BULLETS]
-    long    bulletindex
-    long    nextbullet
-    long    bullettiming
     
     long    xoffset
     
@@ -109,12 +81,12 @@ PUB Main
     gfx.TranslateBuffer(@prebuffer, screen)
 
     clicked := 0
-    StaticScreen
+    'StaticScreen
     'LogoScreen
     
     repeat
         'TitleScreen
-        'LevelStage
+        LevelStage
         BossStage
 
 
@@ -134,16 +106,13 @@ PUB StaticScreen
 
 PUB LogoScreen
 
-
-    
-
     gfx.ClearScreen
     gfx.TranslateBuffer(@prebuffer, screen)
     
     repeat x from 0 to 100000
     
-    gfx.ClearScreen
-    gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0, 0, 0)
+    gfx.ClearScreen 
+    gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
     gfx.TranslateBuffer(@prebuffer, screen)
 
     audio.SetWaveform(3, 127)
@@ -155,10 +124,6 @@ PUB LogoScreen
     audio.StopSong
 
 
-
-
-
-
 PUB TitleScreen
 
     audio.SetWaveform(1, 127)
@@ -166,11 +131,8 @@ PUB TitleScreen
     audio.LoadSong(@titleScreenSong)
     audio.PlaySong
 
-
-
     choice := 1
     repeat until choice == 0  
-  '  repeat
         gfx.TranslateBuffer(@prebuffer, screen)
 
         gfx.Blit(@gfx_zeroforcelogo)
@@ -187,58 +149,115 @@ PUB TitleScreen
     audio.StopSong
     
 
+   
+' *********************************************************
+'  Enemies
+' *********************************************************
+CON
+    ENEMIES = 16
 
-
-PUB InitLevel
-
-    playerx := 3
-    playery := 3
+VAR           
+  
+    byte    enemyindex
+    byte    enemycount
+    byte    nextenemy
+    byte    enemyon[ENEMIES]    
+    long    enemyx[ENEMIES]
+    long    enemyy[ENEMIES] 
+    byte    enemyhealth[ENEMIES]
+    word    enemyspeed[ENEMIES] 
     
-    enemygraphics[0] := @gfx_krakken
-    enemygraphics[1] := @gfx_spacetank
+    word    enemygraphics[3]
+    byte    enemytypespeed[3]
+    byte    enemytypeacceleration[3]
+    
+    word    currentenemies
+    word    currentenemiestmp
+    word    currentenemiesoffset
+
+
+PUB InitEnemies
+    enemygraphics[0] := @gfx_spacetank
+    enemygraphics[1] := @gfx_krakken
     enemygraphics[2] := @gfx_blackhole
+
+    enemytypespeed[0] := 6
+    enemytypespeed[1] := 3
+    enemytypespeed[2] := 2
     
     currentenemiesoffset := 0
+    enemycount := 0
     
     repeat enemyindex from 0 to constant(ENEMIES-1)
         enemyon[enemyindex] := 0
         enemyx[enemyindex] := 0
         enemyy[enemyindex] := 0
-        enemyspeed[enemyindex] := 0
         
-    
-    nextbullet := 0
-    blinkon := 0
-    blinkcount := 0
-    
-    bosshealth := 10
-
-    repeat bulletindex from 0 to constant(BULLETS-1)
-        bulleton[bulletindex] := 0 
-        bulletx[bulletindex] := 0
-        bullety[bulletindex] := 0
-        bulletspeed[bulletindex] := 0
-    
-    
-PUB HandleBullets
-
-    repeat bulletindex from 0 to constant(BULLETS-1)
-        if bulleton[bulletindex]
-            bulletx[bulletindex] += bulletspeed[bulletindex]
-            if bulletx[bulletindex] => SCREEN_BW << 3
-                bulleton[bulletindex] := 0
-            else
-                gfx.Sprite(@gfx_laser, bulletx[bulletindex] >> 3, bullety[bulletindex] >> 3, 0, 1, 0)
                 
 PUB HandleEnemies
 
     repeat enemyindex from 0 to constant(ENEMIES-1)
         if enemyon[enemyindex]
-            enemyx[enemyindex] -= enemyspeed[enemyindex]
-            if enemyx[enemyindex] => 0
-                gfx.Sprite(enemygraphics[enemyon[enemyindex]], enemyx[enemyindex] >> 4, enemyy[enemyindex] >> 4, 0, 1, 0)
+            enemyx[enemyindex] -= enemytypespeed[enemyon[enemyindex]-1]
+            if enemyx[enemyindex] => -(24 << FP_OFFSET)
+                gfx.Sprite(enemygraphics[enemyon[enemyindex]-1], enemyx[enemyindex] >> FP_OFFSET, enemyy[enemyindex] >> FP_OFFSET, 0)
             else
                 enemyon[enemyindex] := 0
+                enemycount--
+
+
+PUB SpawnEnemy(dx, dy, type)
+    if enemycount < ENEMIES-1
+        enemyon[nextenemy] := type
+        enemyx[nextenemy] := dx << FP_OFFSET
+        enemyy[nextenemy] := dy << FP_OFFSET
+        enemyhealth[nextenemy] := 1
+        
+        nextenemy++
+        if nextenemy => ENEMIES
+            nextenemy := 0
+            
+        enemycount++
+        
+        
+PUB CreateFixedEnemies
+        currentenemies := word[@level1][currentenemiesoffset]
+        currentenemiestmp := currentenemies
+        repeat x from 0 to 5
+            currentenemiestmp := currentenemies & $3
+            if currentenemiestmp > 0
+                SpawnEnemy(SCREEN_W,x << 3,currentenemiestmp)
+            currentenemies >>= 2
+            
+            
+PUB CreateRandomEnemies | ran
+    ran := cnt
+    
+    currentenemies := ran? & ran?
+    repeat x from 0 to 7
+        currentenemiestmp := currentenemies & $3
+        if currentenemiestmp > 0
+            SpawnEnemy(SCREEN_W,x << 3,currentenemiestmp)    
+        currentenemies >>= 2
+
+
+
+
+
+
+
+' *********************************************************
+'  Player
+' *********************************************************
+VAR
+    long    playerx
+    long    playery
+
+
+PUB InitPlayer
+    playerx := 3
+    playery := 3
+
 
 PUB HandlePlayer
 
@@ -267,57 +286,78 @@ PUB HandlePlayer
                
         if ctrl.A or ctrl.B
             bullettiming++
-            if bullettiming > 30
-                SpawnBullet(playerx >> 3 + 2,playery >> 3 + 1)                
+            if bullettiming > 2
+                SpawnBullet(playerx + 8,playery + 7)                
                 bullettiming := 0
+        else
+            bullettiming := 0
             
-        gfx.Sprite(@gfx_zeroforce, playerx >> 3, playery >> 3, 0, 1, 0)             
+        gfx.Sprite(@gfx_zeroforce, playerx, playery, 0)             
         
 
+    
+' *********************************************************
+'  Bullets
+' *********************************************************
+VAR
+    long    bulletx[BULLETS]
+    long    bullety[BULLETS]
+    long    bulleton[BULLETS]
+    long    bulletspeed[BULLETS]
+    long    bulletindex
+    long    nextbullet
+    long    bullettiming
+    
+    
+PUB InitBullets
+    nextbullet := 0
+    repeat bulletindex from 0 to constant(BULLETS-1)
+        bulleton[bulletindex] := 0 
+        bulletx[bulletindex] := 0
+        bullety[bulletindex] := 0
+        bulletspeed[bulletindex] := 0
+        
 
 PUB SpawnBullet(dx, dy)
     bulleton[nextbullet] := 1
-    bulletx[nextbullet] := dx << 3
-    bullety[nextbullet] := dy << 3    
+    bulletx[nextbullet] := dx
+    bullety[nextbullet] := dy    
     bulletspeed[nextbullet] := BULLSPEED
     
     nextbullet++
     if nextbullet => BULLETS
         nextbullet := 0
 
-PUB SpawnEnemy(dx, dy, type)
-    enemyon[nextenemy] := type
-    enemyx[nextenemy] := dx << 4
-    enemyy[nextenemy] := dy << 4    
-    enemyspeed[nextenemy] := ENEMSPEED
-    enemyhealth[nextenemy] := 1
+PUB HandleBullets
+
+    repeat bulletindex from 0 to constant(BULLETS-1)
+        if bulleton[bulletindex]
+            bulletx[bulletindex] += bulletspeed[bulletindex]
+            if bulletx[bulletindex] => SCREEN_W
+                bulleton[bulletindex] := 0
+            else
+                gfx.Sprite(@gfx_laser, bulletx[bulletindex], bullety[bulletindex], 0)
+   
+
     
-    nextenemy++
-    if nextenemy => ENEMIES
-        nextenemy := 0
-        
-        
-PUB CreateFixedEnemies
-        currentenemies := word[@level1][currentenemiesoffset]
-        currentenemiestmp := currentenemies
-        repeat x from 0 to 5
-            currentenemiestmp := currentenemies & 3
-            if currentenemiestmp > 0
-                SpawnEnemy(13,x,currentenemiestmp-1)
-            currentenemies >>= 2
-            
-            
-PUB CreateRandomEnemies | ran
-    ran := cnt
+
     
-    currentenemies := ran?    
-    repeat x from 1 to 6
-        currentenemiestmp := currentenemies & 3
-        if currentenemiestmp > 0 and currentenemiestmp < 3
-            SpawnEnemy(14,x,currentenemiestmp-1)    
-        currentenemies >>= 2
 
         
+
+
+PUB InitLevel
+    InitBoss
+    InitPlayer
+    InitBullets
+    InitEnemies
+    
+
+
+
+
+
+
 PUB LevelStage
     
     InitLevel
@@ -327,14 +367,12 @@ PUB LevelStage
         gfx.TranslateBuffer(@prebuffer, screen)    
         gfx.ClearScreen
        
-             
-       
-        
+
         HandlePlayer                        
                         
      '   CreateFixedEnemies
         currentenemiesoffset++
-        if currentenemiesoffset > 700     
+        if currentenemiesoffset > 100
             CreateRandomEnemies
             currentenemiesoffset := 0
 
@@ -342,11 +380,45 @@ PUB LevelStage
         HandleEnemies                
                        
         HandleBullets
-        
-        
-        
-        
+
+
+' *********************************************************
+'  Boss
+' *********************************************************
+VAR
+    byte bosshand1_x
+    byte bosshand1_y
+
+
     
+PUB InitBoss
+    blinkon := 0
+    blinkcount := 0
+    bosshealth := 10
+
+PUB HandleBoss
+
+{{
+    repeat bulletindex from 0 to constant(BULLETS-1)
+        if bulleton[bulletindex]
+            collided := 1
+            if bulletx[bulletindex] < 8
+                collided := 0
+            if bosshealth > 0
+                if collided == 1
+                    bulleton[bulletindex] := 0
+                    blinkon := 1
+                  
+                    bosshealth--
+}}
+
+        
+    gfx.Sprite(@gfx_vortex_hand, 72,24, 0)
+    gfx.Sprite(@gfx_vortex, 64,0, 0)        
+    gfx.Sprite(@gfx_vortex_hand, 96,32, 0)   
+
+
+
 PUB BossStage
 
     audio.SetWaveform(1, 127)
@@ -361,30 +433,19 @@ PUB BossStage
     repeat until not choice
 
         gfx.TranslateBuffer(@prebuffer, screen)
+        
         gfx.ClearScreen
         
-        'gfx.Sprite(@gfx_planet, 5,6, 0, 0)
+        gfx.Sprite(@gfx_planet, 20,48, 0)
         
-
-{{
-        repeat bulletindex from 0 to constant(BULLETS-1)
-            if bulleton[bulletindex]
-                collided := 1
-                if bulletx[bulletindex] < 8
-                    collided := 0
-
-                if bosshealth > 0
-                    if collided == 1
-                        bulleton[bulletindex] := 0
-                        blinkon := 1
-                    
-                        bosshealth--
-}}
+        
+        HandleBoss
+     
 
 
   
-        'HandlePlayer   
-        'HandleBullets
+        HandlePlayer   
+        HandleBullets
         
           
         
@@ -394,77 +455,150 @@ PUB BossStage
 
 
 
+' *********************************************************
+'  Data
+' *********************************************************
+DAT
 
-DAT 'LEVEL DATA
 
+gfx_ball
+word    256  'frameboost
+word    32, 32   'width, height
 
+word    $5555, $0555, $5540, $5555, $5555, $0015, $5003, $5555, $5555, $0c00, $0f33, $5554, $1555, $f300, $c3ff, $5550
+word    $0555, $7fcc, $f5dd, $5543, $0155, $57f0, $5d55, $5503, $c055, $55fc, $5555, $543f, $0c15, $757f, $5555, $50f5
+word    $c005, $55dd, $5555, $43f7, $f005, $555f, $5555, $43d5, $f005, $5557, $5555, $4f55, $f0c1, $555f, $5555, $0375
+word    $fc01, $5557, $5555, $0f55, $7cc1, $555f, $5555, $0755, $fc00, $5557, $5555, $0fd5, $fc30, $5555, $5555, $0f55
+word    $ff00, $5557, $5555, $3d55, $dc00, $557f, $5555, $0fd5, $ff00, $55df, $5555, $0f75, $f001, $557d, $5555, $33d5
+word    $f0c1, $55df, $7555, $0fff, $fc01, $77ff, $5555, $03f7, $f005, $ff7f, $f5d5, $40fd, $0005, $ffff, $f77f, $4c3f
+word    $c005, $f7fc, $f7fd, $403f, $0015, $fff3, $fff7, $50c3, $0055, $ffc3, $ffff, $5400, $0155, $f0c0, $c3ff, $5503
+word    $0555, $3c00, $3030, $5540, $1555, $0000, $c00c, $5550, $5555, $0000, $0000, $5554, $5555, $0015, $5000, $5555
 
-
-
-gfx_zeroforce
-word    $40  'frameboost
-word    $2, $2   'width, height
-byte    $4, $F3, $4, $3, $C, $B, $78, $67, $F0, $9F, $D0, $4F, $90, $8F, $80, $1F, $40, $1F, $20, $1F, $0, $3F, $40, $3F, $80, $7F, $0, $FF, $0, $FF, $0, $FF
-byte    $2, $E3, $C, $CC, $1E, $DA, $3E, $B2, $3E, $A2, $7E, $42, $7B, $43, $63, $52, $67, $16, $47, $16, $3, $D2, $7, $D6, $3, $DA, $23, $DA, $3, $FA, $3, $F8
-
-gfx_krakken
-word    $60  'frameboost
-word    $3, $2   'width, height
-byte    $C0, $7F, $F0, $9F, $18, $F, $58, $17, $C, $7, $C, $3, $8C, $B, $FC, $33, $F9, $1, $FF, $41, $FB, $8, $F9, $88, $FF, $89, $F9, $1, $FC, $11, $FE, $9
-byte    $F2, $43, $F8, $13, $EC, $27, $E0, $47, $F0, $9F, $B0, $1F, $C0, $1F, $60, $7F, $7, $FC, $17, $E5, $17, $C5, $17, $C0, $1F, $C8, $1F, $CA, $1F, $D8, $F, $8C
-byte    $63, $2, $7F, $62, $FF, $1, $FF, $C0, $FF, $0, $7F, $1, $7F, $40, $63, $1, $F, $80, $3F, $F4, $0, $C0, $7, $E4, $F, $E8, $7, $F4, $2, $F0, $3, $F0
 
 gfx_blackhole
-word    $90  'frameboost
-word    $3, $3   'width, height
-byte    $3C, $C3, $C4, $3B, $82, $7D, $2, $FD, $82, $FF, $C2, $FF, $32, $F, $F6, $9F, $FC, $9F, $CC, $F, $88, $F, $8, $F, $88, $8F, $C8, $8F, $E8, $F, $68, $F, $7C, $1F, $34, $F, $26, $3F, $42, $7F, $C2, $3D, $62, $9D, $1C, $E3, $0, $FF
-byte    $0, $FF, $0, $FF, $1, $FE, $83, $FC, $FF, $F9, $1E, $0, $FC, $10, $F9, $B0, $F1, $61, $F0, $0, $F0, $0, $F0, $60, $F9, $B0, $F9, $11, $3C, $0, $1C, $0, $4, $0, $2, $0, $3, $0, $81, $80, $FF, $FF, $C0, $FF, $80, $FF, $0, $FF
-byte    $E, $F1, $F, $F3, $5, $FB, $7, $F9, $3F, $C0, $7F, $86, $F, $FC, $5, $FC, $F, $FE, $7F, $80, $7F, $9E, $9, $F8, $B, $F8, $7F, $B0, $7F, $80, $1E, $FC, $E, $F8, $E, $F0, $B, $F7, $9, $F7, $10, $EF, $10, $EF, $13, $ED, $1F, $E3
+word    144  'frameboost
+word    24, 24   'width, height
+
+word    $aaaa, $aaaa, $aaaa, $ff5a, $aaaa, $a5fa, $eaa5, $aaaf, $9abf, $aaa9, $ffff, $9aab, $daa9, $0003, $9aa7, $5aa9
+word    $5001, $a6b5, $4ea6, $5405, $a5c1, $cf96, $1f17, $a900, $435a, $0d03, $ab50, $056a, $0000, $ab14, $15aa, $5000
+word    $ab01, $57aa, $5500, $ab00, $f7aa, $5f55, $ab00, $d3aa, $17d7, $ab00, $53aa, $05d7, $af00, $d3ea, $0755, $bfc0
+word    $55fe, $1555, $faf0, $1d6d, $5537, $dab5, $fd55, $d437, $6aa5, $b5a5, $d7f7, $6a57, $a5aa, $deb6, $55aa, $a5aa
+word    $9e96, $aaaa, $a6aa, $9696, $aaaa, $aaaa, $aaaa, $aaaa
 
 
-gfx_spacetank
-word    $20  'frameboost
-word    $2, $1   'width, height
-byte    $20, $A7, $10, $97, $32, $B7, $22, $A7, $22, $23, $22, $3, $38, $9, $34, $25, $3C, $25, $36, $22, $7E, $42, $76, $42, $7E, $42, $3C, $4, $18, $89, $8, $8F
+gfx_krakken
+word    96  'frameboost
+word    24, 16   'width, height
 
-
-gfx_planet
-word    $C0  'frameboost
-word    $6, $2   'width, height
-byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $80, $FF, $80, $FF, $80, $7F, $40, $7F, $C0, $BF, $C0, $BF, $E0, $BF, $60, $3F, $60, $3F, $60, $3F, $40, $1F, $60, $1F, $60, $1F, $60, $1F, $20, $1F, $A0, $9F, $A0, $9F, $A0, $9F, $E0, $BF, $80, $9F, $A0, $BF, $20, $3F, $20, $3F, $20, $1F, $40, $3F, $40, $7F, $40, $7F, $80, $7F, $80, $FF, $80, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF
-byte    $80, $FF, $60, $7F, $70, $1F, $58, $4F, $DC, $57, $BE, $1B, $BE, $3B, $FB, $79, $FB, $59, $FC, $5C, $AD, $D, $AD, $D, $EC, $C, $FC, $C, $FC, $C, $FB, $1B, $FB, $B, $FF, $F, $FF, $4F, $FA, $8A, $FB, $B, $FF, $2B, $FC, $68, $EE, $68, $EE, $68, $EE, $6E, $EE, $EE, $FA, $FA, $FA, $FA, $F6, $F6, $FE, $F4, $FE, $F0, $FE, $F2, $FE, $B0, $FE, $26, $F6, $36, $D4, $14, $D0, $10, $F8, $38, $C1, $1, $81, $1, $86, $3, $86, $83, $8C, $87, $18, $F, $30, $1F, $E0, $3F, $80, $7F
-
-
-
-gfx_vortex
-word    $400  'frameboost
-word    $8, $8   'width, height
-byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $7F, $0, $7F, $0, $7F, $0, $7F, $0, $7F, $0, $7F, $0, $7F, $0, $3F, $0, $3F, $0, $3F, $0, $1F, $20, $3F, $0, $F, $0, $7, $80, $83, $80, $81, $B8, $A1, $B8, $A1, $B8, $A1, $B0, $A1, $80, $81, $18, $11, $38, $21, $F8, $C1, $F8, $81, $38, $1, $C0, $1, $4, $5, $F4, $5, $4, $1, $FC, $1, $EC, $21, $DC, $C5, $9C, $85, $38, $1, $78, $9, $F0, $31, $E0, $E1, $0, $7, $0, $3F, $0, $FF, $0, $FF, $0, $FF
-byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $EF, $0, $7, $30, $33, $38, $23, $7C, $45, $7E, $42, $FF, $81, $FF, $91, $FF, $11, $FF, $11, $FF, $1, $FF, $C1, $1F, $1, $DF, $0, $DF, $4, $DF, $4, $9F, $4, $3F, $0, $FF, $0, $FF, $20, $FF, $20, $FF, $0, $FF, $0, $FF, $84, $FF, $84, $FF, $C0, $FF, $E1, $FE, $F2, $FE, $FA, $7E, $7E, $3C, $3C, $99, $18, $C2, $0, $F1, $80, $7C, $0, $7F, $40, $9F, $10, $E7, $21, $F7, $7, $F3, $3, $F8, $80, $FD, $80, $FF, $C1, $7F, $4F, $7C, $7C, $78, $78, $70, $71, $70, $73
-byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $F3, $0, $0, $5C, $1C, $5E, $12, $1E, $12, $9E, $12, $FE, $2, $FC, $4, $79, $49, $A3, $A2, $DF, $DC, $3F, $38, $7F, $61, $FE, $C2, $F9, $F8, $C3, $C0, $1F, $0, $FE, $C0, $FD, $0, $FB, $0, $FB, $0, $F7, $6, $C7, $7, $CF, $F, $C7, $7, $C3, $3, $EB, $B, $E5, $5, $F0, $0, $7A, $2, $7D, $0, $3C, $0, $7E, $40, $7E, $40, $7F, $61, $7F, $78, $7F, $78, $7, $4, $F3, $D3, $FD, $5, $FD, $1, $FE, $0, $E2, $20, $82, $80, $1, $0, $0, $0, $0, $0, $1, $0
-byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $7F, $80, $8E, $C1, $C1, $4D, $4C, $6D, $60, $B5, $30, $DB, $18, $ED, $D, $F2, $2, $FD, $1, $FE, $C2, $FF, $E3, $3E, $3E, $9C, $9C, $C3, $C3, $3, $3, $F0, $B0, $FF, $8F, $FF, $0, $FF, $0, $7F, $0, $3F, $20, $1F, $10, $CF, $88, $A7, $80, $73, $40, $7B, $42, $39, $20, $90, $0, $A0, $A0, $C2, $0, $37, $34, $0, $0, $8A, $0, $E6, $22, $EF, $27, $EF, $23, $DF, $40, $D8, $40, $C3, $42, $8F, $8, $9F, $90, $9F, $90, $BF, $A0, $BF, $A1, $BE, $A0, $BE, $A2, $B8, $80
-byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $1, $F9, $5, $E5, $1E, $1E, $3F, $3E, $FF, $F0, $7F, $60, $BF, $B0, $9F, $1C, $EF, $E, $F3, $83, $FD, $81, $FE, $C2, $7F, $61, $9F, $0, $8F, $F, $C0, $0, $BF, $3F, $9F, $91, $AF, $AE, $E9, $29, $5C, $40, $FC, $30, $19, $19, $6B, $9, $81, $1, $10, $10, $3C, $3C, $3F, $E, $7F, $3, $7F, $0, $3, $0, $3C, $3C, $FF, $C0, $FF, $C0, $FF, $80, $FF, $80, $3, $0, $38, $38, $7E, $70, $FF, $C0, $FF, $80, $FF, $80, $FF, $80, $FF, $80, $0, $0, $3F, $38, $FF, $E0, $FF, $80
-byte    $0, $C3, $78, $7B, $F8, $8B, $F8, $B, $F0, $13, $F0, $17, $F0, $17, $60, $27, $60, $27, $60, $2F, $60, $2F, $60, $2F, $60, $2F, $60, $2F, $E0, $27, $E0, $27, $E0, $23, $E0, $20, $E8, $28, $E8, $28, $6E, $6E, $F, $F, $E7, $E6, $F7, $F5, $FB, $7B, $FD, $3C, $DE, $9E, $FE, $E, $FE, $0, $CF, $0, $DF, $10, $FF, $38, $FF, $0, $FF, $4, $FF, $3D, $FF, $FF, $FF, $64, $BF, $80, $E, $0, $EF, $60, $EF, $60, $EF, $20, $FE, $30, $AE, $20, $EE, $20, $EE, $20, $EE, $20, $EE, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $EC, $20, $FC, $0, $EC, $0, $EC, $80, $EC, $60, $FC, $F0, $EC, $20, $EC, $20, $FC, $F0, $F4, $F0, $F4, $F0
-byte    $0, $FF, $0, $FE, $1, $FD, $7, $F6, $7, $E6, $F, $CE, $1F, $DC, $1D, $DC, $19, $98, $13, $10, $37, $30, $77, $70, $6F, $60, $7F, $40, $FF, $C0, $D3, $C0, $FB, $F8, $FD, $FC, $BF, $BE, $1F, $1F, $0, $0, $0, $0, $1, $1, $7F, $7F, $7F, $78, $FF, $C0, $FF, $D8, $1F, $1E, $1F, $17, $F, $A, $7, $1, $FF, $FF, $FF, $FC, $FF, $0, $FF, $E0, $7F, $7F, $6F, $60, $18, $18, $3, $3, $FF, $DE, $FF, $C0, $DC, $80, $FC, $3C, $0, $0, $F, $0, $BF, $30, $FF, $E0, $FF, $80, $FF, $20, $7F, $0, $1F, $0, $7, $0, $F, $0, $FF, $C0, $FF, $F8, $FF, $0, $7F, $7F, $7B, $30, $F, $F, $D, $C, $3, $3, $1, $1, $9, $9, $F, $F
-byte    $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FE, $0, $FC, $0, $FC, $0, $FC, $0, $F0, $0, $C0, $1, $1, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $1, $1, $3, $3, $6, $6, $0, $0, $0, $0, $0, $0, $3, $1, $7, $7, $7, $7, $1, $1, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $3, $7, $7, $5, $4, $0, $0, $0, $0, $0, $0, $3, $3, $7, $7, $F, $6, $E, $C, $0, $0, $0, $0, $0, $0, $13, $3, $F, $F, $1, $1, $0, $0, $4, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-
-
-
-gfx_vortex_hand
-word    $90  'frameboost
-word    $3, $3   'width, height
-byte    $0, $7, $0, $3, $CC, $CD, $EE, $86, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $F6, $12, $EE, $86, $CC, $CC, $0, $1, $0, $3, $F8, $61, $F8, $31, $F0, $30, $E6, $4, $8E, $C, $1E, $1A, $70, $71, $0, $7
-byte    $0, $0, $0, $0, $78, $78, $FD, $E5, $FD, $C5, $FF, $C7, $FD, $81, $FD, $81, $FD, $81, $FD, $81, $FD, $C1, $FD, $C5, $FD, $E5, $78, $78, $0, $0, $0, $0, $1F, $18, $7F, $78, $FF, $FC, $8F, $F, $C3, $43, $E1, $E1, $8, $8, $0, $0
-byte    $0, $E0, $0, $C0, $4, $C4, $E, $8E, $E, $C, $2E, $28, $2E, $28, $2E, $28, $2E, $28, $2E, $28, $2E, $28, $E, $8, $E, $C, $6, $6, $0, $80, $0, $C0, $2, $C2, $F, $CD, $7, $E4, $7, $E6, $3, $F3, $0, $F8, $0, $FC, $0, $FE
-
-
+word    $aaaa, $af5f, $aaaa, $aaaa, $4114, $aaab, $57aa, $5104, $aab0, $757a, $d7f5, $aa14, $c0de, $7555, $af0d, $c006
+word    $5555, $c575, $4047, $555d, $d1d7, $500d, $57d5, $1755, $557d, $dd75, $4545, $5d55, $555f, $5545, $d57f, $1554
+word    $0dcd, $ff02, $1554, $0305, $3556, $1554, $a80c, $000a, $555d, $aa8c, $2aaa, $75dd, $aaa8, $aaaa, $01d0, $aaaa
 
 
 gfx_laser
-word    $10  'frameboost
-word    $1, $1   'width, height
-byte    $22, $FF, $66, $DD, $66, $DD, $66, $DD, $66, $DD, $66, $DD, $66, $DD, $22, $FF
+word    16  'frameboost
+word    8, 8   'width, height
 
+word    $aaaa, $d557, $bffe, $aaaa, $aaaa, $d557, $bffe, $aaaa
+
+
+gfx_moon
+word    256  'frameboost
+word    32, 32   'width, height
+
+word    $aaaa, $0aaa, $aa80, $aaaa, $aaaa, $002a, $a003, $aaaa, $aaaa, $0c00, $0f33, $aaa8, $2aaa, $f300, $c3ff, $aaa0
+word    $0aaa, $7fcc, $f5dd, $aa83, $02aa, $5700, $5d55, $aa03, $c0aa, $55c0, $5555, $a83f, $0c2a, $357c, $3f55, $a0f5
+word    $000a, $f5d0, $d557, $83f4, $f00a, $c15f, $555f, $83d3, $f00a, $c557, $d543, $8f5d, $c0c2, $d55f, $5557, $037d
+word    $c002, $5557, $5555, $0f75, $4cc2, $555f, $5555, $0755, $fc00, $555f, $5555, $0fd5, $fc30, $57fd, $f555, $0f55
+word    $ff00, $5770, $f555, $3d57, $dc00, $5f73, $c155, $0fd0, $5f00, $5dcf, $1555, $0f75, $7002, $7f3d, $5555, $33d4
+word    $f0c2, $5cd5, $7555, $0fff, $c002, $ff55, $555f, $03f4, $000a, $3d7f, $51fc, $80fc, $000a, $d57f, $17ff, $8c3c
+word    $c00a, $55fc, $0ffd, $803f, $002a, $55f3, $f3f5, $a0c3, $00aa, $ffc3, $ffff, $a800, $02aa, $f0c0, $c3ff, $aa03
+word    $0aaa, $3c00, $3030, $aa80, $2aaa, $0000, $c00c, $aaa0, $aaaa, $0000, $0000, $aaa8, $aaaa, $002a, $a000, $aaaa
+
+
+gfx_planet
+word    192  'frameboost
+word    48, 16   'width, height
+
+word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa
+word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $eaaa
+word    $553f, $fcd5, $aaa9, $aaaa, $aaaa, $57aa, $1555, $0040, $aaf4, $aaaa, $aaaa, $fc7e, $0000, $0fff, $bd00, $aaaa
+word    $eaaa, $c0f3, $0f3f, $0000, $c000, $aaab, $7eaa, $c001, $4fff, $5ffd, $00f7, $aabc, $17aa, $3ffc, $543c, $7c3d
+word    $03f5, $aad4, $fdea, $ffff, $ffff, $53ff, $3015, $ab40, $ff7a, $d40f, $1555, $ffc0, $3fdf, $ad00, $f41e, $5555
+word    $fd55, $ffff, $30ff, $b400, $c3de, $550f, $f575, $ffff, $5557, $9000, $5503, $5555, $55d5, $fff5, $555f, $50f5
+
+
+gfx_rocket
+word    96  'frameboost
+word    24, 16   'width, height
+
+word    $aaaa, $aaaa, $5aaa, $aaaa, $aaaa, $d5aa, $5555, $aaa9, $bd56, $5555, $6aa1, $abd5, $ffff, $568f, $abff, $ffff
+word    $f54f, $aaff, $ffff, $554f, $a955, $ffff, $0fcf, $a000, $ffff, $000f, $ffff, $ffff, $0fcf, $ac00, $ffff, $5543
+word    $a955, $0000, $d580, $aaff, $0000, $5aa0, $abfd, $0000, $aaa8, $abd5, $aaaa, $aaaa, $ad5a, $aaaa, $aaaa, $95aa
+
+
+gfx_spacetank
+word    32  'frameboost
+word    16, 8   'width, height
+
+word    $aaaa, $a002, $0ffa, $83fc, $c0aa, $8d57, $3000, $f511, $503c, $1555, $d7f3, $055f, $0000, $03f0, $00aa, $a000
+
+
+gfx_vortex_hand
+word    144  'frameboost
+word    24, 24   'width, height
+
+word    $002a, $a000, $a00a, $ffca, $83ff, $8d40, $55f2, $0f55, $87c0, $0070, $0d00, $0f05, $ff00, $00ff, $3c3d, $5540
+word    $0155, $307f, $5570, $0d55, $3057, $55f0, $0f55, $0155, $ffc0, $03ff, $0fd5, $0c00, $0000, $03d5, $5fc0, $03d5
+word    $00f5, $5570, $0d55, $30ff, $5570, $0d55, $003f, $55f0, $0f55, $0c3c, $5ff0, $0ff5, $0f3c, $ffc0, $03ff, $0d70
+word    $0000, $0000, $035c, $55c0, $0d55, $83d7, $57f0, $0f55, $a0fc, $ffc0, $03ff, $a80c, $0000, $0000, $aa00, $fc02
+word    $003f, $aaa0, $002a, $8000, $aaaa, $00aa, $a000, $aaaa
+
+
+gfx_vortex
+word    1024  'frameboost
+word    64, 64   'width, height
+
+word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $00aa, $0000, $0000, $aa80
+word    $aaaa, $aaaa, $aaaa, $aaaa, $002a, $0000, $3d5f, $aa80, $aaaa, $aaaa, $aaaa, $aaaa, $540a, $1550, $5540, $aa03
+word    $aaaa, $aaaa, $aaaa, $aaaa, $5402, $1571, $5444, $aa0d, $aaaa, $aaaa, $aaaa, $2aaa, $fc03, $15c3, $4344, $aa3d
+word    $aaaa, $aaaa, $aaaa, $00aa, $0000, $4700, $0d44, $a835, $aaaa, $aaaa, $02aa, $0000, $ffc0, $4f0f, $3d44, $a834
+word    $aaaa, $aaaa, $f2aa, $57ff, $5555, $4035, $fd44, $a0f4, $aaaa, $aaaa, $5caa, $5555, $5555, $0fd5, $f541, $80d0
+word    $aaaa, $aaaa, $570a, $f555, $d557, $3d57, $3550, $03d4, $aaaa, $aaaa, $5542, $5555, $5555, $ff55, $0150, $0fd5
+word    $aaaa, $aaaa, $d570, $555f, $5555, $ffd5, $5354, $ff55, $aaaa, $aaaa, $55f2, $0055, $57d4, $3ff5, $5c54, $ff55
+word    $aaaa, $aaaa, $5f02, $54d5, $5550, $0ffd, $54d5, $fff5, $aaaa, $aaaa, $f002, $54d5, $d551, $43ff, $550d, $003f
+word    $aaaa, $aaaa, $0002, $5357, $f551, $10ff, $f570, $4103, $aaaa, $aaaa, $3fc2, $4d5c, $fd45, $0c3f, $3555, $0054
+word    $aaaa, $aaaa, $d570, $0570, $fc15, $50c3, $cd55, $0005, $aaaa, $aaaa, $5570, $35f3, $c155, $5430, $43d5, $0005
+word    $aaaa, $aaaa, $5ff2, $35f1, $0555, $5500, $73d5, $0005, $aaaa, $aaaa, $5002, $37cd, $0554, $5550, $53f5, $0035
+word    $aaaa, $aaaa, $5052, $ff33, $555c, $1555, $73ff, $0015, $aaaa, $aaaa, $5402, $fc3c, $555c, $0155, $7000, $00d5
+word    $aaaa, $aaaa, $d572, $f0cc, $555c, $4055, $47c0, $0355, $aaaa, $aaaa, $100a, $f3f3, $555c, $5035, $c7f4, $3555
+word    $aaaa, $aaaa, $c5ca, $0f54, $555c, $c001, $05d0, $1555, $aaaa, $aaaa, $f1ca, $0f54, $d55c, $0050, $1544, $5557
+word    $aaaa, $aaaa, $3c02, $0f55, $3557, $c154, $1400, $557c, $aaaa, $aaaa, $4f02, $03d5, $0d57, $ccd5, $03f0, $7fc0
+word    $aaaa, $aaaa, $53f2, $30f5, $4155, $103c, $fd50, $0000, $aaaa, $aaaa, $543c, $3cf5, $c05f, $1d03, $5554, $fffd
+word    $aaaa, $aaaa, $554f, $373d, $f0df, $1743, $4155, $5455, $aaaa, $aaaa, $55f0, $35cf, $4037, $17c0, $5155, $5455
+word    $aaaa, $aaaa, $d5fc, $3553, $0537, $c5f0, $5055, $5455, $aaaa, $aaaa, $d5f2, $3553, $f5f7, $c5f0, $5c55, $5c55
+word    $aaaa, $aaaa, $f7f2, $0554, $3d0f, $c57c, $7c55, $5c55, $aaaa, $aaaa, $3fca, $0355, $4cf3, $c570, $7c55, $7c55
+word    $aaaa, $aaaa, $0f0a, $43d5, $4740, $0500, $f05f, $7055, $aaaa, $aaaa, $730a, $54fd, $047d, $0001, $c0ff, $f0ff
+word    $aaaa, $aaaa, $dc02, $5407, $45f5, $0005, $0000, $0000, $aaaa, $aaaa, $7f02, $55f3, $55d5, $5555, $0000, $0000
+word    $a800, $aaaa, $ff00, $55fc, $57fd, $5555, $5555, $5555, $00fc, $0aa8, $0ff0, $d5ff, $55f5, $5555, $5555, $0555
+word    $3f5c, $0000, $c000, $f17f, $05f5, $0030, $1000, $fc30, $d55c, $ffff, $f3ff, $c14f, $c7f5, $ffff, $5fff, $fffd
+word    $555e, $5555, $f355, $5557, $c3d5, $5517, $5555, $fd7d, $1572, $5000, $f055, $5575, $4dd5, $5555, $5555, $fd77
+word    $5572, $5555, $f0d5, $f755, $71d5, $5501, $5555, $ff77, $1fca, $5554, $c0f1, $dfd5, $f1d5, $5501, $5555, $c337
+word    $ffea, $1550, $c0fc, $d7d5, $c1d7, $5535, $5555, $c0f3, $fc2a, $1503, $c0ff, $cdf7, $cdd7, $5535, $7515, $f0f7
+word    $f0aa, $54ff, $c0ff, $c3f7, $ccd7, $5c35, $7415, $000f, $02aa, $17f0, $c03f, $c017, $43f7, $7c31, $7407, $000f
+word    $aaaa, $ffc0, $c00f, $c03f, $c3f7, $7017, $7c05, $0007, $aaaa, $f002, $003f, $c03c, $c037, $f41f, $7c01, $0000
+word    $aaaa, $002a, $000c, $c03c, $003f, $f01f, $fc01, $0000, $aaaa, $00aa, $0000, $40f0, $000f, $f00f, $3c07, $0000
+word    $aaaa, $2aaa, $0000, $00c0, $000f, $c03c, $300f, $0004, $aaaa, $2aaa, $0000, $0000, $0000, $0000, $300d, $0000
+word    $aaaa, $aaaa, $0000, $0000, $0000, $0000, $0400, $0000, $aaaa, $aaaa, $0000, $0000, $0000, $0000, $0000, $0000
+word    $aaaa, $aaaa, $0002, $0000, $0000, $0000, $0000, $0000, $aaaa, $aaaa, $0002, $0000, $0000, $0000, $0000, $0000
+
+
+gfx_zeroforce
+word    64  'frameboost
+word    16, 16   'width, height
+
+word    $aaaa, $aaaa, $aaaa, $aaaa, $aa95, $aaaa, $aa70, $aaaa, $9742, $aaaa, $01c2, $aaa4, $0dc2, $aa41, $7702, $a900
+word    $7002, $5555, $fff3, $7fff, $055c, $00cf, $157c, $aa00, $95f0, $aaaa, $57c2, $a401, $fc2a, $aaa5, $02aa, $aaa0
 
 
 

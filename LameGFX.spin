@@ -270,7 +270,7 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1,
 
 
 
-PUB Sprite(source, x, y, frame, trans, clip) | cw, ch
+PUB Sprite(source, x, y, frame)
 '' This is the original sprite function and has been
 '' largely superseded by SpriteTrans, which supports
 '' transparency and frames.
@@ -297,7 +297,7 @@ PUB Sprite(source, x, y, frame, trans, clip) | cw, ch
 '' Read more on img2dat to see how you can generate source images to use with this
 '' drawing command.
 
-    SendASMCommand(source, INST_SPRITE + ((x & $FF) << 8) + ((y & $FF) << 16) + (frame << 24) + (trans << 30) + (clip << 31))
+    SendASMCommand(source, INST_SPRITE + ((x & $FF) << 8) + ((y & $FF) << 16) + (frame << 24))
 
 
 
@@ -631,146 +631,7 @@ blitscreen1             mov     Addrtemp, destscrn
 
 
 
-
-
 '' #### BLIT SPRITE
-'' ---------------------------------------------------
-''
-'' ###### instruction1 format
-''
-'' <pre>
-'' clip trans   frame     y        x        instr
-''  -     -     ------ -------- --------  --------
-''  0     0     000000 00000000 00000000  00000000   
-'' </pre>
-'' --------------------------------------------------- 
-{{
-sprite1                 mov     Addrtemp, destscrn
-
-                        ' get parameters from instruction1 and prepare for use
-
-                        ' x position
-                        mov     instruct1, instruct1full
-                        and     instruct1, h0000FF00   ' get X position
-                        shr     instruct1, #4           ' x >> 4        (x >> 8 << 4)
-                        add     Addrtemp, instruct1
-
-                        ' y position
-                        mov     instruct1, instruct1full
-                        and     instruct1, h00FF0000   ' get Y position
-                        shr     instruct1, #8           ' y >> 8        (y >> 16 << 8)
-                        add     Addrtemp, instruct1
-                        
-                        'frame
-                        mov     instruct1, instruct1full
-                        shr     instruct1, #24
-                        and     instruct1, #$3F   ' get frame number
-
-
-
-                        ' read header from sprite
-                        rdword  sourceAddrTemp, sourceAddr                             
-                        rdword  frameboost, sourceAddrTemp
-                        add     sourceAddrTemp, #2 
-                        
-
-                        ' get image width                                               
-                        rdword  w1, sourceAddrTemp
-                        shl     w1, #3              ' left-shift by 3 for 16x8 grid, 1 because assembly is always byte-aligned
-                        add     sourceAddrTemp, #2
-                        
-                        rdword  h1, sourceAddrTemp       ' only width is left-shifted because height has 8 pages only
-                        add     sourceAddrTemp, #2       'get ready to start reading data
-                                                
-
-                        'add frameboost to sourceAddr (frame) number of times
-:frameboostloop         cmp     instruct1, #0   wz
-if_nz                   add     sourceAddrTemp, frameboost
-if_nz                   sub     instruct1, #1
-if_nz                   jmp     #:frameboostloop
-
-
-
-                        ' Begin copying data       
-' OUTER LOOP --------------------------------------
-                        mov     valutemp2, h1 
-:outerloop              mov     datatemp, Addrtemp
-
-
-' INNER LOOP --------------------------------------                        
-                        mov     valutemp, w1
-:innerloop                                      
-                        ' the copy operation           
-                        rdword  datatemp2, sourceAddrTemp
-                        
-                        
-                        
-                        
-                        ' check if transparency enabled
-                        ' if not, skip this block
-                        cmp     instruct1full, bit_transparent   wz      
-if_z                    jmp     #:skiptransparency
-                        
-                        ' ---- TRANSPARENCY ----
-                        mov colorbyte1, datatemp2
-                        and colorbyte1, #$FF
-                        
-                        mov flipbyte1, datatemp2
-                        shr flipbyte1, #8
-                        
-                        
-                        ' get bytes from destination
-                        rdword  datatemp2, datatemp
-                        
-                        mov oldcolorbyte1, datatemp2
-                        and oldcolorbyte1, #$FF
-                        
-                        mov oldflipbyte1, datatemp2
-                        shr oldflipbyte1, #8
-                        
-                        
-                        
-                        
-                        mov selectbyte1, flipbyte1
-                        andn selectbyte1, colorbyte1
-                        
-                        and oldcolorbyte1, selectbyte1
-                        andn colorbyte1, selectbyte1
-                        add oldcolorbyte1, colorbyte1
-                        
-                        and oldflipbyte1, selectbyte1
-                        andn flipbyte1, selectbyte1
-                        add oldflipbyte1, flipbyte1
-                        
-       
-                        mov datatemp2, oldflipbyte1
-                        shl datatemp2, #8
-                        add datatemp2, oldcolorbyte1
-                                          
-                        
-                        
-:skiptransparency       ' ---- TRANSPARENCY END ----       
-                        
-                        
-                        wrword  datatemp2, datatemp
-                        
-                        
-                        add     datatemp, #2
-                        add     sourceAddrTemp, #2
-                        
-                        djnz    valutemp, #:innerloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
-' INNER LOOP END ----------------------------------                                                
-                        add     Addrtemp, #$100           ' add width of screen in bytes
-                        
-
-                        djnz    valutemp2, #:outerloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
-' OUTER LOOP END ----------------------------------
-
-                        jmp     #loopexit
-}}
-
-
-'' #### BLIT BOX
 '' ---------------------------------------------------
 ''
 '' ###### instruction1 format

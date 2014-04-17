@@ -204,12 +204,12 @@ else:
             output_canvas = output_canvas.resize(multiply_tuple(SCALEFACTOR,(im.size[0],im.size[1]*2)))
             output_canvas.show()
 
-        print "'   Creating:",newfilename
-        print "'  Bit depth:", args.bits[0]
-        print "' Image Type:", args.mode[0]
-        print "' Image size:",im.size
-        print "' Frame size:",framesize
-        print "'     Frames:",im.size[1]/framesize[1],",",im.size[0]/framesize[0]
-        print "'------------------- COPY AFTER THIS LINE --------------------"
-
+#        print "'   Creating:",newfilename
+#        print "'  Bit depth:", args.bits[0]
+#        print "' Image Type:", args.mode[0]
+#        print "' Image size:",im.size
+#        print "' Frame size:",framesize
+#        print "'     Frames:",im.size[1]/framesize[1],",",im.size[0]/framesize[0]
+#        print "'------------------- COPY AFTER THIS LINE --------------------"
+        print
         print open(newfilename,'r').read()
