@@ -113,6 +113,11 @@ VAR
     word    screen
 '' ---------------------------------------------------
 
+    word    font
+    byte    startingchar
+    byte    tilesize_x
+    byte    tilesize_y
+
 
 PUB Start(screenvar)
 '' This function initializes the library. It takes
@@ -252,6 +257,8 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1,
 ''
 ''
 
+    SetClipRectangle(box_x1<<3, box_y1<<3, box_x2<<3, box_y2<<3)
+
     tilecnt := 0
     tilecnttemp := 2
                     
@@ -266,6 +273,9 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1,
                  Box(source_tilemap + (tile << 4), (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7))
 
         tilecnttemp += byte[source_levelmap][0]
+        
+        
+    SetClipRectangle(0,0,128,64)
 
 
 
@@ -301,6 +311,27 @@ PUB Sprite(source, x, y, frame)
 
 
 
+PUB LoadFont(sourcevar, startingcharvar, tilesize_xvar, tilesize_yvar)
+    font := sourcevar
+    startingchar := startingcharvar
+    tilesize_x := tilesize_xvar
+    tilesize_y := tilesize_yvar
+
+PUB PutChar(char, x, y)
+    Box(font + (char - startingchar)<<4, x, y)
+
+PUB PutString(stringvar, origin_x, origin_y) | stringcursor, char, x, y
+   
+    stringcursor := 0
+    x := origin_x
+    y := origin_y
+    repeat while byte[stringvar][stringcursor] <> 0
+        char := byte[stringvar][stringcursor]
+        Box(font + (char - startingchar)<<4, x, y)
+        x += tilesize_x
+        stringcursor++
+
+
 
 PUB TextBox(teststring, boxx, boxy) | text_line, stringcursor, screencursor, valuetemp, value, indexx
 '' This function creates a text with a black background.
@@ -309,6 +340,7 @@ PUB TextBox(teststring, boxx, boxy) | text_line, stringcursor, screencursor, val
 '' * **boxx** - x position on screen (0-15)
 '' * **boxy** - y position on screen (0-7)
 ''
+
 {{{
     repeat until not lockset(SCREENLOCK)  
 
@@ -401,122 +433,6 @@ PUB TranslateBuffer(sourcebuffer, destbuffer)
 '' buffer addresses are packed into the sourcegfx long.
 
     SendASMCommand(sourcebuffer + (destbuffer << 16), INST_TRANSLATE)
-
-
-
-
-
-
-
-
-
-
-DAT
-
-
-
-asciitable
-
-'32 to 64
-byte    $0, $0, $0, $0, $0, $0
-byte    $2F, $0, $0, $0, $0, $0
-byte    $3, $4, $3, $4, $0, $0
-byte    $12, $3F, $12, $3F, $12, $0
-byte    $4, $2A, $7F, $2A, $10, $0
-byte    $24, $10, $8, $4, $12, $0
-byte    $1A, $25, $2A, $10, $28, $0
-byte    $3, $0, $0, $0, $0, $0
-byte    $3E, $41, $0, $0, $0, $0
-byte    $41, $3E, $0, $0, $0, $0
-byte    $14, $8, $3E, $8, $14, $0
-byte    $8, $8, $3E, $8, $8, $0
-byte    $40, $30, $0, $0, $0, $0
-byte    $8, $8, $8, $8, $8, $0
-byte    $30, $30, $0, $0, $0, $0
-byte    $40, $30, $8, $6, $1, $0
-byte    $3E, $51, $49, $45, $3E, $0
-byte    $44, $42, $7F, $40, $40, $0
-byte    $42, $61, $51, $49, $46, $0
-byte    $22, $41, $49, $49, $36, $0
-byte    $F, $8, $8, $7F, $8, $0
-byte    $4F, $49, $49, $49, $31, $0
-byte    $3E, $49, $49, $49, $30, $0
-byte    $1, $1, $61, $1D, $3, $0
-byte    $36, $49, $49, $49, $36, $0
-byte    $6, $49, $49, $49, $3E, $0
-byte    $24, $0, $0, $0, $0, $0
-byte    $40, $24, $0, $0, $0, $0
-byte    $8, $14, $14, $22, $22, $0
-byte    $14, $14, $14, $14, $0, $0
-byte    $22, $22, $14, $14, $8, $0
-byte    $2, $1, $51, $9, $6, $0
-byte    $3E, $49, $55, $5D, $3E, $0
-
-'ABC...
-byte    $7E, $9, $9, $9, $7E, $0
-byte    $7F, $49, $49, $49, $36, $0
-byte    $3E, $41, $41, $41, $22, $0
-byte    $7F, $41, $41, $41, $3E, $0
-byte    $3E, $49, $49, $49, $41, $0
-byte    $7F, $9, $9, $9, $1, $0
-byte    $3E, $41, $41, $51, $32, $0
-byte    $7F, $8, $8, $8, $7F, $0
-byte    $41, $41, $7F, $41, $41, $0
-byte    $41, $41, $41, $3F, $1, $0
-byte    $7F, $8, $14, $22, $41, $0
-byte    $7F, $40, $40, $40, $40, $0
-byte    $7F, $1, $E, $1, $7F, $0
-byte    $7F, $2, $C, $30, $7F, $0
-byte    $3E, $41, $41, $41, $3E, $0
-byte    $7E, $9, $9, $9, $6, $0
-byte    $3E, $41, $51, $21, $5E, $0
-byte    $7F, $9, $9, $9, $76, $0
-byte    $6, $49, $49, $49, $30, $0
-byte    $1, $1, $7F, $1, $1, $0
-byte    $3F, $40, $40, $40, $3F, $0
-byte    $3, $1C, $60, $1C, $3, $0
-byte    $F, $70, $C, $70, $F, $0
-byte    $63, $14, $8, $14, $63, $0
-byte    $3, $4, $78, $4, $3, $0
-byte    $61, $51, $49, $45, $43, $0
-
-byte    $7F, $41, $0, $0, $0, $0
-byte    $1, $6, $8, $30, $40, $0
-byte    $41, $7F, $0, $0, $0, $0
-byte    $4, $2, $1, $2, $4, $0
-byte    $40, $40, $40, $40, $40, $0
-byte    $2, $4, $0, $0, $0, $0
-
-'abc...
-byte    $18, $24, $24, $3C, $0, $0
-byte    $3F, $24, $24, $18, $0, $0
-byte    $18, $24, $24, $0, $0, $0
-byte    $18, $24, $24, $3F, $0, $0
-byte    $1C, $2A, $2A, $C, $0, $0
-byte    $8, $3F, $9, $0, $0, $0
-byte    $18, $A4, $A4, $7C, $0, $0
-byte    $3F, $4, $4, $38, $0, $0
-byte    $3D, $0, $0, $0, $0, $0
-byte    $80, $80, $7D, $0, $0, $0
-byte    $3F, $8, $14, $24, $0, $0
-byte    $3F, $0, $0, $0, $0, $0
-byte    $3C, $4, $38, $4, $38, $0
-byte    $3C, $4, $38, $0, $0, $0
-byte    $18, $24, $24, $18, $0, $0
-byte    $FC, $24, $24, $18, $0, $0
-byte    $18, $24, $24, $FC, $80, $0
-byte    $3C, $4, $8, $0, $0, $0
-byte    $24, $2A, $12, $0, $0, $0
-byte    $4, $3F, $4, $0, $0, $0
-byte    $1C, $20, $20, $3C, $0, $0
-byte    $C, $10, $20, $10, $C, $0
-byte    $1C, $20, $18, $20, $1C, $0
-byte    $24, $18, $18, $24, $0, $0
-byte    $4, $98, $60, $18, $4, $0
-byte    $32, $2A, $2A, $26, $0, $0
-
-
-
 
 
 
@@ -1071,6 +987,9 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
                         add     datatemp, srcpointer                                
 
                         rdlong  translatelong, datatemp
+ 
+                        ' potential inverter effect                       
+'                        xor     translatelong, invert
 
                         mov     datatemp2, #translatematrix_src
                         add     datatemp2, #8
@@ -1237,6 +1156,9 @@ hFF000000               long    $FF000000
 hFFFF                   long    $FFFF
 hAAAA                   long    $AAAA
 h5555                   long    $5555
+
+invert                  long    %01010_1010_1010_1010_1010_1010_1010_101
+'invert                  long    $FFFF_FFFF
 
 sourceAddr              long    0
 frame1                  long    0
