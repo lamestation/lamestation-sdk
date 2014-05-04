@@ -81,12 +81,12 @@ PUB Main
     gfx.TranslateBuffer(@prebuffer, screen)
 
     clicked := 0
-    'StaticScreen
-    'LogoScreen
+    StaticScreen
+    LogoScreen
     
     repeat
-        'TitleScreen
-        LevelStage
+        TitleScreen
+'        LevelStage
         BossStage
 
 
