@@ -109,20 +109,20 @@ PUB Graphics_Demo
             
             gfx.ClearScreen
 
-            gfx.DrawMap(@gfx_tiles_2b_tuxor, @map_supersidescroll, xoffset, 0, 0,0, 16, 8)
+            gfx.DrawMap(@gfx_tiles_2b_tuxor, @map_supersidescroll, xoffset, 0, 0,3, 16, 8)
             
             'gfx.Blit(@gfx_randomcrop)
                        
 '            gfx.Box(@gfx_test_box2,pos_x,pos_y)
-            gfx.Sprite(@gfx_test_box3,pos_x,30, 0, 0, 0)      
+            gfx.Sprite(@gfx_test_box3,pos_x,30, 0)      
 
             'if pos_dir == 3
-            '    gfx.Sprite(@gfx_player,pos_x,pos_y, 3+pos_frame//3, 0, 0)
+            '    gfx.Sprite(@gfx_player,pos_x,pos_y, 3+pos_frame//3)
             'if pos_dir == 1
-           ' gfx.Sprite(@gfx_vortex,pos_x,pos_y, 0, 0, 0)
+           ' gfx.Sprite(@gfx_vortex,pos_x,pos_y, 0)
             
-'            gfx.Sprite(@gfx_player,8,0, 0, 0, 0)
- '           gfx.Sprite(@gfx_player,60,30, 0, 0, 0)
+'            gfx.Sprite(@gfx_player,8,0, 0)
+ '           gfx.Sprite(@gfx_player,60,30, 0)
       
             {{
             if ctrl.Right
