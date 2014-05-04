@@ -24,12 +24,6 @@ CON
     DIR_U = 2
     DIR_D = 3
     
-    NL = 10
-
-
-    XOFFSET1 = 16
-    YOFFSET1 = 20
-    
     COLLIDEBIT = $80
     TILEBYTE = COLLIDEBIT-1
     
@@ -134,19 +128,15 @@ PUB Main
     gfx.TranslateBuffer(@buffer, screen)
 
     gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
-
-
     InitData
 
     clicked := 0
     
     'LogoScreen
-    'TitleScreen
+    TitleScreen
     TankSelect
-    LevelSelect                          
+    'LevelSelect                          
     'TankFaceOff          
-
-
 
     menuchoice := GO_GAME
     repeat
@@ -287,19 +277,6 @@ PUB TankSelect
         gfx.PutString(tanktypename[theirtype],56,56)
 
 
-    tankgfx[yourtank] := tanktypegfx[yourtype]
-    tankgfx[theirtank] := tanktypegfx[theirtype]
-
-    repeat tankindex from 0 to TANKSMASK
-       tankw[tankindex] := word[tankgfx[tankindex]][1]
-       tankh[tankindex] := word[tankgfx[tankindex]][2]
-
-
-
-
-
-
-
 PUB LevelSelect
 
     choice := 1
@@ -344,7 +321,7 @@ PUB LevelSelect
           clicked := 0
 
         'MULTIPLAYER HANDLING
-        {{
+        
         repeat while pst.RxCount > 0
            receivebyte := pst.CharIn
                     
@@ -354,20 +331,13 @@ PUB LevelSelect
            elseif receivebyte == UPDATEADVANCE
               choice := 0
               clicked := 1       
-              }}
+              
 
         gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.PutString(string("Level:"),0,16)                  
         gfx.PutString(levelname[currentlevel],40,16)
         
         gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,3,16,8)
-
-        
-
-        
-    InitLevel
-
-
 
 
 PUB TankFaceOff
@@ -399,13 +369,14 @@ PUB TankFaceOff
               choice := 0
               clicked := 1   
 
-     
-    
+
 PUB GameLoop : menureturn
 
     audio.StopSong
     audio.SetWaveform(4, 127)
     audio.SetADSR(127, 70, 0, 70)
+  
+    InitLevel
 
     clicked := 0
     choice := 0                               
@@ -414,8 +385,23 @@ PUB GameLoop : menureturn
         ctrl.Update
         gfx.TranslateBuffer(@buffer, screen)
 
-        '  if tankon[yourtank]
-          
+        if tankon[yourtank]
+            ControlTank 
+        else
+            GhostMode
+            
+            
+        'HandleNetworking
+        gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,0,16,8)
+
+        DrawTanks
+        HandleBullets
+        HandleStatusBar
+
+    menureturn := choice
+
+PUB ControlTank
+   
               tankoldx := tankx[yourtank]
               tankoldy := tanky[yourtank]
               tankolddir := tankdir[yourtank]
@@ -426,13 +412,13 @@ PUB GameLoop : menureturn
               if ctrl.Left
                  tankdir[yourtank] := 0        
 
-                 tankx[yourtank]--
+                 tankx[yourtank] -= tanktypespeed[yourtype]
                   if tankx[yourtank] < 0
                       tankx[yourtank] := 0
               if ctrl.Right
                   tankdir[yourtank] := 1
               
-                  tankx[yourtank]++
+                  tankx[yourtank] += tanktypespeed[yourtype]
                   if tankx[yourtank] > levelw<<3 - tankw[yourtank]
                       tankx[yourtank] := levelw<<3 - tankw[yourtank] 
 
@@ -476,13 +462,13 @@ PUB GameLoop : menureturn
               if ctrl.Up
                   tankdir[yourtank] := 2
                   
-                  tanky[yourtank]--
+                  tanky[yourtank] -= tanktypespeed[yourtype]
                   if tanky[yourtank] < 0
                       tanky[yourtank] := 0
               if ctrl.Down
                   tankdir[yourtank] := 3  
 
-                  tanky[yourtank]++
+                  tanky[yourtank] += tanktypespeed[yourtype]
                   if tanky[yourtank] > levelh<<3 - tankh[yourtank]
                       tanky[yourtank] := levelh<<3 - tankh[yourtank]
        {{
@@ -526,6 +512,7 @@ PUB GameLoop : menureturn
               if ctrl.A
                 if not clicked
                   clicked := 1
+                  tankhealth[yourtank]--
                
                  ' choice := GO_MENU 'Go to menu
                   
@@ -539,11 +526,8 @@ PUB GameLoop : menureturn
                 
               else
                   clicked := 0      
-                {{  
-          else
 
-              'TANK CONTROL
-              'LEFT AND RIGHT   
+PUB GhostMode  
               if ctrl.Left
                   xoffset--
                   if xoffset < 0
@@ -573,29 +557,15 @@ PUB GameLoop : menureturn
                   
                   clicked := 1
               else
-                clicked := 0
-              }}
+                clicked := 0    
+    
+    
+    
 
 
 
 
-          'HANDLE OPPONENT TANKS
-          'HandleNetworking
-       
-          'DRAW TILES TO SCREEN
-          gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,0,16,8)
 
-          
-
-          DrawTanks
-                                                                       
-          'CONTROL EXISTING BULLETS -----
-          'HandleBullets
-
-          'HUD OVERLY
-          'HandleStatusBar
-
-    menureturn := choice
 
 PUB PauseMenu : menureturn
 
@@ -686,6 +656,13 @@ PUB InitData
     tanktypegfx[3] := @gfx_happyface
     tanktypegfx[4] := @gfx_moonman
 
+
+    tanktypespeed[0] := 5
+    tanktypespeed[1] := 10
+    tanktypespeed[2] := 2
+    tanktypespeed[3] := 6
+    tanktypespeed[4] := 7
+
               
 ' *********************************************************
 '  Levels
@@ -718,6 +695,11 @@ PUB InitLevel
     ControlOffset(yourtank)
 
     InitBullets
+    InitTanks
+    
+    
+
+    
 
 PUB ControlOffset(tankindexvar) | bound_x, bound_y
 
@@ -775,6 +757,18 @@ VAR
 
     long    tanktypegfx[TANKTYPES]
     word    tanktypename[TANKTYPES]
+    byte    tanktypespeed[TANKTYPES]
+
+
+PUB InitTanks
+    tankgfx[yourtank] := tanktypegfx[yourtype]
+    tankgfx[theirtank] := tanktypegfx[theirtype]
+
+    repeat tankindex from 0 to TANKSMASK
+       tankw[tankindex] := word[tankgfx[tankindex]][1]
+       tankh[tankindex] := word[tankgfx[tankindex]][2]
+    
+    
 
 PUB SpawnTank(tankindexvar, respawnindexvar, respawnflag)
     if respawnflag == 1
@@ -892,7 +886,7 @@ PUB HandleNetworking
 CON 
     BULLETS = 20
     BULLETSMASK = BULLETS-1
-    BULLETINGSPEED = 2
+    BULLETINGSPEED = 15
   
 VAR
     word    bullet
@@ -927,7 +921,7 @@ PUB SpawnBullet(tankindexvar)
         bullety[bullet] := tanky[tankindexvar]
           
     if bulletdir[bullet] == DIR_R
-        bulletx[bullet] := tankx[tankindexvar] + tankw[tankindexvar] - 1
+        bulletx[bullet] := tankx[tankindexvar] + tankw[tankindexvar] - 8
         bullety[bullet] := tanky[tankindexvar]
           
     if bulletdir[bullet] == DIR_U
@@ -936,7 +930,7 @@ PUB SpawnBullet(tankindexvar)
           
     if bulletdir[bullet] == DIR_D
         bulletx[bullet] := tankx[tankindexvar]
-        bullety[bullet] := tanky[tankindexvar] + tankh[tankindexvar] - 1
+        bullety[bullet] := tanky[tankindexvar] + tankh[tankindexvar] - 8
                       
     bullet++
     if bullet > BULLETSMASK
@@ -968,7 +962,6 @@ PUB HandleBullets
           if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)
           
              gfx.Sprite(@gfx_bullet, bulletxtemp , bulletytemp, 0)
-
 
              repeat tankindex from 0 to TANKSMASK
                 if tankon[tankindex]
@@ -1002,32 +995,33 @@ PUB HandleStatusBar
 
    
     'STATUS HUD
-    if tankon[yourtank] == 1   
-        repeat x from 0 to ((tankhealth[yourtank]-1)) step 1
-             if x < ((tankhealth[yourtank]-1)>>1)
-                 gfx.Box(@gfx_heart, x>>1, 7)
-             else
-            '     if x & $1 == 0
-              '       gfx.BoxEx(@gfx_heart, x>>1, 7, 3)
-             '    else
-                     gfx.Box(@gfx_heart, x>>2, 7)
-
+    if tankon[yourtank]
+        repeat x from 0 to (tankhealth[yourtank]-1)
+            if x == (tankhealth[yourtank]-1)
+                if x & 1
+                    gfx.SetClipRectangle(0, 56, (x + 1) << 2 ,64) 
+                else
+                    gfx.Sprite(@gfx_heart, x<<2, 56, 0)
+            else
+                if not x & 1
+                    gfx.Sprite(@gfx_heart, x<<2, 56, 0)
+        gfx.SetClipRectangle(0, 0, 128,64)
 
     intarray[0] := 48+(score[yourtank]/10)
     intarray[1] := 48+(score[yourtank]//10)
     intarray[2] := 0
 
-    gfx.TextBox(@intarray, 0, 0)
+    gfx.PutString(@intarray, 0, 0)
 
 
     intarray[0] := 48+(score[theirtank]/10)
     intarray[1] := 48+(score[theirtank]//10)
     intarray[2] := 0
 
-    gfx.TextBox(@intarray, 14, 0)
+    gfx.PutString(@intarray, 112, 0)
 
 
-DAT 'LEVEL DATA
+DAT
 
 
 
