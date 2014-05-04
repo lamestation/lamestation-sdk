@@ -16,12 +16,6 @@ CON
                      
     SCREEN_W = 128
     SCREEN_H = 64
-    BITSPERPIXEL = 2
-    FRAMES = 1
-
-    SCREEN_H_BYTES = SCREEN_H / 8
-    SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
-    TOTALBUFFER_BYTES = SCREENSIZE_BYTES
             
 
 
@@ -31,19 +25,8 @@ CON
     DIR_D = 3
     
     NL = 10
-    TANKS = 2   'must be power of 2
-    TANKSMASK = TANKS-1
-    
-    TANKTYPES = 5 'must be power of 2
-    TANKTYPESMASK = TANKTYPES-1
-    
-    TANKHEALTHMAX = 10
-    
-    BULLETS = 20
-    BULLETSMASK = BULLETS-1
-    
-    BULLETINGSPEED = 2
-    
+
+
     XOFFSET1 = 16
     YOFFSET1 = 20
     
@@ -60,20 +43,7 @@ CON
     
     WIFI_RX = 22
     WIFI_TX = 23
-    
-    UPDATETANKX = 1
-    UPDATETANKY = 2
-    UPDATETANKDIR = 3
-    UPDATEBULLETSPAWN = 4
-    
-    'CONTROLS LIFE AND DEATH
-    UPDATETANKSPAWN = 5
-    UPDATETANKDIED = 6
-    UPDATESCORE = 7
-    UPDATEADVANCE = 8
-    UPDATEORDER = 9
-    UPDATETYPE = 10
-    UPDATELEVEL = 11
+
     
     
     'DECIDES WHO CLICKED TO INITIALIZE THE GAME
@@ -107,16 +77,10 @@ OBJ
 
 VAR
 
-    word    prebuffer[TOTALBUFFER_BYTES/2]
+    word    buffer[1024]
     word    screen
 
-    long    levelw
-    long    levelh
-    byte    currentlevel
-    word    leveldata[LEVELS]
-    word    levelname[LEVELS]
-    word    tilemap
-    byte    levelstarts[LEVELS*TANKS]
+
 
     long    x
     long    y    
@@ -125,46 +89,11 @@ VAR
     long    tilecnttemp
 
 
-    long    xoffset
-    long    yoffset
 
-    long    tankgfx[TANKS]
-    long    tankx[TANKS]
-    long    tanky[TANKS]
-    long    tankoldx
-    long    tankoldy
-    byte    tankolddir
-    byte    tankstartx[TANKS]
-    byte    tankstarty[TANKS]
 
-    byte    tankw[TANKS]
-    byte    tankh[TANKS]
-    byte    tankdir[TANKS]
-    byte    tankhealth[TANKS]
-    byte    tankon[TANKS]
-
-    long    tankxtemp
-    long    tankytemp
-    byte    tankwtemp
-    byte    tankhtemp
-
-    long    tanktypegfx[TANKTYPES]
-    word    tanktypename[TANKTYPES]
 
     byte    score[TANKS]
     byte    oldscore
-
-    word    bullet
-    long    bulletx[BULLETS]
-    long    bullety[BULLETS]
-    byte    bulletspeed[BULLETS]
-    byte    bulletdir[BULLETS]
-    byte    bulleton[BULLETS]
-
-    long    bulletxtemp
-    long    bulletytemp
-
-    long    bacon
 
     byte    collided
     byte    yourtank
@@ -195,14 +124,14 @@ PUB Main
 
     dira~
     screen := lcd.Start
-    gfx.Start(@prebuffer)
+    gfx.Start(@buffer)
     pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
     ctrl.Start
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(@prebuffer, screen)
+    gfx.TranslateBuffer(@buffer, screen)
 
     gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
 
@@ -226,20 +155,27 @@ PUB Main
         elseif menuchoice == GO_MENU
             menuchoice := PauseMenu
 
+PUB Sleep(time) | count
+    repeat count from 0 to time
 
+
+
+' *********************************************************
+'  Scenes
+' *********************************************************   
 PUB LogoScreen
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(@prebuffer, screen)
+    gfx.TranslateBuffer(@buffer, screen)
     gfx.ClearScreen
     gfx.Sprite(@gfx_logo_teamlame, -2, 24, 0)
-    gfx.TranslateBuffer(@prebuffer, screen)
+    gfx.TranslateBuffer(@buffer, screen)
 
     audio.SetWaveform(3, 127)
     audio.SetADSR(127, 10, 0, 10)
     audio.PlaySequence(@logoScreenSound)  
 
-    repeat x from 0 to 150000 
+    Sleep(15000)
 
     audio.StopSong
 
@@ -255,7 +191,7 @@ PUB TitleScreen
     choice := 1
     repeat until not choice
         ctrl.Update
-        gfx.TranslateBuffer(@prebuffer, screen)
+        gfx.TranslateBuffer(@buffer, screen)
 
         gfx.Blit(@gfx_logo_tankbattle)   
 
@@ -281,6 +217,7 @@ PUB TitleScreen
               choice := 0
               clicked := 1
 
+
 PUB TankSelect         
 
     choice := 1
@@ -288,7 +225,7 @@ PUB TankSelect
     repeat until not choice
 
         ctrl.Update
-        gfx.TranslateBuffer(@prebuffer, screen)         
+        gfx.TranslateBuffer(@buffer, screen)         
         gfx.ClearScreen
 
         if ctrl.Up or ctrl.Down
@@ -370,7 +307,7 @@ PUB LevelSelect
     repeat until not choice
 
         ctrl.Update
-        gfx.TranslateBuffer(@prebuffer, screen)
+        gfx.TranslateBuffer(@buffer, screen)
         gfx.ClearScreen         
 
 
@@ -445,7 +382,7 @@ PUB TankFaceOff
     repeat until not choice
 
         ctrl.Update 
-        gfx.TranslateBuffer(@prebuffer, screen)         
+        gfx.TranslateBuffer(@buffer, screen)         
         gfx.ClearScreen
 
         gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
@@ -481,9 +418,11 @@ PUB GameLoop : menureturn
     repeat while not choice
 
         ctrl.Update
-        gfx.TranslateBuffer(@prebuffer, screen)
+        gfx.TranslateBuffer(@buffer, screen)
 
-          if tankon[yourtank] == 1   
+{{
+          ''if tankon[yourtank] == 1
+          
               tankoldx := tankx[yourtank]
               tankoldy := tanky[yourtank]
               tankolddir := tankdir[yourtank]
@@ -611,14 +550,10 @@ PUB GameLoop : menureturn
                     bulletspawned := 1
                 
               else
-                  clicked := 0
-               
-
-
-
-      
+                  clicked := 0      
+                  
           else
-
+}}
               'TANK CONTROL
               'LEFT AND RIGHT   
               if ctrl.Left
@@ -627,11 +562,11 @@ PUB GameLoop : menureturn
                       xoffset := 0 
               if ctrl.Right
                   xoffset++
-                  if xoffset > levelw-SCREEN_W
-                      xoffset := levelw-SCREEN_W
+                 '' if xoffset > levelw<<3-SCREEN_W
+                   ''   xoffset := levelw<<3-SCREEN_W
 
 
-                      
+     
               'UP AND DOWN   
               if ctrl.Up
                   yoffset-- 
@@ -639,8 +574,8 @@ PUB GameLoop : menureturn
                       yoffset := 0  
               if ctrl.Down
                   yoffset++
-                  if yoffset > levelh-SCREEN_H
-                      yoffset := levelh-SCREEN_H  
+                 '' if yoffset > levelh<<3-SCREEN_H
+                   ''   yoffset := levelh<<3-SCREEN_H  
 
                
               if ctrl.A or ctrl.B
@@ -651,44 +586,26 @@ PUB GameLoop : menureturn
                   clicked := 1
               else
                 clicked := 0
-               
+              
 
 
 
 
           'HANDLE OPPONENT TANKS
-          'UpdateHandler
+          'HandleNetworking
        
           'DRAW TILES TO SCREEN
           gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,0,16,8)
 
           
 
-          'DRAW TANKS TO SCREEN        
-          repeat tankindex from 0 to TANKS-1
-              if tankon[tankindex] == 1
-                  tankxtemp := tankx[tankindex] - xoffset
-                  tankytemp := tanky[tankindex] - yoffset
-                  tankwtemp := tankw[tankindex]
-                  tankhtemp := tankh[tankindex]        
-                                                                                        
-                  if (tankxtemp => 0) and (tankxtemp =< SCREEN_W-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_H - tankh[yourtank])
-
-                    if tankdir[tankindex] == DIR_D
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 0)
-                    elseif tankdir[tankindex] == DIR_U       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 1)
-                    elseif tankdir[tankindex] == DIR_L       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 2)
-                    elseif tankdir[tankindex] == DIR_R       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 3)
-              
-                                                             
+          'DrawTanks
+                                                                       
           'CONTROL EXISTING BULLETS -----
-          BulletHandler
+          'HandleBullets
 
           'HUD OVERLY
-          StatusOverlay
+          'HandleStatusBar
 
     menureturn := choice
 
@@ -698,7 +615,7 @@ PUB PauseMenu : menureturn
     repeat while not choice
            
         ctrl.Update 
-        gfx.TranslateBuffer(@prebuffer, screen)         
+        gfx.TranslateBuffer(@buffer, screen)         
         gfx.ClearScreen
 
         gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
@@ -781,7 +698,22 @@ PUB InitData
     tanktypegfx[3] := @gfx_happyface
     tanktypegfx[4] := @gfx_moonman
 
-
+              
+' *********************************************************
+'  Levels
+' *********************************************************  
+VAR
+    long    levelw
+    long    levelh
+    byte    currentlevel
+    word    leveldata[LEVELS]
+    word    levelname[LEVELS]
+    word    tilemap
+    byte    levelstarts[LEVELS*TANKS]
+    
+    long    xoffset
+    long    yoffset
+      
 PUB InitLevel
 
     levelw := byte[leveldata[currentlevel]][0] 
@@ -797,30 +729,7 @@ PUB InitLevel
 
     ControlOffset(yourtank)
 
-
-    bullet := 0
-    repeat bulletindex from 0 to BULLETSMASK
-        bulleton[bulletindex] := 0 
-        bulletx[bulletindex] := 0
-        bullety[bulletindex] := 0
-        bulletspeed[bulletindex] := 0
-        bulletdir[bulletindex] := 0
-    bulletspawned := 0
-
-
-
-PUB SpawnTank(tankindexvar, respawnindexvar, respawnflag)
-    if respawnflag == 1
-       respawnindex := (respawnindex + 1) & TANKSMASK
-       tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindex<<1)+0] 
-       tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindex<<1)+1]
-    else
-       tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+0] 
-       tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+1]
-    tankon[tankindexvar] := 1
-    tankhealth[tankindexvar] := TANKHEALTHMAX
-    tankdir[tankindexvar] := 0
-
+    InitBullets
 
 PUB ControlOffset(tankindexvar)
 
@@ -837,7 +746,101 @@ PUB ControlOffset(tankindexvar)
         yoffset := (levelh<<8)-SCREEN_H 
 
 
-PUB UpdateHandler
+
+              
+' *********************************************************
+'  Tanks
+' *********************************************************
+CON
+    TANKS = 2   'must be power of 2
+    TANKSMASK = TANKS-1
+    
+    TANKTYPES = 5 'must be power of 2
+    TANKTYPESMASK = TANKTYPES-1
+    
+    TANKHEALTHMAX = 10
+    
+VAR
+
+    long    tankgfx[TANKS]
+    long    tankx[TANKS]
+    long    tanky[TANKS]
+    long    tankoldx
+    long    tankoldy
+    byte    tankolddir
+    byte    tankstartx[TANKS]
+    byte    tankstarty[TANKS]
+
+    byte    tankw[TANKS]
+    byte    tankh[TANKS]
+    byte    tankdir[TANKS]
+    byte    tankhealth[TANKS]
+    byte    tankon[TANKS]
+
+    long    tankxtemp
+    long    tankytemp
+    byte    tankwtemp
+    byte    tankhtemp
+
+    long    tanktypegfx[TANKTYPES]
+    word    tanktypename[TANKTYPES]
+
+PUB SpawnTank(tankindexvar, respawnindexvar, respawnflag)
+    if respawnflag == 1
+       respawnindex := (respawnindex + 1) & TANKSMASK
+       tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindex<<1)+0] 
+       tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindex<<1)+1]
+    else
+       tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+0] 
+       tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+1]
+    tankon[tankindexvar] := 1
+    tankhealth[tankindexvar] := TANKHEALTHMAX
+    tankdir[tankindexvar] := 0
+
+
+PUB DrawTanks
+    repeat tankindex from 0 to TANKSMASK
+        'if tankon[tankindex] == 1
+        if true
+            tankxtemp := tankx[tankindex] - xoffset
+            tankytemp := tanky[tankindex] - yoffset
+            tankwtemp := tankw[tankindex]
+            tankhtemp := tankh[tankindex]        
+                                                                                  
+            if (tankxtemp => 0) and (tankxtemp =< SCREEN_W-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_H - tankh[yourtank])
+
+                if tankdir[tankindex] == DIR_D
+                    gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 0)
+                elseif tankdir[tankindex] == DIR_U       
+                    gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 1)
+                elseif tankdir[tankindex] == DIR_L       
+                    gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 2)
+                elseif tankdir[tankindex] == DIR_R       
+                    gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 3)
+
+
+
+
+
+' *********************************************************
+'  Networking
+' *********************************************************  
+CON
+    UPDATETANKX = 1
+    UPDATETANKY = 2
+    UPDATETANKDIR = 3
+    UPDATEBULLETSPAWN = 4
+    
+    'CONTROLS LIFE AND DEATH
+    UPDATETANKSPAWN = 5
+    UPDATETANKDIED = 6
+    UPDATESCORE = 7
+    UPDATEADVANCE = 8
+    UPDATEORDER = 9
+    UPDATETYPE = 10
+    UPDATELEVEL = 11
+
+PUB HandleNetworking
 
     'WIRELESS STUFF
     if tankoldx <> tankx[yourtank]
@@ -893,6 +896,35 @@ PUB UpdateHandler
              tankon[receivebyte] := 0
                   
    
+' *********************************************************
+'  Bullets
+' *********************************************************      
+CON 
+    BULLETS = 20
+    BULLETSMASK = BULLETS-1
+    BULLETINGSPEED = 2
+  
+VAR
+    word    bullet
+    long    bulletx[BULLETS]
+    long    bullety[BULLETS]
+    byte    bulletspeed[BULLETS]
+    byte    bulletdir[BULLETS]
+    byte    bulleton[BULLETS]
+
+    long    bulletxtemp
+    long    bulletytemp
+
+
+PUB InitBullets
+    bullet := 0
+    repeat bulletindex from 0 to BULLETSMASK
+        bulleton[bulletindex] := 0 
+        bulletx[bulletindex] := 0
+        bullety[bulletindex] := 0
+        bulletspeed[bulletindex] := 0
+        bulletdir[bulletindex] := 0
+    bulletspawned := 0   
     
 
 PUB SpawnBullet(tankindexvar)
@@ -923,7 +955,7 @@ PUB SpawnBullet(tankindexvar)
     audio.PlaySound(2+tankindexvar,40)
           
 
-PUB BulletHandler
+PUB HandleBullets
 
     repeat bulletindex from 0 to BULLETS-1
         if bulleton[bulletindex]
@@ -943,11 +975,8 @@ PUB BulletHandler
           bulletxtemp := bulletx[bulletindex] - xoffset
           bulletytemp := bullety[bulletindex] - yoffset
 
-          if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)            
-
+          if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)
           
-
-
              gfx.Sprite(@gfx_bullet, bulletxtemp , bulletytemp, 0)
 
 
@@ -973,15 +1002,13 @@ PUB BulletHandler
                            pst.Char(tankindex)
                            
                        bulleton[bulletindex] := 0
-
-             
           else
               bulleton[bulletindex] := 0
 
 
 
 
-PUB StatusOverlay
+PUB HandleStatusBar
 
    
     'STATUS HUD

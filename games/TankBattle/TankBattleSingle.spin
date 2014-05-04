@@ -205,49 +205,6 @@ PUB Main
             menuchoice := PauseMenu
 
 
-PUB LogoScreen
-
-    gfx.ClearScreen
-    gfx.TranslateBuffer(@prebuffer, screen)
-    gfx.ClearScreen
-    gfx.Sprite(@teamlamelogo, 0, 3, 0, 1, 0)
-    gfx.TranslateBuffer(@prebuffer, screen)
-
-    audio.SetWaveform(3, 127)
-    audio.SetADSR(127, 10, 0, 10)
-    audio.PlaySequence(@logoScreenSound)  
-
-    repeat x from 0 to 150000 
-
-    audio.StopSong
-
-PUB TitleScreen
-
-    audio.SetWaveform(1, 127)
-    audio.SetADSR(127, 127, 100, 127) 
-    audio.LoadSong(@titleScreenSong)
-    audio.PlaySong
-
-
-
-    choice := 1
-    repeat until not choice
-        ctrl.Update
-        gfx.TranslateBuffer(@prebuffer, screen)
-
-        gfx.Blit(@gfx_logo_tankbattle)   
-
-        if ctrl.A or ctrl.B
-              if not clicked
-                choice := 0
-                clicked := 1
-               
-                yourtank := 0
-                theirtank := 1
-
-        else
-              clicked := 0
-
 PUB TankSelect         
 
     choice := 1
@@ -284,7 +241,7 @@ PUB TankSelect
           clicked := 0            
 
 
-        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0, 1, 0)
+        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.TextBox(string("CHOOSE"), 6, 2)
 
         gfx.TextBox(string("You"),2,3)
@@ -295,8 +252,8 @@ PUB TankSelect
            
         gfx.TextBox(string("vs."),7,5)
             
-        gfx.Sprite(tanktypegfx[yourtype], 3, 4, 3, 1, 0) 
-        gfx.Sprite(tanktypegfx[theirtype], 11, 4, 2, 1, 0) 
+        gfx.Sprite(tanktypegfx[yourtype], 3, 4, 3) 
+        gfx.Sprite(tanktypegfx[theirtype], 11, 4, 2) 
 
        ' gfx.TextBox(string("At"),3,7)   
         'gfx.TextBox(levelname[currentlevel],5,7)  
@@ -351,7 +308,7 @@ PUB LevelSelect
         else
           clicked := 0  
 
-        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0, 1, 0)
+        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.TextBox(string("Level:"),0,2)                  
         gfx.TextBox(levelname[currentlevel],5,2)
 
@@ -380,7 +337,7 @@ PUB TankFaceOff
         gfx.TranslateBuffer(@prebuffer, screen)         
         gfx.ClearScreen
 
-        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0, 0, 0)
+        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.TextBox(string("Prepare for battle..."),2,3)
         
         if ctrl.A or ctrl.B
@@ -420,7 +377,7 @@ PUB GameLoop : menureturn
               if ctrl.Right
                   xoffset += tankspeed
                   if xoffset > (levelw<<3)-SCREEN_W-8
-                      xoffset := (levelw<<3)-SCREEN_W
+                      xoffset := (levelw<<3)-SCREEN_W-8
 
 
                       
@@ -461,7 +418,7 @@ PUB GameLoop : menureturn
           'DRAW TANKS TO SCREEN 
           
           
-          gfx.Sprite(@gfx_tank1, 8, 8, 0, 0, 0)       
+          gfx.Sprite(@gfx_tank1, 8, 8, 0)       
         
               
           
@@ -483,7 +440,7 @@ PUB PauseMenu : menureturn
         gfx.TranslateBuffer(@prebuffer, screen)         
         gfx.ClearScreen
 
-        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0, 0, 0)
+        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.TextBox(string(" PAUSE!"),5,2)
 
 
@@ -510,7 +467,7 @@ PUB PauseMenu : menureturn
         else
           clicked := 0
           
-        gfx.Sprite(@bulletgfx, 3, 4+menuchoice, 0, 1, 0)
+        gfx.Sprite(@bulletgfx, 3, 4+menuchoice, 0)
         gfx.TextBox(string("Return to Game"),4,4)
         gfx.TextBox(string("Change Level"),4,5)
         gfx.TextBox(string("Change Tank"),4,6)

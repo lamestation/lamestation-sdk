@@ -129,13 +129,7 @@ PUB Start(screenvar)
     instruction2 := 0
     
     screen := screenvar
-    
-'PUB SetClipRectangle(x, y, w, h)
-' Rectangles are composed of 8x8 tiles
-
-
-
-      
+         
 
 PRI SendASMCommand(source, instruction)
 '' This is just a little function to allow for reuse
@@ -261,8 +255,8 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1,
 
     tilecnt := 0
     tilecnttemp := 2
-                    
-    repeat while y < (offset_y>>3)
+    
+    repeat y from 0 to (offset_y>>3)
         tilecnttemp += byte[source_levelmap][1]
         
     repeat y from 0 to box_y2-box_y1
@@ -681,6 +675,7 @@ if_nc                   jmp     #:skipall
                         
                         mov     datatemp, datatemp3
 
+                        ' perform sprite clipping
                         cmps    xtmp1, _clipx1                  wc
 if_c                    jmp     #:skipblender1
                         cmps    xtmp1, _clipx2                  wc
@@ -810,7 +805,7 @@ if_nc                   jmp     #:skipall
                         
                         
                         mov     datatemp, Addrtemp
-
+                        ' perform sprite clipping
                         cmps    x1, _clipx1                  wc
 if_c                    jmp     #:skipblender1
                         cmps    x1, _clipx2                  wc
