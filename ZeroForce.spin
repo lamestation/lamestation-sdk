@@ -36,10 +36,6 @@ CON
     BITSPERPIXEL = 2
     
     FP_OFFSET = 3
-
-    SCREEN_H_BYTES = SCREEN_H / 8
-    SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
-    TOTALBUFFER_BYTES = SCREENSIZE_BYTES
         
 
 OBJ
@@ -49,7 +45,7 @@ OBJ
     ctrl    :               "LameControl"
 
 VAR
-    word    prebuffer[TOTALBUFFER_BYTES/2]
+    word    buffer[1024]
     word    screen
     
     byte    choice
@@ -73,12 +69,12 @@ PUB Main
 
     dira~
     screen := lcd.Start
-    gfx.Start(@prebuffer)
+    gfx.Start(@buffer)
 
     audio.Start
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(@prebuffer, screen)
+    gfx.TranslateBuffer(@buffer, screen)
 
     clicked := 0
     StaticScreen
@@ -98,7 +94,7 @@ PUB StaticScreen
     audio.PlaySong
     
     repeat x from 0 to 50
-        gfx.TranslateBuffer(@prebuffer, screen)
+        gfx.TranslateBuffer(@buffer, screen)
         gfx.Static
         
     audio.StopSong
@@ -107,13 +103,13 @@ PUB StaticScreen
 PUB LogoScreen
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(@prebuffer, screen)
+    gfx.TranslateBuffer(@buffer, screen)
     
     repeat x from 0 to 100000
     
     gfx.ClearScreen 
     gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
-    gfx.TranslateBuffer(@prebuffer, screen)
+    gfx.TranslateBuffer(@buffer, screen)
 
     audio.SetWaveform(3, 127)
     audio.SetADSR(127, 10, 0, 10)
@@ -133,7 +129,7 @@ PUB TitleScreen
 
     choice := 1
     repeat until choice == 0  
-        gfx.TranslateBuffer(@prebuffer, screen)
+        gfx.TranslateBuffer(@buffer, screen)
 
         gfx.Blit(@gfx_zeroforcelogo)
         ctrl.Update
@@ -364,7 +360,7 @@ PUB LevelStage
     
     choice := 1
     repeat until not choice
-        gfx.TranslateBuffer(@prebuffer, screen)    
+        gfx.TranslateBuffer(@buffer, screen)    
         gfx.ClearScreen
        
 
@@ -432,7 +428,7 @@ PUB BossStage
     
     repeat until not choice
 
-        gfx.TranslateBuffer(@prebuffer, screen)
+        gfx.TranslateBuffer(@buffer, screen)
         
         gfx.ClearScreen
         
