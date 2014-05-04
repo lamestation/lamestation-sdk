@@ -256,8 +256,10 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1,
     tilecnt := 0
     tilecnttemp := 2
     
-    repeat y from 0 to (offset_y>>3)
+    y := 0
+    repeat while y < (offset_y>>3)
         tilecnttemp += byte[source_levelmap][1]
+        y++
         
     repeat y from 0 to box_y2-box_y1
         repeat x from 0 to box_x2-box_x1

@@ -142,8 +142,8 @@ PUB Main
     
     'LogoScreen
     'TitleScreen
-    'TankSelect
-    'LevelSelect                          
+    TankSelect
+    LevelSelect                          
     'TankFaceOff          
 
 
@@ -344,6 +344,7 @@ PUB LevelSelect
           clicked := 0
 
         'MULTIPLAYER HANDLING
+        {{
         repeat while pst.RxCount > 0
            receivebyte := pst.CharIn
                     
@@ -353,18 +354,11 @@ PUB LevelSelect
            elseif receivebyte == UPDATEADVANCE
               choice := 0
               clicked := 1       
+              }}
 
         gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
-        'gfx.PutString(string("Level:"),0,16)                  
-        'gfx.PutString(levelname[currentlevel],40,16)
-        
-
-        'DRAW TILES TO SCREEN
-        xoffset := 5
-        yoffset := 2
-
-        levelw := word[leveldata[currentlevel]][0] 
-        levelh := word[leveldata[currentlevel]][1]
+        gfx.PutString(string("Level:"),0,16)                  
+        gfx.PutString(levelname[currentlevel],40,16)
         
         gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,3,16,8)
 
@@ -420,8 +414,7 @@ PUB GameLoop : menureturn
         ctrl.Update
         gfx.TranslateBuffer(@buffer, screen)
 
-{{
-          ''if tankon[yourtank] == 1
+        '  if tankon[yourtank]
           
               tankoldx := tankx[yourtank]
               tankoldy := tanky[yourtank]
@@ -440,10 +433,10 @@ PUB GameLoop : menureturn
                   tankdir[yourtank] := 1
               
                   tankx[yourtank]++
-                  if tankx[yourtank] > levelw - tankw[yourtank]
-                      tankx[yourtank] := levelw - tankw[yourtank] 
+                  if tankx[yourtank] > levelw<<3 - tankw[yourtank]
+                      tankx[yourtank] := levelw<<3 - tankw[yourtank] 
 
-
+{{
               tankxtemp := tankx[yourtank] 
               tankytemp := tanky[yourtank]
               tilecnt := 0
@@ -475,7 +468,7 @@ PUB GameLoop : menureturn
 
                           if collided == 1
                              tankx[yourtank] := tankoldx    
-
+}}
 
 
            
@@ -490,9 +483,9 @@ PUB GameLoop : menureturn
                   tankdir[yourtank] := 3  
 
                   tanky[yourtank]++
-                  if tanky[yourtank] > levelh - tankh[yourtank]
-                      tanky[yourtank] := levelh - tankh[yourtank]
-       
+                  if tanky[yourtank] > levelh<<3 - tankh[yourtank]
+                      tanky[yourtank] := levelh<<3 - tankh[yourtank]
+       {{
               tankxtemp := tankx[yourtank] 
               tankytemp := tanky[yourtank]
               tilecnt := 0
@@ -525,14 +518,9 @@ PUB GameLoop : menureturn
                           if collided == 1
                              tanky[yourtank] := tankoldy    
 
-
+}}
               'OFFSET CONTROL
-              'ControlOffset(yourtank)
-              yoffset := 0
-              xoffset := 0
-        
-
-     
+              ControlOffset(yourtank)     
                
                
               if ctrl.A
@@ -551,9 +539,9 @@ PUB GameLoop : menureturn
                 
               else
                   clicked := 0      
-                  
+                {{  
           else
-}}
+
               'TANK CONTROL
               'LEFT AND RIGHT   
               if ctrl.Left
@@ -562,8 +550,8 @@ PUB GameLoop : menureturn
                       xoffset := 0 
               if ctrl.Right
                   xoffset++
-                 '' if xoffset > levelw<<3-SCREEN_W
-                   ''   xoffset := levelw<<3-SCREEN_W
+                  if xoffset > levelw<<3-SCREEN_W
+                      xoffset := levelw<<3-SCREEN_W
 
 
      
@@ -574,8 +562,8 @@ PUB GameLoop : menureturn
                       yoffset := 0  
               if ctrl.Down
                   yoffset++
-                 '' if yoffset > levelh<<3-SCREEN_H
-                   ''   yoffset := levelh<<3-SCREEN_H  
+                  if yoffset > levelh<<3-SCREEN_H
+                      yoffset := levelh<<3-SCREEN_H  
 
                
               if ctrl.A or ctrl.B
@@ -586,7 +574,7 @@ PUB GameLoop : menureturn
                   clicked := 1
               else
                 clicked := 0
-              
+              }}
 
 
 
@@ -599,7 +587,7 @@ PUB GameLoop : menureturn
 
           
 
-          'DrawTanks
+          DrawTanks
                                                                        
           'CONTROL EXISTING BULLETS -----
           'HandleBullets
@@ -666,7 +654,7 @@ PUB InitData
 
     currentlevel := 0
     yourtype := 0
-    theirtype := 0
+    theirtype := 1
 
     tilemap := @gfx_tiles_2b_poketron
 
@@ -731,19 +719,22 @@ PUB InitLevel
 
     InitBullets
 
-PUB ControlOffset(tankindexvar)
+PUB ControlOffset(tankindexvar) | bound_x, bound_y
 
-    xoffset := tankx[tankindexvar] - 7
+    bound_x := levelw<<3 - SCREEN_W
+    bound_y := levelh<<3 - SCREEN_H
+    
+    xoffset := tankx[tankindexvar] + (tankw[tankindexvar]>>1) - (SCREEN_W>>1)
     if xoffset < 0
         xoffset := 0      
-    elseif xoffset > (levelw<<8)-SCREEN_W
-        xoffset := (levelw<<8)-SCREEN_W
+    elseif xoffset > bound_x
+        xoffset := bound_x
                   
-    yoffset := tanky[tankindexvar] - 3
+    yoffset := tanky[tankindexvar] + (tankh[tankindexvar]>>1) - (SCREEN_H>>1)
     if yoffset < 0
         yoffset := 0      
-    elseif yoffset > (levelh<<8)-SCREEN_H
-        yoffset := (levelh<<8)-SCREEN_H 
+    elseif yoffset > bound_y
+        yoffset := bound_y
 
 
 
@@ -771,16 +762,16 @@ VAR
     byte    tankstartx[TANKS]
     byte    tankstarty[TANKS]
 
-    byte    tankw[TANKS]
-    byte    tankh[TANKS]
+    long    tankw[TANKS]
+    long    tankh[TANKS]
     byte    tankdir[TANKS]
     byte    tankhealth[TANKS]
     byte    tankon[TANKS]
 
     long    tankxtemp
     long    tankytemp
-    byte    tankwtemp
-    byte    tankhtemp
+    long    tankwtemp
+    long    tankhtemp
 
     long    tanktypegfx[TANKTYPES]
     word    tanktypename[TANKTYPES]
@@ -793,21 +784,21 @@ PUB SpawnTank(tankindexvar, respawnindexvar, respawnflag)
     else
        tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+0] 
        tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+1]
+    
     tankon[tankindexvar] := 1
     tankhealth[tankindexvar] := TANKHEALTHMAX
     tankdir[tankindexvar] := 0
 
 
-PUB DrawTanks
+PUB DrawTanks    
     repeat tankindex from 0 to TANKSMASK
-        'if tankon[tankindex] == 1
-        if true
+        if tankon[tankindex]
             tankxtemp := tankx[tankindex] - xoffset
             tankytemp := tanky[tankindex] - yoffset
             tankwtemp := tankw[tankindex]
             tankhtemp := tankh[tankindex]        
-                                                                                  
-            if (tankxtemp => 0) and (tankxtemp =< SCREEN_W-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_H - tankh[yourtank])
+                                                                                 
+            if (tankxtemp => 0) and (tankxtemp =< SCREEN_W-tankw[tankindex]) and (tankytemp => 0) and (tankytemp =< SCREEN_H - tankh[tankindex])
 
                 if tankdir[tankindex] == DIR_D
                     gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 0)
@@ -817,7 +808,6 @@ PUB DrawTanks
                     gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 2)
                 elseif tankdir[tankindex] == DIR_R       
                     gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 3)
-
 
 
 
