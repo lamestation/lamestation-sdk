@@ -13,14 +13,22 @@ Authors: Brett Weir
 CON
     _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
     _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
-                          
-    SCREEN_BW = 16   
-    SCREEN_BH = 8
+                     
+    SCREEN_W = 128
+    SCREEN_H = 64
+    BITSPERPIXEL = 2
+    FRAMES = 1
+
+    SCREEN_H_BYTES = SCREEN_H / 8
+    SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
+    TOTALBUFFER_BYTES = SCREENSIZE_BYTES
             
-    DIR_U = 2
-    DIR_D = 3
+
+
     DIR_L = 0
     DIR_R = 1
+    DIR_U = 2
+    DIR_D = 3
     
     NL = 10
     TANKS = 2   'must be power of 2
@@ -99,8 +107,11 @@ OBJ
 
 VAR
 
-    byte    levelw
-    byte    levelh
+    word    prebuffer[TOTALBUFFER_BYTES/2]
+    word    screen
+
+    long    levelw
+    long    levelh
     byte    currentlevel
     word    leveldata[LEVELS]
     word    levelname[LEVELS]
@@ -183,20 +194,22 @@ VAR
 PUB Main
 
     dira~
-    gfx.Start(lcd.Start)
-    pst.StartRxTx(WIFI_RX, WIFI_TX, 0, 115200)
+    screen := lcd.Start
+    gfx.Start(@prebuffer)
+    pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
     ctrl.Start
 
     gfx.ClearScreen
-    lcd.SwitchFrame
+    gfx.TranslateBuffer(@prebuffer, screen)
 
     InitData
 
     clicked := 0
-    LogoScreen
-    TitleScreen
+    
+    'LogoScreen
+    'TitleScreen
     TankSelect
     LevelSelect                          
     TankFaceOff          
@@ -214,10 +227,10 @@ PUB Main
 PUB LogoScreen
 
     gfx.ClearScreen
-    lcd.SwitchFrame
+    gfx.TranslateBuffer(@prebuffer, screen)
     gfx.ClearScreen
-    gfx.Sprite(@teamlamelogo, 0, 3, 0, 1, 0)
-    lcd.SwitchFrame
+    gfx.Sprite(@gfx_logo_teamlame, -2, 24, 0)
+    gfx.TranslateBuffer(@prebuffer, screen)
 
     audio.SetWaveform(3, 127)
     audio.SetADSR(127, 10, 0, 10)
@@ -239,9 +252,9 @@ PUB TitleScreen
     choice := 1
     repeat until not choice
         ctrl.Update
-        lcd.SwitchFrame
+        gfx.TranslateBuffer(@prebuffer, screen)
 
-        gfx.Blit(@excitingtank)   
+        gfx.Blit(@gfx_logo_tankbattle)   
 
         if ctrl.A or ctrl.B
               if not clicked
@@ -272,7 +285,7 @@ PUB TankSelect
     repeat until not choice
 
         ctrl.Update
-        lcd.SwitchFrame         
+        gfx.TranslateBuffer(@prebuffer, screen)         
         gfx.ClearScreen
 
         if ctrl.Up or ctrl.Down
@@ -304,20 +317,21 @@ PUB TankSelect
         else
           clicked := 0
 
+
         'MULTIPLAYER HANDLING
         repeat while pst.RxCount > 0
            receivebyte := pst.CharIn
-                    
+                        
            if receivebyte == UPDATETYPE
               theirtype := pst.CharIn
-
+    
            elseif receivebyte == UPDATEADVANCE
               choice := 0
               clicked := 1          
-            
+        
 
 
-        gfx.Sprite(@tanklogo, 0, 0, 0, 1, 0)
+        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.TextBox(string("CHOOSE"), 6, 2)
 
         gfx.TextBox(string("You"),2,3)
@@ -327,13 +341,12 @@ PUB TankSelect
         gfx.TextBox(tanktypename[theirtype],9,7)
            
         gfx.TextBox(string("vs."),7,5)
+        
+        gfx.Sprite(@gfx_tankstand, 20, 44, 0) 
+        gfx.Sprite(@gfx_tankstand, 86, 44, 0) 
             
-        gfx.Sprite(tanktypegfx[yourtype], 3, 4, 3, 1, 0) 
-        gfx.Sprite(tanktypegfx[theirtype], 11, 4, 2, 1, 0) 
-
-       ' gfx.TextBox(string("At"),3,7)   
-        'gfx.TextBox(levelname[currentlevel],5,7)  
-
+        gfx.Sprite(tanktypegfx[yourtype], 24, 32, 3) 
+        gfx.Sprite(tanktypegfx[theirtype], 88, 32, 2) 
 
     tankgfx[yourtank] := tanktypegfx[yourtype]
     tankgfx[theirtank] := tanktypegfx[theirtype]
@@ -355,7 +368,7 @@ PUB LevelSelect
     repeat until not choice
 
         ctrl.Update
-        lcd.SwitchFrame
+        gfx.TranslateBuffer(@prebuffer, screen)
         gfx.ClearScreen         
 
 
@@ -402,20 +415,22 @@ PUB LevelSelect
               choice := 0
               clicked := 1       
 
-
-        gfx.Sprite(@tanklogo, 0, 0, 0, 1, 0)
+        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.TextBox(string("Level:"),0,2)                  
         gfx.TextBox(levelname[currentlevel],5,2)
+
+        
 
         'DRAW TILES TO SCREEN
         xoffset := 5
         yoffset := 2
 
-        levelw := byte[leveldata[currentlevel]][0] 
-        levelh := byte[leveldata[currentlevel]][1]
+        levelw := word[leveldata[currentlevel]][0] 
+        levelh := word[leveldata[currentlevel]][1]
         
-        DrawMap(tilemap,0,3,SCREEN_BW,5)
+        gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,3,16,5)
 
+        
 
         
     InitLevel
@@ -429,10 +444,10 @@ PUB TankFaceOff
     repeat until not choice
 
         ctrl.Update 
-        lcd.SwitchFrame         
+        gfx.TranslateBuffer(@prebuffer, screen)         
         gfx.ClearScreen
 
-        gfx.Sprite(@tanklogo, 0, 0, 0, 0, 0)
+        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.TextBox(string("Prepare for battle..."),2,3)
         
         if ctrl.A or ctrl.B
@@ -465,7 +480,7 @@ PUB GameLoop : menureturn
     repeat while not choice
 
         ctrl.Update
-        lcd.SwitchFrame
+        gfx.TranslateBuffer(@prebuffer, screen)
 
           if tankon[yourtank] == 1   
               tankoldx := tankx[yourtank]
@@ -572,8 +587,9 @@ PUB GameLoop : menureturn
 
 
               'OFFSET CONTROL
-              ControlOffset(yourtank)
-     
+              'ControlOffset(yourtank)
+              yoffset := 0
+              xoffset := 0
         
 
      
@@ -610,8 +626,8 @@ PUB GameLoop : menureturn
                       xoffset := 0 
               if ctrl.Right
                   xoffset++
-                  if xoffset > levelw-SCREEN_BW
-                      xoffset := levelw-SCREEN_BW
+                  if xoffset > levelw-SCREEN_W
+                      xoffset := levelw-SCREEN_W
 
 
                       
@@ -622,8 +638,8 @@ PUB GameLoop : menureturn
                       yoffset := 0  
               if ctrl.Down
                   yoffset++
-                  if yoffset > levelh-SCREEN_BH
-                      yoffset := levelh-SCREEN_BH  
+                  if yoffset > levelh-SCREEN_H
+                      yoffset := levelh-SCREEN_H  
 
                
               if ctrl.A or ctrl.B
@@ -640,10 +656,10 @@ PUB GameLoop : menureturn
 
 
           'HANDLE OPPONENT TANKS
-          UpdateHandler
+          'UpdateHandler
        
           'DRAW TILES TO SCREEN
-          DrawMap(tilemap,0,0,SCREEN_BW,SCREEN_BH)
+          gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,0,16,8)
 
           
 
@@ -655,16 +671,16 @@ PUB GameLoop : menureturn
                   tankwtemp := tankw[tankindex]
                   tankhtemp := tankh[tankindex]        
                                                                                         
-                  if (tankxtemp => 0) and (tankxtemp =< SCREEN_BW-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_BH - tankh[yourtank])
+                  if (tankxtemp => 0) and (tankxtemp =< SCREEN_W-tankw[yourtank]) and (tankytemp => 0) and (tankytemp =< SCREEN_H - tankh[yourtank])
 
                     if tankdir[tankindex] == DIR_D
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 0, 1, 0)
+                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 0)
                     elseif tankdir[tankindex] == DIR_U       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 1, 1, 0)
+                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 1)
                     elseif tankdir[tankindex] == DIR_L       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 2, 1, 0)
+                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 2)
                     elseif tankdir[tankindex] == DIR_R       
-                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 3, 1, 0)
+                        gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 3)
               
                                                              
           'CONTROL EXISTING BULLETS -----
@@ -681,10 +697,10 @@ PUB PauseMenu : menureturn
     repeat while not choice
            
         ctrl.Update 
-        lcd.SwitchFrame         
+        gfx.TranslateBuffer(@prebuffer, screen)         
         gfx.ClearScreen
 
-        gfx.Sprite(@tanklogo, 0, 0, 0, 0, 0)
+        gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
         gfx.TextBox(string(" PAUSE!"),5,2)
 
 
@@ -711,7 +727,7 @@ PUB PauseMenu : menureturn
         else
           clicked := 0
           
-        gfx.Sprite(@bulletgfx, 3, 4+menuchoice, 0, 1, 0)
+        gfx.Sprite(@gfx_bullet, 3, 4+menuchoice, 0)
         gfx.TextBox(string("Return to Game"),4,4)
         gfx.TextBox(string("Change Level"),4,5)
         gfx.TextBox(string("Change Tank"),4,6)
@@ -752,17 +768,17 @@ PUB InitData
     levelw := byte[leveldata[currentlevel]][0] 
     levelh := byte[leveldata[currentlevel]][1]
 
-    tanktypename[0] := @extremetankname   
-    tanktypename[1] := @extremethangname
-    tanktypename[2] := @gianttankname
-    tanktypename[3] := @happyfacename
-    tanktypename[4] := @moonmanname
+    tanktypename[0] := @gfx_supertankname   
+    tanktypename[1] := @gfx_superthangname
+    tanktypename[2] := @gfx_class16name
+    tanktypename[3] := @gfx_happyfacename
+    tanktypename[4] := @gfx_moonmanname
 
-    tanktypegfx[0] := @extremetank
-    tanktypegfx[1] := @extremethang
-    tanktypegfx[2] := @gianttank
-    tanktypegfx[3] := @happyface
-    tanktypegfx[4] := @moonman
+    tanktypegfx[0] := @gfx_supertank
+    tanktypegfx[1] := @gfx_superthang
+    tanktypegfx[2] := @gfx_class16
+    tanktypegfx[3] := @gfx_happyface
+    tanktypegfx[4] := @gfx_moonman
 
 
 PUB InitLevel
@@ -803,23 +819,6 @@ PUB SpawnTank(tankindexvar, respawnindexvar, respawnflag)
     tankon[tankindexvar] := 1
     tankhealth[tankindexvar] := TANKHEALTHMAX
     tankdir[tankindexvar] := 0
-    
-
-PUB DrawMap(source, position_x, position_y, width, height)
-       
-    'DRAW TILES TO SCREEN           
-    tilecnt := 0
-    tilecnttemp := 2
-    if yoffset > 0
-      repeat y from 0 to yoffset-1
-        tilecnttemp += levelw
-    repeat y from yoffset to yoffset+height-1
-        repeat x from xoffset to xoffset+width-1  
-            tilecnt := tilecnttemp + x
-            tile := (byte[leveldata[currentlevel]][tilecnt] & TILEBYTE) -  1
-            gfx.Box(source + (tile << 4), x-xoffset+position_x,y-yoffset+position_y)
-
-        tilecnttemp += levelw
 
 
 PUB ControlOffset(tankindexvar)
@@ -827,14 +826,14 @@ PUB ControlOffset(tankindexvar)
     xoffset := tankx[tankindexvar] - 7
     if xoffset < 0
         xoffset := 0      
-    elseif xoffset > levelw-SCREEN_BW
-        xoffset := levelw-SCREEN_BW
+    elseif xoffset > (levelw<<8)-SCREEN_W
+        xoffset := (levelw<<8)-SCREEN_W
                   
     yoffset := tanky[tankindexvar] - 3
     if yoffset < 0
         yoffset := 0      
-    elseif yoffset > levelh-SCREEN_BH
-        yoffset := levelh-SCREEN_BH 
+    elseif yoffset > (levelh<<8)-SCREEN_H
+        yoffset := (levelh<<8)-SCREEN_H 
 
 
 PUB UpdateHandler
@@ -943,12 +942,12 @@ PUB BulletHandler
           bulletxtemp := bulletx[bulletindex] - xoffset
           bulletytemp := bullety[bulletindex] - yoffset
 
-          if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_BW-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_BH - 1)            
+          if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)            
 
           
 
 
-             gfx.Sprite(@bulletgfx, bulletxtemp , bulletytemp, 0, 1, 0)
+             gfx.Sprite(@gfx_bullet, bulletxtemp , bulletytemp, 0)
 
 
              repeat tankindex from 0 to TANKSMASK
@@ -988,12 +987,12 @@ PUB StatusOverlay
     if tankon[yourtank] == 1   
         repeat x from 0 to ((tankhealth[yourtank]-1)) step 1
              if x < ((tankhealth[yourtank]-1)>>1)
-                 gfx.Box(@heartbox, x>>1, 7)
+                 gfx.Box(@gfx_heart, x>>1, 7)
              else
-                 if x & $1 == 0
-                     gfx.BoxEx(@heartbox, x>>1, 7, 3)
-                 else
-                     gfx.Box(@heartbox, x>>1, 7)
+            '     if x & $1 == 0
+              '       gfx.BoxEx(@gfx_heart, x>>1, 7, 3)
+             '    else
+                     gfx.Box(@gfx_heart, x>>2, 7)
 
 
     intarray[0] := 48+(score[yourtank]/10)
@@ -1012,83 +1011,87 @@ PUB StatusOverlay
 
 DAT 'LEVEL DATA
 
+
+
+gfx_tiles_2b_poketron
+
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $575d, $5515, $5d57, $d555, $45d5, $5557, $7551, $5d55
+word    $4771, $dd1d, $cccf, $33f4, $4cf1, $d3cf, $3cd1, $771d, $f1f1, $0001, $7c7c, $0000, $f1f1, $0001, $7c7c, $0000
+word    $31f1, $0000, $4c7c, $4000, $31f1, $0000, $4c7c, $4000, $575d, $5515, $5005, $4711, $0df0, $0f10, $01c0, $1300
+word    $575d, $5515, $5005, $4711, $0df0, $0f10, $01c0, $1307, $575d, $5515, $5005, $4711, $0df0, $0f10, $11c0, $3307
+word    $575d, $5515, $5d57, $d555, $45d5, $1557, $c151, $7c15, $575d, $1515, $c157, $7c15, $d7c1, $3d7c, $c3d7, $7c3d
+word    $75d5, $5454, $d543, $543d, $43d7, $3d7c, $d7c3, $7c3d, $575d, $5515, $5d57, $d555, $45d5, $5554, $5d43, $543d
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $4001, $3ffc, $30cc, $3ffc, $4001, $5415, $5714, $1575
+word    $5440, $5c4c, $fc0c, $0043, $1533, $57cf, $3c3f, $03ff, $0d15, $3335, $303f, $c340, $c354, $f3d4, $fc3c, $ffc0
+word    $5535, $5535, $0cf3, $4010, $1145, $1555, $3ff3, $4404, $43c5, $1551, $f55c, $3554, $f554, $3554, $0ff4, $50c1
+word    $f000, $1001, $c015, $0005, $0711, $0df0, $0f10, $11c0, $f00d, $100f, $c011, $0003, $0710, $0df0, $0f10, $11c0
+word    $000d, $400f, $5c11, $5003, $4710, $0df0, $0f10, $11c0, $d7c0, $3d7c, $c3d4, $7c3f, $d7c0, $3d7c, $c3d4, $7c3f
+word    $d7c3, $3d7c, $c3d7, $7c3d, $d7c3, $3d7c, $c3d7, $7c3d, $c3d7, $3d7c, $d7c3, $7c3d, $c3d7, $3d7c, $d7c3, $7c3d
+word    $03d7, $3d7c, $17c3, $fc3d, $03d7, $3d7c, $17c3, $fc3d, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+word    $015d, $5115, $0157, $5155, $f015, $0100, $5414, $5514, $0340, $5105, $0140, $5005, $f14f, $0000, $5555, $5555
+word    $5740, $5545, $5d40, $d545, $540f, $0040, $1415, $1455, $5454, $5454, $fcfc, $0000, $5554, $5554, $fffc, $0000
+word    $1455, $1455, $3cff, $0000, $1554, $1554, $3ffc, $0000, $3300, $0000, $c001, $7c15, $54dd, $7715, $4cf1, $5d55
+word    $3300, $0000, $c003, $7c3f, $54dd, $7715, $4cf1, $5d55, $3300, $0000, $4003, $5c3f, $54dd, $7715, $4cf1, $5d55
+word    $d7c3, $3d7c, $c3d7, $3c3d, $43c3, $543c, $0003, $fffc, $03c3, $003c, $1143, $1154, $1155, $1155, $1000, $03ff
+word    $c3c0, $3c00, $c144, $1544, $5544, $5544, $0004, $ffc0, $c3d7, $3d7c, $d7c3, $7c3c, $c3c1, $3c15, $c000, $3fff
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $553c, $5500, $5514, $5514, $5500, $5514, $5514, $5514
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $3c55, $0055, $1455, $1455, $0055, $1455, $1455, $1455
+word    $00ff, $1501, $3510, $0c54, $00d1, $000d, $0003, $0000, $5500, $4015, $0537, $45cc, $5300, $f000, $c000, $0000
+word    $000d, $000f, $c011, $f003, $4710, $0df0, $0f10, $11c0, $f000, $1000, $c003, $000f, $0711, $0df0, $0f10, $11c0
+word    $575d, $5515, $5005, $4711, $0df0, $0f10, $11c0, $3300, $0000, $0000, $4444, $4444, $0000, $0000, $1554, $0000
+word    $1554, $0000, $0000, $0000, $0ccc, $3330, $1ddc, $5555, $0000, $3ffc, $355c, $355c, $03fc, $355c, $3ffc, $0000
+word    $0000, $3ffc, $355c, $355c, $3fc0, $355c, $3ffc, $0000, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+word    $5500, $5514, $013c, $5100, $0050, $514c, $f00c, $0140, $5555, $5555, $0140, $5145, $0140, $5005, $f14f, $0000
+word    $0055, $1455, $3c40, $0045, $0500, $3145, $1c0f, $0500, $0000, $0000, $0000, $0000, $4444, $1111, $4545, $5555
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $000d, $400f, $5c11, $5003, $4710, $0df0, $0f10, $11c0
+word    $f000, $1001, $c015, $0005, $0711, $0df0, $0f10, $11c0, $0000, $4001, $5c17, $d4dd, $7715, $4cf3, $7551, $5d55
+word    $0000, $5555, $5555, $5555, $5555, $5555, $0000, $ffff, $d73c, $3d00, $c314, $7c14, $d700, $3d14, $c314, $7c14
+word    $3cd7, $007c, $14c3, $143d, $00d7, $147c, $14c3, $143d, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5540, $57cc, $fc3c, $00d0, $5470, $544c, $fc0c, $01c0
+word    $355c, $dc37, $d007, $d007, $dc37, $dc37, $355c, $ffff, $0d15, $3335, $303f, $0340, $01d4, $3354, $343c, $0d00
+word    $013c, $5100, $0114, $5114, $f000, $0100, $5414, $5514, $3c40, $0045, $1440, $1445, $000f, $0040, $1415, $1455
+word    $5555, $5555, $5005, $4711, $0df0, $0f10, $11c0, $3300, $7fff, $f3ff, $cf77, $f5f3, $7dff, $555f, $7377, $5d7f
+word    $ffcf, $ddff, $fffd, $f3f7, $f7dd, $fd57, $fd1d, $fff5, $0000, $1111, $5555, $1111, $0000, $0000, $0410, $0000
+word    $d7c3, $3d7c, $03c0, $5005, $03c0, $5005, $f14f, $0000, $c3d7, $3d7c, $03c0, $5005, $03c0, $5005, $f14f, $0000
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+word    $5440, $5c4c, $fc0c, $0041, $1531, $57c5, $3c15, $0155, $5455, $5455, $fcff, $0000, $5554, $5554, $fffc, $0000
+word    $0d15, $3335, $303f, $4340, $4354, $53d4, $543c, $5540, $1554, $4001, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $5555, $0000, $4001, $5c15, $54dd, $7715, $4cf1, $5555, $5555
+word    $57f7, $577f, $7f7f, $f5f3, $4fdf, $5dff, $ff37, $ffff, $f5dd, $fd75, $7fdf, $c774, $fdf5, $cf57, $f7df, $ffff
+word    $c3c0, $3c00, $c144, $7c04, $d7c0, $3d7c, $c3d4, $7c3f, $ffff, $0000, $ffff, $5555, $ffff, $0000, $ffff, $5555
+word    $03c3, $003c, $1143, $103d, $03d7, $3d7c, $17c3, $fc3d, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $ffff, $5fff, $f5ff, $3f7f, $03df, $0cdf, $40f7, $5337
+word    $ffff, $fff5, $ff5f, $fdfc, $f7c3, $f730, $df01, $dc05, $55d5, $5555, $0557, $c015, $0315, $f017, $7cc5, $dc05
+word    $5d75, $5555, $0550, $c00c, $0cc0, $f00f, $5ff5, $f55f, $5d75, $5555, $5550, $d40c, $54c0, $540f, $503d, $5337
+word    $575d, $5515, $5f57, $f555, $cdd5, $d5d7, $fd51, $fd55, $575d, $5515, $dd57, $f5d5, $4dfd, $71f7, $ff51, $fff7
+word    $575d, $5515, $5d57, $d555, $45f5, $55d7, $7753, $5d5f, $03ff, $53ff, $03ff, $53ff, $f03f, $0100, $5414, $5514
+word    $03c0, $53c5, $03c0, $5005, $f14f, $0000, $5555, $5555, $ffc0, $ffc5, $ffc0, $ffc5, $fc0f, $0040, $1415, $1455
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+word    $5037, $40f7, $0cdf, $c3df, $3f7f, $f5ff, $5fff, $ffff, $dcc5, $df01, $f730, $f7c0, $fdfc, $ff5f, $fff5, $ffff
+word    $dcc5, $dc07, $7315, $7035, $7315, $7015, $dccd, $dc05, $ffff, $ffff, $ffff, $ffff, $ffff, $ffff, $ffff, $ffff
+word    $d037, $5337, $5c0d, $74cd, $540d, $54cd, $7037, $5337, $d75d, $7d15, $7fd7, $fcd5, $cdd5, $ffd7, $f751, $dd55
+word    $f73f, $7fdc, $73ff, $cfff, $ff47, $dfff, $f7fd, $f33d, $577d, $5517, $5d77, $f77f, $47f7, $57cf, $75d7, $5fc7
+word    $1144, $0140, $1144, $1004, $1144, $0140, $1144, $1004, $0410, $1144, $4551, $1554, $1554, $4551, $1144, $0410
+word    $4444, $1111, $4444, $1111, $4444, $1111, $4444, $1111, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+word    $ffff, $fc0f, $f153, $c554, $c554, $c55c, $cff3, $f00f, $dcc5, $7c05, $f015, $0315, $3017, $0555, $5555, $5d75
+word    $f55f, $5ff5, $f00f, $0330, $3003, $0550, $5555, $5d75, $5037, $573d, $d40f, $54c0, $5503, $d550, $5555, $5755
+word    $f7dd, $dd15, $5dd7, $f555, $c7d5, $5557, $7551, $5d55, $ff77, $7fdf, $cfdf, $dd73, $c5c7, $55f7, $755f, $5d55
+word    $55ff, $553f, $5d5d, $d5ff, $45df, $5557, $7551, $5d55, $1004, $4144, $0140, $1444, $1504, $0004, $5150, $0000
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $1004, $1141, $0140, $1114, $1054, $1000, $0545, $0000
+word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
+
 mapTable_tiles_2b_poketron
 word    @map_supercastle
 
-gfx_tiles_2b_poketron
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $24, $BF, $1, $FF, $0, $FD, $10, $FF, $1, $FF, $84, $EF, $40, $FF, $8
-byte    $F7, $24, $AE, $A6, $DB, $19, $7D, $7C, $AB, $A9, $D7, $56, $EA, $C8, $B7, $26, $33, $0, $44, $44, $55, $55, $55, $11, $11, $0, $44, $44, $55, $55, $55, $11
-byte    $11, $0, $44, $44, $55, $55, $55, $11, $11, $0, $44, $44, $11, $11, $CC, $0, $F, $0, $7, $1, $3B, $10, $51, $50, $FB, $A9, $3B, $30, $87, $0, $F, $0
-byte    $8F, $80, $87, $1, $3B, $10, $51, $50, $FB, $A9, $3B, $30, $87, $0, $F, $0, $8F, $80, $87, $1, $3B, $10, $51, $50, $FB, $A9, $3B, $30, $C7, $80, $F, $0
-byte    $FF, $24, $BF, $1, $FF, $0, $7D, $10, $7F, $1, $BF, $84, $AF, $80, $DF, $48, $DF, $44, $EF, $A1, $EF, $A0, $75, $50, $77, $51, $BB, $A8, $BB, $A8, $DD, $54
-byte    $DD, $54, $BB, $A8, $BB, $A8, $77, $51, $75, $50, $EF, $A0, $EF, $A1, $DF, $44, $DF, $44, $BF, $81, $BF, $80, $7D, $10, $7F, $1, $FF, $44, $EF, $0, $FF, $8
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $B1, $0, $EE, $E, $EA, $8A, $8E, $E, $CA, $4A, $EA, $A, $EE, $E, $71, $0
-byte    $F8, $F8, $E6, $E6, $D0, $D0, $AB, $A0, $B0, $A0, $77, $46, $77, $44, $27, $4, $7, $4, $77, $44, $77, $46, $B8, $A0, $BB, $BA, $C1, $C1, $E6, $E6, $F8, $F8
-byte    $77, $44, $B3, $0, $6F, $47, $74, $44, $73, $40, $E7, $44, $73, $40, $8B, $0, $83, $0, $7D, $4, $7E, $40, $FF, $C1, $7F, $41, $7E, $40, $BE, $3C, $95, $14
-byte    $1E, $0, $C, $0, $74, $20, $A0, $A0, $F0, $50, $70, $60, $83, $1, $5, $5, $F, $A, $3, $3, $74, $20, $A0, $A0, $F0, $50, $70, $60, $83, $1, $5, $5
-byte    $F, $A, $3, $3, $74, $20, $A0, $A0, $F0, $50, $74, $64, $8C, $0, $1E, $0, $88, $88, $EE, $AA, $EE, $AA, $77, $55, $77, $55, $BB, $AA, $BB, $AA, $DD, $55
-byte    $DD, $55, $EE, $AA, $EE, $AA, $77, $55, $77, $55, $BB, $AA, $BB, $AA, $DD, $55, $DD, $55, $BB, $AA, $BB, $AA, $77, $55, $77, $55, $EE, $AA, $EE, $AA, $DD, $55
-byte    $DD, $55, $BB, $AA, $BB, $AA, $77, $55, $77, $55, $EE, $AA, $EE, $AA, $88, $88, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $1F, $4, $DF, $1, $DF, $0, $D, $0, $AF, $0, $C0, $0, $DA, $10, $DA, $10, $DA, $10, $DA, $10, $C0, $0, $D5, $0, $D7, $1, $C0, $0, $DA, $10, $DA, $10
-byte    $DA, $10, $DA, $10, $C0, $0, $AF, $0, $F, $1, $DF, $4, $DF, $0, $1F, $8, $0, $0, $77, $44, $77, $44, $77, $44, $70, $40, $77, $44, $77, $44, $77, $44
-byte    $7, $4, $77, $44, $77, $44, $77, $44, $70, $40, $77, $44, $77, $44, $0, $0, $FC, $0, $B8, $10, $F8, $40, $D0, $50, $A1, $21, $F8, $C8, $B9, $29, $FC, $4
-byte    $FC, $C, $B8, $18, $F8, $48, $D0, $50, $A1, $21, $F8, $C8, $B9, $29, $FC, $4, $FC, $C, $B8, $18, $F8, $48, $D0, $50, $A1, $21, $F8, $C8, $B9, $21, $FC, $0
-byte    $5D, $55, $AE, $AA, $AE, $AA, $97, $95, $97, $95, $AB, $8A, $AB, $8A, $B5, $85, $B5, $85, $BA, $82, $BA, $82, $BD, $81, $BD, $81, $0, $0, $7C, $0, $0, $0
-byte    $0, $0, $7C, $0, $0, $0, $BD, $81, $BD, $81, $BA, $82, $BA, $82, $B5, $85, $B5, $85, $AB, $8A, $AB, $8A, $97, $95, $97, $95, $AE, $AA, $AE, $AA, $5D, $55
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $0, $0, $ED, $1, $ED, $1, $0, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $0, $0, $ED, $1, $ED, $1, $0, $0
-byte    $73, $41, $29, $21, $1D, $1, $19, $11, $6, $0, $E, $8, $6, $4, $0, $0, $6, $4, $E, $8, $6, $4, $8, $8, $1D, $10, $D, $0, $31, $20, $7B, $60
-byte    $F, $A, $3, $3, $74, $20, $A0, $A0, $F0, $50, $70, $60, $88, $8, $1C, $C, $1C, $C, $8, $8, $70, $20, $A0, $A0, $F0, $50, $70, $60, $83, $1, $5, $5
-byte    $F, $0, $7, $1, $3B, $10, $51, $50, $FB, $A9, $3B, $30, $C7, $80, $F, $0, $0, $0, $4C, $0, $40, $0, $4C, $0, $40, $0, $4C, $0, $40, $0, $C, $0
-byte    $80, $0, $D1, $50, $E1, $20, $D1, $50, $E1, $20, $D1, $50, $E1, $20, $80, $0, $0, $0, $7E, $7E, $7E, $52, $7E, $52, $7E, $52, $6E, $42, $6E, $6E, $0, $0
-byte    $0, $0, $6E, $6E, $6E, $42, $7E, $52, $7E, $52, $7E, $52, $7E, $7E, $0, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $0, $0, $66, $64, $16, $4, $B0, $0, $AF, $0, $3, $0, $6B, $40, $6B, $40, $6B, $40, $6B, $40, $3, $0, $5F, $0, $5F, $0, $3, $0, $6B, $40, $6B, $40
-byte    $6B, $40, $6B, $40, $3, $0, $2F, $0, $B0, $0, $D6, $44, $66, $24, $0, $0, $E0, $0, $D0, $0, $A0, $0, $D0, $0, $E0, $0, $D0, $0, $A0, $0, $D0, $0
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $F, $A, $3, $3, $74, $20, $A0, $A0, $F0, $50, $74, $64, $8C, $0, $1E, $0
-byte    $1E, $0, $C, $0, $74, $20, $A0, $A0, $F0, $50, $70, $60, $83, $1, $5, $5, $FE, $24, $9C, $8, $FC, $20, $E8, $28, $D0, $10, $FC, $A4, $DC, $50, $FE, $8
-byte    $BE, $80, $BE, $80, $BE, $80, $BE, $80, $BE, $80, $BE, $80, $BE, $80, $BE, $80, $0, $0, $ED, $1, $ED, $1, $0, $0, $77, $55, $BB, $AA, $BB, $AA, $DD, $55
-byte    $DD, $55, $BB, $AA, $BB, $AA, $77, $55, $0, $0, $ED, $1, $ED, $1, $0, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $0, $0, $66, $66, $1C, $14, $BB, $8A, $83, $2, $77, $44, $77, $44, $77, $44
-byte    $BE, $BE, $FF, $C1, $F3, $B2, $C1, $80, $C1, $80, $F3, $B2, $FF, $C1, $BE, $BE, $7, $4, $77, $44, $77, $46, $38, $10, $BB, $2A, $C1, $81, $66, $66, $0, $0
-byte    $0, $0, $CD, $1, $CD, $1, $0, $0, $AF, $0, $C0, $0, $DA, $10, $DA, $10, $DA, $10, $DA, $10, $C0, $0, $AF, $0, $0, $0, $CD, $1, $CD, $1, $0, $0
-byte    $F, $0, $7, $0, $3B, $10, $53, $50, $FB, $A8, $3B, $30, $C7, $80, $F, $0, $FF, $FF, $F7, $B3, $FF, $DF, $FF, $1B, $FF, $47, $BD, $95, $FB, $5B, $FF, $E
-byte    $FF, $2B, $FF, $57, $FE, $8E, $BF, $9F, $FF, $9D, $F7, $E7, $FF, $FD, $FF, $FF, $E, $0, $4, $0, $4E, $0, $4, $0, $E, $0, $44, $0, $E, $0, $4, $0
-byte    $69, $41, $6A, $42, $2, $2, $57, $15, $57, $15, $3, $2, $6B, $42, $69, $41, $69, $41, $6B, $42, $3, $2, $57, $15, $57, $15, $2, $2, $6A, $42, $69, $41
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $F8, $0, $E6, $6, $D0, $10, $AB, $20, $B0, $20, $77, $46, $77, $44, $27, $4, $7, $4, $77, $44, $77, $44, $77, $44, $70, $40, $77, $44, $77, $44, $77, $44
-byte    $7, $4, $77, $44, $77, $46, $B8, $20, $BB, $3A, $C1, $1, $E6, $6, $F8, $0, $2, $0, $1, $0, $1, $0, $1, $0, $1, $0, $1, $0, $1, $0, $2, $0
-byte    $80, $0, $80, $0, $80, $0, $80, $0, $80, $0, $80, $0, $80, $0, $80, $0, $FE, $0, $DC, $8, $FC, $20, $E8, $28, $D0, $10, $FC, $24, $DC, $10, $FE, $0
-byte    $FF, $FF, $F7, $B6, $FF, $EF, $BF, $B9, $FF, $D7, $FF, $F4, $EF, $CC, $FF, $C8, $F7, $E4, $FF, $C5, $FF, $9A, $FF, $D5, $FF, $EC, $FF, $B6, $D7, $D7, $FF, $FB
-byte    $80, $80, $EC, $A0, $E0, $A0, $75, $51, $75, $51, $BA, $AA, $BA, $AA, $DD, $55, $DD, $55, $DD, $55, $DD, $55, $DD, $55, $DD, $55, $DD, $55, $DD, $55, $DD, $55
-byte    $DD, $55, $BA, $AA, $BA, $AA, $75, $51, $75, $51, $E0, $A0, $EC, $A0, $80, $80, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $FF, $FF, $3F, $FF, $CF, $7F, $77, $9F, $9B, $2F, $2B, $8F, $D, $C7, $5
-byte    $D7, $15, $8F, $D, $2F, $2B, $1F, $1B, $7F, $77, $FF, $CF, $FF, $3F, $FF, $FF, $FF, $24, $FF, $0, $3F, $0, $47, $41, $17, $10, $C7, $C0, $E3, $60, $EB, $A8
-byte    $E3, $A0, $EB, $A8, $C7, $41, $D7, $50, $C7, $40, $D7, $51, $E3, $A0, $EB, $A8, $E3, $A0, $EB, $68, $C7, $C1, $17, $10, $87, $80, $3F, $1, $FF, $0, $FF, $8
-byte    $FF, $24, $BF, $1, $FF, $0, $FD, $30, $FF, $5, $FF, $D4, $EF, $C8, $FF, $F8, $FF, $A4, $BF, $11, $FF, $B0, $FD, $B8, $FF, $C1, $DF, $D4, $EF, $E8, $FF, $CC
-byte    $FF, $E4, $BF, $81, $FF, $10, $FD, $30, $FF, $41, $FF, $84, $EF, $40, $FF, $8, $1F, $1F, $DF, $1F, $DF, $1F, $F, $F, $AF, $F, $C0, $0, $DA, $10, $DA, $10
-byte    $DA, $10, $DA, $10, $C0, $0, $D7, $7, $D7, $7, $C0, $0, $DA, $10, $DA, $10, $DA, $10, $DA, $10, $C0, $0, $AF, $F, $F, $F, $DF, $1F, $DF, $1F, $1F, $1F
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $FF, $FF, $FF, $FC, $FF, $F3, $FE, $EE, $F8, $D8, $F4, $D4, $F1, $B0, $EB, $A8, $E3, $A0, $F1, $B0, $F4, $D4, $F9, $D9, $FE, $EE, $FF, $F3, $FF, $FC, $FF, $FF
-byte    $FF, $2, $FF, $40, $3C, $8, $41, $41, $14, $14, $C3, $C3, $FF, $3C, $FF, $C3, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-byte    $FF, $C3, $FF, $3C, $C3, $C3, $28, $28, $82, $82, $3C, $4, $FF, $48, $FF, $1, $FF, $24, $BF, $1, $FF, $0, $FD, $3C, $F7, $65, $FF, $BE, $EF, $6E, $FF, $F9
-byte    $FD, $3D, $FF, $EF, $EF, $ED, $7E, $6E, $FF, $FF, $7B, $3A, $F7, $D7, $FF, $F9, $FF, $FE, $FF, $29, $5F, $1D, $FD, $F0, $FF, $B9, $FF, $84, $EF, $48, $FF, $8
-byte    $0, $0, $DD, $0, $0, $0, $77, $0, $77, $0, $0, $0, $DD, $0, $0, $0, $24, $0, $5A, $0, $BD, $0, $7E, $0, $7E, $0, $BD, $0, $5A, $0, $24, $0
-byte    $AA, $0, $55, $0, $AA, $0, $55, $0, $AA, $0, $55, $0, $AA, $0, $55, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
-byte    $C7, $C7, $BB, $A3, $7D, $41, $7D, $41, $7D, $41, $7B, $43, $87, $87, $FF, $FF, $FF, $10, $FF, $0, $FC, $80, $E1, $1, $E8, $8, $E3, $83, $D7, $16, $C7, $5
-byte    $D7, $15, $C7, $5, $EB, $8A, $E3, $2, $EB, $A, $E3, $82, $D7, $15, $C7, $5, $D7, $15, $C7, $6, $E3, $3, $E8, $8, $F2, $82, $FE, $0, $FF, $0, $FF, $24
-byte    $FF, $24, $BF, $1, $FF, $0, $FD, $15, $FF, $11, $FF, $86, $EF, $49, $FF, $1B, $FF, $7F, $F7, $46, $EF, $29, $FF, $36, $FF, $7, $FF, $8F, $EB, $43, $FF, $1D
-byte    $FF, $3B, $BF, $1F, $FF, $B, $FD, $19, $FF, $0, $FF, $84, $EF, $40, $FF, $8, $0, $0, $3B, $0, $40, $0, $4E, $0, $56, $0, $18, $0, $59, $0, $42, $0
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $42, $0, $59, $0, $18, $0, $56, $0, $4E, $0, $40, $0, $3B, $0, $0, $0
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
 
 map_supercastle
-byte     50,  50  'width, height
+byte    50, 50  'width, height
 byte    108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108
 byte    228,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,230
-byte    168, 41, 41, 41, 41, 41, 41,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 41, 41, 41, 41, 41,170
-byte    168, 41,114,114, 41, 41, 41,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 41, 41,114,114, 41,170
-byte    168, 41,114,114, 41, 41, 41,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 41, 41,114,114, 41,170
+byte    168, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,170
+byte    168, 41,114,114, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,114,114, 41,170
+byte    168, 41,114,114, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,114,114, 41,170
 byte    168, 41, 41, 41, 41,170,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,168, 41, 41, 41, 41,170
 byte    168, 41, 41, 41,182,183,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,181,182, 41, 41, 41,170
 byte    168, 41, 41, 41,170,196,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,194,168, 41, 41, 41,170
@@ -1127,24 +1130,20 @@ byte    168, 41, 41, 41,170,108,108,108,108,143,208,208,208,208,208,208,208,208,
 byte    168, 41, 41, 41,170,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,168, 41, 41, 41,170
 byte    168, 41, 41, 41,170,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,168, 41, 41, 41,170
 byte    168, 41, 41, 41,156,230,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,228,156, 41, 41, 41,170
-byte    168, 41, 41, 41,  1,170,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,168, 41, 41, 41, 41,170
-byte    168, 41,114,114,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 41, 41,114,114, 41,170
-byte    168, 41,114,114,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 41, 41,114,114, 41,170
-byte    168, 41, 41, 41,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1, 41, 41, 41, 41, 41,170
+byte    168, 41, 41, 41, 41,170,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,168, 41, 41, 41, 41,170
+byte    168, 41,114,114, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,114,114, 41,170
+byte    168, 41,114,114, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,114,114, 41,170
+byte    168, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,170
 byte    181,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,183
 byte    194,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,196
 byte    194,208,208,208,196,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,194,208,208,208,196
 
-
- 
 startlocations
+
+byte    3, 3
 byte    3, 3
 byte    47, 44
-
-
-
-
-
+byte    46, 3
 
 
 
@@ -1153,198 +1152,234 @@ byte    47, 44
 DAT 'SPRITE DATA
 
 
-extremetank
-word    $40  'frameboost
-word    $2, $2   'width, height
-byte    $0, $1, $D6, $D6, $FE, $38, $FF, $E9, $0, $0, $1A, $12, $B7, $87, $B7, $85, $BF, $8D, $BF, $9, $DE, $D6, $0, $0, $D4, $D4, $FF, $39, $FF, $E8, $1E, $11
-byte    $E4, $A4, $C3, $83, $C3, $80, $E3, $A1, $1C, $90, $0, $C0, $4, $E4, $D, $ED, $D, $ED, $5, $E4, $0, $C0, $4, $84, $C3, $83, $C3, $80, $E3, $A1, $FC, $B0
-byte    $0, $1, $6F, $6F, $FF, $48, $17, $17, $38, $38, $7E, $66, $7E, $40, $7F, $41, $7F, $41, $7E, $40, $7E, $46, $38, $30, $7F, $5F, $FF, $48, $FF, $9F, $E0, $E1
-byte    $F0, $A0, $F7, $A7, $F7, $A7, $F0, $A0, $0, $80, $0, $C0, $12, $92, $37, $A7, $37, $A1, $12, $92, $0, $C0, $0, $80, $F0, $A0, $F7, $A4, $F7, $A4, $F3, $A3
-byte    $0, $3F, $80, $BF, $80, $87, $B0, $B1, $B6, $B0, $B6, $80, $B6, $80, $B2, $80, $B0, $80, $BD, $B5, $4F, $49, $EF, $D, $F6, $56, $F0, $11, $F0, $1F, $F0, $FF
-byte    $0, $F8, $33, $DA, $4B, $C2, $93, $12, $B3, $A2, $83, $2, $83, $82, $93, $12, $B3, $A2, $83, $2, $80, $80, $97, $17, $B7, $A4, $47, $85, $37, $E4, $2, $F2
-byte    $F0, $FF, $F0, $1F, $F0, $11, $F6, $56, $EF, $D, $4F, $49, $BD, $B5, $B0, $80, $B2, $80, $B6, $80, $B6, $80, $B6, $B0, $B0, $B1, $80, $87, $80, $BF, $0, $3F
-byte    $2, $F2, $37, $E4, $47, $85, $B7, $A4, $97, $17, $80, $80, $83, $2, $B3, $A2, $93, $12, $83, $82, $83, $2, $B3, $A2, $93, $12, $4B, $C2, $33, $DA, $0, $F8
+gfx_supertank
+word    64  'frameboost
+word    16, 16   'width, height
 
-extremethang
-word    $40  'frameboost
-word    $2, $2   'width, height
-byte    $4, $7, $F8, $3, $F8, $1, $9A, $2, $9A, $0, $FA, $0, $FA, $0, $6, $4, $6, $4, $FA, $0, $FA, $0, $9A, $0, $9A, $2, $F8, $1, $F8, $3, $4, $7
-byte    $2, $FE, $1, $FC, $5, $FC, $D, $D8, $D, $18, $4D, $48, $2E, $28, $2A, $A8, $2A, $A8, $2E, $28, $4D, $48, $D, $18, $D, $D8, $5, $CC, $1, $EC, $2, $EE
-byte    $4, $7, $0, $3, $0, $1, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $1, $0, $3, $4, $7
-byte    $3, $EF, $2, $EE, $4, $CC, $C, $DC, $8, $18, $48, $48, $28, $28, $28, $A8, $28, $A8, $28, $28, $48, $48, $8, $18, $C, $DC, $4, $DC, $2, $FE, $3, $FF
-byte    $0, $7, $4, $7, $E8, $1, $88, $0, $EC, $0, $EC, $0, $EC, $0, $EC, $0, $D8, $0, $F0, $A0, $E0, $E0, $0, $0, $0, $1, $0, $1, $0, $7, $0, $FF
-byte    $1, $F7, $3, $F6, $7, $E4, $B, $E8, $B, $E8, $F, $88, $2F, $28, $6F, $68, $6F, $69, $2F, $2C, $9, $88, $8, $F8, $C, $FC, $4, $FC, $2, $FE, $0, $FF
-byte    $0, $FF, $0, $7, $0, $1, $0, $1, $0, $0, $E0, $E0, $F0, $A0, $D8, $0, $EC, $0, $EC, $0, $EC, $0, $EC, $0, $88, $0, $E8, $1, $4, $7, $0, $7
-byte    $0, $FF, $2, $FE, $4, $FC, $C, $FC, $8, $F8, $9, $88, $2F, $2C, $6F, $69, $6F, $68, $2F, $28, $F, $88, $B, $E8, $B, $E8, $7, $E4, $3, $F6, $1, $F7
-
-gianttank
-word    $90  'frameboost
-word    $3, $3   'width, height
-byte    $0, $FF, $0, $7F, $80, $BF, $C0, $BF, $C0, $BF, $80, $3F, $0, $3F, $C0, $DF, $0, $3, $0, $1, $24, $5, $24, $5, $24, $5, $24, $5, $0, $1, $0, $3
-byte    $E0, $DF, $C0, $27, $0, $7, $FC, $FF, $F7, $F0, $FC, $3, $F8, $FF, $18, $E7, $0, $FF, $54, $54, $F8, $A8, $F8, $A8, $F9, $A9, $F9, $A9, $E0, $A0, $19, $19
-byte    $43, $43, $2, $2, $5A, $5A, $22, $2, $22, $2, $5A, $5A, $2, $2, $43, $43, $19, $19, $C0, $80, $E0, $E0, $1F, $1F, $F, $F, $1F, $10, $FF, $EF, $0, $FF
-byte    $0, $FF, $19, $99, $7F, $66, $7F, $66, $7F, $66, $7F, $66, $7F, $66, $19, $99, $0, $C0, $0, $C0, $3, $83, $3, $83, $3, $83, $3, $83, $0, $C0, $0, $C0
-byte    $19, $99, $7F, $66, $7E, $66, $7F, $67, $71, $61, $7F, $67, $18, $98, $0, $FF, $0, $FF, $2, $3, $FF, $FF, $F8, $F8, $FF, $0, $FE, $FD, $0, $7F, $80, $BF
-byte    $0, $7, $0, $3, $8, $B, $8, $B, $8, $B, $8, $B, $0, $3, $0, $7, $C0, $BF, $0, $7F, $0, $7F, $80, $7F, $80, $7F, $0, $7F, $0, $FF, $0, $FF
-byte    $0, $9F, $70, $70, $8F, $8F, $87, $81, $8F, $88, $7F, $77, $E0, $80, $3, $3, $6, $6, $4, $4, $C4, $C4, $C4, $C4, $C4, $C4, $C4, $C4, $4, $4, $6, $6
-byte    $3, $3, $F0, $A0, $F1, $A1, $F3, $A3, $F3, $A3, $F3, $A2, $58, $58, $0, $FF, $0, $FF, $19, $99, $7F, $66, $7E, $66, $7F, $66, $7F, $66, $7F, $66, $19, $99
-byte    $0, $E0, $0, $E0, $1, $C1, $1, $C1, $1, $C1, $1, $C1, $0, $E0, $0, $E0, $19, $99, $7F, $66, $7F, $66, $7F, $66, $7F, $66, $7F, $66, $19, $99, $0, $FF
-byte    $0, $FF, $0, $FF, $70, $5F, $78, $57, $7C, $5B, $70, $57, $70, $5F, $70, $5F, $70, $5F, $70, $5F, $70, $5F, $70, $5F, $78, $51, $78, $50, $71, $51, $71, $51
-byte    $70, $50, $70, $51, $70, $5F, $70, $5F, $78, $57, $78, $57, $0, $FF, $0, $FF, $0, $FF, $80, $7F, $0, $7E, $80, $FE, $BF, $D5, $AA, $EA, $BE, $FE, $80, $FE
-byte    $80, $FE, $80, $FE, $0, $3C, $5A, $42, $2A, $2A, $50, $50, $40, $40, $0, $0, $0, $0, $0, $0, $0, $38, $80, $FE, $81, $FD, $1, $7D, $80, $FF, $0, $FF
-byte    $19, $D0, $3E, $88, $BA, $B2, $BA, $B2, $6, $4, $6, $4, $82, $82, $B2, $82, $3E, $34, $3E, $34, $82, $82, $82, $82, $7, $5, $37, $5, $BB, $B3, $BB, $B3
-byte    $7, $5, $6, $4, $82, $82, $B2, $82, $3E, $34, $3E, $34, $44, $C4, $2B, $EB, $0, $FF, $0, $FF, $78, $57, $78, $57, $10, $1F, $50, $1F, $80, $81, $C0, $C0
-byte    $41, $41, $41, $1, $C8, $80, $C8, $41, $D0, $9F, $90, $9F, $70, $5F, $70, $5F, $70, $5F, $70, $5F, $70, $57, $7C, $5B, $78, $57, $70, $5F, $0, $FF, $0, $FF
-byte    $0, $FF, $80, $FF, $1, $7D, $81, $FD, $80, $FE, $0, $38, $1, $1, $0, $0, $0, $0, $40, $40, $50, $50, $2B, $2B, $5B, $42, $0, $3C, $80, $FE, $80, $FE
-byte    $80, $FE, $BE, $FE, $AA, $EA, $BF, $D5, $80, $FE, $0, $7E, $80, $7F, $0, $FF, $2B, $EB, $44, $C4, $3E, $34, $3E, $34, $B2, $82, $82, $82, $6, $4, $7, $5
-byte    $BB, $B3, $BB, $B3, $37, $5, $7, $5, $82, $82, $82, $82, $3E, $34, $3E, $34, $B2, $82, $82, $82, $6, $4, $6, $4, $BA, $B2, $BA, $B2, $3E, $88, $19, $D0
-
-happyface
-word    $40  'frameboost
-word    $2, $2   'width, height
-byte    $0, $7F, $60, $63, $42, $3, $E2, $E3, $42, $2, $E6, $E6, $E, $2, $7A, $60, $76, $60, $E, $2, $E6, $E6, $42, $2, $E2, $E3, $42, $3, $60, $63, $0, $7F
-byte    $0, $F8, $8, $F8, $3E, $F2, $76, $C2, $EE, $82, $DC, $8C, $DA, $8A, $D8, $88, $D8, $88, $DA, $8A, $DC, $8C, $EE, $82, $76, $C2, $3E, $F2, $8, $F8, $0, $F8
-byte    $0, $7F, $0, $3, $2, $3, $2, $3, $2, $2, $2, $2, $6, $6, $FE, $FE, $FE, $FE, $6, $6, $2, $2, $2, $2, $2, $3, $2, $3, $0, $3, $0, $7F
-byte    $0, $F8, $8, $F8, $20, $E0, $40, $C0, $80, $80, $80, $80, $C0, $C0, $FF, $FF, $FF, $FF, $C0, $C0, $80, $80, $80, $80, $40, $C0, $20, $E0, $0, $F0, $0, $F8
-byte    $1A, $61, $6E, $6E, $46, $6, $E2, $E2, $42, $2, $E2, $E2, $42, $2, $E2, $E2, $2, $2, $2, $2, $2, $2, $2, $2, $2, $3, $4, $7, $78, $7F, $80, $FF
-byte    $A, $FA, $D8, $88, $D8, $88, $DC, $84, $EE, $82, $F6, $C2, $FE, $E2, $E0, $E0, $C0, $C0, $80, $80, $80, $80, $80, $80, $40, $C0, $30, $F0, $8, $F8, $7, $FF
-byte    $80, $FF, $78, $7F, $4, $7, $2, $3, $2, $2, $2, $2, $2, $2, $2, $2, $E2, $E2, $42, $2, $E2, $E2, $42, $2, $E2, $E2, $46, $6, $6E, $6E, $1A, $61
-byte    $7, $FF, $8, $F8, $30, $F0, $40, $C0, $80, $80, $80, $80, $80, $80, $C0, $C0, $E0, $E0, $FE, $E2, $F6, $C2, $EE, $82, $DC, $84, $D8, $88, $D8, $88, $A, $FA
-
-moonman
-word    $40  'frameboost
-word    $2, $2   'width, height
-byte    $0, $FF, $30, $FF, $48, $C7, $48, $43, $30, $7, $32, $A7, $1E, $1D, $1F, $1, $1F, $0, $DF, $1, $1E, $3, $1C, $F, $10, $1F, $0, $FF, $0, $FF, $0, $FF
-byte    $0, $FF, $0, $FF, $0, $FF, $0, $FE, $8, $FF, $18, $F6, $3F, $67, $3F, $20, $3F, $E0, $3B, $E1, $1B, $F0, $D, $C, $3, $7F, $0, $FD, $0, $E3, $0, $FF
-byte    $0, $FF, $0, $FF, $0, $FF, $F0, $FF, $FC, $F, $FE, $3, $FF, $1, $FF, $0, $CF, $1, $BE, $B5, $3A, $B7, $30, $7, $70, $63, $70, $E7, $30, $FF, $0, $FF
-byte    $0, $FF, $0, $E3, $0, $FD, $3, $7F, $7, $7, $1F, $FC, $3F, $FC, $3F, $F8, $6, $0, $3E, $76, $18, $F6, $8, $FF, $0, $FE, $0, $FF, $0, $FF, $0, $FF
-byte    $0, $FF, $10, $97, $38, $2B, $38, $2F, $3A, $AF, $32, $A7, $17, $15, $1F, $18, $1F, $1, $DE, $1, $DE, $3, $9C, $7, $F8, $F, $F8, $3F, $10, $97, $0, $FF
-byte    $0, $FF, $0, $FF, $8, $FE, $18, $F6, $18, $F7, $39, $E6, $39, $62, $3B, $20, $3B, $F0, $3D, $E0, $1F, $70, $E, $8, $5, $FC, $1, $E3, $0, $FF, $0, $FF
-byte    $0, $FF, $10, $97, $F8, $3F, $F8, $F, $9C, $7, $DE, $3, $DE, $1, $1F, $1, $1F, $18, $17, $15, $32, $A7, $3A, $AF, $38, $2F, $38, $2B, $10, $97, $0, $FF
-byte    $0, $FF, $0, $FF, $1, $E3, $5, $FC, $E, $8, $1F, $70, $3D, $E0, $3B, $F0, $3B, $20, $39, $62, $39, $E6, $18, $F7, $18, $F6, $8, $FE, $0, $FF, $0, $FF
+word    $70aa, $aa0d, $00c2, $9c00, $5c5c, $5435, $545c, $5715, $54f0, $7c15, $507c, $df05, $00f0, $3c30, $f0dc, $3737
+word    $c0dc, $3707, $005c, $1700, $f103, $40cf, $c100, $4003, $0300, $c000, $a0c3, $f00a, $a855, $552a, $aaff, $ffaa
+word    $52de, $b785, $54dc, $3715, $00dc, $3700, $573c, $3f55, $57d0, $37d5, $5f1c, $d5d5, $fc3c, $df3f, $0010, $f400
+word    $c03c, $d403, $f03c, $d40d, $c03c, $3c01, $0000, $0000, $7055, $550d, $c0ff, $ff03, $0855, $5520, $aaff, $ffaa
+word    $00aa, $a8fc, $552a, $a350, $552a, $a3dc, $000a, $a0f4, $57ca, $bfc1, $57ca, $b551, $0000, $bff0, $fffc, $b553
+word    $5554, $8771, $fffc, $b573, $0000, $8ff0, $001a, $8000, $c1ce, $91c1, $0306, $b303, $003a, $a400, $776a, $ab77
+word    $3f2a, $aa00, $05ca, $a855, $37ca, $a855, $1f0a, $a000, $43fe, $a3d5, $455e, $a3d5, $0ffe, $0000, $c55e, $3fff
+word    $4dd2, $1555, $cd5e, $3fff, $0ff2, $0000, $0002, $a400, $4346, $b343, $c0ce, $90c0, $001a, $ac00, $ddea, $a9dd
 
 
 
 
+gfx_superthang
+word    64  'frameboost
+word    16, 16   'width, height
+
+word    $002a, $a800, $55ca, $a355, $c003, $c003, $1554, $1554, $1554, $1554, $1414, $1414, $1414, $1414, $1554, $1554
+word    $0554, $1550, $5003, $c005, $157a, $ad54, $ffea, $abff, $02aa, $0280, $f02a, $a00f, $0caa, $aa30, $80aa, $aa02
+word    $002a, $a800, $000a, $a000, $0003, $c000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0003, $c000, $000f, $f000, $00fa, $af00, $ffea, $abff, $0280, $aa80, $f00a, $a00f, $0caa, $aa30, $80aa, $aa02
+word    $002a, $aa00, $000a, $a000, $550e, $a000, $5550, $8001, $0000, $8005, $5510, $803c, $5510, $8035, $5550, $803d
+word    $5557, $8017, $555e, $b005, $543a, $af0d, $ffc0, $abff, $000a, $aa80, $f2aa, $aa8f, $c2aa, $aa83, $0aaa, $aaa0
+word    $00aa, $a800, $000a, $a000, $000a, $b055, $4002, $0555, $5002, $0000, $3c02, $0455, $5c02, $0455, $7c02, $0555
+word    $d402, $d555, $500e, $b555, $70fa, $ac15, $ffea, $03ff, $02aa, $a000, $f2aa, $aa8f, $c2aa, $aa83, $0aaa, $aaa0
 
 
 
-bulletgfx
-word    $10  'frameboost
-word    $1, $1   'width, height
-byte    $0, $FF, $4, $C7, $2A, $AB, $1E, $9D, $3E, $B9, $5E, $D5, $3C, $E3, $0, $FF
+gfx_class16
+word    144  'frameboost
+word    24, 24   'width, height
+
+word    $aaaa, $aaaa, $a9aa, $aaaa, $8002, $a9aa, $aaaa, $0ff0, $a5ea, $aaaa, $0000, $74c2, $aaaa, $0000, $77c2, $2aaa
+word    $0550, $b7c9, $c14a, $0000, $b7c7, $c7f2, $0000, $b7c7, $cf02, $c003, $b7c3, $0002, $ffff, $b7c0, $000e, $0000
+word    $b7c0, $cff2, $0c30, $b7c3, $c55e, $0c30, $9cc3, $3ff2, $0140, $b030, $155e, $cc33, $b034, $3ff2, $0000, $b03c
+word    $d55e, $0ff0, $8fc7, $3ff2, $0ff0, $8cfc, $3ff2, $0000, $8cfc, $d55e, $0000, $b457, $d55e, $0000, $b557, $3ff2
+word    $0000, $8ffc, $3ff2, $a00a, $8ffc, $800a, $aaaa, $a002, $a93a, $aaaa, $aaaa, $a53e, $aaaa, $aaaa, $ad32, $8002
+word    $aaaa, $adf2, $0ff0, $aaaa, $adf2, $0000, $aaaa, $adf2, $0000, $aaaa, $2df2, $0000, $aaa9, $cdf2, $0000, $a143
+word    $cdf2, $0000, $87f3, $cd72, $c003, $8fc3, $0d72, $ffff, $8000, $0732, $0000, $b000, $0c0e, $0000, $b554, $1c0c
+word    $0000, $8ffc, $1c0c, $0ff0, $b554, $33f2, $0ff0, $8ffc, $d51e, $0ff0, $b557, $3ff2, $0000, $8ffc, $3ff2, $0000
+word    $8ffc, $d55e, $0000, $b557, $d55e, $0000, $b557, $3ff2, $a00a, $8ffc, $3ff2, $aaaa, $8ffc, $800a, $aaaa, $a002
+word    $aaaa, $f2aa, $aaa8, $aaaa, $00aa, $aaa0, $a9aa, $00aa, $aaa0, $a36a, $05aa, $a5a0, $fffa, $ffff, $afff, $555a
+word    $5555, $a555, $fffa, $ffff, $afff, $000a, $0000, $a000, $030a, $0000, $af00, $bdaa, $03ca, $a080, $b3aa, $002a
+word    $aa80, $bdaa, $036a, $aaa0, $b3aa, $0c6a, $aaa0, $bdaa, $032a, $aaa0, $aaaa, $3cca, $aa80, $ffc6, $000f, $b3c0
+word    $0001, $ff00, $c003, $f5f4, $f5f5, $c5f5, $0f04, $0f0f, $3f0f, $005d, $5005, $c500, $40f7, $f40f, $0f40, $40f4
+word    $f40f, $cf40, $0002, $0000, $b000, $f0fa, $f0f0, $a0f0, $2aaa, $aa8f, $aaaa, $0aaa, $aa00, $aaaa, $0aaa, $aa00
+word    $aa6a, $0a5a, $aa50, $a9ca, $0ffa, $ff00, $afff, $005a, $5000, $a555, $c4fa, $f1d7, $afff, $f00a, $0f70, $a000
+word    $30fa, $01c0, $a0c0, $020a, $a3c0, $aa7e, $02aa, $a800, $aace, $0aaa, $a9c0, $aa7e, $0aaa, $a930, $aace, $0aaa
+word    $a8c0, $aa7e, $02aa, $a33c, $aaaa, $03ce, $f000, $93ff, $c003, $00ff, $4000, $5f53, $5f5f, $1f5f, $f0fc, $f0f0
+word    $10f0, $0053, $5005, $7500, $01f0, $f01f, $df01, $01f3, $f01f, $1f01, $000e, $0000, $8000, $0f0a, $0f0f, $af0f
 
 
-heartgfx
-word    $10  'frameboost
-word    $1, $1   'width, height
-byte    $0, $E1, $F, $CE, $1F, $9E, $3E, $39, $38, $39, $3F, $BE, $1F, $DE, $E, $E1
+gfx_happyface
+word    64  'frameboost
+word    16, 16   'width, height
 
-heartbox
-byte    $0, $E1, $F, $CE, $1F, $9E, $3E, $39, $38, $39, $3F, $BE, $1F, $DE, $E, $E1       
-
-
-teamlamelogo
-word    $200  'frameboost
-word    $10, $2   'width, height
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $8, $0, $8, $0, $8, $0, $8, $0, $F8, $0, $F8, $0, $8, $0, $8, $0, $8, $0, $8, $0, $0, $0, $B8, $0, $F8, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $0, $0, $0, $0, $80, $0, $E0, $0, $78, $0, $18, $0, $78, $0, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $80, $0, $E0, $0, $78, $0, $18, $0, $78, $0, $E0, $0, $80, $0, $0, $0, $0, $0, $F8, $0, $F8, $0, $F8, $0, $E0, $0, $80, $0, $0, $0, $80, $0, $E0, $0, $F8, $0, $F8, $0, $F8, $0, $0, $0, $B8, $0, $F8, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $48, $0, $0, $0, $8, $0, $38, $0, $8, $0, $0, $0, $38, $0, $8, $0, $30, $0, $8, $0, $30, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $7, $0, $7, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $6, $0, $7, $0, $1, $0, $0, $0, $0, $0, $0, $0, $1, $0, $7, $0, $6, $0, $4, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $6, $0, $7, $0, $3, $0, $0, $0, $7, $0, $7, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $0, $0, $4, $0, $6, $0, $7, $0, $1, $0, $0, $0, $0, $0, $0, $0, $1, $0, $7, $0, $6, $0, $4, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $6, $0, $7, $0, $3, $0, $0, $0, $7, $0, $7, $0, $0, $0, $3, $0, $7, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $4, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
+word    $00aa, $aa00, $7ffa, $affd, $1c02, $8035, $5002, $8004, $4002, $8001, $ccce, $b333, $cdde, $b773, $0cc0, $0330
+word    $0000, $0000, $33f0, $0fcc, $0d50, $0570, $fd1e, $b47f, $547a, $ad15, $017a, $ad40, $55ea, $ab55, $ffaa, $aaff
+word    $00aa, $aa00, $fffa, $afff, $f002, $800f, $c002, $8003, $c002, $8003, $c002, $8003, $c002, $8003, $c000, $0003
+word    $c000, $0003, $c000, $0003, $c000, $0003, $c00e, $8003, $c00a, $a003, $c03a, $ac03, $f0ea, $ab0f, $ffaa, $aaff
+word    $0002, $aa00, $fffd, $abff, $003c, $ac00, $000d, $b000, $0001, $b000, $ccce, $b000, $ddde, $b000, $ccc0, $c000
+word    $0000, $c000, $3f03, $c000, $15c0, $c000, $117f, $b000, $1456, $ac00, $f502, $ac00, $fd56, $ab03, $fffe, $aaff
+word    $00aa, $8000, $ffea, $7fff, $003a, $3c00, $000e, $7000, $000e, $4000, $000e, $b333, $000e, $b777, $0003, $0333
+word    $0003, $0000, $0003, $c0fc, $0003, $0354, $000e, $fd44, $003a, $9514, $003a, $805f, $c0ea, $957f, $ffaa, $bfff
 
 
+gfx_moonman
+word    64  'frameboost
+word    16, 16   'width, height
+
+word    $eaaa, $aaad, $5eaa, $aab5, $7a2a, $aad5, $705a, $aad5, $750e, $ab55, $0d0e, $a800, $00fa, $a804, $082a, $a804
+word    $722a, $ab5d, $7aaa, $a315, $7aaa, $8ac1, $57aa, $8ad5, $5eaa, $8a35, $faaa, $aa2f, $2aaa, $aa2a, $0aaa, $a82a
+word    $7aaa, $aaab, $5eaa, $aab5, $57aa, $a8ad, $57aa, $a015, $55ea, $b57c, $55ea, $bf7c, $55ea, $af01, $55ea, $a82d
+word    $57ea, $a880, $57ca, $aaad, $7fa2, $aaad, $fca2, $aad4, $fca2, $aabc, $f8aa, $aaac, $a8aa, $aaa8, $a82a, $aaa0
+word    $7aaa, $aaab, $5faa, $aab5, $7a8a, $aad5, $c3f2, $8f55, $f55e, $bd55, $0ff2, $8d00, $0002, $8514, $0a0a, $a554
+word    $560a, $ad15, $6aaa, $a851, $0aaa, $a354, $557a, $a2d5, $57ea, $a237, $feaa, $aa2f, $2aaa, $aa2a, $0aaa, $aa0a
+word    $eaaa, $aaad, $5eaa, $aaf5, $57aa, $a2ad, $55f2, $8fc3, $557e, $b55f, $0072, $8ff0, $1452, $8000, $155a, $a0a0
+word    $547a, $a095, $452a, $aaa9, $15ca, $aaa0, $578a, $ad55, $dc8a, $abd5, $f8aa, $aabf, $a8aa, $aaa8, $a0aa, $aaa0
+
+
+
+gfx_bullet
+word    16  'frameboost
+word    8, 8   'width, height
+
+word    $aaaa, $a57a, $9dce, $97f2, $9fc2, $b332, $ac0a, $aaaa
 
 
 
 
- 'LAME LOGO
-tanklogo
-word    $200  'frameboost
-word    $10, $2   'width, height
-byte    $0, $0, $0, $0, $C, $0, $C, $8, $4, $4, $0, $0, $C0, $C0, $E4, $64, $C, $C, $C, $8, $C, $8, $C, $0, $0, $0, $0, $0, $88, $0, $8C, $80
-byte    $8C, $80, $C, $0, $C, $0, $C, $0, $8C, $80, $8C, $0, $FC, $0, $F8, $0, $0, $0, $0, $0, $F8, $E0, $FC, $0, $C, $0, $C, $0, $C, $8, $C, $8
-byte    $C, $8, $4, $0, $84, $84, $C8, $48, $0, $0, $0, $0, $F8, $0, $F0, $0, $80, $0, $C0, $0, $E0, $80, $78, $40, $3C, $0, $C, $0, $C, $4, $C, $C
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $8C, $C, $8C, $C, $8C, $C, $8C, $8, $8C, $8, $8C, $8, $8C, $0, $8C, $0
-byte    $FC, $0, $F8, $0, $0, $0, $0, $0, $88, $0, $8C, $0, $8C, $4, $88, $8, $80, $0, $80, $0, $84, $4, $8C, $8, $FC, $0, $F8, $0, $0, $0, $0, $0
-byte    $C, $0, $C, $0, $C, $8, $C, $8, $4, $4, $4, $4, $C, $8, $C, $8, $C, $0, $C, $0, $0, $0, $0, $0, $0, $0, $4, $4, $C, $8, $C, $8
-byte    $CC, $C0, $EC, $E0, $C, $0, $C, $0, $C, $0, $C, $0, $0, $0, $0, $0, $3C, $20, $1C, $10, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $F8, $0, $FC, $0, $8C, $0, $8C, $80, $C, $8, $C, $8, $4, $0, $4, $0, $4, $0, $C, $8, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $1F, $0, $1F, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $1F, $0, $1F, $0
-byte    $1, $1, $1, $1, $0, $0, $0, $0, $0, $0, $1, $1, $1F, $18, $1F, $1E, $0, $0, $0, $0, $1C, $C, $19, $9, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $1F, $1, $1F, $0, $0, $0, $0, $0, $F, $F, $1F, $18, $3, $0, $1, $1, $0, $0, $0, $0, $0, $0, $C, $C, $1C, $4, $18, $8
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $1F, $10, $1F, $10, $19, $18, $9, $9, $1, $1, $1, $1, $1, $1, $9, $9
-byte    $1F, $1E, $F, $8, $0, $0, $0, $0, $1F, $0, $1F, $1C, $1, $0, $1, $0, $1, $0, $1, $0, $1, $0, $1, $0, $1F, $18, $1F, $10, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $0, $0, $0, $0, $1E, $E, $1F, $1, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0
-byte    $1F, $1, $1F, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $E, $2, $1C, $4, $18, $0, $18, $10, $18, $10, $8, $0, $8, $0, $18, $10
-byte    $18, $10, $18, $0, $0, $0, $0, $0, $F, $0, $1F, $0, $19, $0, $19, $0, $19, $11, $18, $10, $18, $10, $18, $18, $8, $8, $8, $8, $0, $0, $0, $0
-    
+gfx_heart
+word    16  'frameboost
+word    8, 8   'width, height
+
+word    $b4de, $d7d4, $5757, $d557, $f55c, $8d72, $a3ca, $a82a
+  
+
+
+
+gfx_tankstand
+word    96  'frameboost
+word    24, 16   'width, height
+
+word    $7aaa, $5555, $aaad, $35ea, $c30c, $ab50, $dfde, $7df7, $b7df, $30c1, $c30c, $4c30, $df7f, $7df7, $f7df, $30dc
+word    $c30c, $3430, $f5f0, $7df7, $0f5f, $7f00, $5555, $00fd, $c00c, $ffff, $3003, $033c, $0000, $3cc0, $cf32, $ffff
+word    $8cf3, $cc2a, $ffff, $a833, $0aaa, $ffff, $aaa0, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa
+
+
+
+gfx_logo_teamlame
+word    512  'frameboost
+word    128, 16   'width, height
+
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $5555, $5545, $0155, $0054, $0015, $0015, $0050, $0000, $0054, $0015, $5515, $4555, $1145, $0000
+word    $0000, $0000, $0500, $0140, $0000, $0054, $0015, $0015, $0050, $0000, $0054, $0015, $0515, $0000, $4441, $0000
+word    $0000, $0000, $0500, $0140, $0000, $0145, $4055, $0015, $0050, $0000, $0145, $4055, $0515, $0000, $4441, $0000
+word    $0000, $0000, $0500, $5500, $0155, $0145, $4055, $0015, $0050, $0000, $0145, $4055, $5415, $0555, $0000, $0000
+word    $0000, $0000, $0500, $0140, $4000, $0501, $5155, $0015, $0050, $4000, $0501, $5155, $0515, $0000, $0000, $0000
+word    $0000, $0000, $0500, $0140, $4000, $0501, $5145, $0014, $0050, $4000, $0501, $5145, $0514, $0000, $0000, $0000
+word    $0000, $0000, $0500, $0140, $5000, $1400, $5545, $0014, $0050, $5000, $1400, $5545, $0514, $0000, $0000, $0000
+word    $0000, $0000, $0500, $5500, $5555, $5400, $1505, $0014, $5540, $5455, $5400, $1505, $5414, $0555, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+
+
+
+
+
+
+gfx_logo_tankbattle_name
+word    512  'frameboost
+word    128, 16   'width, height
+
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $c350, $4057, $1555, $5540, $0035, $f500, $0000, $5570, $3401, $0170, $5f55, $5c05, $0555, $0005, $5400, $0555
+word    $00d0, $507f, $5555, $f550, $10c3, $d540, $0000, $5fc0, $d505, $05c0, $f0f5, $f005, $0555, $0005, $5500, $0c0f
+word    $0000, $0000, $5000, $0050, $5000, $0140, $0000, $0000, $0005, $0500, $0000, $0000, $0000, $000d, $0500, $0000
+word    $c000, $0000, $5000, $0070, $5000, $0150, $0000, $000c, $0005, $0500, $0000, $0000, $000c, $0003, $0500, $0000
+word    $f000, $0000, $5000, $0070, $50c0, $00d4, $0000, $000f, $0005, $0500, $0000, $0000, $000f, $0000, $0500, $0000
+word    $7000, $d000, $5703, $0070, $5070, $0035, $0000, $5557, $5505, $0555, $0000, $0000, $000f, $0000, $d500, $0000
+word    $5000, $5000, $5c0f, $00c0, $7070, $000d, $0000, $ffd5, $5505, $0555, $0c00, $0000, $0007, $0000, $5500, $0003
+word    $5000, $5000, $d000, $0000, $7050, $0001, $0000, $0005, $0507, $0500, $0700, $0000, $0005, $0003, $0500, $0000
+word    $5000, $5000, $d000, $0030, $7050, $3c00, $0000, $0005, $0d07, $0500, $0700, $0000, $0005, $000d, $0500, $0000
+word    $5000, $5000, $f000, $00f0, $f050, $dc00, $0000, $c3f5, $0d0f, $0700, $0700, $0000, $0005, $5555, $5505, $0fd5
+word    $5000, $5000, $f000, $0050, $c050, $5000, $0000, $00ff, $0d03, $0f00, $0500, $0000, $0005, $c3d4, $5407, $00ff
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+
          
-'RANDOM PIC 2
-excitingtank
-byte    $40, $0, $0, $0, $C, $0, $C, $8, $4, $4, $0, $0, $C0, $C0, $E4, $64, $C, $C, $C, $8, $C, $8, $8C, $80, $0, $0, $0, $0, $88, $0, $8C, $80
-byte    $8C, $80, $C, $0, $C, $0, $C, $0, $8C, $80, $8C, $0, $FC, $0, $F8, $0, $0, $0, $0, $0, $F8, $E0, $FC, $0, $C, $0, $C, $0, $C, $8, $C, $8
-byte    $C, $8, $4, $0, $84, $84, $C8, $48, $0, $0, $0, $0, $F8, $0, $F0, $0, $80, $0, $C0, $0, $E0, $80, $78, $40, $3C, $0, $C, $0, $C, $4, $C, $C
-byte    $0, $0, $0, $0, $0, $0, $40, $40, $0, $0, $0, $0, $4, $0, $0, $0, $C0, $C0, $E0, $60, $84, $4, $8C, $8, $8C, $8, $8C, $8, $8C, $0, $8C, $0
-byte    $FC, $0, $F8, $0, $C0, $C0, $40, $40, $C8, $40, $EC, $60, $AC, $24, $88, $8, $80, $0, $80, $0, $84, $4, $8C, $8, $FC, $0, $F8, $0, $0, $0, $0, $0
-byte    $2C, $20, $C, $0, $C, $8, $C, $8, $4, $4, $4, $4, $C, $8, $C, $8, $C, $0, $4C, $0, $0, $0, $80, $80, $80, $80, $4, $4, $C, $8, $C, $8
-byte    $CC, $C0, $EC, $E0, $C, $0, $C, $0, $8C, $80, $C, $0, $0, $0, $0, $0, $3C, $20, $1C, $10, $0, $0, $0, $0, $0, $0, $0, $0, $80, $80, $88, $80
-byte    $C0, $C0, $F0, $F0, $30, $30, $0, $0, $F8, $0, $FC, $0, $8C, $0, $8C, $80, $C, $8, $C, $8, $4, $0, $4, $0, $4, $0, $0, $0, $40, $40, $0, $0
-byte    $0, $0, $0, $0, $20, $0, $0, $0, $0, $0, $0, $0, $1F, $0, $1F, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $0, $1F, $0, $1F, $0
-byte    $1, $1, $1, $1, $0, $0, $0, $0, $0, $0, $1, $1, $1F, $18, $9F, $9E, $80, $80, $80, $80, $9C, $8C, $F9, $E9, $20, $20, $30, $30, $0, $0, $0, $0
-byte    $0, $0, $0, $0, $1F, $1, $1F, $0, $0, $0, $0, $0, $8F, $8F, $9F, $98, $83, $80, $81, $81, $80, $80, $80, $80, $80, $80, $8C, $8C, $DC, $C4, $D8, $C8
-byte    $C0, $C0, $C0, $C0, $60, $60, $60, $60, $60, $60, $70, $70, $38, $38, $38, $38, $3F, $30, $3F, $30, $39, $38, $39, $39, $2F, $2F, $7, $7, $3, $3, $9, $9
-byte    $1F, $1E, $F, $8, $80, $80, $0, $0, $1F, $0, $1F, $1C, $1, $0, $1, $0, $1, $0, $81, $80, $81, $80, $81, $80, $9F, $98, $9F, $90, $80, $80, $C0, $C0
-byte    $E0, $E0, $E0, $E0, $40, $40, $0, $0, $1E, $E, $1F, $1, $4, $4, $4, $4, $A, $A, $E, $E, $6, $6, $3, $3, $1, $1, $0, $0, $0, $0, $0, $0
-byte    $1F, $1, $1F, $0, $80, $80, $C0, $C0, $E0, $E0, $60, $60, $B0, $B0, $0, $0, $E, $2, $1C, $4, $1A, $2, $5A, $52, $19, $11, $9, $1, $9, $1, $18, $10
-byte    $18, $10, $18, $0, $0, $0, $0, $0, $F, $0, $1F, $0, $19, $0, $19, $0, $99, $91, $98, $90, $D8, $D0, $98, $98, $88, $88, $C0, $C0, $40, $40, $0, $0
-byte    $80, $80, $0, $0, $C0, $C0, $80, $80, $0, $0, $0, $0, $22, $22, $0, $0, $50, $50, $40, $40, $60, $60, $70, $70, $72, $72, $70, $70, $70, $70, $18, $18
-byte    $1C, $1C, $9C, $9C, $8C, $8C, $86, $86, $A7, $A7, $A3, $A3, $A3, $A3, $AF, $AF, $A3, $A3, $81, $81, $A0, $A0, $80, $80, $B0, $B0, $30, $30, $30, $30, $10, $10
-byte    $28, $28, $6C, $6C, $7C, $7C, $7E, $7E, $4E, $4E, $7F, $7F, $D, $D, $C7, $C7, $66, $66, $77, $77, $27, $27, $3, $3, $23, $23, $33, $33, $21, $21, $0, $0
-byte    $1, $1, $A0, $A0, $A0, $A0, $84, $84, $A0, $A0, $80, $80, $80, $80, $80, $80, $80, $80, $80, $80, $82, $82, $80, $80, $80, $80, $88, $88, $80, $80, $80, $80
-byte    $D0, $50, $D0, $50, $C8, $48, $C8, $48, $C8, $48, $C4, $44, $CC, $4C, $CC, $CC, $C7, $C7, $87, $87, $87, $87, $83, $3, $82, $2, $81, $1, $C9, $49, $C1, $41
-byte    $C8, $C8, $C0, $C0, $C0, $C0, $84, $84, $80, $80, $90, $90, $D0, $D0, $C8, $C8, $CC, $4C, $C4, $44, $FE, $FE, $EE, $6E, $CE, $4E, $DC, $1C, $86, $86, $8E, $8E
-byte    $A3, $23, $83, $3, $20, $20, $30, $30, $84, $4, $C0, $0, $E2, $2, $F2, $2, $FA, $2, $F8, $C0, $7C, $60, $3C, $30, $4C, $48, $EC, $E8, $F2, $F2, $F2, $F2
-byte    $E2, $E2, $C8, $C8, $E0, $E0, $9C, $9C, $1C, $1C, $2E, $2E, $CF, $CF, $C7, $C7, $C3, $C3, $C3, $C3, $81, $81, $80, $80, $0, $0, $10, $10, $40, $40, $0, $0
-byte    $F7, $F7, $E3, $63, $F3, $33, $F3, $33, $F9, $19, $FD, $D, $FC, $4, $FE, $2, $FE, $2, $FE, $2, $FE, $0, $7E, $0, $3F, $1, $1F, $1, $9F, $80, $8F, $80
-byte    $8F, $80, $8F, $80, $F, $0, $F, $1, $F, $1, $1F, $1, $1F, $0, $1F, $0, $7F, $0, $FF, $0, $FF, $0, $FF, $1, $FF, $0, $FF, $1, $FF, $3, $FF, $3
-byte    $FF, $3, $FF, $3, $FE, $2, $FE, $2, $FE, $2, $FE, $2, $F8, $0, $F8, $80, $F8, $10, $FA, $12, $F2, $F2, $C0, $C0, $8E, $8E, $1A, $1A, $70, $10, $F4, $84
-byte    $B5, $25, $B9, $A9, $F9, $D1, $D9, $D1, $C9, $81, $EB, $AB, $DB, $9B, $F7, $A7, $B7, $7, $AF, $8E, $AF, $8C, $EF, $8C, $CF, $8C, $DF, $1E, $DF, $98, $9F, $90
-byte    $BF, $3C, $3F, $34, $7F, $70, $FF, $F0, $FF, $F0, $FF, $D0, $FF, $F0, $FF, $C0, $FF, $80, $FF, $E0, $FF, $80, $FF, $0, $FF, $0, $FF, $C0, $FF, $0, $FF, $0
-byte    $FF, $0, $FF, $0, $FF, $0, $FF, $1, $FF, $1, $FF, $1, $FF, $1, $FF, $1, $FF, $1, $87, $0, $7B, $60, $FD, $80, $FD, $80, $FD, $80, $FD, $80, $9D, $80
-byte    $DD, $80, $1, $0, $5C, $5C, $DF, $0, $1F, $0, $1F, $0, $1F, $0, $1F, $0, $9F, $0, $3, $1, $1C, $0, $1D, $0, $FD, $80, $FC, $80, $FC, $80, $DC, $80
-byte    $DD, $C1, $CD, $C1, $CE, $C0, $4E, $40, $7E, $40, $6, $0, $78, $0, $84, $0, $2, $0, $2, $0, $85, $1, $79, $1, $87, $87, $FE, $FE, $FC, $FC, $FC, $FC
-byte    $FF, $1, $FF, $0, $FF, $1, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $C1, $0, $BE, $0, $63, $40, $63, $40, $BE, $0, $C1, $0, $F3, $10
-byte    $C1, $0, $BE, $0, $63, $40, $63, $40, $7F, $40, $BE, $0, $C0, $80, $38, $38, $C0, $0, $E1, $0, $FF, $0, $FF, $0, $1F, $0, $F, $0, $8F, $0, $C7, $0
-byte    $C7, $80, $C7, $80, $E7, $0, $E7, $0, $FF, $80, $FF, $E0, $FF, $E0, $7F, $6C, $7F, $78, $BF, $3F, $BF, $38, $DF, $1F, $DF, $1F, $EF, $F, $60, $0, $7F, $45
-byte    $5F, $43, $5E, $5C, $82, $2, $D7, $17, $DF, $F, $6F, $0, $8F, $1, $E7, $2, $7, $3, $F7, $0, $F7, $1, $F6, $0, $F6, $2, $13, $3, $D3, $C3, $51, $41
-byte    $57, $45, $57, $40, $57, $44, $16, $6, $76, $4, $B5, $1, $35, $1, $35, $1, $A3, $3, $9B, $2, $B7, $7, $67, $4, $6F, $D, $EF, $F, $DF, $1D, $9F, $1D
-byte    $3F, $3F, $7F, $6E, $7F, $4C, $FF, $FC, $FF, $B4, $FF, $E0, $FF, $30, $FF, $0, $FF, $C0, $FF, $C0, $FE, $0, $FD, $1, $FD, $81, $1D, $1, $ED, $1, $F5, $1
-byte    $F1, $1, $F0, $0, $C0, $0, $BF, $20, $76, $40, $E6, $80, $EE, $0, $DE, $0, $DF, $0, $DE, $0, $F0, $0, $88, $0, $75, $1, $F5, $1, $ED, $1, $DD, $1
-byte    $DD, $1, $ED, $1, $80, $0, $80, $0, $B5, $0, $80, $0, $FC, $0, $FC, $0, $FF, $6, $FD, $4, $F8, $8, $FA, $A, $FB, $1B, $F7, $17, $F7, $37, $EF, $6F
-byte    $FF, $C0, $FF, $F0, $FF, $60, $FF, $A0, $FF, $F8, $FF, $F0, $FF, $C0, $FB, $E0, $7B, $40, $7B, $60, $7B, $70, $77, $40, $37, $20, $B6, $20, $B5, $20, $82, $2
-byte    $1A, $1A, $1B, $1A, $1B, $1A, $3, $2, $1B, $1A, $19, $19, $1A, $18, $83, $0, $DD, $18, $CD, $88, $EE, $C8, $EE, $4C, $E4, $44, $F0, $0, $9, $8, $D5, $15
-byte    $D5, $1, $D5, $1, $D5, $1, $D5, $1, $D5, $1, $D4, $0, $D6, $0, $D6, $0, $D7, $0, $D7, $4, $D7, $4, $D7, $4, $D3, $2, $D3, $2, $D7, $17, $C7, $5
-byte    $D1, $11, $AE, $AC, $1F, $10, $67, $60, $79, $40, $7E, $40, $7F, $40, $7F, $40, $0, $0, $7F, $7F, $7F, $40, $7F, $40, $FF, $C0, $FC, $80, $80, $80, $73, $70
-byte    $6F, $68, $5F, $50, $5F, $50, $27, $20, $19, $0, $66, $0, $81, $0, $81, $0, $0, $0, $0, $0, $0, $0, $81, $0, $81, $0, $66, $0, $99, $0, $27, $21
-byte    $6F, $43, $2F, $2, $AF, $82, $AE, $2, $AC, $0, $AD, $5, $AD, $D, $AD, $2D, $AD, $25, $9D, $1, $D9, $1, $D7, $6, $C7, $6, $C8, $8, $CF, $E, $9F, $E
-byte    $8F, $88, $4F, $C, $5F, $1C, $DF, $18, $BE, $30, $B9, $31, $33, $22, $7, $4, $6F, $48, $6F, $40, $4F, $40, $5F, $50, $1F, $0, $1E, $0, $3D, $0, $BB, $80
-byte    $B3, $80, $AF, $80, $CF, $80, $EF, $80, $FF, $80, $FF, $80, $FF, $C0, $FF, $F0, $FF, $80, $FF, $E0, $FF, $F0, $FF, $F0, $FF, $F0, $FF, $E0, $FF, $F0, $FF, $0
-byte    $F9, $10, $FD, $11, $FD, $91, $FD, $31, $FD, $11, $FC, $10, $FE, $D0, $FE, $48, $FE, $44, $FF, $24, $FF, $24, $FF, $10, $FF, $90, $FF, $90, $FE, $90, $FE, $DA
-byte    $FE, $6A, $FE, $6A, $FE, $22, $FF, $23, $FE, $12, $7E, $12, $7E, $4A, $7E, $2A, $7F, $6B, $FF, $5E, $FF, $3A, $FF, $28, $FF, $0, $F, $0, $F0, $F0, $FD, $81
-byte    $FD, $81, $FD, $81, $FD, $81, $FD, $81, $FD, $81, $FD, $81, $FD, $81, $FD, $81, $FD, $81, $FB, $2, $FB, $2, $FB, $2, $FB, $2, $FB, $2, $FB, $2, $FB, $2
-byte    $FB, $2, $FB, $3, $F8, $F8, $1, $1, $C1, $C1, $83, $83, $83, $83, $F, $F, $0, $0, $3, $3, $17, $17, $2F, $2F, $3E, $3E, $3E, $3E, $1E, $1E, $3E, $3E
-byte    $3E, $3E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $1E, $3E, $3E, $2D, $2C, $2D, $2C, $D, $C, $E, $E, $86, $86, $2, $2, $2, $2, $40, $40
-byte    $C2, $C0, $FF, $F0, $C0, $C0, $3B, $3B, $FB, $C2, $FB, $82, $FB, $82, $FB, $82, $FB, $82, $FB, $82, $FB, $82, $FB, $82, $FD, $80, $FD, $80, $FD, $80, $FD, $80
-byte    $FD, $80, $FD, $81, $FD, $85, $FC, $84, $FC, $84, $E3, $82, $1F, $6, $F0, $0, $F7, $34, $F7, $34, $FF, $3C, $FF, $78, $F0, $70, $F7, $20, $F7, $0, $F6, $0
-byte    $FE, $40, $FE, $40, $FE, $40, $FC, $20, $FD, $21, $FD, $21, $FD, $41, $F9, $21, $FB, $23, $FB, $23, $FB, $63, $FB, $43, $F3, $43, $F3, $C3, $F7, $C7, $F7, $7
-byte    $FF, $6, $FF, $61, $F9, $21, $F8, $30, $FE, $10, $FF, $10, $FF, $18, $FF, $8, $FF, $C, $FF, $45, $3F, $22, $F, $1, $F, $1, $8F, $1, $CF, $0, $CF, $0
-byte    $FF, $8, $FF, $8, $FF, $4, $FF, $4, $FF, $6, $FF, $2, $FF, $81, $FE, $40, $FE, $60, $FF, $20, $FF, $10, $FF, $18, $FF, $8, $FE, $0, $BE, $3A, $F0, $70
-byte    $80, $0, $A8, $20, $A8, $20, $A8, $20, $A8, $20, $A8, $20, $A8, $20, $A8, $20, $A8, $20, $A9, $21, $A9, $21, $89, $1, $89, $1, $89, $1, $89, $1, $81, $1
-byte    $C1, $C1, $F9, $79, $F4, $34, $FC, $3C, $FF, $1F, $F8, $F8, $FF, $3F, $FF, $3F, $F, $F, $1, $1, $1F, $1F, $3F, $1F, $3F, $1F, $FF, $1F, $FF, $3F, $E9, $29
-byte    $FF, $FF, $FF, $3F, $FF, $3F, $FF, $3F, $FD, $1D, $FD, $1D, $F9, $19, $F3, $33, $C7, $7, $DE, $5E, $FE, $7E, $FC, $7C, $F8, $38, $F8, $38, $F1, $31, $F1, $71
-byte    $E4, $64, $80, $0, $85, $5, $94, $14, $81, $1, $A1, $21, $A9, $21, $A9, $21, $A9, $21, $C9, $1, $C9, $1, $C9, $1, $C9, $1, $D4, $10, $D4, $10, $D4, $10
-byte    $D4, $10, $E4, $0, $E4, $0, $E4, $0, $F0, $0, $FE, $20, $FE, $20, $FF, $20, $FF, $20, $FF, $20, $FF, $20, $BF, $20, $BF, $20, $3F, $27, $3F, $26, $7F, $2A
-byte    $FF, $4A, $FF, $4A, $FF, $4A, $FF, $4A, $FF, $4A, $FE, $4A, $FC, $48, $FC, $4C, $FC, $44, $FF, $4, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0, $FF, $0
+gfx_logo_tankbattle
+word    2048  'frameboost
+word    128, 64   'width, height
 
-
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+word    $c350, $4057, $1555, $5540, $0035, $f500, $1000, $5570, $3401, $0170, $5f55, $5c05, $0555, $0005, $5400, $0155
+word    $00d0, $507f, $5555, $f550, $10c3, $d540, $0000, $5fc0, $d505, $05c0, $f0f5, $f005, $0555, $4005, $5500, $000f
+word    $0000, $0000, $5000, $0050, $5000, $0140, $0000, $0000, $0005, $0500, $0000, $0000, $0000, $000d, $053c, $0000
+word    $c000, $0000, $5000, $0070, $5000, $0150, $0000, $000c, $3c05, $0500, $0003, $0000, $000c, $0003, $053c, $0000
+word    $f001, $0000, $5000, $0070, $50c0, $00d4, $00c0, $000f, $0ff5, $0500, $0000, $0004, $000f, $0000, $050f, $3000
+word    $7000, $d0c0, $5703, $0070, $5070, $0035, $0000, $5557, $5535, $0555, $0000, $03c0, $030f, $f000, $d50f, $0000
+word    $5000, $5000, $5c0f, $00c0, $7070, $000d, $0000, $ffd5, $5505, $0555, $0c00, $03c0, $0007, $3f00, $5500, $0003
+word    $5000, $5000, $d000, $0000, $7050, $0001, $0000, $3f05, $0507, $0500, $0700, $00ff, $0005, $00f3, $0500, $0000
+word    $5000, $5000, $d000, $0030, $7050, $3c00, $0000, $0f05, $0d07, $0500, $f700, $003c, $0005, $000d, $0500, $0000
+word    $5000, $5000, $f000, $00f0, $f050, $dc00, $f000, $c3f5, $0d0f, $0700, $0700, $000f, $0005, $5555, $5505, $03d5
+word    $5000, $5000, $f000, $0c50, $c050, $5000, $fc00, $00ff, $0d03, $0f00, $0500, $0000, $3005, $c3d4, $5407, $00ff
+word    $0010, $0000, $0000, $0fc0, $0000, $0000, $fff0, $03ff, $0000, $0000, $000f, $0000, $3f00, $0000, $0000, $0000
+word    $0000, $0000, $0000, $00c0, $0000, $f000, $0fff, $0000, $0000, $c000, $003f, $0000, $0fc0, $00c0, $0000, $3c30
+word    $0000, $0000, $c000, $00ff, $f000, $ffff, $000f, $0000, $0030, $fffc, $000f, $0000, $33f0, $0000, $0000, $0fff
+word    $0000, $0000, $ff00, $000f, $fc00, $3ffc, $0003, $0000, $0000, $fcff, $0000, $0000, $000f, $0000, $f000, $003f
+word    $3000, $0300, $ffc0, $0003, $cfc0, $0fff, $0000, $0030, $0000, $03ff, $0000, $f3f0, $f00f, $f003, $fc03, $000f
+word    $0000, $0000, $c3ff, $0000, $fffc, $003f, $00c0, $0000, $fc00, $003f, $00c0, $ffff, $0300, $0550, $ffc0, $0000
+word    $0000, $c000, $c03f, $0000, $3fff, $0000, $0000, $0c00, $f3f0, $3000, $c003, $cff3, $0000, $0f55, $3fcc, $0000
+word    $0000, $ffc3, $000f, $ff00, $0cf0, $0c0c, $0000, $0000, $000f, $0000, $3c00, $0c30, $40c0, $f0d5, $03c0, $0c00
+word    $3000, $3ff0, $ff00, $3f33, $0cff, $3f3f, $033c, $0000, $0000, $0000, $0000, $00f0, $50f3, $fcf5, $0c33, $0000
+word    $0030, $3fff, $0000, $0000, $cffc, $000f, $0000, $0000, $ffff, $f003, $f03f, $07ff, $5400, $ff3d, $f03f, $300f
+word    $00f3, $0000, $fffc, $03ff, $c000, $0000, $fffc, $ffff, $d555, $557f, $ffff, $f575, $5505, $fc0d, $f0ff, $00ff
+word    $0fff, $5f00, $5fd5, $fdd5, $000f, $0000, $ffff, $5557, $5555, $5555, $ffd5, $5557, $5545, $014d, $000f, $03f0
+word    $c0ff, $555f, $5555, $f555, $0fff, $0f3c, $fc00, $5d5f, $5555, $5555, $5555, $0015, $5540, $0005, $0550, $0f05
+word    $7c03, $5555, $5555, $5555, $0555, $c300, $c003, $5fff, $555f, $5555, $5555, $5545, $5571, $5551, $4555, $ff10
+word    $5f00, $5555, $5555, $5555, $5555, $0f05, $3d5c, $7ffc, $5557, $5555, $5555, $5551, $5571, $5551, $1155, $fc40
+word    $57f3, $1555, $5400, $5555, $5555, $7c3f, $70f5, $fc01, $7fff, $5555, $5555, $5551, $5571, $5551, $1101, $fc40
+word    $55ff, $0155, $0000, $5555, $5555, $5035, $cc1f, $0055, $77ff, $555d, $5555, $1571, $0000, $1500, $1100, $fc40
+word    $555f, $0055, $0000, $5555, $5555, $50f5, $55f0, $1540, $fff0, $5d5d, $5555, $1571, $0071, $5500, $13ff, $fc40
+word    $5557, $f015, $000f, $5554, $d555, $c3f5, $fffd, $f7fd, $ffc1, $5d7f, $5555, $ffc5, $0043, $ff01, $403f, $ff10
+word    $5577, $5145, $0151, $5554, $5555, $cfdd, $77c3, $fc37, $fc17, $ff77, $5557, $ffc5, $0043, $ff01, $010f, $ff05
+word    $5555, $4551, $0554, $5550, $5555, $4fdd, $d7f7, $3f57, $01d5, $5d7f, $555f, $0015, $5540, $0005, $0000, $ffc3
+word    $5555, $0411, $0504, $5550, $d555, $cfdd, $57cd, $0155, $57f7, $fff0, $57ff, $5555, $5540, $5505, $5105, $fc0f
+word    $5555, $0411, $c504, $1550, $d500, $4fff, $170d, $0000, $0000, $ff04, $55ff, $1555, $5040, $5045, $5005, $c3f5
+word    $5555, $c411, $c504, $0150, $5500, $43ff, $01cd, $5554, $5555, $f014, $77d7, $4555, $4145, $4515, $5101, $3f55
+word    $5555, $4551, $c554, $0054, $fd50, $543f, $4400, $0154, $5500, $0551, $7fdf, $5155, $15c5, $1510, $5104, $f555
+word    $5555, $53c5, $13f1, $4055, $fd55, $d543, $454f, $f154, $013f, $1540, $5dfc, $515f, $5715, $5515, $5005, $d555
+word    $5555, $5415, $3405, $5055, $3f5f, $0554, $5150, $3154, $0400, $5415, $5fc0, $535f, $5c55, $5455, $5555, $5555
+word    $5555, $1155, $4d54, $d005, $03ff, $f555, $5153, $415c, $5155, $d140, $fc17, $517f, $5c55, $5155, $5555, $5555
+word    $5555, $c555, $53ff, $0050, $5000, $7f55, $5454, $415c, $0455, $4400, $00ff, $f3c0, $7155, $4555, $5555, $5555
+word    $1555, $1540, $0000, $c3d5, $5555, $f0fd, $545c, $055c, $0455, $4400, $fd55, $f3c7, $c17d, $1555, $5554, $5555
+word    $5755, $0015, $3f3f, $30ff, $0000, $0000, $551c, $055c, $0117, $1000, $f555, $fc15, $05ff, $5557, $5554, $5555
+word    $5f5d, $1575, $3f3f, $c403, $5555, $3555, $5533, $c55c, $013c, $1000, $0000, $4054, $1ff0, $55c0, $d501, $77f5
+word    $dffd, $3f7d, $0000, $0550, $0000, $0000, $55cc, $c55c, $04c3, $c400, $d555, $0003, $3f00, $5005, $d545, $7ffd
+word    $ff7f, $00ff, $0000, $47f5, $5555, $5555, $ffc1, $c7fc, $043f, $0400, $0003, $1550, $0054, $00ff, $f550, $7ffd
+word    $ffdf, $5400, $4000, $457d, $5555, $5555, $000d, $3f00, $5000, $1140, $5570, $5555, $0543, $c000, $ffff, $7fff
+word    $03fd, $0554, $00c0, $c557, $ffff, $5557, $ffcd, $00fc, $0000, $0015, $55c4, $5555, $143d, $1455, $ff00, $ffff
+word    $5000, $d555, $ffff, $057f, $0000, $fffc, $fc0f, $fffc, $ffff, $3fc0, $ffc5, $00ff, $3c00, $5455, $0015, $ffff
+word    $5554, $557f, $5555, $455d, $5555, $0001, $c000, $fff0, $ffff, $03ff, $0004, $5500, $33f5, $547f, $1555, $f000
+word    $d555, $d555, $f55f, $45ff, $5555, $5555, $c035, $ffc0, $ffff, $00ff, $55c4, $5555, $1155, $00f0, $5555, $0055
+word    $7fff, $ffd5, $5f55, $717d, $5555, $5555, $0035, $ff30, $ffff, $0000, $55cc, $5555, $5155, $57ff, $5555, $5555
+word    $55d5, $557d, $d5ff, $71f7, $5555, $5555, $0035, $cfc0, $c003, $000f, $55cc, $5555, $4555, $5fff, $dfd5, $557f
+word    $f555, $d557, $755f, $715f, $5555, $5555, $0335, $0000, $0000, $c000, $573f, $5555, $4555, $57d5, $757f, $7ff5
+word    $7575, $ff55, $0155, $f154, $ffff, $5557, $3f35, $0000, $0000, $0300, $ff3f, $ffff, $4fff, $5555, $5555, $7d55
+word    $543d, $5fdd, $3555, $0154, $0000, $fffc, $f30f, $ffff, $ffff, $f003, $ff30, $03ff, $4000, $5d55, $0155, $5554
+word    $5507, $5575, $5f55, $3555, $0000, $0000, $f300, $3ff3, $c0ff, $003f, $0000, $0000, $5400, $fd55, $0fff, $5554
+word    $5507, $555f, $57f5, $1555, $0000, $0000, $f3f0, $3ff3, $0fff, $00ff, $00f3, $5400, $5455, $7d55, $d555, $555f
+word    $f555, $5557, $555f, $37d5, $5554, $1555, $ffcc, $fff3, $3fff, $0ffc, $5000, $0155, $5400, $d555, $ffff, $5555
+word    $7fd5, $0015, $5555, $f5f5, $0000, $0000, $fffc, $3ff0, $ffff, $fffc, $00c0, $fc00, $5503, $5555, $5555, $5555
+word    $55fd, $0035, $5555, $f55f, $fffc, $003f, $fdfc, $f540, $d5ff, $fff0, $fc03, $0003, $fd54, $ffff, $5555, $5555
+word    $555d, $500d, $d555, $c557, $0000, $0000, $5d5f, $5400, $5557, $d5fd, $0003, $5554, $5555, $4015, $ffff, $5557
+word    $5555, $5405, $7555, $5555, $5555, $5555, $5d57, $5400, $5557, $5555, $5555, $5555, $5555, $0155, $5555, $5555
 
 
 
@@ -1455,11 +1490,11 @@ DAT  'STRING DATA
 
 
 'TANK NAMES
-extremetankname         byte    "Tank Tock",0
-extremethangname        byte    "Super Thang",0
-gianttankname           byte    "Class XVI",0
-happyfacename           byte    "Happy Face",0
-moonmanname             byte    "Moon Man",0
+gfx_supertankname         byte    "Tank Tock",0
+gfx_superthangname        byte    "Super Thang",0
+gfx_class16name           byte    "Class XVI",0
+gfx_happyfacename           byte    "Happy Face",0
+gfx_moonmanname             byte    "Moon Man",0
   
 
 'LEVEL NAMES

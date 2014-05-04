@@ -309,7 +309,7 @@ PUB TextBox(teststring, boxx, boxy) | text_line, stringcursor, screencursor, val
 '' * **boxx** - x position on screen (0-15)
 '' * **boxy** - y position on screen (0-7)
 ''
-
+{{{
     repeat until not lockset(SCREENLOCK)  
 
     text_line := (boxy << 8) + (boxx << 4)
@@ -379,7 +379,7 @@ PUB TextBox(teststring, boxx, boxy) | text_line, stringcursor, screencursor, val
 
     lockclr(SCREENLOCK)
 
-
+}}
 
 
 
