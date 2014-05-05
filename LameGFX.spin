@@ -235,22 +235,27 @@ PUB LoadMap(source_tilemap, source_levelmap)
 PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt, tilecnttemp, x, y
 '' Returns 1 if collision, 0 otherwise
 
+    if objx < 0
+        objx := 0
+    if objy < 0
+        objy := 0
+
     objtilex := objx >> 3 
     objtiley := objy >> 3
- 
+     
     tilecnt := 0
     tilecnttemp := 2
     
     y := 0
     repeat while y < objtiley
-        tilecnttemp += byte[map_levelmap][1]
+        tilecnttemp += byte[map_levelmap][0]
         y++
         
     repeat y from objtiley to objtiley + (objh>>3)
         repeat x from objtilex to objtilex + (objw>>3)
             tilecnt := tilecnttemp + x
             if (byte[map_levelmap][tilecnt] & COLLIDEBIT)
-                return 1
+                return 1                
         tilecnttemp += byte[map_levelmap][0]         
     
     
@@ -259,8 +264,6 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
 ''
-'' * **source_tilemap** - 
-'' * **source_levelmap** -
 '' * **offset_x** -
 '' * **offset_y** -
 '' * **width** -
@@ -274,7 +277,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
     
     y := 0
     repeat while y < (offset_y>>3)
-        tilecnttemp += byte[map_levelmap][1]
+        tilecnttemp += byte[map_levelmap][0]
         y++
         
     repeat y from 0 to box_y2-box_y1
@@ -282,7 +285,6 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
             tilecnt := tilecnttemp + (offset_x >> 3) + x
             tile := (byte[map_levelmap][tilecnt] & TILEBYTE) -1 
             if tile > 0
-'            if (byte[source_levelmap][tilecnt] & COLLIDEBIT)
                  Box(map_tilemap + (tile << 4), (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7))
 
         tilecnttemp += byte[map_levelmap][0]

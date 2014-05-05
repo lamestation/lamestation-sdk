@@ -58,7 +58,9 @@ else:
         newtilemap_name = fullpath_tilemap_name+'.dat'
 
         ## See if a corresponding collision map is available
-        collisionmap_name = fullpath_tilemap_name.split('.')[0]+'_collision.'+fullpath_tilemap_name.split('.')[1]
+        collisionmap_name = os.path.splitext(fullpath_tilemap_name)[0]
+        collisionmap_name = collisionmap_name + '_collision' + os.path.splitext(fullpath_tilemap_name)[1]
+        #print collisionmap_name
 
         if not oldtilemap_name == tilemap_name:
             mapsets[newtilemap_name] = {}
@@ -89,14 +91,15 @@ else:
                 sys.exit(1)
 
         def layer_with_collision(leveldatavalue,j):
-            value = int(leveldatavalue[maplayer][j])
+            value = int(leveldatavalue[maplayer][j]) - 1
 
-            tilex = value % tilemap_inc - 1
+            tilex = (value) % tilemap_inc
             tiley = value / tilemap_inc
 
             if not sum(collision_data.getpixel((tilex*tilemap_tilew,tiley*tilemap_tileh)))/3 > 0:
                 value += 1 << 7
-            return value
+
+            return value + 1
 
         def layer_no_collision(leveldatavalue,j):
             return int(leveldatavalue[maplayer][j])
@@ -120,10 +123,10 @@ else:
         except IOError:
             process_output(layer_no_collision)
         except KeyError:
-#            print "No collision layer"
+            #print "No collision layer"
             process_output(layer_no_collision)
         else:
-#            print "Collision layer found"
+            #print "Collision layer found"
             process_output(layer_with_collision)
 
         

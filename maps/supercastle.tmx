@@ -105,8 +105,8 @@
 </data>
  </layer>
  <objectgroup name="start" width="50" height="50">
-  <object name="start" x="25" y="31"/>
-  <object name="start" x="378" y="359"/>
-  <object name="start" x="375" y="31"/>
+  <object name="start" x="13" y="20"/>
+  <object name="start" x="365" y="349"/>
+  <object name="start" x="363" y="21"/>
  </objectgroup>
 </map>
