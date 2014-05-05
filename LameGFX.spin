@@ -221,9 +221,18 @@ PUB Box(source, x, y)
 ''
     SendASMCommand(source, INST_BOX + ((x & $FF) << 8) + ((y & $FF) << 16))
     
+' *********************************************************
+'  Maps
+' *********************************************************  
+VAR
+    word    map_tilemap
+    word    map_levelmap
     
+PUB LoadMap(source_tilemap, source_levelmap)
+    map_tilemap := source_tilemap
+    map_levelmap := source_levelmap
     
-PUB TestMapCollision(source_tilemap, source_levelmap, objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt, tilecnttemp, x, y
+PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt, tilecnttemp, x, y
 '' Returns 1 if collision, 0 otherwise
 
     objtilex := objx >> 3 
@@ -234,18 +243,18 @@ PUB TestMapCollision(source_tilemap, source_levelmap, objx, objy, objw, objh) | 
     
     y := 0
     repeat while y < objtiley
-        tilecnttemp += byte[source_levelmap][1]
+        tilecnttemp += byte[map_levelmap][1]
         y++
         
     repeat y from objtiley to objtiley + (objh>>3)
         repeat x from objtilex to objtilex + (objw>>3)
             tilecnt := tilecnttemp + x
-            if (byte[source_levelmap][tilecnt] & COLLIDEBIT)
+            if (byte[map_levelmap][tilecnt] & COLLIDEBIT)
                 return 1
-        tilecnttemp += byte[source_levelmap][0]         
+        tilecnttemp += byte[map_levelmap][0]         
     
     
-PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
+PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
 '' This function uses the Box command to draw an array of tiles to the screen.
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
@@ -265,18 +274,18 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1,
     
     y := 0
     repeat while y < (offset_y>>3)
-        tilecnttemp += byte[source_levelmap][1]
+        tilecnttemp += byte[map_levelmap][1]
         y++
         
     repeat y from 0 to box_y2-box_y1
         repeat x from 0 to box_x2-box_x1
             tilecnt := tilecnttemp + (offset_x >> 3) + x
-            tile := (byte[source_levelmap][tilecnt] & TILEBYTE) -1 
+            tile := (byte[map_levelmap][tilecnt] & TILEBYTE) -1 
             if tile > 0
 '            if (byte[source_levelmap][tilecnt] & COLLIDEBIT)
-                 Box(source_tilemap + (tile << 4), (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7))
+                 Box(map_tilemap + (tile << 4), (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7))
 
-        tilecnttemp += byte[source_levelmap][0]
+        tilecnttemp += byte[map_levelmap][0]
         
         
     SetClipRectangle(0,0,128,64)
@@ -331,7 +340,7 @@ PUB PutString(stringvar, origin_x, origin_y) | stringcursor, char, x, y
     y := origin_y
     repeat while byte[stringvar][stringcursor] <> 0
         char := byte[stringvar][stringcursor]
-        Box(font + (char - startingchar)<<4, x, y)
+        Box(font + (char - startingchar)<<4 + 1, x, y)
         x += tilesize_x
         stringcursor++
 

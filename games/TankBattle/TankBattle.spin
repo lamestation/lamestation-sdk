@@ -89,7 +89,6 @@ VAR
     byte    score[TANKS]
     byte    oldscore
 
-    byte    collided
     byte    yourtank
     byte    theirtank
     byte    yourtype
@@ -337,7 +336,7 @@ PUB LevelSelect
         gfx.PutString(string("Level:"),0,16)                  
         gfx.PutString(levelname[currentlevel],40,16)
         
-        gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,3,16,8)
+        gfx.DrawMap(xoffset,yoffset,0,3,16,8)
 
 
 PUB TankFaceOff
@@ -394,7 +393,7 @@ PUB GameLoop : menureturn
             
             
         'HandleNetworking
-        gfx.DrawMap(tilemap,leveldata[currentlevel],xoffset,yoffset,0,0,16,8)
+        gfx.DrawMap(xoffset,yoffset,0,0,16,8)
 
         DrawTanks
         HandleBullets
@@ -402,6 +401,17 @@ PUB GameLoop : menureturn
 
     menureturn := choice
     
+    
+PUB TestBoxCollision(obj1x, obj1y, obj1w, obj1h, obj2x, obj2y, obj2w, obj2h)
+    if obj1x + obj1w - 1 < obj2x
+        return 0
+    if obj1x > obj2x + obj2w - 1
+        return 0
+    if obj1y + obj1h - 1 < obj2y
+        return 0
+    if obj1y > obj2y + obj2h - 1
+        return 0
+    return 1
 
 PUB ControlTank
    
@@ -425,49 +435,16 @@ PUB ControlTank
             tankx[yourtank] := levelw<<3 - tankw[yourtank] 
 
 
-
-    if gfx.TestMapCollision(tilemap,leveldata[currentlevel], tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
+    ' map collision
+    if gfx.TestMapCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
         tankx[yourtank] := tankoldx
     
-    ' map collision
-    {{
-    tankxtemp := tankx[yourtank] >> 3 
-    tankytemp := tanky[yourtank] >> 3
- 
-    tilecnt := 0
-    tilecnttemp := 2
-    
-    y := 0
-    repeat while y < tankytemp
-        tilecnttemp += levelh
-        y++
-    repeat y from tankytemp to tankytemp + (tankh[yourtank]>>3)
-        repeat x from tankxtemp to tankxtemp + (tankw[yourtank]>>3)
-            tilecnt := tilecnttemp + x
-            if (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
-                tankx[yourtank] := tankoldx
-        tilecnttemp += levelw
-}}
     ' Tank-to-tank collision
-    {{
+    
     repeat tankindex from 0 to TANKSMASK
-        if tankon[tankindex]
-            if tankindex <> yourtank
-                collided := 1
-                if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
-                    collided := 0
-                if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
-                    collided := 0
-                if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
-                    collided := 0
-                if tankytemp > tanky[tankindex]+tankh[tankindex]-1
-                    collided := 0
-
-                if collided == 1
-                    tankx[yourtank] := tankoldx    
-
-}}
-
+        if tankon[tankindex] and tankindex <> yourtank
+            if TestBoxCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank], tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
+                tankx[yourtank] := tankoldx
     
     ' Up/Down
     if ctrl.Up
@@ -482,48 +459,16 @@ PUB ControlTank
         tanky[yourtank] += tanktypespeed[yourtype]
         if tanky[yourtank] > levelh<<3 - tankh[yourtank]
             tanky[yourtank] := levelh<<3 - tankh[yourtank]
-           
-    if gfx.TestMapCollision(tilemap,leveldata[currentlevel], tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
-        tanky[yourtank] := tankoldy
-        {{   
-    ' map collision
-    tankxtemp := tankx[yourtank] >> 3 
-    tankytemp := tanky[yourtank] >> 3
  
-    tilecnt := 0
-    tilecnttemp := 2
-    
-    y := 0
-    repeat while y < tankytemp
-        tilecnttemp += levelh
-        y++
-    repeat y from tankytemp to tankytemp + (tankh[yourtank]>>3)
-        repeat x from tankxtemp to tankxtemp + (tankw[yourtank]>>3)
-            tilecnt := tilecnttemp + x
-            if (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
-                tanky[yourtank] := tankoldy
-        tilecnttemp += levelw
-                }}
-{{
+    ' map collision
+    if gfx.TestMapCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
+        tanky[yourtank] := tankoldy
+        
     repeat tankindex from 0 to TANKSMASK
-        if tankon[tankindex] 
-            if tankindex <> yourtank
-                collided := 1
-                if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
-                    collided := 0
-                if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
-                    collided := 0
-                if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
-                    collided := 0
-                if tankytemp > tanky[tankindex]+tankh[tankindex]-1
-                    collided := 0
-
-                if collided == 1
-                    tanky[yourtank] := tankoldy    
-
-    }}
-     
-     
+        if tankon[tankindex] and tankindex <> yourtank
+            if TestBoxCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank], tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
+                tanky[yourtank] := tankoldy  
+ 
     if ctrl.A
       if not clicked
         clicked := 1
@@ -707,7 +652,8 @@ PUB InitLevel
     InitBullets
     InitTanks
     
-    'gfx.LoadMap(tilemap,leveldata[currentlevel])    
+    'gfx.LoadMap(tilemap,leveldata[currentlevel])
+    gfx.LoadMap(tilemap,leveldata[currentlevel])
 
     
 
@@ -975,17 +921,7 @@ PUB HandleBullets
 
              repeat tankindex from 0 to TANKSMASK
                 if tankon[tankindex]
-                   collided := 1
-                   if bulletx[bulletindex] < tankx[tankindex]
-                       collided := 0
-                   if bulletx[bulletindex] > tankx[tankindex]+tankw[tankindex]-1
-                       collided := 0
-                   if bullety[bulletindex] < tanky[tankindex]
-                       collided := 0
-                   if bullety[bulletindex] > tanky[tankindex]+tankh[tankindex]-1
-                       collided := 0
-              
-                   if collided == 1
+                    if TestBoxCollision(bulletx[bulletindex], bullety[bulletindex], 8, 8, tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
                        if tankhealth[tankindex] > 1
                            tankhealth[tankindex]--
                        else

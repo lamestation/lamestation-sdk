@@ -89,6 +89,8 @@ PUB Graphics_Demo
     
     screen := lcd.Start
     gfx.Start(@prebuffer) 
+
+    gfx.LoadMap(@gfx_tiles_2b_tuxor, @map_supersidescroll)
     
     ctrl.Start
     
@@ -109,7 +111,7 @@ PUB Graphics_Demo
             
             gfx.ClearScreen
 
-            gfx.DrawMap(@gfx_tiles_2b_tuxor, @map_supersidescroll, xoffset, 0, 0,3, 16, 8)
+            gfx.DrawMap(xoffset, 0, 0,0, 16, 8)
             
             'gfx.Blit(@gfx_randomcrop)
                        
