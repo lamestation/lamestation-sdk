@@ -131,11 +131,11 @@ PUB Main
 
     clicked := 0
     
-    'LogoScreen
-    'TitleScreen
-    'TankSelect
-    'LevelSelect                          
-    'TankFaceOff          
+    LogoScreen
+    TitleScreen
+    TankSelect
+    LevelSelect                          
+    TankFaceOff          
 
     menuchoice := GO_GAME
     repeat
@@ -336,6 +336,7 @@ PUB LevelSelect
         gfx.PutString(string("Level:"),0,16)                  
         gfx.PutString(levelname[currentlevel],40,16)
         
+        gfx.LoadMap(tilemap,leveldata[currentlevel])
         gfx.DrawMap(xoffset,yoffset,0,3,16,8)
 
 
