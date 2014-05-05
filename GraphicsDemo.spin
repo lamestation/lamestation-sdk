@@ -35,6 +35,7 @@ PUB GraphicsDemo | x
 
     screen := lcd.Start
     gfx.Start(@buffer)
+    gfx.LoadMap(@gfx_tiles_2b_tuxor,@map_gradient)
 
     slide := 0
    
@@ -53,8 +54,8 @@ PUB GraphicsDemo | x
  '           0: gfx.ClearScreen
   '          1: gfx.Sprite(@gfx_krakken,0,0,0)
    '         2: gfx.Blit(@gfx_test_checker)
-    '        3: gfx.DrawMap(@gfx_tiles_2b_tuxor,@map_gradient,0,0,1,1,14,6)
-        gfx.DrawMap(@gfx_tiles_2b_tuxor,@map_gradient,positionx,0,0,0,16,8)
+    '        3: gfx.DrawMap(0,0,1,1,14,6)
+        gfx.DrawMap(positionx,0,0,0,16,8)
 
         if ctrl.A or ctrl.B
           if not clicked
