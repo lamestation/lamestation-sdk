@@ -219,22 +219,30 @@ PUB Box(source, x, y)
 '' 00000000 00000000 00000000  00000000
 '' </pre>
 ''
-'' Here is the original Spin implementation for reference.
-''
-'' <pre>
-'' repeat until not lockset(SCREENLOCK)
-''
-'' temp := (x << 3) + (y << 7)
-''                       
-'' repeat indexer from 0 to 7 step 1
-''     word[screen][temp+indexer] := word[source][indexer] 
-''
-'' lockclr(SCREENLOCK)
-'' </pre>
-'' 
-''
     SendASMCommand(source, INST_BOX + ((x & $FF) << 8) + ((y & $FF) << 16))
     
+    
+    
+PUB TestMapCollision(source_tilemap, source_levelmap, objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt, tilecnttemp, x, y
+'' Returns 1 if collision, 0 otherwise
+
+    objtilex := objx >> 3 
+    objtiley := objy >> 3
+ 
+    tilecnt := 0
+    tilecnttemp := 2
+    
+    y := 0
+    repeat while y < objtiley
+        tilecnttemp += byte[source_levelmap][1]
+        y++
+        
+    repeat y from objtiley to objtiley + (objh>>3)
+        repeat x from objtilex to objtilex + (objw>>3)
+            tilecnt := tilecnttemp + x
+            if (byte[source_levelmap][tilecnt] & COLLIDEBIT)
+                return 1
+        tilecnttemp += byte[source_levelmap][0]         
     
     
 PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
@@ -248,7 +256,6 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1,
 '' * **offset_y** -
 '' * **width** -
 '' * **height** -
-''
 ''
 
     SetClipRectangle(box_x1<<3, box_y1<<3, box_x2<<3, box_y2<<3)
@@ -266,6 +273,7 @@ PUB DrawMap(source_tilemap, source_levelmap, offset_x, offset_y, box_x1, box_y1,
             tilecnt := tilecnttemp + (offset_x >> 3) + x
             tile := (byte[source_levelmap][tilecnt] & TILEBYTE) -1 
             if tile > 0
+'            if (byte[source_levelmap][tilecnt] & COLLIDEBIT)
                  Box(source_tilemap + (tile << 4), (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7))
 
         tilecnttemp += byte[source_levelmap][0]

@@ -133,8 +133,8 @@ PUB Main
     clicked := 0
     
     'LogoScreen
-    TitleScreen
-    TankSelect
+    'TitleScreen
+    'TankSelect
     'LevelSelect                          
     'TankFaceOff          
 
@@ -384,9 +384,11 @@ PUB GameLoop : menureturn
 
         ctrl.Update
         gfx.TranslateBuffer(@buffer, screen)
+        gfx.ClearScreen
 
         if tankon[yourtank]
             ControlTank 
+            ControlOffset(yourtank)     
         else
             GhostMode
             
@@ -399,173 +401,179 @@ PUB GameLoop : menureturn
         HandleStatusBar
 
     menureturn := choice
+    
 
 PUB ControlTank
    
-              tankoldx := tankx[yourtank]
-              tankoldy := tanky[yourtank]
-              tankolddir := tankdir[yourtank]
-              oldscore := score[yourtank]
+    tankoldx := tankx[yourtank]
+    tankoldy := tanky[yourtank]
+    tankolddir := tankdir[yourtank]
+    oldscore := score[yourtank]
 
-              'TANK CONTROL
-              'LEFT AND RIGHT   
-              if ctrl.Left
-                 tankdir[yourtank] := 0        
+    ' Left/Right
+    if ctrl.Left
+       tankdir[yourtank] := 0        
 
-                 tankx[yourtank] -= tanktypespeed[yourtype]
-                  if tankx[yourtank] < 0
-                      tankx[yourtank] := 0
-              if ctrl.Right
-                  tankdir[yourtank] := 1
-              
-                  tankx[yourtank] += tanktypespeed[yourtype]
-                  if tankx[yourtank] > levelw<<3 - tankw[yourtank]
-                      tankx[yourtank] := levelw<<3 - tankw[yourtank] 
+       tankx[yourtank] -= tanktypespeed[yourtype]
+        if tankx[yourtank] < 0
+            tankx[yourtank] := 0
+    if ctrl.Right
+        tankdir[yourtank] := 1
+    
+        tankx[yourtank] += tanktypespeed[yourtype]
+        if tankx[yourtank] > levelw<<3 - tankw[yourtank]
+            tankx[yourtank] := levelw<<3 - tankw[yourtank] 
 
-{{
-              tankxtemp := tankx[yourtank] 
-              tankytemp := tanky[yourtank]
-              tilecnt := 0
-              tilecnttemp := 2
-              if tanky[yourtank] > 0
-                  repeat y from 0 to tanky[yourtank]-1
-                       tilecnttemp += levelw
-              repeat y from tankytemp to tankytemp+tankh[yourtank]-1
-                  repeat x from tankxtemp to tankxtemp+tankw[yourtank]-1 
-                      tilecnt := tilecnttemp + x
-               
-                      tile := (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
-                      if tile <> 0
-                             tankx[yourtank] := tankoldx 
-                  tilecnttemp += levelw
 
-              repeat tankindex from 0 to TANKSMASK
-                  if tankon[tankindex]
-                      if tankindex <> yourtank
-                          collided := 1
-                          if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
-                             collided := 0
-                          if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
-                             collided := 0
-                          if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
-                             collided := 0
-                          if tankytemp > tanky[tankindex]+tankh[tankindex]-1
-                             collided := 0
 
-                          if collided == 1
-                             tankx[yourtank] := tankoldx    
+    if gfx.TestMapCollision(tilemap,leveldata[currentlevel], tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
+        tankx[yourtank] := tankoldx
+    
+    ' map collision
+    {{
+    tankxtemp := tankx[yourtank] >> 3 
+    tankytemp := tanky[yourtank] >> 3
+ 
+    tilecnt := 0
+    tilecnttemp := 2
+    
+    y := 0
+    repeat while y < tankytemp
+        tilecnttemp += levelh
+        y++
+    repeat y from tankytemp to tankytemp + (tankh[yourtank]>>3)
+        repeat x from tankxtemp to tankxtemp + (tankw[yourtank]>>3)
+            tilecnt := tilecnttemp + x
+            if (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
+                tankx[yourtank] := tankoldx
+        tilecnttemp += levelw
+}}
+    ' Tank-to-tank collision
+    {{
+    repeat tankindex from 0 to TANKSMASK
+        if tankon[tankindex]
+            if tankindex <> yourtank
+                collided := 1
+                if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
+                    collided := 0
+                if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
+                    collided := 0
+                if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
+                    collided := 0
+                if tankytemp > tanky[tankindex]+tankh[tankindex]-1
+                    collided := 0
+
+                if collided == 1
+                    tankx[yourtank] := tankoldx    
+
 }}
 
+    
+    ' Up/Down
+    if ctrl.Up
+        tankdir[yourtank] := 2
+        
+        tanky[yourtank] -= tanktypespeed[yourtype]
+        if tanky[yourtank] < 0
+            tanky[yourtank] := 0
+    if ctrl.Down
+        tankdir[yourtank] := 3  
 
+        tanky[yourtank] += tanktypespeed[yourtype]
+        if tanky[yourtank] > levelh<<3 - tankh[yourtank]
+            tanky[yourtank] := levelh<<3 - tankh[yourtank]
            
-          'UP AND DOWN   
-              if ctrl.Up
-                  tankdir[yourtank] := 2
-                  
-                  tanky[yourtank] -= tanktypespeed[yourtype]
-                  if tanky[yourtank] < 0
-                      tanky[yourtank] := 0
-              if ctrl.Down
-                  tankdir[yourtank] := 3  
+    if gfx.TestMapCollision(tilemap,leveldata[currentlevel], tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
+        tanky[yourtank] := tankoldy
+        {{   
+    ' map collision
+    tankxtemp := tankx[yourtank] >> 3 
+    tankytemp := tanky[yourtank] >> 3
+ 
+    tilecnt := 0
+    tilecnttemp := 2
+    
+    y := 0
+    repeat while y < tankytemp
+        tilecnttemp += levelh
+        y++
+    repeat y from tankytemp to tankytemp + (tankh[yourtank]>>3)
+        repeat x from tankxtemp to tankxtemp + (tankw[yourtank]>>3)
+            tilecnt := tilecnttemp + x
+            if (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
+                tanky[yourtank] := tankoldy
+        tilecnttemp += levelw
+                }}
+{{
+    repeat tankindex from 0 to TANKSMASK
+        if tankon[tankindex] 
+            if tankindex <> yourtank
+                collided := 1
+                if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
+                    collided := 0
+                if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
+                    collided := 0
+                if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
+                    collided := 0
+                if tankytemp > tanky[tankindex]+tankh[tankindex]-1
+                    collided := 0
 
-                  tanky[yourtank] += tanktypespeed[yourtype]
-                  if tanky[yourtank] > levelh<<3 - tankh[yourtank]
-                      tanky[yourtank] := levelh<<3 - tankh[yourtank]
-       {{
-              tankxtemp := tankx[yourtank] 
-              tankytemp := tanky[yourtank]
-              tilecnt := 0
-              tilecnttemp := 2
-              if tanky[yourtank] > 0
-                  repeat y from 0 to tanky[yourtank]-1
-                      tilecnttemp += levelw
-              repeat y from tankytemp to tankytemp+tankw[yourtank]-1
-                  repeat x from tankxtemp to tankxtemp+tankh[yourtank]-1 
-                      tilecnt := tilecnttemp + x
-               
-                      tile := (byte[leveldata[currentlevel]][tilecnt] & COLLIDEBIT)
-                      if tile <> 0
-                            tanky[yourtank] := tankoldy
-                  tilecnttemp += levelw
+                if collided == 1
+                    tanky[yourtank] := tankoldy    
 
-              repeat tankindex from 0 to TANKSMASK
-                  if tankon[tankindex] 
-                      if tankindex <> yourtank
-                          collided := 1
-                          if tankxtemp+tankw[yourtank]-1 < tankx[tankindex]
-                             collided := 0
-                          if tankxtemp > tankx[tankindex]+tankw[tankindex]-1
-                             collided := 0
-                          if tankytemp+tankh[yourtank]-1 < tanky[tankindex]
-                             collided := 0
-                          if tankytemp > tanky[tankindex]+tankh[tankindex]-1
-                             collided := 0
+    }}
+     
+     
+    if ctrl.A
+      if not clicked
+        clicked := 1
+        tankhealth[yourtank]--
+     
+       ' choice := GO_MENU 'Go to menu
+        
+      '  yourtank++
+       ' yourtank &= TANKSMASK
 
-                          if collided == 1
-                             tanky[yourtank] := tankoldy    
-
-}}
-              'OFFSET CONTROL
-              ControlOffset(yourtank)     
-               
-               
-              if ctrl.A
-                if not clicked
-                  clicked := 1
-                  tankhealth[yourtank]--
-               
-                 ' choice := GO_MENU 'Go to menu
-                  
-                '  yourtank++
-                 ' yourtank &= TANKSMASK
-
-              elseif ctrl.B
-                  if tankon[yourtank] == 1
-                    SpawnBullet(yourtank)
-                    bulletspawned := 1
-                
-              else
-                  clicked := 0      
+    elseif ctrl.B
+        if tankon[yourtank] == 1
+          SpawnBullet(yourtank)
+          bulletspawned := 1
+      
+    else
+        clicked := 0      
 
 PUB GhostMode  
-              if ctrl.Left
-                  xoffset--
-                  if xoffset < 0
-                      xoffset := 0 
-              if ctrl.Right
-                  xoffset++
-                  if xoffset > levelw<<3-SCREEN_W
-                      xoffset := levelw<<3-SCREEN_W
+    if ctrl.Left
+        xoffset--
+        if xoffset < 0
+            xoffset := 0 
+    if ctrl.Right
+        xoffset++
+        if xoffset > levelw<<3-SCREEN_W
+            xoffset := levelw<<3-SCREEN_W
 
+
+    
+    'UP AND DOWN   
+    if ctrl.Up
+        yoffset-- 
+        if yoffset < 0
+            yoffset := 0  
+    if ctrl.Down
+        yoffset++
+        if yoffset > levelh<<3-SCREEN_H
+            yoffset := levelh<<3-SCREEN_H  
 
      
-              'UP AND DOWN   
-              if ctrl.Up
-                  yoffset-- 
-                  if yoffset < 0
-                      yoffset := 0  
-              if ctrl.Down
-                  yoffset++
-                  if yoffset > levelh<<3-SCREEN_H
-                      yoffset := levelh<<3-SCREEN_H  
-
-               
-              if ctrl.A or ctrl.B
-                if clicked == 0
-                  SpawnTank(yourtank, 0, 1)
-                  tankspawned := 1      
-                  
-                  clicked := 1
-              else
-                clicked := 0    
+    if ctrl.A or ctrl.B
+      if clicked == 0
+        SpawnTank(yourtank, 0, 1)
+        tankspawned := 1      
+        
+        clicked := 1
+    else
+        clicked := 0    
     
-    
-    
-
-
-
-
-
 
 PUB PauseMenu : menureturn
 
@@ -681,6 +689,8 @@ VAR
       
 PUB InitLevel
 
+
+
     levelw := byte[leveldata[currentlevel]][0] 
     levelh := byte[leveldata[currentlevel]][1]
 
@@ -697,7 +707,7 @@ PUB InitLevel
     InitBullets
     InitTanks
     
-    
+    'gfx.LoadMap(tilemap,leveldata[currentlevel])    
 
     
 
@@ -773,11 +783,11 @@ PUB InitTanks
 PUB SpawnTank(tankindexvar, respawnindexvar, respawnflag)
     if respawnflag == 1
        respawnindex := (respawnindex + 1) & TANKSMASK
-       tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindex<<1)+0] 
-       tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindex<<1)+1]
+       tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindex<<1)+0] <<3
+       tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindex<<1)+1] <<3
     else
-       tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+0] 
-       tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+1]
+       tankx[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+0] <<3 
+       tanky[tankindexvar] := byte[@startlocations][(currentlevel<<2)+(respawnindexvar<<1)+1] <<3
     
     tankon[tankindexvar] := 1
     tankhealth[tankindexvar] := TANKHEALTHMAX
