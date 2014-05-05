@@ -17,15 +17,10 @@ CON
     SCREEN_W = 128
     SCREEN_H = 64
             
-
-
     DIR_L = 0
     DIR_R = 1
     DIR_U = 2
     DIR_D = 3
-    
-    COLLIDEBIT = $80
-    TILEBYTE = COLLIDEBIT-1
     
     LEVELS = 1
     LEVELSMASK = LEVELS-1
@@ -68,6 +63,7 @@ OBJ
     audio   :               "LameAudio"
     pst     :               "LameSerial"
     ctrl    :               "LameControl"
+    fn      :               "LameFunctions"
 
 VAR
 
@@ -131,11 +127,11 @@ PUB Main
 
     clicked := 0
     
-    LogoScreen
+    'LogoScreen
     TitleScreen
     TankSelect
-    LevelSelect                          
-    TankFaceOff          
+    'LevelSelect                          
+    'TankFaceOff          
 
     menuchoice := GO_GAME
     repeat
@@ -143,10 +139,6 @@ PUB Main
             menuchoice := GameLoop
         elseif menuchoice == GO_MENU
             menuchoice := PauseMenu
-
-PUB Sleep(time) | count
-    repeat count from 0 to time
-
 
 
 ' *********************************************************
@@ -164,7 +156,7 @@ PUB LogoScreen
     audio.SetADSR(127, 10, 0, 10)
     audio.PlaySequence(@logoScreenSound)  
 
-    Sleep(15000)
+    fn.Sleep(15000)
 
     audio.StopSong
 
@@ -402,17 +394,7 @@ PUB GameLoop : menureturn
 
     menureturn := choice
     
-    
-PUB TestBoxCollision(obj1x, obj1y, obj1w, obj1h, obj2x, obj2y, obj2w, obj2h)
-    if obj1x + obj1w - 1 < obj2x
-        return 0
-    if obj1x > obj2x + obj2w - 1
-        return 0
-    if obj1y + obj1h - 1 < obj2y
-        return 0
-    if obj1y > obj2y + obj2h - 1
-        return 0
-    return 1
+
 
 PUB ControlTank
    
@@ -444,7 +426,7 @@ PUB ControlTank
     
     repeat tankindex from 0 to TANKSMASK
         if tankon[tankindex] and tankindex <> yourtank
-            if TestBoxCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank], tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
+            if fn.TestBoxCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank], tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
                 tankx[yourtank] := tankoldx
     
     ' Up/Down
@@ -467,7 +449,7 @@ PUB ControlTank
         
     repeat tankindex from 0 to TANKSMASK
         if tankon[tankindex] and tankindex <> yourtank
-            if TestBoxCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank], tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
+            if fn.TestBoxCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank], tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
                 tanky[yourtank] := tankoldy  
  
     if ctrl.A
@@ -922,7 +904,7 @@ PUB HandleBullets
 
              repeat tankindex from 0 to TANKSMASK
                 if tankon[tankindex]
-                    if TestBoxCollision(bulletx[bulletindex], bullety[bulletindex], 8, 8, tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
+                    if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex], 8, 8, tankx[tankindex], tanky[tankindex], tankw[tankindex], tankh[tankindex])
                        if tankhealth[tankindex] > 1
                            tankhealth[tankindex]--
                        else
@@ -969,7 +951,6 @@ PUB HandleStatusBar
 
 
 DAT
-
 
 
 gfx_tiles_2b_poketron
@@ -1045,7 +1026,7 @@ word    @map_supercastle
 
 
 map_supercastle
-byte    50, 50  'width, height
+byte     50,  50  'width, height
 byte    108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108,108
 byte    228,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,229,230
 byte    168, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,170
@@ -1097,12 +1078,14 @@ byte    181,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,182,
 byte    194,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,208,196
 byte    194,208,208,208,196,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,158,159,108,108,108,108,108,194,208,208,208,196
 
+
 startlocations
 
-byte    3, 3
-byte    3, 3
-byte    47, 44
+byte    1, 2
+byte    46, 44
 byte    46, 3
+
+
 
 
 
