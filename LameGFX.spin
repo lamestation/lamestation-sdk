@@ -315,7 +315,7 @@ PUB LoadFont(sourcevar, startingcharvar, tilesize_xvar, tilesize_yvar)
     tilesize_y := tilesize_yvar
 
 PUB PutChar(char, x, y)
-    Box(font + (char - startingchar)<<4, x, y)
+    Box(font + (char - startingchar)<<4 + 1, x, y)
 
 PUB PutString(stringvar, origin_x, origin_y) | stringcursor, char, x, y
    
@@ -327,89 +327,28 @@ PUB PutString(stringvar, origin_x, origin_y) | stringcursor, char, x, y
         Box(font + (char - startingchar)<<4 + 1, x, y)
         x += tilesize_x
         stringcursor++
-
-
-
-PUB TextBox(teststring, boxx, boxy) | text_line, stringcursor, screencursor, valuetemp, value, indexx
-'' This function creates a text with a black background.
-''
-'' * **teststring** - Address of source string
-'' * **boxx** - x position on screen (0-15)
-'' * **boxy** - y position on screen (0-7)
-''
-
-{{{
-    repeat until not lockset(SCREENLOCK)  
-
-    text_line := (boxy << 8) + (boxx << 4)
-    screencursor := 0
-    stringcursor := 0 
-
-    temp3 := screen + text_line       
-    value := 1
-
-    repeat while screencursor < constant(TEXTPADDING)
-        word[temp3][screencursor] := 0
-        screencursor++   
-
-        word[temp3][screencursor] := 0
-     
-       
-    repeat while byte[teststring][stringcursor] <> 0
-        value := byte[teststring][stringcursor]
-
-        if screencursor > constant(SCREEN_W - MAXCHARWIDTH - TEXTPADDING)
-            repeat while screencursor < constant(SCREEN_W + TEXTPADDING + 1)
-               word[temp3][screencursor] := 0
-               screencursor++
-
-            text_line += SCREENSPACER
-            screencursor := TEXTPADDING 
-
-        temp3 := screen + text_line
-
-        if value == SPACEBAR
-            repeat indexx from 0 to SPACEWIDTH step 1
-               word[temp3][screencursor] := 0
-               screencursor++
-
-
-        elseif value == NL or value == LF
-            repeat while screencursor < constant(SCREEN_W + TEXTPADDING + 1)
-               word[temp3][screencursor] := 0
-               screencursor++
-
-            text_line += SCREENSPACER 
-            screencursor := TEXTPADDING
-
-           
-        else
-
-            value -= 32
-            valuetemp := value*MAXCHARWIDTH
-
-            screencursor++  
-            indexx := 0        
-            repeat while asciitable[valuetemp + indexx] <> 0
-                word[temp3][screencursor] := asciitable[valuetemp + indexx]
-                screencursor++
-                indexx++
-             
-             
-             
-        word[temp3][screencursor] := 0
-        stringcursor++     
-          
-           
-'    repeat while screencursor < SCREEN_W - (boxx << 4)
-'        word[temp3][screencursor] := 0
-'        screencursor++        
-         
-
-    lockclr(SCREENLOCK)
-
-}}
-
+        
+        
+PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
+    stringcursor := 0
+    x := origin_x
+    y := origin_y
+    
+    repeat while byte[stringvar][stringcursor] <> 0
+        char := byte[stringvar][stringcursor]
+        if char == NL or char == LF
+            y += tilesize_y
+            x := origin_x          
+        elseif char == " "
+            x += tilesize_x
+        else   
+            Box(font + (char - startingchar)<<4 + 1, x, y)
+            if x+tilesize_x => origin_x+w      
+                y += tilesize_y
+                x := origin_x
+            else
+                x += tilesize_x
+        stringcursor++
 
 
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
