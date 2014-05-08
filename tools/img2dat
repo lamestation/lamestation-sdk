@@ -6,6 +6,15 @@ from PIL import Image
 import argparse
 
 
+# white on black
+#BLACK=(0,30,40)
+#GRAY=(80,110,130)
+#WHITE=(210,255,255)
+
+BLACK=(145,64,254)
+GRAY=(177,125,225)
+WHITE=(204,206,203)
+
 LS_SCREEN_W = 128
 LS_SCREEN_H = 64
 
@@ -138,7 +147,14 @@ else:
 
         newfilename = filename+".dat"
         output_txt = open(newfilename,'w')
-        output_txt.write("gfx_%s\n" % os.path.splitext(os.path.basename(filename))[0])
+
+
+        if args.mode[0] == 'font':
+            prefix = 'font_'
+        else:
+            prefix = 'gfx_'
+
+        output_txt.write("%s%s\n" % (prefix,os.path.splitext(os.path.basename(filename))[0]))
 
 
         if args.mode[0] == 'sprite':
@@ -187,20 +203,21 @@ else:
             output_im = Image.new("RGB",im.size)
 
 
+        output_im.paste(TRANSPARENT_COLOR)
 
         if args.bits[0] == 2:
             if args.mode[0] == 'font':
-                padFrameSize(framesize, 8)
+                padFrameSize(framesize, TILESIZE)
             else:
                 requirePower3FrameSize(framesize)
 
-        wordcount = 0
-        colordata = 0
 
 
         count_tiles_x = im.size[0]/framesize[0]
         count_tiles_y = im.size[1]/framesize[1]
 
+
+        # Iterate over image to splice into subdivisions
         for frame_y in range(0,count_tiles_y):
             for frame_x in range(0,count_tiles_x):
 
@@ -213,44 +230,82 @@ else:
                         out_x = frame_x*output_framesize[0] + px
                         out_y = frame_y*output_framesize[1] + py
 
-                        if x % BITS_PER_BLOCK == 0:
-                            colordata = 0
-
-                        colorchar = 0
                         pixeldata = im.getpixel((x,y))
 
                         if args.bits[0] == 2:
 
                             coloravg = getAverageColor(pixeldata)
 
-                            # Pink is the alpha color
                             if pixeldata == TRANSPARENT_COLOR:
                                 output_im.putpixel((out_x,out_y), TRANSPARENT_COLOR)
-                                colorchar = 2
-
                             elif coloravg < 40: # black
-                                output_im.putpixel((out_x,out_y), (23,43,66))
-                                colorchar = 0
-
+                                output_im.putpixel((out_x,out_y), (0,0,0))
                             elif 40 < coloravg < 210: # gray
-                                output_im.putpixel((out_x,out_y), (139, 138, 116))
-                                colorchar = 3
-
+                                output_im.putpixel((out_x,out_y), (128,128,128))
                             elif coloravg > 210: # white
-                                output_im.putpixel((out_x,out_y), (255, 233, 166))
+                                output_im.putpixel((out_x,out_y), (255,255,255))
+
+                        elif args.bits[0] == 8:
+                            if type(pixeldata) is tuple:
+                                r = pixeldata[0] >> 6 << 6
+                                g = pixeldata[1] >> 6 << 6
+                                b = pixeldata[2] >> 6 << 6
+                                output_im.putpixel((x,y), (r, g, b))
+                            else:
+                                print "Color data not in tuple format?"
+                                sys.exit(1)
+
+
+
+        # Iterate again to render DAT output
+        colordata = 0
+        wordcount = 0
+        output_count_tiles_x = output_im.size[0]/output_framesize[0]
+        output_count_tiles_y = output_im.size[1]/output_framesize[1]
+
+        
+        for frame_y in range(0,output_count_tiles_y):
+            for frame_x in range(0,output_count_tiles_x):
+
+                for py in range(0,output_framesize[1]):
+                    for px in range(0,output_framesize[0]):
+
+                        x = frame_x*output_framesize[0] + px
+                        y = frame_y*output_framesize[1] + py
+
+                        if x % BITS_PER_BLOCK == 0:
+                            colordata = 0
+
+                        colorchar = 0
+                        pixeldata = output_im.getpixel((x,y))
+
+                        if args.bits[0] == 2:
+
+                            coloravg = getAverageColor(pixeldata)
+
+                            if pixeldata == TRANSPARENT_COLOR:
+                                colorchar = 2
+                            elif coloravg < 40: # black
+                                output_im.putpixel((x,y), BLACK)
+                                colorchar = 0
+                            elif 40 < coloravg and coloravg < 210: # gray
+                                output_im.putpixel((x,y), GRAY)
+                                colorchar = 3
+                            elif coloravg > 210: # white
+                                output_im.putpixel((x,y), WHITE)
                                 colorchar = 1
 
                             colordata += (colorchar << ((x % BITS_PER_BLOCK)*2))
 
 
-                            if x % BITS_PER_BLOCK == BITS_PER_BLOCK-1 or x == im.size[0]-1:
+                            if x % BITS_PER_BLOCK == BITS_PER_BLOCK-1 or x == output_im.size[0]-1:
                                 output_txt.write("$"+hex(colordata)[2:].zfill(BITS_PER_BLOCK/2))
 
                             if x % BITS_PER_BLOCK == 0:
                                 if wordcount % (BITS_PER_BLOCK*2) == 0:
                                     output_txt.write("\nword    ")
                                 else:
-                                    if x < im.size[0]-1:
+                                    if x < output_im.size[0]-1:
                                         output_txt.write(", ")
 
                                 wordcount += 1
@@ -262,11 +317,14 @@ else:
                                 r = pixeldata[0] >> 6 << 6
                                 g = pixeldata[1] >> 6 << 6
                                 b = pixeldata[2] >> 6 << 6
-                                output_im.putpixel((x,y), (r, g, b))
                                 colorchar = (r) + (g >> 2) + (b >> 4)
                             else:
                                 print "Color data not in tuple format?"
                                 sys.exit(1)
+
+
+
+        
 
         output_txt.close()
 
