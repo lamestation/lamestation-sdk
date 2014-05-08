@@ -33,8 +33,7 @@ VAR
 
 PUB GraphicsDemo | x
 
-    screen := lcd.Start
-    gfx.Start(@buffer)
+    gfx.Start(@buffer, lcd.Start)
     gfx.LoadMap(@gfx_tiles_2b_tuxor,@map_gradient)
 
     slide := 0
@@ -43,11 +42,9 @@ PUB GraphicsDemo | x
         'The LCD and graphics libraries enforce flipping between
         'two pages in memory to prevent screen flicker, but this
         'functionality is hidden from the user.
-        
-        'To update the screen, you call gfx.TranslateBuffer.
+        gfx.DrawScreen
         
         ctrl.Update
-        gfx.TranslateBuffer(@buffer, screen)
         gfx.ClearScreen
         
 '        case slide

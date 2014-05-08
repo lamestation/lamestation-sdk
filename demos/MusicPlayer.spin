@@ -38,7 +38,6 @@ VAR
     word    songnames[SONGCOUNT]   '' This array contains memory address, so we use data type word.
 
     word    buffer[1024]
-    word    screen
 
 
     byte    slide
@@ -54,10 +53,10 @@ VAR
 PUB MusicPlayer
 
     ' Initialize the video system
-    screen := lcd.Start
-    gfx.Start(@buffer)
+    gfx.Start(@buffer, lcd.Start)
     
-    gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
+    'gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
+    gfx.LoadFont(@gfx_4x4, " ", 4,4)
     
     ' Initialize the user controls
     ctrl.Start
@@ -89,7 +88,7 @@ PUB MusicPlayer
     repeat
         
         'To update the screen, you simply call switchFrame.
-        gfx.TranslateBuffer(@buffer, screen)
+        gfx.DrawScreen
 
         'Make sure to call update before attempting to check values
         ctrl.Update
@@ -166,6 +165,19 @@ zeroforce_name              byte    "Into Infinity",0
 pixel_name                  byte    "Intensity",0
 lastboss_name               byte    "Enter Darkness",0
 
+
+
+
+gfx_4x4
+
+word    $0400, $0400, $0000, $0400, $1515, $1515, $1105, $0000, $1511, $1100, $1500, $0000, $1505, $0115, $1515, $0000
+word    $1104, $0405, $1115, $0000, $1505, $0511, $1505, $0000, $0404, $0414, $0015, $0000, $0515, $1105, $1501, $0000
+word    $0410, $1004, $0410, $0000, $1511, $0415, $1511, $0000, $0415, $1515, $0404, $0000, $1110, $0511, $1115, $0000
+word    $0000, $1500, $0004, $0004, $1501, $1501, $1115, $0000, $1000, $0400, $0104, $0000, $1505, $1111, $1511, $0000
+word    $0505, $0411, $1514, $0000, $1515, $1115, $0501, $0000, $1505, $1404, $1514, $0000, $1415, $0405, $0511, $0000
+word    $1414, $0415, $0510, $0000, $1115, $1104, $1504, $0000, $1501, $1015, $0415, $0000, $1111, $1511, $1504, $0000
+word    $1504, $1515, $1015, $0000, $1111, $1504, $0411, $0000, $0400, $0004, $0404, $0100, $1405, $0404, $1414, $0000
+word    $1510, $0004, $1510, $0000, $0501, $0404, $0510, $0000, $1504, $1410, $0004, $0400, $0004, $0011, $0000, $5500
 
 
 

@@ -113,14 +113,14 @@ PUB Main
 
     dira~
     screen := lcd.Start
-    gfx.Start(@buffer)
+    gfx.Start(@buffer, screen)
     pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
     ctrl.Start
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(@buffer, screen)
+    gfx.DrawScreen
 
     gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
     InitData
@@ -147,10 +147,10 @@ PUB Main
 PUB LogoScreen
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(@buffer, screen)
+    gfx.DrawScreen
     gfx.ClearScreen
     gfx.Sprite(@gfx_logo_teamlame, -2, 24, 0)
-    gfx.TranslateBuffer(@buffer, screen)
+    gfx.DrawScreen
 
     audio.SetWaveform(3, 127)
     audio.SetADSR(127, 10, 0, 10)
@@ -172,7 +172,7 @@ PUB TitleScreen
     choice := 1
     repeat until not choice
         ctrl.Update
-        gfx.TranslateBuffer(@buffer, screen)
+        gfx.DrawScreen
 
         gfx.Blit(@gfx_logo_tankbattle)   
 
@@ -206,7 +206,7 @@ PUB TankSelect
     repeat until not choice
 
         ctrl.Update
-        gfx.TranslateBuffer(@buffer, screen)         
+        gfx.DrawScreen       
         gfx.ClearScreen
 
         if ctrl.Up or ctrl.Down
@@ -275,7 +275,7 @@ PUB LevelSelect
     repeat until not choice
 
         ctrl.Update
-        gfx.TranslateBuffer(@buffer, screen)
+        gfx.DrawScreen
         gfx.ClearScreen         
 
 
@@ -338,7 +338,7 @@ PUB TankFaceOff
     repeat until not choice
 
         ctrl.Update 
-        gfx.TranslateBuffer(@buffer, screen)         
+        gfx.DrawScreen        
         gfx.ClearScreen
 
         gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
@@ -375,7 +375,7 @@ PUB GameLoop : menureturn
     repeat while not choice
 
         ctrl.Update
-        gfx.TranslateBuffer(@buffer, screen)
+        gfx.DrawScreen
         gfx.ClearScreen
 
         if tankon[yourtank]
@@ -509,7 +509,7 @@ PUB PauseMenu : menureturn
     repeat while not choice
            
         ctrl.Update 
-        gfx.TranslateBuffer(@buffer, screen)         
+        gfx.DrawScreen         
         gfx.ClearScreen
 
         gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)

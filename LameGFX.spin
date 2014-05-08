@@ -30,11 +30,9 @@ CON
     SCREEN_W = 128
     SCREEN_H = 64
     BITSPERPIXEL = 2
-    FRAMES = 2    
     
     SCREEN_H_BYTES = SCREEN_H / 8
     SCREENSIZE = SCREEN_W*SCREEN_H
-    SCREENSIZEB = SCREEN_W*SCREEN_H_BYTES*BITSPERPIXEL*FRAMES
 
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
     SCREENSIZE_BYTES_END = SCREENSIZE_BYTES-1
@@ -103,15 +101,17 @@ VAR
     
     
 '' These longs make up the interface between Spin and
-'' assembly, as well as between LameGFX and LameLCD.
+'' assembly.
 '' They must apppear in this order.
 '' ---------------------------------------------------
     long    instruction1
     long    instruction2
     long    outputlong
     long    sourcegfx
-    word    screen
+    word    drawsurface
 '' ---------------------------------------------------
+
+    word    copysurface
 
     word    font
     byte    startingchar
@@ -119,17 +119,14 @@ VAR
     byte    tilesize_y
 
 
-PUB Start(screenvar)
-'' This function initializes the library. It takes
-'' no parameters and takes care of setting up the LCD
-'' and frame buffer.
-
+PUB Start(buffer, screen)
     cognew(@graphicsdriver, @instruction1)
     instruction1 := INST_IDLE
     instruction2 := 0
-    
-    screen := screenvar
-         
+
+    drawsurface := buffer
+    copysurface := screen
+
 
 PRI SendASMCommand(source, instruction)
 '' This is just a little function to allow for reuse
@@ -142,7 +139,7 @@ PRI SendASMCommand(source, instruction)
 '' to request it in your drawing function
 ''
     
-    repeat until not lockset(SCREENLOCK)  
+    repeat until not lockset(SCREENLOCK)
                                 
     sourcegfx := source  
     
@@ -164,14 +161,6 @@ PUB ClearScreen
 
     SendASMCommand(0, INST_CLEARSCREEN)
 
-'    repeat until not lockset(SCREENLOCK)
-          
-    'repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-    '   word[screen][imgpointer] := 0
-    
-'    lockclr(SCREENLOCK) 
-
-
 
 PUB Static | ran
 '' This command sprays garbage data onto the framebuffer
@@ -179,11 +168,9 @@ PUB Static | ran
     
     ran := cnt
     repeat imgpointer from 0 to constant(SCREENSIZE_BYTES/2-1) step 1
-         word[screen][imgpointer] := ran?
+         word[drawsurface][imgpointer] := ran?
        
     lockclr(SCREENLOCK) 
-
-
 
 
 PUB Blit(source)
@@ -193,15 +180,6 @@ PUB Blit(source)
 '' its game utility so much.
     
     SendASMCommand(source, INST_BLITSCREEN)
-
-'    repeat until not lockset(SCREENLOCK)               
- '     
-  '  repeat imgpointer from 0 to constant(SCREENSIZE_BYTES/2-1) step 1
-   '     word[screen][imgpointer] := word[source][imgpointer]
-    '   
-    'lockclr(SCREENLOCK) 
-
-
 
 
 PUB Box(source, x, y)
@@ -221,6 +199,38 @@ PUB Box(source, x, y)
 ''
     SendASMCommand(source, INST_BOX + ((x & $FF) << 8) + ((y & $FF) << 16))
     
+
+PUB Sprite(source, x, y, frame)
+'' This is the original sprite function and has been
+'' largely superseded by SpriteTrans, which supports
+'' transparency and frames.
+''
+'' * **source** - Memory address of the source image
+'' * **x** - Horizontal destination position (0-15)
+'' * **y** - Vertical destination position (0-7)
+'' * **frame** - If the image has multiple frames, this integer will select which to use.
+'' * **trans** - Turn transparency keying on/off, allowing seamless copying.
+'' * **clip** (boolean) - Turn sprite clipping on/off; prevents images from drawing outside frame buffer.
+''
+'' This is the instruction mapping for Sprite.
+''
+'' <pre>
+'' clip  frame     y        x        instr
+''  -   ------- -------- --------  --------
+''  0   0000000 00000000 00000000  00000000
+'' </pre>
+''
+'' This function allows the user to blit an arbitrarily-sized image
+'' from a memory address. It is designed to accept the sprite output from img2dat,
+'' and can handle multi-frame sprites, 3-color sprites, and sprites with transparency.
+''
+'' Read more on img2dat to see how you can generate source images to use with this
+'' drawing command.
+
+    SendASMCommand(source, INST_SPRITE + ((x & $FF) << 8) + ((y & $FF) << 16) + (frame << 24))
+
+
+
 ' *********************************************************
 '  Maps
 ' *********************************************************  
@@ -295,37 +305,9 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
 
 
 
-PUB Sprite(source, x, y, frame)
-'' This is the original sprite function and has been
-'' largely superseded by SpriteTrans, which supports
-'' transparency and frames.
-''
-'' * **source** - Memory address of the source image
-'' * **x** - Horizontal destination position (0-15)
-'' * **y** - Vertical destination position (0-7)
-'' * **frame** - If the image has multiple frames, this integer will select which to use.
-'' * **trans** - Turn transparency keying on/off, allowing seamless copying.
-'' * **clip** (boolean) - Turn sprite clipping on/off; prevents images from drawing outside frame buffer.
-''
-'' This is the instruction mapping for Sprite.
-''
-'' <pre>
-'' clip  frame     y        x        instr
-''  -   ------- -------- --------  --------
-''  0   0000000 00000000 00000000  00000000
-'' </pre>
-''
-'' This function allows the user to blit an arbitrarily-sized image
-'' from a memory address. It is designed to accept the sprite output from img2dat,
-'' and can handle multi-frame sprites, 3-color sprites, and sprites with transparency.
-''
-'' Read more on img2dat to see how you can generate source images to use with this
-'' drawing command.
-
-    SendASMCommand(source, INST_SPRITE + ((x & $FF) << 8) + ((y & $FF) << 16) + (frame << 24))
-
-
-
+' *********************************************************
+'  Text
+' *********************************************************  
 PUB LoadFont(sourcevar, startingcharvar, tilesize_xvar, tilesize_yvar)
     font := sourcevar
     startingchar := startingcharvar
@@ -450,7 +432,8 @@ PUB TranslateBuffer(sourcebuffer, destbuffer)
     SendASMCommand(sourcebuffer + (destbuffer << 16), INST_TRANSLATE)
 
 
-
+PUB DrawScreen
+    TranslateBuffer(drawsurface, copysurface)
 
 
 
