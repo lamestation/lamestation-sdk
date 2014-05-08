@@ -513,7 +513,7 @@ PUB PauseMenu : menureturn
         gfx.ClearScreen
 
         gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
-        gfx.TextBox(string(" PAUSE!"),5,2)
+        gfx.PutString(string(" PAUSE!"),40,16)
 
 
         if ctrl.Up or ctrl.Down
@@ -540,10 +540,10 @@ PUB PauseMenu : menureturn
           clicked := 0
           
         gfx.Sprite(@gfx_bullet, 3, 4+menuchoice, 0)
-        gfx.TextBox(string("Return to Game"),4,4)
-        gfx.TextBox(string("Change Level"),4,5)
-        gfx.TextBox(string("Change Tank"),4,6)
-        gfx.TextBox(string("Give Up?"),4,7)
+        gfx.PutString(string("Return to Game"),4,4)
+        gfx.PutString(string("Change Level"),4,5)
+        gfx.PutString(string("Change Tank"),4,6)
+        gfx.PutString(string("Give Up?"),4,7)
 
 
     if menuchoice == 1
