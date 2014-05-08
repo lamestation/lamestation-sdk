@@ -87,8 +87,7 @@ PUB Main
         
     dira[24]~~
         
-    screen := lcd.Start
-    gfx.Start(@buffer) 
+    gfx.Start(@buffer, lcd.Start) 
 
     gfx.LoadMap(@gfx_tiles_2b_tuxor, @map_supersidescroll)
     gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
@@ -111,7 +110,7 @@ PUB TitleScreen | choice, clicked
     clicked := 0
     repeat until not choice
         ctrl.Update
-        gfx.TranslateBuffer(@buffer, screen)
+        gfx.DrawScreen
 
         gfx.Blit(@gfx_title)
         
@@ -223,7 +222,7 @@ PUB GameLoop
         
            ' repeat x from 0 to 1000            
             
-            gfx.TranslateBuffer(@buffer, screen)
+            gfx.DrawScreen
             
             
 PUB HandleBullets

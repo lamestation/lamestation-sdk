@@ -19,8 +19,7 @@ OBJ
         lcd     :               "LameLCD"
         gfx     :               "LameGFX" 
         
-PUB TextMachine
-
+PUB TextDemo | x, ran
 
     gfx.Start(lcd.Start)
 
@@ -51,12 +50,17 @@ PUB TextMachine
         '' reaches the right side of the screen, it isn't behaving like I
         '' want it to yet, when x is nonzero.  Buyer beware.
         
-        gfx.TextBox(string("Super Texty Fun-Time?"), 0, 1)
-        gfx.TextBox(@allcharacters, 0, 3) 
+        repeat x from 1 to 26
+            ran
+            
+        
+        gfx.PutString(string("Super Texty Fun-Time?"), 0, 1)
+        gfx.PutString(@allcharacters, 0, 3) 
 
 DAT
 ''Strings need to be null-terminated
-allcharacters   byte    "!",34,"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz",0   
+allcharacters   byte    "!",34,"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz",0
+  
 
 {{
 ┌──────────────────────────────────────────────────────────────────────────────────────┐
