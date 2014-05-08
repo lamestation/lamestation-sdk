@@ -62,7 +62,7 @@ def printImageTag():
     print "' Image Type:", args.mode[0]
     print "' Image size:",im.size
     print "' Frame size:",framesize
-    print "'     Frames:",im.size[1]/framesize[1],",",im.size[0]/framesize[0]
+    print "'     Frames:",count_tiles_x,",",count_tiles_x
 
 
 def cleanFilenames(filenames):
@@ -87,16 +87,6 @@ def getAverageColor(pixel):
         return pixel
 
 
-def displayConversionResults(input_image, output_image):
-    canvas = Image.new("RGB",(input_image.size[0],input_image.size[1]*2))
-
-    canvas.paste(input_image,(0,0))
-    canvas.paste(output_image,(0,input_image.size[1]))
-    
-    canvas = canvas.resize(tupleMultiply(SCALEFACTOR,(im.size[0],im.size[1]*2)))
-    canvas.show()
-
-
 def printConversionResults(filename):
     print
     print open(filename,'r').read()
@@ -118,14 +108,19 @@ def padFrameSize(framesize, size):
 
 
 def getFrameSize(framesize, image):
-    if framesize:
-        framesize = tuple(framesize)
-        if not framesize < image.size:
-            print "Frame is larger than image; exiting"
-            sys.exit(1)
-        return framesize
-    else:
-        return image.size
+    framesize = tuple(framesize)
+    if not framesize < image.size:
+        print "Frame is larger than image; exiting"
+        sys.exit(1)
+    return framesize
+
+
+def requireFrameSize(framesize):
+    if not framesize:
+        print "Frame size required for",args.mode[0]+"; exiting"
+        sys.exit(1)
+
+    return framesize
 
 
 
@@ -140,7 +135,6 @@ else:
 
 
         im = openImage(filename)
-        output_im = Image.new("RGB",im.size)
 
         newfilename = filename+".dat"
         output_txt = open(newfilename,'w')
@@ -149,7 +143,10 @@ else:
 
         if args.mode[0] == 'sprite':
 
-            framesize = getFrameSize(args.framesize, im)
+            if args.framesize:
+                framesize = getFrameSize(args.framesize, im)
+            else:
+                framesize = im.size
 
             # Calculate frameboost constant, the precalculated frame size so 
             # that jumping to a frame requires only one multiplication, not three.
@@ -166,10 +163,28 @@ else:
             framesize = DEFAULT_FRAME
 
 
+
+
+        # Allow padding of tilized images for arbitrary font sizes
         if args.mode[0] == 'font':
-            output_framesize = DEFAULT_FRAME
+            if args.framesize:
+                framesize = getFrameSize(args.framesize, im)
+            else:
+                framesize = im.size
+
+            output_framesize = tuple([ceilMultiple(framesize[0], TILESIZE),ceilMultiple(framesize[1], TILESIZE)])
+            output_size = tuple([im.size[0]*output_framesize[0]/framesize[0],im.size[1]*output_framesize[1]/framesize[1]])
+
+
+            print output_size
+
+            framesize = requireFrameSize(args.framesize)
+            output_im = Image.new("RGB",output_size)
+
+            print output_framesize
         else:
             output_framesize = framesize
+            output_im = Image.new("RGB",im.size)
 
 
 
@@ -182,14 +197,21 @@ else:
         wordcount = 0
         colordata = 0
 
-        for frame_y in range(0,im.size[1]/framesize[1]):
-            for frame_x in range(0,im.size[0]/framesize[0]):
+
+        count_tiles_x = im.size[0]/framesize[0]
+        count_tiles_y = im.size[1]/framesize[1]
+
+        for frame_y in range(0,count_tiles_y):
+            for frame_x in range(0,count_tiles_x):
 
                 for py in range(0,framesize[1]):
                     for px in range(0,framesize[0]):
 
                         x = frame_x*framesize[0] + px
                         y = frame_y*framesize[1] + py
+
+                        out_x = frame_x*output_framesize[0] + px
+                        out_y = frame_y*output_framesize[1] + py
 
                         if x % BITS_PER_BLOCK == 0:
                             colordata = 0
@@ -203,19 +225,19 @@ else:
 
                             # Pink is the alpha color
                             if pixeldata == TRANSPARENT_COLOR:
-                                output_im.putpixel((x,y), TRANSPARENT_COLOR)
+                                output_im.putpixel((out_x,out_y), TRANSPARENT_COLOR)
                                 colorchar = 2
 
                             elif coloravg < 40: # black
-                                output_im.putpixel((x,y), (23,43,66))
+                                output_im.putpixel((out_x,out_y), (23,43,66))
                                 colorchar = 0
 
                             elif 40 < coloravg < 210: # gray
-                                output_im.putpixel((x,y), (139, 138, 116))
+                                output_im.putpixel((out_x,out_y), (139, 138, 116))
                                 colorchar = 3
 
                             elif coloravg > 210: # white
-                                output_im.putpixel((x,y), (255, 233, 166))
+                                output_im.putpixel((out_x,out_y), (255, 233, 166))
                                 colorchar = 1
 
                             colordata += (colorchar << ((x % BITS_PER_BLOCK)*2))
@@ -249,7 +271,14 @@ else:
         output_txt.close()
 
         if args.display:
-            displayConversionResults(im, output_im)
+            canvas = Image.new("RGB",(output_im.size[0],im.size[1]+output_im.size[1]))
+        
+            canvas.paste(im,(0,0,im.size[0],im.size[1]))
+            canvas.paste(output_im,(0,im.size[1]))
+            
+            canvas = canvas.resize(tupleMultiply(SCALEFACTOR,(output_im.size[0],im.size[1]+output_im.size[1])))
+            canvas.show()
+
 
         printImageTag()
         printConversionResults(newfilename)
