@@ -49,7 +49,6 @@ OBJ
 VAR
 
     word    buffer[1024]
-    word    screen
     
     
     long    pos_x
