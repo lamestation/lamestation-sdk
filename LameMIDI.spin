@@ -30,7 +30,7 @@ CON     _clkmode = xtal1 + pll16x
 '        MIDIPIN = 25
 '        MIDIPIN = 23
 
-        MIDIPIN = 9
+        MIDIPIN = 16
 
         
         KEYBITS = $180
