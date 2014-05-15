@@ -114,7 +114,7 @@ PUB Main
     dira~
     screen := lcd.Start
     gfx.Start(@buffer, screen)
-    pst.StartRxTx(31, 30, 0, 115200)
+   ' pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
     ctrl.Start

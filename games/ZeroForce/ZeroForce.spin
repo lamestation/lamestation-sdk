@@ -69,7 +69,7 @@ PUB Main
 
     dira~
     screen := lcd.Start
-    gfx.Start(@buffer)
+    gfx.Start(@buffer, screen)
 
     audio.Start
 
@@ -82,7 +82,7 @@ PUB Main
     
     repeat
         TitleScreen
-'        LevelStage
+        LevelStage
         BossStage
 
 

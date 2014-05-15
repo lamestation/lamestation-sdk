@@ -177,7 +177,7 @@ PUB GameLoop
                 pos_x := pos_oldx
 
 
-            if ctrl.Up
+            if ctrl.A
                 if not jumping
                     'pos_dir := 0                   
                     pos_speed := -10
