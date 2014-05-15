@@ -92,7 +92,7 @@ VAR
     byte    theirtype
     byte    tankindex
     byte    levelindex
-    word    bulletindex
+
 
     byte    choice
     byte    menuchoice
@@ -837,7 +837,7 @@ VAR
 
     long    bulletxtemp
     long    bulletytemp
-
+    word    bulletindex
 
 PUB InitBullets
     bullet := 0
