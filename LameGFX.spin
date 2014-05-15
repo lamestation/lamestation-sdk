@@ -196,8 +196,6 @@ PUB Sprite(source, x, y, frame)
 '' * **x** - Horizontal destination position (0-15)
 '' * **y** - Vertical destination position (0-7)
 '' * **frame** - If the image has multiple frames, this integer will select which to use.
-'' * **trans** - Turn transparency keying on/off, allowing seamless copying.
-'' * **clip** (boolean) - Turn sprite clipping on/off; prevents images from drawing outside frame buffer.
 ''
 '' This is the instruction mapping for Sprite.
 ''
@@ -280,8 +278,8 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
     repeat y from 0 to box_y2-box_y1
         repeat x from 0 to box_x2-box_x1
             tilecnt := tilecnttemp + (offset_x >> 3) + x
-            tile := (byte[map_levelmap][tilecnt] & TILEBYTE) -1 
-            if tile > 0
+            tile := (byte[map_levelmap][tilecnt] & TILEBYTE) - 1
+            if tile => 0
                  Box(map_tilemap + (tile << 4), (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7))
 
         tilecnttemp += byte[map_levelmap][0]

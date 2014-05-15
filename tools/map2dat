@@ -96,8 +96,10 @@ else:
             tilex = (value) % tilemap_inc
             tiley = value / tilemap_inc
 
-            if not sum(collision_data.getpixel((tilex*tilemap_tilew,tiley*tilemap_tileh)))/3 > 0:
-                value += 1 << 7
+
+            if value > 0:
+                if not sum(collision_data.getpixel((tilex*tilemap_tilew,tiley*tilemap_tileh)))/3 > 0:
+                    value += 1 << 7
 
             return value + 1
 
