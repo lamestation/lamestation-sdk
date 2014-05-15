@@ -32,8 +32,7 @@ CON
     DOWN = 2
     LEFT = 3
 
-    
-    SPEED = 2
+
     
     SONGS = 1
     SONGOFF = 255
@@ -71,12 +70,15 @@ PUB Main
     gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
     
     ctrl.Start
+
+    InitEnemies
     
-    InitObjects(@objects)
+    ReadObjects(@objects)
+
     pos_dir := 1
     
     
-    TitleScreen
+   ' TitleScreen
     GameLoop
     
     
@@ -111,6 +113,7 @@ PUB GameLoop
             gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
             DrawPlayer                
             HandleBullets
+            HandleEnemies
             gfx.DrawScreen
 
 
@@ -133,9 +136,12 @@ VAR
 ' *********************************************************
 '  Player
 ' *********************************************************
+CON
+    
+    SPEED = 5
 VAR
-    long    pos_x
-    long    pos_y
+    long    playerx
+    long    playery
     long    pos_oldx
     long    pos_oldy
 
@@ -147,18 +153,18 @@ VAR
     
     byte    jumping
     
-    
+
 PUB HandlePlayer
-    pos_oldx := pos_x
-    pos_oldy := pos_y    
+    pos_oldx := playerx
+    pos_oldy := playery    
             
     if ctrl.Left or ctrl.Right
         if ctrl.Right
-            pos_x += SPEED
+            playerx += SPEED
             pos_dir := 1
 
         if ctrl.Left
-            pos_x -= SPEED
+            playerx -= SPEED
             pos_dir := 3
 
         pos_count++
@@ -168,13 +174,11 @@ PUB HandlePlayer
             else
                 pos_frame := 1
             pos_count := 0
-
-            
     else
         pos_frame := 0
 
-    if gfx.TestMapCollision(pos_x, pos_y, word[@gfx_player][1], word[@gfx_player][2])
-        pos_x := pos_oldx
+    if gfx.TestMapCollision(playerx, playery, word[@gfx_player][1], word[@gfx_player][2])
+        playerx := pos_oldx
 
 
     if ctrl.A
@@ -185,22 +189,22 @@ PUB HandlePlayer
 
     if ctrl.B
         if pos_dir == 3
-            SpawnBullet(pos_x, pos_y+8, LEFT)
+            SpawnBullet(playerx, playery+8, LEFT)
         if pos_dir == 1
-            SpawnBullet(pos_x + 14, pos_y+8, RIGHT)    
+            SpawnBullet(playerx + 8, playery+8, RIGHT)    
 
 
 
     
     pos_speed += 1
-    pos_y += pos_speed
+    playery += pos_speed
     
-    if pos_y > levelh
+    if playery > levelh
 
-    if gfx.TestMapCollision(pos_x, pos_y, word[@gfx_player][1], word[@gfx_player][2])
+    if gfx.TestMapCollision(playerx, playery, word[@gfx_player][1], word[@gfx_player][2])
         if  pos_speed > 0
             jumping := 0
-        pos_y := pos_oldy
+        playery := pos_oldy
         pos_speed := 0
     
     if pos_speed > 0
@@ -211,28 +215,37 @@ PUB HandlePlayer
 
 PUB DrawPlayer
     if pos_dir == 3
-        gfx.Sprite(@gfx_player,pos_x-xoffset,pos_y-yoffset, 3+pos_frame)
+        gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, 3+pos_frame)
     if pos_dir == 1 
-        gfx.Sprite(@gfx_player,pos_x-xoffset,pos_y-yoffset, pos_frame)
+        gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, pos_frame)
 
    
 
 ' *********************************************************
 '  Objects
 ' *********************************************************
-PUB InitObjects(objectaddr) | objcount, object
-    objcount := byte[objectaddr][0]
+PUB ReadObjects(objectaddr) | objcount, object, objtype, objx, objy
+    objcount := word[objectaddr][0]
     
-    objectaddr += 2
     
-    repeat object from 0 to objcount
-        if byte[objectaddr][2] == PLAYER
-            pos_x := byte[objectaddr][0] << 3
-            pos_y := byte[objectaddr][1] << 3
+    objectaddr += 4
     
+    repeat object from 0 to objcount-1    
+        objx := word[objectaddr][0] << 3
+        objy := word[objectaddr][1] << 3
 
+        objtype := word[objectaddr][2]
 
-   
+        case objtype
+            PLAYER:     playerx := objx
+                        playery := objy
+            TANK, EYE:  SpawnEnemy(objx, objy, objtype, LEFT)
+            
+            
+            
+        objectaddr += 6
+
+ 
 ' *********************************************************
 '  Bullets
 ' *********************************************************
@@ -298,20 +311,136 @@ PUB HandleBullets | bulletxtemp, bulletytemp
 
 
 
+' *********************************************************
+'  Enemies
+' *********************************************************
+CON
+    ENEMIES = 16
+    ENEMYTYPES = 2
+
+VAR           
+    byte    enemyindex
+    byte    enemycount
+    byte    nextenemy
+    byte    enemyon[ENEMIES]
+    
+    long    enemyx[ENEMIES]
+    long    enemyy[ENEMIES]
+    long    enemyspeedx[ENEMIES]
+    long    enemyspeedy[ENEMIES]
+    
+    long    enemydir[ENEMIES]
+    long    enemytmp1[ENEMIES]
+    
+    byte    enemyhealth[ENEMIES]
+    
+    word    enemygraphics[ENEMYTYPES]
+    byte    enemytypeacceleration[ENEMYTYPES]
+
+
+PUB InitEnemies
+    enemygraphics[0] := @gfx_tank
+    enemygraphics[1] := @gfx_ibot
+
+    enemycount := 0
+    
+    repeat enemyindex from 0 to constant(ENEMIES-1)
+        enemyon[enemyindex] := 0
+        enemyx[enemyindex] := 0
+        enemyy[enemyindex] := 0
+        enemydir[enemyindex] := RIGHT
+        
+                
+PUB HandleEnemies
+
+    repeat enemyindex from 0 to constant(ENEMIES-1)
+        if enemyx[enemyindex] - xoffset > 0 and enemyx[enemyindex] - xoffset < SCREEN_W and enemyy[enemyindex] - yoffset > 0 and enemyy[enemyindex] - yoffset < SCREEN_H
+        case enemyon[enemyindex]
+            TANK: EnemyTank(enemyindex)
+            EYE:  EnemyEye(enemyindex)
+            
+            
+            
+PUB EnemyTank(index)
+    pos_oldx := enemyx[index]
+    pos_oldy := enemyy[index]
+    
+    enemyx[index] += enemyspeedx[index]
+    if gfx.TestMapCollision(enemyx[index], enemyy[index], 16, 16)
+        enemyx[index] := pos_oldx
+        enemyspeedx[index] := -enemyspeedx[index]
+    
+    enemyspeedy[index] += 1
+    enemyy[index] += enemyspeedy[index]
+
+    if gfx.TestMapCollision(enemyx[index], enemyy[index], 16, 16)
+        enemyy[index] := pos_oldy
+        enemyspeedy[index] := 0
+    
+    DrawEnemy(index, @gfx_tank)
+
+
+
+
+PUB EnemyEye(index) | dx, dy
+    dx := playerx - enemyx[index]
+    dy := playery - enemyy[index]
+    
+    if dx > 0
+        enemyx[index]++
+    elseif dx < 0
+        enemyx[index]--
+        
+    if dy > 0
+        enemyy[index]++
+    elseif dy < 0
+        enemyy[index]--
+        
+    DrawEnemy(index, @gfx_ibot)
+    
+    
+PUB DrawEnemy(index, source) | tmpx, tmpy
+    tmpx := enemyx[index] - xoffset
+    tmpy := enemyy[index] - yoffset
+    gfx.Sprite(source, tmpx, tmpy, 0)
+
+
+PUB GetEnemyWidth(index)
+    return word[enemygraphics[enemyon[index]-1]][1]
+    
+PUB GetEnemyHeight(index)
+    return word[enemygraphics[enemyon[index]-1]][2]    
+
+PUB SpawnEnemy(dx, dy, type, dir)
+    if enemycount < constant(ENEMIES-1)
+        enemyon[nextenemy] := type
+        enemyx[nextenemy] := dx
+        enemyy[nextenemy] := dy
+        enemyhealth[nextenemy] := 1
+        
+        nextenemy++
+        if nextenemy => ENEMIES
+            nextenemy := 0
+            
+        enemycount++
+
+
+
+
 
 PUB ControlOffset | bound_x, bound_y
 
     bound_x := byte[@map_supersidescroll][0]<<3 - SCREEN_W
     bound_y := byte[@map_supersidescroll][1]<<3 - SCREEN_H
     
-    xoffset := pos_x + (PLAYER_W>>1) - (SCREEN_W>>1)
+    xoffset := playerx + (word[@gfx_player][1]>>1) - (SCREEN_W>>1)
     if xoffset < 0
         xoffset := 0      
     elseif xoffset > bound_x
         xoffset := bound_x
         
         
-    yoffset := pos_y + (PLAYER_H>>1) - (SCREEN_H>>1)
+    yoffset := playery + (word[@gfx_player][2]>>1) - (SCREEN_H>>1)
     if yoffset < 0
         yoffset := 0      
     elseif yoffset > bound_y
@@ -359,7 +488,7 @@ word    $35ca, $aa00, $0d7a, $a83c, $0d72, $a8dc, $0f72, $a83f, $03c1, $a00c, $a
 
 
 
-gfx_tank1
+gfx_tank
 word    64  'frameboost
 word    16, 16   'width, height
 
@@ -367,10 +496,15 @@ word    $00aa, $a8fc, $552a, $a350, $552a, $a3dc, $000a, $a0f4, $57ca, $bfc1, $5
 word    $5554, $8771, $fffc, $b573, $0000, $8ff0, $001a, $8000, $c1ce, $91c1, $0306, $b303, $003a, $a400, $776a, $ab77
 word    $3f2a, $aa00, $05ca, $a855, $37ca, $a855, $1f0a, $a000, $43fe, $a3d5, $455e, $a3d5, $0ffe, $0000, $c55e, $3fff
 word    $4dd2, $1555, $cd5e, $3fff, $0ff2, $0000, $0002, $a400, $4346, $b343, $c0ce, $90c0, $001a, $ac00, $ddea, $a9dd
-word    $52de, $b785, $54dc, $3715, $00dc, $3700, $573c, $3f55, $57d0, $37d5, $5f1c, $d5d5, $fc3c, $df3f, $0010, $f400
-word    $c03c, $d403, $f03c, $d40d, $c03c, $3c01, $0000, $0000, $7055, $550d, $c0ff, $ff03, $0855, $5520, $aaff, $ffaa
-word    $70aa, $aa0d, $00c2, $9c00, $5c5c, $5435, $545c, $5715, $54f0, $7c15, $507c, $df05, $00f0, $3c30, $f0dc, $3737
-word    $c0dc, $3707, $005c, $1700, $f103, $40cf, $c100, $4003, $0300, $c000, $a0c3, $f00a, $a855, $552a, $aaff, $ffaa
+
+
+gfx_ibot
+word    64  'frameboost
+word    16, 16   'width, height
+
+word    $caa2, $aaad, $7ca2, $aa35, $5722, $ab55, $5fc2, $ad55, $fff2, $8d7f, $5f02, $8ff5, $f155, $555c, $7003, $c011
+word    $7003, $c0d1, $d371, $7d5f, $0002, $8030, $0002, $b000, $000a, $a00c, $c02a, $a83f, $00aa, $aa00, $0aaa, $aaa0
+
 
 
 
@@ -437,7 +571,7 @@ byte	  2,  3,  3,  3,  3,  3,  3,  3,  3,  3,  0,  0,  0, 19,  0,  0,  0,  0,  0
 byte	  2,  2,  3,  3,  3,  3,  3,  3,  3,  3,  3,  0,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  2,  3,  3,  3,  3,  3,  4,  2,  0,  0,  0,  0,  0,  3,  0,  0,  0,  0,  0,  0,  0,  0,  0,  3,  3,  3,  3,  3,134,134,134,134,136,136,136,  3,  3,  3,  3,  3,136,136,134,136,  3,  4, 19,  2,  3,  3,  3,  0,  0, 19,  2,  3
 byte	  0,  2,  2,  3,  3,  3,  3,  3,  3,  3,  3,  0,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  2,  3,  3,  3,  2,  2,  0,  0,  0,  0,  0,  3,  4,  0,  0,  0,  0,  0,  0,  0,  0,  2,  3,  3,  3,  3,  3,135,134,134,136,136,136,  3,  3,  3,  3,  3,  3, 20,136,134,134,  3,  4, 19,  2,  3,  3,  3,  3,  4, 19,  2,  3
 byte	  0,  0,  2,  2,  3,  3,  3,  3,  3,  3,  3,  0,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,138,138,  0,  0,138,138,138,138,138,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  2,  2,  2,  2,  0,  0,  0,  0,  2,  2,  3,  4,  0,  0,  0,135,135,135,135,135,135,135,135,135,135,135,134,134,136,136,136,  3,  3,  3,  3,  3,  3,  0, 20,136,134,134,  3,  4, 19,  2,  3,  3,  3,  3,  4, 19,  2,  3
-byte	  0,  0,  0,  2,  3,  3,  3,  3,  3,  3,  3,  3,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 13, 19, 12,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  2,  0,  0,  0,  0,  0,  2,  3,  3,  4,  0,  0,  0,  0,  0,  0,134,134,134,134,134,134,134,134,134,136,136,136,  3,  3,  3,  3,  3,  3,  0,  0, 20,136,136,134,138,138,138,138,138,  3,  3,  3,  4, 19,  2,  3
+byte	  0,  0,  0,  2,  3,  3,  3,  3,  3,  3,  3,  3,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 13, 19, 12,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  2,  0,  0,  0,  0,  0,  2,  3,  3,  4,  0,  0,  0,  0,  0,  0,134,134,134,134,134,134,134,134,134,136,136,136,  3,  3,  3,  3,  3,  3,  0,  0, 20,136,136,134,138,138,138,138,  3,  3,  3,  3,  4, 19,  2,  3
 byte	  0,  0,  0,  0,  2,  3,  3,138,138,138,138,138,138,138,138,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  3,138,138,  0,  0,  0,  0,  0,  0,  0,  0,134,134,134,134,136,136,136,136,136,  3,  3,  3,  3,  3,  3,  3,  0,  0, 20, 20,136,136,136,136, 19,136,  3,  3,  3,  3,  4, 19,  2,  3
 byte	  0,  0,  0,  0,  2,  3,  3,  4,  3,  3,  3,  3,  3, 19, 12,  0,  0,  0,138,138,  0,  0,  0,  0,  0,  0,  0,  0,  0, 19,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  2,  3,  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,136,136,136,136,  2,  2,  2,  3,  3,  2,  3,  3,  3,  3,  2,  0,  0,  0, 20, 24,136,136,136,136, 19,  2,  3,  3,  3,  3,  4, 19,  2,  3
 byte	  0,  0,  0,  2,  2,  2,  3,  4,  4,  4,  3,  3,  3, 19,  2,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 19,  0,  0,  0,  0,  0,  0,  0,  4,  4,  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  3,  3,  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  2,  2,  2,  3,  2,  2,  3,  3,  3,  2,  2,  0,  0,  0, 20, 24,  3,136,136,  4, 19,  2,  3,  3,  3,  3,  4, 19,  2,  3
@@ -448,17 +582,17 @@ byte	137,137,137,  3,  3,  3,  3,  3,  3,  3,  3,  3,  3, 19,  4,  4,  4,  3,  3
 byte	137,137,137,137,137,137,137,137,137,137,137,137,  3, 19,  4,  4,  4,  4,  3,  3,  3, 19,  0,  0,137,137,137,  0,  0, 19,  0,  0,  0,  0,  0,  0, 19,  0,  0, 19,  2,  2, 19,  2,  2, 19,  2,137,  0,  0,  0,  2, 19,  2,  3, 19,136,136,137,136,  0,  0,  0,136,136,136,  0,136,138,138,138,135,135,135,135,135,135,135,135,135,135,135,135,135,135,135,135,135,  3,  3,  3,  3,135,135,135,135
 byte	137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,  0,  0, 19,  0,  0,  0,  0,  0,  0, 19,  0,  0, 19,  0,  0, 19,  2,  0, 19,  0,137,  0,  0,137,  0, 19,  2,  2, 19,  0,137,136,  0,  0,  0,  0,  0,  0,  0,  0,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,134, 17, 17, 17, 17,134,136,136,136
 
-
-
 objects
-byte    6, 0
+word    6, 0
 
-byte    5, 43, PLAYER
-byte    37, 41, TANK
-byte    28, 33, EYE
-byte    65, 42, TANK
-byte    79, 41, EYE
-byte    88,  2, BOSS
+word    5, 43, PLAYER
+word    9, 41, TANK
+word    28, 33, EYE
+word    128, 42, TANK
+word    79, 41, EYE
+word    88,  2, BOSS
+
+
 
 
 gfx_title
