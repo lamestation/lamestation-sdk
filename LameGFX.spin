@@ -37,8 +37,6 @@ CON
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
     SCREENSIZE_BYTES_END = SCREENSIZE_BYTES-1
 
-    SCREENSPACER = SCREEN_W*2
-
 
     ' text printing
     NL = 10
@@ -121,8 +119,6 @@ VAR
 
 PUB Start(buffer, screen)
     cognew(@graphicsdriver, @instruction1)
-    instruction1 := INST_IDLE
-    instruction2 := 0
 
     drawsurface := buffer
     copysurface := screen
@@ -139,19 +135,11 @@ PRI SendASMCommand(source, instruction)
 '' to request it in your drawing function
 ''
     
-    repeat until not lockset(SCREENLOCK)
+    'repeat until not lockset(SCREENLOCK)
+    repeat until not instruction1
                                 
     sourcegfx := source  
-    
     instruction1 := instruction     'send instructions to cog
-    instruction2 := 1               'receive reply
-
-    repeat while instruction2 <> 0  'cog will set instruction2 to 0 when finished
-    instruction1 := INST_IDLE
-      
-       
-    lockclr(SCREENLOCK) 
-   
 
 
 PUB ClearScreen
@@ -169,8 +157,7 @@ PUB Static | ran
     ran := cnt
     repeat imgpointer from 0 to constant(SCREENSIZE_BYTES/2-1) step 1
          word[drawsurface][imgpointer] := ran?
-       
-    lockclr(SCREENLOCK) 
+
 
 
 PUB Blit(source)
@@ -303,8 +290,6 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
     SetClipRectangle(0,0,128,64)
 
 
-
-
 ' *********************************************************
 '  Text
 ' *********************************************************  
@@ -327,7 +312,6 @@ PUB PutString(stringvar, origin_x, origin_y) | stringcursor, char, x, y
         Box(font + (char - startingchar)<<4 + 1, x, y)
         x += tilesize_x
         stringcursor++
-        
         
 PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
     stringcursor := 0
@@ -357,11 +341,6 @@ PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Use only multiples of 8.
 
     SendASMCommand( (clipx1 << 24) + (clipy1 << 16) + (clipx2 << 8) + clipy2, INST_SETCLIPRECT)
-
-
-
-
-
 
 PUB TranslateBuffer(sourcebuffer, destbuffer)
 '' This command converts a linear framebuffer to one formatted
@@ -393,25 +372,24 @@ graphicsdriver          mov     Addr, par
                         mov     sourceAddr, Addr       'get sourceaddr long
                         add     Addr, #4
                       
-                      ' deferenced pointer to screen address
-'                        rdword  destscrnAddr, Addr
                         mov destscrnAddr, Addr
-                        
+                        rdword  destscrn, destscrnAddr                       
 
-'START MAIN LOOP                       
+                        'START MAIN LOOP                       
 mainloop                rdlong  instruct1full, instruct1Addr
+
+
+
+
+
+                        ' Decide which command to execute next      
+                        cmp     instruct1full, #0   wz
+if_z                    jmp     #mainloop                       
 
                         mov     instruct1, instruct1full
                         and     instruct1, #$FF
-                        cmp     instruct1, #0   wz
-if_z                    jmp     #loopexit
 
 
-                        ' read current frame value
-                        rdword  destscrn, destscrnAddr
-
-' Decide which command to execute next
-                         
                         cmp     instruct1, #1   wz      'CLEARSCREEN
 if_z                    jmp     #clearscreen1
                         cmp     instruct1, #2   wz      'BLITSCREEN
@@ -428,7 +406,7 @@ if_z                    jmp     #setcliprect1
 if_z                    jmp     #translatebuffer1
 
 
-                        jmp     #loopexit
+                        jmp     #mainloop
 
 
 
@@ -445,10 +423,6 @@ if_z                    jmp     #translatebuffer1
 
 
 ' CLEAR THE SCREEN
-' --------------------------------------------------- 
-' repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-'     word[screen][imgpointer] := 0
-
 clearscreen1            mov     Addrtemp, destscrn
                         mov     valutemp, fulscreen
        
@@ -459,11 +433,6 @@ clearscreen1            mov     Addrtemp, destscrn
 
 
 '' #### BLIT FULL SCREEN
-'' --------------------------------------------------- 
-'' repeat imgpointer from 0 to constant(SCREENSIZEB/BITSPERPIXEL-1) step 1
-''     word[screen][imgpointer] := word[source][imgpointer]
-'' --------------------------------------------------- 
-
 blitscreen1             mov     Addrtemp, destscrn
                         rdword  sourceAddrTemp, sourceAddr
                         mov     valutemp, fulscreen
@@ -793,14 +762,6 @@ textbox1
 
 
 
-
-
-
-
-
-
-
-
 '' #### SetClipRectangle
 '' ---------------------------------------------------
 ''
@@ -1043,25 +1004,19 @@ translatebuffer1        rdlong  sourceAddrTemp, sourceAddr
 
 
 
-
-
-
-
-
-
-
-
-
-
                         
 loopexit                wrlong  destscrn, outputAddr  'change this to get data back out of assembly
-                        wrlong  zero, instruct2Addr
+                        wrlong  zero, instruct1Addr
 
                         jmp     #mainloop
 
 
 
-                        
+
+
+
+
+' VARIABLES
 Addr                    long    0
 Addrtemp                long    0
 sourceAddrTemp          long    0
@@ -1081,6 +1036,7 @@ valutemp                long    0
 valutemp2               long    0
 
 
+_screenlock             long    SCREENLOCK
 
 datatemp                long    0
 datatemp2               long    0
