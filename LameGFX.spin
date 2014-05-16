@@ -230,11 +230,8 @@ PUB LoadMap(source_tilemap, source_levelmap)
 PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt, tilecnttemp, x, y
 '' Returns 1 if collision, 0 otherwise
 
-    if objx < 0
-        objx := 0
-    if objy < 0
-        objy := 0
-
+    objx #>= 0
+    objy #>= 0
     objtilex := objx >> 3 
     objtiley := objy >> 3
      
@@ -251,8 +248,13 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt
             tilecnt := tilecnttemp + x
             if (byte[map_levelmap][tilecnt] & COLLIDEBIT)
                 return 1                
-        tilecnttemp += byte[map_levelmap][0]         
+        tilecnttemp += byte[map_levelmap][0]
+        
+PUB GetMapWidth
+    return byte[map_levelmap][0] 
     
+PUB GetMapHeight
+    return byte[map_levelmap][1]
     
 PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
 '' This function uses the Box command to draw an array of tiles to the screen.
