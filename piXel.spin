@@ -30,6 +30,7 @@ CON
     LEFT = 3
 
     HURT_TIMEOUT = 20
+    SHOOT_TIMEOUT = 5
 
     
     SONGS = 1
@@ -72,12 +73,6 @@ PUB Main
     gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
 
     audio.Start
-    audio.SetWaveform(1, 127)
-    audio.SetADSR(127, 10, 100, 10)
-
-
-
-    
     ctrl.Start
 
     InitGraphicAssets
@@ -85,9 +80,11 @@ PUB Main
     InitGame
     InitLevel
     
-    
+    audio.SetWaveform(1, 127)
+    audio.SetADSR(127, 10, 100, 10)
     audio.LoadSong(@pixel_theme)
-    audio.PlaySong
+    audio.LoopSong
+
     
     gamestate := TITLE
     clicked := 0
@@ -96,7 +93,8 @@ PUB Main
             TITLE:      TitleScreen
             INTRO:      GameIntro
                         gamestate := STARTLEVEL
-            STARTLEVEL: InitLevel
+            STARTLEVEL: InitLevel                
+                        audio.StopSong                        
                         gamestate := INGAME
             INGAME:     GameLoop
             DIED:       PlayerDied
@@ -112,7 +110,7 @@ PUB TitleScreen
 
     gfx.PutString(string("p  i      e  l"), 8, 30)
     gfx.Sprite(@gfx_pixmain, 40, 8, 0)        
-    gfx.PutString(string("press start"), 20, 56)
+    gfx.PutString(string("press A/B"), 28, 56)
 
     if ctrl.A or ctrl.B
         if not clicked
@@ -149,22 +147,50 @@ PUB ShowGameView
 PUB PlayerDied
             playerlives--
             
+            audio.StopAllSound
+            audio.SetWaveform(1, 127)
+            audio.SetADSR(127, 10, 100, 10)
+            audio.LoadSong(@song_ohnooo)
+            audio.PlaySong         
+            
             ShowGameView
             gfx.TextBox(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
             gfx.DrawScreen
             fn.Sleep(200000)
 
-PUB StarWarsReel(text,reeltime) | x    
+PUB StarWarsReel(text,reeltime) | x, choice
     x := 0
-    repeat while x < reeltime
+    choice := 0
+    
+    audio.StopSong
+            
+    audio.SetWaveform(3, 127)
+    audio.SetADSR(127, 3, 0, 3)
+    audio.LoadSong(@song_sad)
+    audio.LoopSong    
+    
+    repeat while x < reeltime and not choice
+        ctrl.Update
+        if ctrl.A or ctrl.B
+            if not clicked
+                choice := 1
+                clicked := 1
+        else
+            clicked := 0
         gfx.Blit(@gfx_starmap)
         gfx.TextBox(text, 16, 64-x, 108, 64) 
     
         gfx.DrawScreen
-        fn.Sleep(11000)
+        fn.Sleep(13000)
         x++
 
 PUB ItsGameOver
+            audio.StopAllSound
+            audio.SetWaveform(1, 127)
+            audio.SetADSR(127, 10, 100, 10)
+            audio.LoadSong(@song_superohnooo)
+            audio.PlaySong     
+
             ShowGameView
             gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
             gfx.DrawScreen
@@ -181,7 +207,8 @@ PUB ItsGameOver
                 ctrl.Update
 
 PUB GameIntro
-            StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all.."),180)
+
+    StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all..",10,10,"Before it's",10,"too late..."),200)
 
 
 ' *********************************************************
@@ -207,8 +234,6 @@ PUB InitLevel
 
     tilemap := @gfx_tiles_2b_tuxor
     leveldata[0] := @map_supersidescroll
-    
-    audio.StopSong
 
     ControlOffset
     InitPlayer
@@ -226,8 +251,8 @@ PUB InitLevel
 CON
     
     SPEED = 4
-    STARTING_HEALTH = 5
-    STARTING_LIVES = 3
+    STARTING_HEALTH = 1
+    STARTING_LIVES = 1
 VAR
     long    playerx
     long    playery
@@ -245,7 +270,7 @@ VAR
     
     byte    playerhealth
     byte    playerhealth_timeout
-    byte    playerhealth_hurt
+    byte    playershoot_timeout
 
 PUB InitPlayer
     pos_dir := RIGHT
@@ -265,7 +290,6 @@ PUB HandlePlayer
         else
             crouching := 0
             
-        
     if not crouching
         if ctrl.Left or ctrl.Right
     
@@ -292,32 +316,33 @@ PUB HandlePlayer
     if jumping
         pos_frame := 3
 
-
     if gfx.TestMapCollision(playerx, playery, word[@gfx_player][1], word[@gfx_player][2])
         playerx := pos_oldx
-
-
 
     if ctrl.A
         if not jumping               
             pos_speed := -9
             jumping := 1                 
 
-
     if ctrl.B
-        if crouching
-            if pos_dir == LEFT
-                SpawnBullet(playerx, playery+7, LEFT)
-            if pos_dir == RIGHT
-                SpawnBullet(playerx, playery+7, RIGHT)    
+        if not playershoot_timeout
+            playershoot_timeout := SHOOT_TIMEOUT
+            
+            if crouching
+                if pos_dir == LEFT
+                    SpawnBullet(playerx, playery+7, LEFT)
+                if pos_dir == RIGHT
+                    SpawnBullet(playerx, playery+7, RIGHT)    
+            else
+                if pos_dir == LEFT
+                    SpawnBullet(playerx, playery+2, LEFT)
+                if pos_dir == RIGHT
+                    SpawnBullet(playerx, playery+2, RIGHT)    
         else
-            if pos_dir == LEFT
-                SpawnBullet(playerx, playery+2, LEFT)
-            if pos_dir == RIGHT
-                SpawnBullet(playerx, playery+2, RIGHT)    
+            playershoot_timeout--
+    else
+        playershoot_timeout := 0
                 
-
-
     pos_speed += 1
     playery += pos_speed
 
@@ -330,11 +355,12 @@ PUB HandlePlayer
     if pos_speed > 0
         jumping := 1
         
-        
-        
+    if playery > (gfx.GetMapHeight << 3)
+        KillPlayer
+                
     if playerhealth_timeout > 0
         playerhealth_timeout--
-
+        
 
 PUB DrawPlayer
     if not playerhealth_timeout or (playerhealth_timeout & $2)
@@ -343,16 +369,17 @@ PUB DrawPlayer
         if pos_dir == RIGHT
             gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, pos_frame)
 
-
+PUB KillPlayer
+    if playerlives > 1
+        gamestate := DIED
+    else
+        gamestate := GAMEOVER
+        
 PUB HitPlayer
     if playerhealth_timeout == 0
         playerhealth--
         if not playerhealth > 0
-            if playerlives > 1
-                gamestate := DIED
-            else
-                gamestate := GAMEOVER
-            
+            KillPlayer
         playerhealth_timeout := HURT_TIMEOUT
 
 
@@ -402,6 +429,10 @@ PUB SpawnEffect(x, y, type)
     effect++
     if effect > constant(EFFECTS-1)
         effect := 0
+        
+    audio.SetWaveform(4, 127)
+    audio.SetADSR(127, 10, 0, 70)
+    audio.PlaySound(2,40)
 
 PUB HandleEffects | effectxtemp, effectytemp, index
 
@@ -501,6 +532,10 @@ PUB SpawnBullet(x, y, dir)
     if bullet > constant(BULLETS-1)
         bullet := 0
 
+    audio.SetWaveform(1, 127)
+    audio.SetADSR(127, 50, 0, 50)
+    audio.PlaySound(2,50)        
+
 PUB HandleBullets | bulletxtemp, bulletytemp
 
     repeat bulletindex from 0 to constant(BULLETS-1)
@@ -521,10 +556,17 @@ PUB HandleBullets | bulletxtemp, bulletytemp
           bulletxtemp := bulletx[bulletindex] - xoffset
           bulletytemp := bullety[bulletindex] - yoffset
 
-          if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)          
-             gfx.Sprite(@gfx_laser, bulletxtemp , bulletytemp, 0)
+          if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)
+              if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1, playerx, playery, word[@gfx_player][1], word[@gfx_player][2])
+                  HitPlayer
+                  bulleton[bulletindex] := 0
+              else
+                  gfx.Sprite(@gfx_laser, bulletxtemp , bulletytemp, 0)
           else
               bulleton[bulletindex] := 0
+              
+          
+
 
 
 ' *********************************************************
@@ -592,7 +634,7 @@ PUB EnemyTank(index) | dx, dy
     else
         enemydir[index] := LEFT
     
-    if ||dx < 24 and ||(dy + 8) < 16
+    if ||dx < 32 and ||(dy + 8) < 16
         
             enemytmp1[index]++
         
@@ -1042,6 +1084,66 @@ byte		6, 43, PLAYER
 
 
 
+
+song_ohnooo
+byte    2
+byte    50
+byte    7
+
+byte    0, 30, 29, 28, 27, SNOP, SNOP, SOFF
+byte    1, 18, 17, 16, 15, SNOP, SNOP, SOFF
+
+byte    0,1,BAROFF
+byte    SONGOFF
+
+
+song_superohnooo
+byte    2
+byte    100
+byte    7
+
+byte    0, 27, 26, 25, 24, SNOP, SNOP, SOFF
+byte    1, 15, 14, 13, 12, SNOP, SNOP, SOFF
+
+byte    0,1,BAROFF
+byte    SONGOFF
+
+
+song_sad
+byte    14
+byte    140
+byte    8
+'low part
+byte    0, 32,  39, 42, 46, 32, 39, 42, 46
+byte    0, 28,  35, 37, 42, 28, 35, 37, 42
+byte    0, 25,  32, 37, 40, 25, 32, 37, 40
+byte    0, 22,  29, 34, 38, 22, 29, 34, 38
+byte    0, 27,SNOP, 27, 29, 30, 27, 30, 34 ' do do dooo do doo
+'high part
+byte    1,   59,SNOP,  59,  58, 58, SNOP, SNOP, SNOP
+byte    1, SNOP,  59,  59,  58, 58,   54,   54,   51
+byte    1,   54,SNOP,SNOP,  52, 52, SNOP, SNOP, SNOP
+byte    1, SNOP,  54,  54,  52, 52,   51,   51,   54
+byte    1,   54,SNOP,SNOP,  52, 52, SNOP, SNOP, SNOP
+byte    1, SNOP,  54,  54,  51, 51,   47,   47,   51
+byte    1,   51,SNOP,SNOP,  50, 50, SNOP, SNOP, SNOP
+byte    1, SNOP,SNOP,  51,  53, 54,   51,   54,   58
+byte    1,   58,SNOP,SNOP,  56, 56, SNOP, SNOP, SNOP
+
+byte    0,BAROFF
+byte    0,BAROFF
+byte    0,5,BAROFF
+byte    0,6,BAROFF
+byte    1,7,BAROFF
+byte    1,8,BAROFF
+byte    2,9,BAROFF
+byte    2,10,BAROFF
+byte    3,11,BAROFF
+byte    4,12,BAROFF
+byte    0,13,BAROFF
+byte    0,BAROFF
+
+byte    SONGOFF
 
 pixel_theme
 byte    14     'number of bars
