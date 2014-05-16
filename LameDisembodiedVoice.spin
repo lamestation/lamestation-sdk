@@ -21,12 +21,12 @@ talkie.set_speaker(0,140) '
 
 'talkie.say(string("laem --stae --shon ++is ++mae +++best frend")) 'play text
 
-talkie.say(string("%110-------laemstaesh%200on")) 'play text
+'talkie.say(string("%110-------laemstaesh%200on")) 'play text
 
-'talkie.say(string("%60thu +++hyoomans +++++ar -ded...."))
-'talkie.say(string("%60+++thu ++++hyoomans +ar -de --ed...."))
-'talkie.say(string("%60+++wi yoosd ++++poyson +us -ga ----ses...."))
-'talkie.say(string("%60+++and wi ++++poysond +their -as --ses...."))
+talkie.say(string("%60thu +++hyoomans +++++ar -ded...."))
+talkie.say(string("%60+++thu ++++hyoomans +ar -de --ed...."))
+talkie.say(string("%60+++wi yoosd ++++poyson +us -ga ----ses...."))
+talkie.say(string("%60+++and wi ++++poysond +their -as --ses...."))
 
 'talkie.say(string("_ae ++will ++des+++troy --you")) 'play text
 
