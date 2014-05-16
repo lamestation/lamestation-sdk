@@ -132,6 +132,8 @@ else:
             process_output(layer_with_collision)
 
         
+
+        # Start locations
         object_data = root.find(".//objectgroup[@name='start']")
         if object_data is not None:
             if not object_data == []:
@@ -142,6 +144,19 @@ else:
                 for o in object_data:
                     f.write("\nbyte\t"+str(int(o.attrib['x'])/tilemap_tilew)+", "
                             +str(int(o.attrib['y'])/tilemap_tilew))
+
+        # OBjects
+        object_data = root.find(".//objectgroup[@name='objects']")
+        if object_data is not None:
+            if not object_data == []:
+                f.write("\n' objects\n")
+
+                f.write("\nbyte\t\t%i, 0" % len(object_data))
+
+                for o in object_data:
+                    f.write("\nbyte\t\t"+str(int(o.attrib['x'])/tilemap_tilew)+", "
+                            +str(int(o.attrib['y'])/tilemap_tilew)+", "+o.attrib['name'])
+
 
 
         f.close()
