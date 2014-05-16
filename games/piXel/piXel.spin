@@ -29,6 +29,7 @@ CON
     DOWN = 2
     LEFT = 3
 
+    HURT_TIMEOUT = 20
 
     
     SONGS = 1
@@ -43,6 +44,8 @@ CON
     'object types
     #0, PLAYER, TANK, IBOT, IDRONE, BOSS
     
+    #0, TITLE, INGAME, MENU, PAUSE, DIED, GAMEOVER, WIN, STARTLEVEL
+    
 
 
 OBJ
@@ -54,6 +57,9 @@ OBJ
 VAR
 
     word    buffer[1024]
+                    
+    byte    gamestate
+    byte    clicked
 
 PUB Main
 
@@ -63,90 +69,140 @@ PUB Main
         
     gfx.Start(@buffer, lcd.Start) 
 
-    gfx.LoadMap(@gfx_tiles_2b_tuxor, @map_supersidescroll)
+    
     gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
     
     ctrl.Start
 
     InitGraphicAssets
-    InitEnemies
-    
-    ReadObjects(@objects)
 
-    pos_dir := 1
-    
-    
-    TitleScreen
-    Defeat
-    GameLoop
-    
-    
+    InitGame
+    InitLevel
 
-PUB TitleScreen | choice, clicked
-
-    choice := 1
+    
+    gamestate := TITLE
     clicked := 0
-    repeat until not choice
-        ctrl.Update
-        gfx.DrawScreen
+    repeat
+        case gamestate
+            TITLE:      TitleScreen
+            STARTLEVEL: InitLevel
+                        gamestate := INGAME
+            INGAME:     GameLoop
+            DIED:       PlayerDied
+                        gamestate := STARTLEVEL
+            GAMEOVER:   ItsGameOver
+                        InitGame
+                        gamestate := STARTLEVEL
 
-        gfx.PutString(string("p  i      e  l"), 8, 30)
-        gfx.Sprite(@gfx_pixmain, 40, 8, 0)
-        
 
-        
-        gfx.PutString(string("press start"), 20, 56)
+PUB TitleScreen
+    ctrl.Update
+    gfx.DrawScreen
 
-        if ctrl.A or ctrl.B
-              if not clicked
-                choice := 0
-                clicked := 1
+    gfx.PutString(string("p  i      e  l"), 8, 30)
+    gfx.Sprite(@gfx_pixmain, 40, 8, 0)        
+    gfx.PutString(string("press start"), 20, 56)
+
+    if ctrl.A or ctrl.B
+        if not clicked
+            gamestate := STARTLEVEL
+            clicked := 1
         else
-              clicked := 0
+            clicked := 0
 
 PUB GameLoop
-    repeat 
             ctrl.Update
-'            gfx.ClearScreen      
             gfx.Blit(@gfx_starmap)      
-            HandlePlayer 
-                        
+            HandlePlayer                        
             ControlOffset
-            
             gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
             DrawPlayer
             HandleBullets
             HandleEnemies
+            HandleStatusBar
             gfx.DrawScreen
-
-
+            
 PUB Victory
 
-PUB Defeat
-            gfx.ClearScreen    
+
+PUB Intro
+    gamestate := INGAME
+    
+PUB ShowGameView
+            gfx.ClearScreen
+            gfx.Blit(@gfx_starmap)
+            HandlePlayer                        
             ControlOffset
             gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
             HandleBullets
             HandleEnemies
+            HandleStatusBar
+
+PUB PlayerDied
+            playerlives--
             
+            ShowGameView
             gfx.TextBox(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
             gfx.DrawScreen
-            
             fn.Sleep(200000)
+
+PUB StarWarsReel(text,reeltime) | x    
+    repeat x from 0 to reeltime
+        gfx.Blit(@gfx_starmap)
+        gfx.TextBox(text, 16, 64-x, 96, 64) 
+    
+        gfx.DrawScreen
+        fn.Sleep(12000)
+
+PUB ItsGameOver | x
+            ShowGameView
+            gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
+            gfx.DrawScreen
+            fn.Sleep(300000)  
+    
+            StarWarsReel(string("Macrosoth",10,"went on to",10,"destroy the",10,"Galaxy..."),100)
+        
+            gfx.Blit(@gfx_starmap)
+            gfx.PutString(string("Press A and "),18,24)
+            gfx.PutString(string("try again..."),18,32)
+            gfx.DrawScreen
+            
+            repeat until ctrl.A
+                ctrl.Update
+
 
 ' *********************************************************
 '  Levels
 ' *********************************************************  
+CON
+    LEVELS = 1
+
 VAR
-    long    levelw
-    long    levelh
+    word    leveldata[LEVELS]
+    byte    currentlevel
     word    tilemap
-    word    level
-    
+
     long    xoffset
     long    yoffset
-            
-            
+    
+    byte    playerlives 
+    
+PUB InitGame
+    playerlives := STARTING_LIVES
+
+PUB InitLevel
+
+    tilemap := @gfx_tiles_2b_tuxor
+    leveldata[0] := @map_supersidescroll
+
+    ControlOffset
+    InitPlayer
+    InitBullets
+    InitEnemies
+        
+    gfx.LoadMap(tilemap, leveldata[currentlevel])
+    ReadObjects(@objects)
+
             
 ' *********************************************************
 '  Player
@@ -154,6 +210,8 @@ VAR
 CON
     
     SPEED = 4
+    STARTING_HEALTH = 1
+    STARTING_LIVES = 1
 VAR
     long    playerx
     long    playery
@@ -169,14 +227,19 @@ VAR
     byte    jumping
     byte    crouching
     
+    byte    playerhealth
+    byte    playerhealth_timeout
+    byte    playerhealth_hurt
+
+PUB InitPlayer
+    pos_dir := RIGHT
+    playerhealth := STARTING_HEALTH
+    playerhealth_timeout := 0
 
 PUB HandlePlayer
     pos_oldx := playerx
     pos_oldy := playery    
-    
-
-
-        
+            
     if jumping
         pos_frame := 3
         crouching := 0
@@ -228,24 +291,19 @@ PUB HandlePlayer
     if ctrl.B
         if crouching
             if pos_dir == LEFT
-                SpawnBullet(playerx, playery+8, LEFT)
+                SpawnBullet(playerx, playery+7, LEFT)
             if pos_dir == RIGHT
-                SpawnBullet(playerx, playery+8, RIGHT)    
+                SpawnBullet(playerx, playery+7, RIGHT)    
         else
             if pos_dir == LEFT
-                SpawnBullet(playerx, playery+4, LEFT)
+                SpawnBullet(playerx, playery+2, LEFT)
             if pos_dir == RIGHT
-                SpawnBullet(playerx, playery+4, RIGHT)    
+                SpawnBullet(playerx, playery+2, RIGHT)    
                 
 
 
-
-    
     pos_speed += 1
     playery += pos_speed
-    
-    if playery > levelh
-        
 
     if gfx.TestMapCollision(playerx, playery, word[@gfx_player][1], word[@gfx_player][2])
         if  pos_speed > 0
@@ -254,24 +312,46 @@ PUB HandlePlayer
         pos_speed := 0
     
     if pos_speed > 0
-        jumping := 1  
+        jumping := 1
         
         
+        
+    if playerhealth_timeout > 0
+        playerhealth_timeout--
 
 
 PUB DrawPlayer
-    if pos_dir == LEFT
-        gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, 5+pos_frame)
-    if pos_dir == RIGHT
-        gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, pos_frame)
+    if not playerhealth_timeout or (playerhealth_timeout & $2)
+        if pos_dir == LEFT
+            gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, 5+pos_frame)
+        if pos_dir == RIGHT
+            gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, pos_frame)
 
-   
+
+PUB HitPlayer
+    if playerhealth_timeout == 0
+        playerhealth--
+        if not playerhealth > 0
+            if playerlives > 1
+                gamestate := DIED
+            else
+                gamestate := GAMEOVER
+            
+        playerhealth_timeout := HURT_TIMEOUT
+
+
+PUB HandleStatusBar | x
+
+    repeat x from 0 to (playerlives-1)
+        gfx.Sprite(@gfx_head, x<<3, 56, 0)
+        
+    repeat x from 0 to (playerhealth-1)
+        gfx.Sprite(@gfx_healthbar, 124-x<<2, 56, 0)        
+
 
 ' *********************************************************
 '  Objects
 ' *********************************************************
-CON
-
 VAR
     word    objectgraphics[10]
     
@@ -284,8 +364,6 @@ PUB InitGraphicAssets
 
 PUB ReadObjects(objectaddr) | objcount, object, objtype, objx, objy
     objcount := byte[objectaddr][0]
-    
-    
     objectaddr += 2
     
     repeat object from 0 to objcount-1    
@@ -373,9 +451,6 @@ PUB HandleBullets | bulletxtemp, bulletytemp
               bulleton[bulletindex] := 0
 
 
-
-
-
 ' *********************************************************
 '  Enemies
 ' *********************************************************
@@ -393,13 +468,13 @@ VAR
     long    enemyy[ENEMIES]
     long    enemyspeedx[ENEMIES]
     long    enemyspeedy[ENEMIES]
+    byte    enemyframe[ENEMIES]
     
     long    enemydir[ENEMIES]
     long    enemytmp1[ENEMIES]
-    
-    byte    enemyframe[ENEMIES]
-    
+        
     byte    enemyhealth[ENEMIES]
+    byte    enemyhurtcount[ENEMIES]
 
 
 PUB InitEnemies
@@ -418,13 +493,15 @@ PUB InitEnemies
 PUB HandleEnemies
 
     repeat enemyindex from 0 to constant(ENEMIES-1)
-        if enemyx[enemyindex] + GetObjectWidth(enemyon[enemyindex]) - xoffset > 0 and enemyx[enemyindex] - xoffset < SCREEN_W and enemyy[enemyindex] + GetObjectHeight(enemyon[enemyindex]) - yoffset > 0 and enemyy[enemyindex] - yoffset < SCREEN_H
-            case enemyon[enemyindex]
-                TANK: EnemyTank(enemyindex)
-                IBOT:  EnemyEye(enemyindex)
-                IDRONE:  EnemyEye(enemyindex)    
-                
-            DrawObject(enemyindex, enemyon[enemyindex], enemyframe[enemyindex])
+        if enemyon[enemyindex]
+            if enemyx[enemyindex] + GetObjectWidth(enemyon[enemyindex]) - xoffset > 0 and enemyx[enemyindex] - xoffset < SCREEN_W and enemyy[enemyindex] + GetObjectHeight(enemyon[enemyindex]) - yoffset > 0 and enemyy[enemyindex] - yoffset < SCREEN_H
+                case enemyon[enemyindex]
+                    TANK: EnemyTank(enemyindex)
+                    IBOT:  EnemyEye(enemyindex)
+                    IDRONE:  EnemyEye(enemyindex)    
+            
+                DrawObject(enemyindex, enemyon[enemyindex], enemyframe[enemyindex])
+                CheckEnemyCollision(enemyindex)
             
             
 PUB EnemyTank(index) | dx, dy
@@ -489,7 +566,8 @@ PUB EnemyEye(index) | dx, dy
         enemyy[index]--
 
     enemyframe[index] := 0
-    
+
+
     
 PUB DrawObject(index, type, frame) | tmpx, tmpy
     tmpx := enemyx[index] - xoffset
@@ -511,13 +589,24 @@ PUB SpawnEnemy(dx, dy, type, dir)
         enemycount++
 
 
-
+PUB CheckEnemyCollision(index)
+    repeat bulletindex from 0 to constant(BULLETS-1)
+    
+        if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1, enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
+            if enemyhealth[index] > 0
+                enemyhealth[index]--
+            else
+                enemyon[index] := 0                          
+                bulleton[bulletindex] := 0
+                
+        if fn.TestBoxCollision(playerx, playery, GetObjectWidth(PLAYER), GetObjectHeight(PLAYER), enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
+            HitPlayer
 
 
 PUB ControlOffset | bound_x, bound_y
 
-    bound_x := byte[@map_supersidescroll][0]<<3 - SCREEN_W
-    bound_y := byte[@map_supersidescroll][1]<<3 - SCREEN_H
+    bound_x := gfx.GetMapWidth << 3 - SCREEN_W
+    bound_y := gfx.GetMapHeight << 3 - SCREEN_H
     
     xoffset := playerx + (word[@gfx_player][1]>>1) - (SCREEN_W>>1)
     if xoffset < 0
@@ -535,17 +624,33 @@ PUB ControlOffset | bound_x, bound_y
 
 DAT
 
-gfx_test_box3
-word    16  'frameboost
-word    8, 8   'width, height
-word    $5554, $4001, $4dd1, $4dd1, $4dd1, $4dd1, $4001, $5555
-
-
 gfx_laser
 word    16  'frameboost
 word    8, 8   'width, height
 
-word    $aaaa, $aaaa, $bd7e, $d557, $bd7e, $aaaa, $aaaa, $aaaa
+word    $aaaa, $aaaa, $aaaa, $aaaa, $d557, $aaaa, $aaaa, $aaaa
+
+gfx_bullet
+word    16  'frameboost
+word    8, 8   'width, height
+
+word    $aaaa, $aaaa, $a96a, $a7ca, $a7ca, $a82a, $aaaa, $aaaa
+
+gfx_head
+word    16  'frameboost
+word    8, 8   'width, height
+
+word    $aaaa, $800a, $3f72, $04f2, $04f2, $3fc2, $000a, $aaaa
+
+
+gfx_healthbar
+word    16  'frameboost
+word    8, 8   'width, height
+
+word    $aad7, $aa7c, $aa7c, $aa7c, $aa7c, $aa7c, $aa7c, $aac0
+
+
+
 
 
 gfx_player
