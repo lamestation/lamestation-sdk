@@ -635,7 +635,6 @@ PUB InitLevel
     InitBullets
     InitTanks
     
-    'gfx.LoadMap(tilemap,leveldata[currentlevel])
     gfx.LoadMap(tilemap,leveldata[currentlevel])
 
     
