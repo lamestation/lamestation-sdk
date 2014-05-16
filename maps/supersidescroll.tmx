@@ -55,4 +55,21 @@
 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,0,0,19,0,0,0,0,0,0,19,0,0,19,0,0,19,2,0,19,0,9,0,0,9,0,19,2,2,19,0,9,8,0,0,0,0,0,0,0,0,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,6,17,17,17,17,6,8,8,8
 </data>
  </layer>
+ <objectgroup name="objects" width="96" height="48">
+  <object name="TANK" x="132" y="352"/>
+  <object name="TANK" x="350" y="329"/>
+  <object name="IBOT" x="620" y="346"/>
+  <object name="IDRONE" x="698" y="216"/>
+  <object name="IBOT" x="509" y="177"/>
+  <object name="TANK" x="272" y="24"/>
+  <object name="IDRONE" x="143" y="188"/>
+  <object name="IBOT" x="219" y="155"/>
+  <object name="IBOT" x="229" y="267"/>
+  <object name="TANK" x="493" y="341"/>
+  <object name="TANK" x="126" y="47"/>
+  <object name="IDRONE" x="604" y="17"/>
+  <object name="IDRONE" x="514" y="41"/>
+  <object name="BOSS" x="704" y="16"/>
+  <object name="PLAYER" x="49" y="347"/>
+ </objectgroup>
 </map>
