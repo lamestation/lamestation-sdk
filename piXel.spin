@@ -44,13 +44,14 @@ CON
     'object types
     #0, PLAYER, TANK, IBOT, IDRONE, BOSS
     
-    #0, TITLE, INGAME, MENU, PAUSE, DIED, GAMEOVER, WIN, STARTLEVEL
+    #0, TITLE, INGAME, MENU, PAUSE, DIED, GAMEOVER, WIN, STARTLEVEL, INTRO
     
 
 
 OBJ
         lcd     :               "LameLCD" 
         gfx     :               "LameGFX"  
+        audio   :               "LameAudio"
         ctrl    :               "LameControl"
         fn      :               "LameFunctions"
 
@@ -68,9 +69,14 @@ PUB Main
     dira[24]~~
         
     gfx.Start(@buffer, lcd.Start) 
-
-    
     gfx.LoadFont(@gfx_chars_cropped, " ", 8, 8)
+
+    audio.Start
+    audio.SetWaveform(1, 127)
+    audio.SetADSR(127, 10, 100, 10)
+
+
+
     
     ctrl.Start
 
@@ -78,13 +84,18 @@ PUB Main
 
     InitGame
     InitLevel
-
+    
+    
+    audio.LoadSong(@pixel_theme)
+    audio.PlaySong
     
     gamestate := TITLE
     clicked := 0
     repeat
         case gamestate
             TITLE:      TitleScreen
+            INTRO:      GameIntro
+                        gamestate := STARTLEVEL
             STARTLEVEL: InitLevel
                         gamestate := INGAME
             INGAME:     GameLoop
@@ -105,7 +116,7 @@ PUB TitleScreen
 
     if ctrl.A or ctrl.B
         if not clicked
-            gamestate := STARTLEVEL
+            gamestate := INTRO
             clicked := 1
         else
             clicked := 0
@@ -119,17 +130,14 @@ PUB GameLoop
             DrawPlayer
             HandleBullets
             HandleEnemies
+            HandleEffects
             HandleStatusBar
             gfx.DrawScreen
             
 PUB Victory
 
-
-PUB Intro
-    gamestate := INGAME
     
 PUB ShowGameView
-            gfx.ClearScreen
             gfx.Blit(@gfx_starmap)
             HandlePlayer                        
             ControlOffset
@@ -147,14 +155,16 @@ PUB PlayerDied
             fn.Sleep(200000)
 
 PUB StarWarsReel(text,reeltime) | x    
-    repeat x from 0 to reeltime
+    x := 0
+    repeat while x < reeltime
         gfx.Blit(@gfx_starmap)
-        gfx.TextBox(text, 16, 64-x, 96, 64) 
+        gfx.TextBox(text, 16, 64-x, 108, 64) 
     
         gfx.DrawScreen
-        fn.Sleep(12000)
+        fn.Sleep(11000)
+        x++
 
-PUB ItsGameOver | x
+PUB ItsGameOver
             ShowGameView
             gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
             gfx.DrawScreen
@@ -169,6 +179,9 @@ PUB ItsGameOver | x
             
             repeat until ctrl.A
                 ctrl.Update
+
+PUB GameIntro
+            StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all.."),180)
 
 
 ' *********************************************************
@@ -194,11 +207,14 @@ PUB InitLevel
 
     tilemap := @gfx_tiles_2b_tuxor
     leveldata[0] := @map_supersidescroll
+    
+    audio.StopSong
 
     ControlOffset
     InitPlayer
     InitBullets
     InitEnemies
+    InitEffects
         
     gfx.LoadMap(tilemap, leveldata[currentlevel])
     ReadObjects(@objects)
@@ -210,8 +226,8 @@ PUB InitLevel
 CON
     
     SPEED = 4
-    STARTING_HEALTH = 1
-    STARTING_LIVES = 1
+    STARTING_HEALTH = 5
+    STARTING_LIVES = 3
 VAR
     long    playerx
     long    playery
@@ -347,6 +363,66 @@ PUB HandleStatusBar | x
         
     repeat x from 0 to (playerhealth-1)
         gfx.Sprite(@gfx_healthbar, 124-x<<2, 56, 0)        
+
+
+
+' *********************************************************
+'  Effects
+' *********************************************************
+CON 
+    EFFECTS = 6
+    #1, EXPLOSION
+  
+VAR
+    word    effect
+    long    effectx[EFFECTS]
+    long    effecty[EFFECTS]
+    byte    effecton[EFFECTS]
+    byte    effectframe[EFFECTS]
+    word    effecttime[EFFECTS]
+
+PUB InitEffects | index
+    effect := 0
+    repeat index from 0 to constant(EFFECTS-1)
+        effecton[index] := 0 
+        effectx[index] := 0
+        effecty[index] := 0
+        effectframe[index] := 0
+        effecttime[index] := 0
+    
+
+PUB SpawnEffect(x, y, type)
+
+    effecton[effect] := type
+    effectx[effect] := x
+    effecty[effect] := y
+    effectframe[effect] := 0
+    effecttime[effect] := 0
+                                
+    effect++
+    if effect > constant(EFFECTS-1)
+        effect := 0
+
+PUB HandleEffects | effectxtemp, effectytemp, index
+
+    repeat index from 0 to constant(EFFECTS-1)
+        if effecton[index]
+        
+            effecttime[index]++
+            if effecttime[index] > 4
+                effecttime[index] := 0
+                effectframe[index]++
+                
+            if effectframe[index] > 2
+                effecton[index] := 0
+            else
+                effectxtemp := effectx[index] - xoffset
+                effectytemp := effecty[index] - yoffset
+      
+                if (effectxtemp => 0) and (effectxtemp =< SCREEN_W-1) and (effectytemp => 0) and (effectytemp =< SCREEN_H - 1)          
+                    gfx.Sprite(@gfx_boom, effectxtemp , effectytemp, effectframe[index])
+                else
+                    effecton[index] := 0
 
 
 ' *********************************************************
@@ -523,7 +599,7 @@ PUB EnemyTank(index) | dx, dy
             if enemytmp1[index] > 20
                 enemytmp1[index] := 0
                 if enemydir[index] == LEFT
-                    SpawnBullet(enemyx[index], enemyy[index]+5, LEFT)
+                    SpawnBullet(enemyx[index]-8, enemyy[index]+5, LEFT)
                 if enemydir[index] == RIGHT
                     SpawnBullet(enemyx[index] + 16, enemyy[index]+5, RIGHT)
     else
@@ -589,13 +665,18 @@ PUB SpawnEnemy(dx, dy, type, dir)
         enemycount++
 
 
-PUB CheckEnemyCollision(index)
+PUB CheckEnemyCollision(index) | x, y, boom, ran
     repeat bulletindex from 0 to constant(BULLETS-1)
     
         if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1, enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
             if enemyhealth[index] > 0
                 enemyhealth[index]--
             else
+            
+                repeat y from 0 to (GetObjectHeight(enemyon[index])>>3)-1
+                    repeat x from 0 to (GetObjectWidth(enemyon[index])>>3)-1
+                        SpawnEffect(enemyx[index]+(x<<3), enemyy[index]+(y<<3), EXPLOSION)
+
                 enemyon[index] := 0                          
                 bulleton[bulletindex] := 0
                 
@@ -648,6 +729,14 @@ word    16  'frameboost
 word    8, 8   'width, height
 
 word    $aad7, $aa7c, $aa7c, $aa7c, $aa7c, $aa7c, $aa7c, $aac0
+
+
+gfx_boom
+word    16  'frameboost
+word    8, 8   'width, height
+
+word    $aaaa, $a16a, $85d2, $8736, $bfce, $a70e, $ac2a, $aaaa, $a0f2, $935e, $354c, $f751, $30d4, $143c, $81f0, $8002
+word    $9e7a, $dbdb, $7fbe, $fbdf, $bfee, $ebb7, $9ff6, $a6da
 
 
 
@@ -950,6 +1039,95 @@ byte		75, 2, IDRONE
 byte		64, 5, IDRONE
 byte		88, 2, BOSS
 byte		6, 43, PLAYER
+
+
+
+
+pixel_theme
+byte    14     'number of bars
+byte    40     'tempo
+byte    8      'bar resolution
+
+'MAIN SECTION
+byte    0, 26,  26,  26,  38,   26,  26,  39,  26
+byte    0, 26,  36,  26,  26,   36,  26,  36,  38
+byte    0, 26,  26,  26,  33,   26,  26,  34,  26
+byte    0, 31,  26,  33,  26,   29,  26,  31,  28
+
+byte    1, 14, SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
+byte    1,SOFF,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
+
+byte    2, 33,  33,  33,  36,   33,  33,  36,  33
+byte    2, 33,  36,  33,  33,   36,  33,  36,  38
+
+byte    1, 14,  14,  14,  17,   14,  14,  17,  14
+byte    1, 14,  17,  14,  14,   17,  14,  17,  19
+
+'UPLIFTING
+byte    0, 31,  31,  31,  34,   31,  31,  34,  31
+byte    0, 31,  34,  31,  31,   34,  31,  34,  36
+
+
+
+byte    1, 19,  19,  19,  22,   19,  19,  22,  19
+byte    1, 19,  22,  19,  19,   22,  19,  22,  24
+
+
+
+
+'SONG ------
+
+byte    0,BAROFF
+byte    1,BAROFF
+byte    2,BAROFF
+byte    3,BAROFF
+byte    0,BAROFF
+byte    1,BAROFF
+byte    2,BAROFF
+byte    3,BAROFF
+
+byte    0,4,BAROFF
+byte    1,4,BAROFF
+byte    2,5,BAROFF
+byte    3,5,BAROFF
+
+byte    0,4,BAROFF
+byte    1,4,BAROFF
+byte    2,5,BAROFF
+byte    3,5,BAROFF
+
+byte    0,6,BAROFF
+byte    1,7,BAROFF
+byte    2,6,BAROFF
+byte    3,7,BAROFF
+
+byte    0,6,8,BAROFF
+byte    1,7,9,BAROFF
+byte    2,6,8,BAROFF
+byte    3,7,9,BAROFF
+
+byte    10,12,BAROFF
+byte    11,13,BAROFF
+byte    10,12,BAROFF
+byte    11,13,BAROFF
+
+byte    0,6,8,BAROFF
+byte    1,7,9,BAROFF
+byte    2,6,8,BAROFF
+byte    3,7,9,BAROFF
+
+byte    10,12,BAROFF
+byte    11,13,BAROFF
+byte    10,12,BAROFF
+byte    11,13,BAROFF
+
+byte    0,6,8,BAROFF
+byte    1,7,9,BAROFF
+byte    2,6,8,BAROFF
+byte    3,7,9,BAROFF
+
+byte    SONGOFF
+
 
 
 
