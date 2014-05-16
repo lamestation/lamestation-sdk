@@ -156,6 +156,7 @@ VAR
     byte    barinc   
     byte    totalbars
     byte    play
+    byte    replay
     byte    barres
     word    bartmp
 
@@ -255,14 +256,20 @@ PUB LoadSong(songBarAddrvar)
 PUB PlaySong
 
     play := 1
+    replay := 0
+    
+PUB LoopSong
+
+    play := 1
+    replay := 1    
 
 PUB StopSong
 
     play := 0
+    replay := 0
     StopAllSound
     
 PUB SongPlaying
-'' This function returns whether a song is currently playing
     return play
         
 PRI FindLoopBarFromSongPointer
@@ -280,22 +287,20 @@ PRI LoopingSongParser
 
     repeat
 
-        if play == 1
+        if replay
+            play := 1
+            
+        if play
             songcursor := 0
-               
-            ' iterate through song definition lines
-            repeat while byte[loopsongPtr][songcursor] <> SONGOFF and play == 1  
+            repeat while byte[loopsongPtr][songcursor] <> SONGOFF and play
                 
                 barcursor := songcursor
-                
-                
-                ' iterate through loop definitions
                 repeat linecursor from 0 to (barres-1)
                 
                     songcursor := barcursor
 
                     ' play all notes defined in song definition
-                    repeat while byte[loopsongPtr][songcursor] <> BAROFF and play == 1  
+                    repeat while byte[loopsongPtr][songcursor] <> BAROFF and play 
                         FindLoopBarFromSongPointer 
                         
                         bartmp := barshift+BYTES_SONGHEADER+BYTES_BARHEADER+linecursor
@@ -315,6 +320,7 @@ PRI LoopingSongParser
                    
                 songcursor += 1
 
+            play := 0
             StopAllSound
 
 
