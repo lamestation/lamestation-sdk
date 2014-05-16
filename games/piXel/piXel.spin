@@ -177,7 +177,17 @@ PUB StarWarsReel(text,reeltime) | x, choice
                 clicked := 1
         else
             clicked := 0
-        gfx.Blit(@gfx_starmap)
+         playerx := 55 << 3
+         playery := 5 << 3
+         pos_dir := LEFT
+
+         
+         ControlOffset
+         gfx.Blit(@gfx_starmap)
+         gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
+         DrawPlayer
+
+        
         gfx.TextBox(text, 16, 64-x, 108, 64) 
     
         gfx.DrawScreen
@@ -194,11 +204,17 @@ PUB ItsGameOver
             ShowGameView
             gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
             gfx.DrawScreen
-            fn.Sleep(300000)  
+            fn.Sleep(300000)
+            
+            jumping := 0
+            crouching := 1
+            pos_frame := 4
     
-            StarWarsReel(string("Macrosoth",10,"went on to",10,"destroy the",10,"Galaxy..."),100)
+            StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
         
             gfx.Blit(@gfx_starmap)
+            gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
+            DrawPlayer            
             gfx.PutString(string("Press A and "),18,24)
             gfx.PutString(string("try again..."),18,32)
             gfx.DrawScreen
@@ -207,7 +223,9 @@ PUB ItsGameOver
                 ctrl.Update
 
 PUB GameIntro
-
+    jumping := 0
+    crouching := 0
+    pos_frame := 0
     StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all..",10,10,"Before it's",10,"too late..."),200)
 
 
@@ -1065,22 +1083,22 @@ byte    137,137,137,137,137,137,137,137,137,137,137,137,  3, 19,  4,  4,  4,  4,
 byte    137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,137,  0,  0, 19,  0,  0,  0,  0,  0,  0, 19,  0,  0, 19,  0,  0, 19,  2,  0, 19,  0,137,  0,  0,137,  0, 19,  2,  2, 19,  0,137,136,  0,  0,  0,  0,  0,  0,  0,  0,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,136,134, 17, 17, 17, 17,134,136,136,136
 
 objects
-byte		15, 0
-byte		16, 44, TANK
-byte		43, 41, TANK
-byte		77, 43, IBOT
-byte		87, 27, IDRONE
-byte		63, 22, IBOT
-byte		34, 3, TANK
-byte		17, 23, IDRONE
-byte		27, 19, IBOT
-byte		28, 33, IBOT
-byte		61, 42, TANK
-byte		15, 5, TANK
-byte		75, 2, IDRONE
-byte		64, 5, IDRONE
-byte		88, 2, BOSS
-byte		6, 43, PLAYER
+byte        15, 0
+byte        16, 44, TANK
+byte        43, 41, TANK
+byte        77, 43, IBOT
+byte        87, 27, IDRONE
+byte        63, 22, IBOT
+byte        34, 3, TANK
+byte        17, 23, IDRONE
+byte        27, 19, IBOT
+byte        28, 33, IBOT
+byte        61, 42, TANK
+byte        15, 5, TANK
+byte        75, 2, IDRONE
+byte        64, 5, IDRONE
+byte        88, 2, BOSS
+byte        6, 43, PLAYER
 
 
 
@@ -1130,8 +1148,6 @@ byte    1,   51,SNOP,SNOP,  50, 50, SNOP, SNOP, SNOP
 byte    1, SNOP,SNOP,  51,  53, 54,   51,   54,   58
 byte    1,   58,SNOP,SNOP,  56, 56, SNOP, SNOP, SNOP
 
-byte    0,BAROFF
-byte    0,BAROFF
 byte    0,5,BAROFF
 byte    0,6,BAROFF
 byte    1,7,BAROFF
