@@ -269,8 +269,8 @@ PUB InitLevel
 CON
     
     SPEED = 4
-    STARTING_HEALTH = 1
-    STARTING_LIVES = 1
+    STARTING_HEALTH = 5
+    STARTING_LIVES = 3
 VAR
     long    playerx
     long    playery
