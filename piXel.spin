@@ -109,7 +109,8 @@ PUB Main
 
 PUB TitleScreen
     ctrl.Update
-    gfx.DrawScreen
+    gfx.ClearScreen
+
 
     gfx.PutString(string("p  i      e  l"), 8, 30)
     gfx.Sprite(@gfx_pixmain, 40, 8, 0)        
@@ -121,6 +122,7 @@ PUB TitleScreen
             clicked := 1
         else
             clicked := 0
+    gfx.DrawScreen
 
 PUB GameLoop
             ctrl.Update
@@ -136,6 +138,8 @@ PUB GameLoop
             gfx.DrawScreen
             
 PUB Victory
+            audio.StopAllSound
+            audio.StopSong
             audio.SetWaveform(1, 127)
             audio.SetADSR(127, 10, 100, 10)
             audio.LoadSong(@song_yeah)
@@ -645,6 +649,7 @@ VAR
         
     byte    enemyhealth[ENEMIES]
     byte    enemytimeout[ENEMIES]
+    byte    bossspawned
 
 
 PUB InitEnemies
@@ -747,6 +752,15 @@ PUB EnemyBoss(index) | dx, dy
     dx := playerx - enemyx[index]
     dy := playery - enemyy[index]
 
+    if not bossspawned
+        bossspawned := 1
+    
+        audio.SetWaveform(1, 127)
+        audio.SetADSR(127, 10, 100, 10)
+        audio.LoadSong(@song_boss)
+        audio.LoopSong    
+
+
     enemyframe[index] := 0
 
 
@@ -779,7 +793,7 @@ PUB CheckEnemyCollision(index) | x, y, boom, ran
       if bulleton[bulletindex]
     
         if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1, enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
-            if enemyhealth[index] > 0
+            if enemyhealth[index] > 1
                 enemyhealth[index]--
                 enemytimeout[index] := ENEMY_TIMEOUT
             else
@@ -1231,6 +1245,18 @@ byte    0, 27, 26, 25, 24, SNOP, SNOP, SOFF
 byte    1, 15, 14, 13, 12, SNOP, SNOP, SOFF
 
 byte    0,1,BAROFF
+byte    SONGOFF
+
+song_boss
+byte    2
+byte    60
+byte    8
+
+byte    0, 26,26,26,SNOP,SNOP,SNOP,27,26
+byte    0, 27,26,27,26,SNOP,26,27,SNOP
+
+byte    0,BAROFF
+byte    1,BAROFF
 byte    SONGOFF
 
 
