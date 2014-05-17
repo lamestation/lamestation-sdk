@@ -30,6 +30,7 @@ CON
     LEFT = 3
 
     HURT_TIMEOUT = 20
+    ENEMY_TIMEOUT = 5
     SHOOT_TIMEOUT = 5
 
     
@@ -99,6 +100,8 @@ PUB Main
             INGAME:     GameLoop
             DIED:       PlayerDied
                         gamestate := STARTLEVEL
+            WIN:        Victory
+                        gamestate := TITLE
             GAMEOVER:   ItsGameOver
                         InitGame
                         gamestate := STARTLEVEL
@@ -133,6 +136,23 @@ PUB GameLoop
             gfx.DrawScreen
             
 PUB Victory
+            audio.SetWaveform(1, 127)
+            audio.SetADSR(127, 10, 100, 10)
+            audio.LoadSong(@song_yeah)
+            audio.LoopSong
+
+            ShowGameView
+            gfx.TextBox(string("YOU WIN"), 40, 30, 100, 60)
+            gfx.DrawScreen
+            fn.Sleep(200000)
+
+            audio.StopAllSound
+            audio.SetWaveform(1, 127)
+            audio.SetADSR(127, 10, 100, 10)
+            audio.LoadSong(@pixel_theme)
+            audio.LoopSong            
+            StarWarsReel(string("Looks like",10,"the galaxy",10,"is safe once",10,"again, thanks",10,"to you!"),110)
+
 
     
 PUB ShowGameView
@@ -161,14 +181,7 @@ PUB PlayerDied
 PUB StarWarsReel(text,reeltime) | x, choice
     x := 0
     choice := 0
-    
-    audio.StopSong
-            
-    audio.SetWaveform(3, 127)
-    audio.SetADSR(127, 3, 0, 3)
-    audio.LoadSong(@song_sad)
-    audio.LoopSong    
-    
+        
     repeat while x < reeltime and not choice
         ctrl.Update
         if ctrl.A or ctrl.B
@@ -177,15 +190,15 @@ PUB StarWarsReel(text,reeltime) | x, choice
                 clicked := 1
         else
             clicked := 0
-         playerx := 55 << 3
-         playery := 5 << 3
-         pos_dir := LEFT
+        playerx := 55 << 3
+        playery := 5 << 3
+        pos_dir := LEFT
 
          
-         ControlOffset
-         gfx.Blit(@gfx_starmap)
-         gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
-         DrawPlayer
+        ControlOffset
+        gfx.Blit(@gfx_starmap)
+        gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
+        DrawPlayer
 
         
         gfx.TextBox(text, 16, 64-x, 108, 64) 
@@ -209,6 +222,12 @@ PUB ItsGameOver
             jumping := 0
             crouching := 1
             pos_frame := 4
+
+            audio.StopSong   
+            audio.SetWaveform(3, 127)
+            audio.SetADSR(127, 3, 0, 3)
+            audio.LoadSong(@song_sad)
+            audio.LoopSong    
     
             StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
         
@@ -226,6 +245,13 @@ PUB GameIntro
     jumping := 0
     crouching := 0
     pos_frame := 0
+    
+    audio.StopSong   
+    audio.SetWaveform(3, 127)
+    audio.SetADSR(127, 3, 0, 3)
+    audio.LoadSong(@song_sad)
+    audio.LoopSong    
+
     StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all..",10,10,"Before it's",10,"too late..."),200)
 
 
@@ -478,13 +504,21 @@ PUB HandleEffects | effectxtemp, effectytemp, index
 '  Objects
 ' *********************************************************
 VAR
-    word    objectgraphics[10]
+    word    objectgraphics[8]
+    word    objecthealth[8]
     
 PUB InitGraphicAssets
     objectgraphics[PLAYER] := @gfx_player
     objectgraphics[TANK] := @gfx_tank
     objectgraphics[IBOT] := @gfx_ibot
     objectgraphics[IDRONE] := @gfx_idrone
+    objectgraphics[BOSS] := @gfx_vortex
+    
+    objecthealth[TANK]   := 3
+    objecthealth[IBOT]   := 1
+    objecthealth[IDRONE] := 2
+    objecthealth[BOSS]   := 10
+    
 
 
 PUB ReadObjects(objectaddr) | objcount, object, objtype, objx, objy
@@ -501,7 +535,7 @@ PUB ReadObjects(objectaddr) | objcount, object, objtype, objx, objy
             PLAYER:     playerx := objx
                         playery := objy
             TANK, IBOT, IDRONE:  SpawnEnemy(objx, objy, objtype, LEFT)
-            'BOSS:       SpawnEnemy(objx, objy, objtype, LEFT)
+            BOSS:       SpawnEnemy(objx, objy, objtype, LEFT)
             
         objectaddr += 3
 
@@ -610,7 +644,7 @@ VAR
     long    enemytmp1[ENEMIES]
         
     byte    enemyhealth[ENEMIES]
-    byte    enemyhurtcount[ENEMIES]
+    byte    enemytimeout[ENEMIES]
 
 
 PUB InitEnemies
@@ -624,6 +658,7 @@ PUB InitEnemies
         enemydir[enemyindex] := RIGHT
         enemyframe[enemyindex] := 0
         enemyhealth[enemyindex] := 0
+        enemytimeout[enemyindex] := 0
         
                 
 PUB HandleEnemies
@@ -634,11 +669,14 @@ PUB HandleEnemies
                 case enemyon[enemyindex]
                     TANK: EnemyTank(enemyindex)
                     IBOT:  EnemyEye(enemyindex)
-                    IDRONE:  EnemyEye(enemyindex)    
+                    IDRONE:  EnemyEye(enemyindex)
+                    BOSS:  EnemyBoss(enemyindex)    
             
-                DrawObject(enemyindex, enemyon[enemyindex], enemyframe[enemyindex])
+                if not enemytimeout[enemyindex] or (enemytimeout[enemyindex] & $1)
+                    DrawObject(enemyindex, enemyon[enemyindex], enemyframe[enemyindex])
+                if enemytimeout[enemyindex]
+                    enemytimeout[enemyindex]--
                 CheckEnemyCollision(enemyindex)
-            
             
 PUB EnemyTank(index) | dx, dy
     pos_oldx := enemyx[index]
@@ -704,6 +742,17 @@ PUB EnemyEye(index) | dx, dy
     enemyframe[index] := 0
 
 
+
+PUB EnemyBoss(index) | dx, dy
+    dx := playerx - enemyx[index]
+    dy := playery - enemyy[index]
+
+    enemyframe[index] := 0
+
+
+
+
+
     
 PUB DrawObject(index, type, frame) | tmpx, tmpy
     tmpx := enemyx[index] - xoffset
@@ -716,7 +765,7 @@ PUB SpawnEnemy(dx, dy, type, dir)
         enemyon[nextenemy] := type
         enemyx[nextenemy] := dx
         enemyy[nextenemy] := dy
-        enemyhealth[nextenemy] := 1
+        enemyhealth[nextenemy] := objecthealth[type]
         
         nextenemy++
         if nextenemy => ENEMIES
@@ -727,21 +776,26 @@ PUB SpawnEnemy(dx, dy, type, dir)
 
 PUB CheckEnemyCollision(index) | x, y, boom, ran
     repeat bulletindex from 0 to constant(BULLETS-1)
+      if bulleton[bulletindex]
     
         if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1, enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
             if enemyhealth[index] > 0
                 enemyhealth[index]--
+                enemytimeout[index] := ENEMY_TIMEOUT
             else
             
                 repeat y from 0 to (GetObjectHeight(enemyon[index])>>3)-1
                     repeat x from 0 to (GetObjectWidth(enemyon[index])>>3)-1
                         SpawnEffect(enemyx[index]+(x<<3), enemyy[index]+(y<<3), EXPLOSION)
+                        
+                if enemyon[index] == BOSS
+                    gamestate := WIN
 
-                enemyon[index] := 0                          
-                bulleton[bulletindex] := 0
+                enemyon[index] := 0
+            bulleton[bulletindex] := 0
                 
-        if fn.TestBoxCollision(playerx, playery, GetObjectWidth(PLAYER), GetObjectHeight(PLAYER), enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
-            HitPlayer
+    if fn.TestBoxCollision(playerx, playery, GetObjectWidth(PLAYER), GetObjectHeight(PLAYER), enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
+        HitPlayer
 
 
 PUB ControlOffset | bound_x, bound_y
@@ -1006,6 +1060,47 @@ word    $7003, $c0d1, $d371, $7d5f, $0002, $8030, $0002, $b000, $000a, $a00c, $c
 
 
 
+gfx_vortex
+word    1024  'frameboost
+word    64, 64   'width, height
+
+word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $00aa, $0000, $0000, $aa80
+word    $aaaa, $aaaa, $aaaa, $aaaa, $002a, $0000, $3d5f, $aa80, $aaaa, $aaaa, $aaaa, $aaaa, $540a, $1550, $5540, $aa03
+word    $aaaa, $aaaa, $aaaa, $aaaa, $5402, $1571, $5444, $aa0d, $aaaa, $aaaa, $aaaa, $2aaa, $fc03, $15c3, $4344, $aa3d
+word    $aaaa, $aaaa, $aaaa, $00aa, $0000, $4700, $0d44, $a835, $aaaa, $aaaa, $02aa, $0000, $ffc0, $4f0f, $3d44, $a834
+word    $aaaa, $aaaa, $f2aa, $57ff, $5555, $4035, $fd44, $a0f4, $aaaa, $aaaa, $5caa, $5555, $5555, $0fd5, $f541, $80d0
+word    $aaaa, $aaaa, $570a, $f555, $d557, $3d57, $3550, $03d4, $aaaa, $aaaa, $5542, $5555, $5555, $ff55, $0150, $0fd5
+word    $aaaa, $aaaa, $d570, $555f, $5555, $ffd5, $5354, $ff55, $aaaa, $aaaa, $55f2, $0055, $57d4, $3ff5, $5c54, $ff55
+word    $aaaa, $aaaa, $5f02, $54d5, $5550, $0ffd, $54d5, $fff5, $aaaa, $aaaa, $f002, $54d5, $d551, $43ff, $550d, $003f
+word    $aaaa, $aaaa, $0002, $5357, $f551, $10ff, $f570, $4103, $aaaa, $aaaa, $3fc2, $4d5c, $fd45, $0c3f, $3555, $0054
+word    $aaaa, $aaaa, $d570, $0570, $fc15, $50c3, $cd55, $0005, $aaaa, $aaaa, $5570, $35f3, $c155, $5430, $43d5, $0005
+word    $aaaa, $aaaa, $5ff2, $35f1, $0555, $5500, $73d5, $0005, $aaaa, $aaaa, $5002, $37cd, $0554, $5550, $53f5, $0035
+word    $aaaa, $aaaa, $5052, $ff33, $555c, $1555, $73ff, $0015, $aaaa, $aaaa, $5402, $fc3c, $555c, $0155, $7000, $00d5
+word    $aaaa, $aaaa, $d572, $f0cc, $555c, $4055, $47c0, $0355, $aaaa, $aaaa, $100a, $f3f3, $555c, $5035, $c7f4, $3555
+word    $aaaa, $aaaa, $c5ca, $0f54, $555c, $c001, $05d0, $1555, $aaaa, $aaaa, $f1ca, $0f54, $d55c, $0050, $1544, $5557
+word    $aaaa, $aaaa, $3c02, $0f55, $3557, $c154, $1400, $557c, $aaaa, $aaaa, $4f02, $03d5, $0d57, $ccd5, $03f0, $7fc0
+word    $aaaa, $aaaa, $53f2, $30f5, $4155, $103c, $fd50, $0000, $aaaa, $aaaa, $543c, $3cf5, $c05f, $1d03, $5554, $fffd
+word    $aaaa, $aaaa, $554f, $373d, $f0df, $1743, $4155, $5455, $aaaa, $aaaa, $55f0, $35cf, $4037, $17c0, $5155, $5455
+word    $aaaa, $aaaa, $d5fc, $3553, $0537, $c5f0, $5055, $5455, $aaaa, $aaaa, $d5f2, $3553, $f5f7, $c5f0, $5c55, $5c55
+word    $aaaa, $aaaa, $f7f2, $0554, $3d0f, $c57c, $7c55, $5c55, $aaaa, $aaaa, $3fca, $0355, $4cf3, $c570, $7c55, $7c55
+word    $aaaa, $aaaa, $0f0a, $43d5, $4740, $0500, $f05f, $7055, $aaaa, $aaaa, $730a, $54fd, $047d, $0001, $c0ff, $f0ff
+word    $aaaa, $aaaa, $dc02, $5407, $45f5, $0005, $0000, $0000, $aaaa, $aaaa, $7f02, $55f3, $55d5, $5555, $0000, $0000
+word    $a800, $aaaa, $ff00, $55fc, $57fd, $5555, $5555, $5555, $00fc, $0aa8, $0ff0, $d5ff, $55f5, $5555, $5555, $0555
+word    $3f5c, $0000, $c000, $f17f, $05f5, $0030, $1000, $fc30, $d55c, $ffff, $f3ff, $c14f, $c7f5, $ffff, $5fff, $fffd
+word    $555e, $5555, $f355, $5557, $c3d5, $5517, $5555, $fd7d, $1572, $5000, $f055, $5575, $4dd5, $5555, $5555, $fd77
+word    $5572, $5555, $f0d5, $f755, $71d5, $5501, $5555, $ff77, $1fca, $5554, $c0f1, $dfd5, $f1d5, $5501, $5555, $c337
+word    $ffea, $1550, $c0fc, $d7d5, $c1d7, $5535, $5555, $c0f3, $fc2a, $1503, $c0ff, $cdf7, $cdd7, $5535, $7515, $f0f7
+word    $f0aa, $54ff, $c0ff, $c3f7, $ccd7, $5c35, $7415, $000f, $02aa, $17f0, $c03f, $c017, $43f7, $7c31, $7407, $000f
+word    $aaaa, $ffc0, $c00f, $c03f, $c3f7, $7017, $7c05, $0007, $aaaa, $f002, $003f, $c03c, $c037, $f41f, $7c01, $0000
+word    $aaaa, $002a, $000c, $c03c, $003f, $f01f, $fc01, $0000, $aaaa, $00aa, $0000, $40f0, $000f, $f00f, $3c07, $0000
+word    $aaaa, $2aaa, $0000, $00c0, $000f, $c03c, $300f, $0004, $aaaa, $2aaa, $0000, $0000, $0000, $0000, $300d, $0000
+word    $aaaa, $aaaa, $0000, $0000, $0000, $0000, $0400, $0000, $aaaa, $aaaa, $0000, $0000, $0000, $0000, $0000, $0000
+word    $aaaa, $aaaa, $0002, $0000, $0000, $0000, $0000, $0000, $aaaa, $aaaa, $0002, $0000, $0000, $0000, $0000, $0000
+
+
+
+
+
 
 
 gfx_tiles_2b_tuxor
@@ -1101,6 +1196,18 @@ byte        88, 2, BOSS
 byte        6, 43, PLAYER
 
 
+
+
+song_yeah
+byte    2
+byte    50
+byte    13
+
+byte    0, 27, 27, 27, 29, 29, 29, 31, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF
+byte    1, 34, 34, 34, 36, 36, 36, 35, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF
+
+byte    0,1,BAROFF
+byte    SONGOFF
 
 
 song_ohnooo
