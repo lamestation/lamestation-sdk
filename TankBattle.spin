@@ -35,10 +35,7 @@ CON
 
     
     
-    'DECIDES WHO CLICKED TO INITIALIZE THE GAME
-    'if this message is sent, you start in starting location 1.
-    'if it's received by an opponent, you start in location 2.
-    'UPDATEADVANCE = 10
+
 
 
     'SONG PLAYER
@@ -114,7 +111,7 @@ PUB Main
     dira~
     screen := lcd.Start
     gfx.Start(@buffer, screen)
-   ' pst.StartRxTx(31, 30, 0, 115200)
+    pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
     ctrl.Start
@@ -130,8 +127,8 @@ PUB Main
     'LogoScreen
     TitleScreen
     TankSelect
-    'LevelSelect                          
-    'TankFaceOff          
+    LevelSelect                          
+    TankFaceOff          
 
     menuchoice := GO_GAME
     repeat
@@ -200,6 +197,14 @@ PUB TitleScreen
 
 
 PUB TankSelect         
+
+
+    gfx.ClearScreen
+
+    gfx.Sprite(@gfx_logo_tankbattle_name, 0, 0, 0)
+    gfx.PutString(string("Prepare for battle..."),0,24)
+    gfx.DrawScreen        
+    fn.Sleep(200000)
 
     choice := 1
     joyclicked := 0
@@ -748,6 +753,9 @@ PUB DrawTanks
 '  Networking
 ' *********************************************************  
 CON
+    'DECIDES WHO CLICKED TO INITIALIZE THE GAME
+    'if this message is sent, you start in starting location 1.
+    'if it's received by an opponent, you start in location 2.
     UPDATETANKX = 1
     UPDATETANKY = 2
     UPDATETANKDIR = 3
