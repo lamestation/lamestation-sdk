@@ -222,8 +222,12 @@ def assembleSpinFile(sprite):
         output += "\n"
         output += assembleWordHeader(imagedata)
 
+    frame = 0
     for s in spritedata:
+        output += "' frame "+str(frame)
         output += assembleData(s,'both')
+        output += "\n"
+        frame += 1
     output += "\n"
 
     return output
