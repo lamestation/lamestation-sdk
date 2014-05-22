@@ -59,7 +59,7 @@ OBJ
         ctrl    : "LameControl"
         fn      : "LameFunctions"
         
-        gfx_player      : "gfx_player"
+        gfx_player      : "gfx_player_small"
         gfx_ibot        : "gfx_ibot"
         gfx_idrone      : "gfx_idrone"
         gfx_tank        : "gfx_tank"    
