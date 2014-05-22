@@ -78,7 +78,6 @@ OBJ
 
 
 VAR
-
     word    buffer[1024]
                     
     byte    gamestate
@@ -86,10 +85,6 @@ VAR
 
 PUB Main
 
-    dira~
-        
-    dira[24]~~
-        
     gfx.Start(@buffer, lcd.Start) 
     gfx.LoadFont(font_chars_cropped.Addr, " ", 8, 8)
 

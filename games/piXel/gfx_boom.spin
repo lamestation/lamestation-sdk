@@ -9,15 +9,33 @@ DAT
 
 gfx_data
 
-word    48 ' frameboost
-word    24, 8 ' width, height
+word    16 ' frameboost
+word    8, 8 ' width, height
 ' frame 0
-word    $aaaa,$a0f2,$9e7a '          █▓▓██    ▓░ ▓░ 
-word    $a16a,$935e,$dbdb '    ░░█   ▓░░▓█░ ▓ ░▓▓ ░▓
-word    $85d2,$354c,$7fbe '  █░▓░░█ █▓█░░░▓█ ▓▓ ▓▓▓░
-word    $8736,$f751,$fbdf '  ░▓█▓░█ ░█░░▓░▓▓▓▓░▓▓ ▓▓
-word    $bfce,$30d4,$bfee '  ▓█▓▓▓▓ █░░▓██▓█ ▓ ▓▓▓▓ 
-word    $a70e,$143c,$ebb7 '  ▓██▓░  █▓▓██░░█▓░▓ ▓  ▓
-word    $ac2a,$81f0,$9ff6 '    ██▓  ██▓▓░██  ░▓▓▓▓░ 
-word    $aaaa,$8002,$a6da '          ██████   ░▓ ░  
+word    $aaaa '         
+word    $a16a '    ░░█  
+word    $85d2 '  █░▓░░█ 
+word    $8736 '  ░▓█▓░█ 
+word    $bfce '  ▓█▓▓▓▓ 
+word    $a70e '  ▓██▓░  
+word    $ac2a '    ██▓  
+word    $aaaa '         
+' frame 1
+word    $a0f2 '  █▓▓██  
+word    $935e '  ▓░░▓█░ 
+word    $354c ' █▓█░░░▓█
+word    $f751 ' ░█░░▓░▓▓
+word    $30d4 ' █░░▓██▓█
+word    $143c ' █▓▓██░░█
+word    $81f0 ' ██▓▓░██ 
+word    $8002 '  ██████ 
+' frame 2
+word    $9e7a '   ▓░ ▓░ 
+word    $dbdb ' ▓ ░▓▓ ░▓
+word    $7fbe '  ▓▓ ▓▓▓░
+word    $fbdf ' ▓▓░▓▓ ▓▓
+word    $bfee '  ▓ ▓▓▓▓ 
+word    $ebb7 ' ▓░▓ ▓  ▓
+word    $9ff6 '  ░▓▓▓▓░ 
+word    $a6da '   ░▓ ░  
 
