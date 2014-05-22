@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="96" height="48" tilewidth="8" tileheight="8" backgroundcolor="#ff00ff">
- <tileset firstgid="1" name="tiles_2b_tuxor" tilewidth="8" tileheight="8">
-  <image source="../tilemaps/tiles_2b_tuxor.png" trans="ff00ff" width="64" height="32"/>
+ <tileset firstgid="1" name="tiles_pixel" tilewidth="8" tileheight="8">
+  <image source="tiles_pixel.png" trans="ff00ff" width="64" height="32"/>
  </tileset>
  <layer name="map" width="96" height="48">
   <data encoding="csv">
