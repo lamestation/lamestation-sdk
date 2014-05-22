@@ -11,6 +11,7 @@ gfx_data
 
 word    16 ' frameboost
 word    8, 8 ' width, height
+' frame 0
 word    $aad7 ' ▓░░▓    
 word    $aa7c ' █▓▓░    
 word    $aa7c ' █▓▓░    
@@ -19,3 +20,4 @@ word    $aa7c ' █▓▓░
 word    $aa7c ' █▓▓░    
 word    $aa7c ' █▓▓░    
 word    $aac0 ' ███▓    
+

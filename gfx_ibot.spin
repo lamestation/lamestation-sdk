@@ -11,6 +11,7 @@ gfx_data
 
 word    16 ' frameboost
 word    8, 8 ' width, height
+' frame 0
 word    $ab29 ' ░  █▓   
 word    $adcb ' ▓ █▓░▓  
 word    $8303 ' ▓███▓██ 
@@ -19,3 +20,4 @@ word    $3d7c ' █▓▓░░▓▓█
 word    $8002 '  ██████ 
 word    $a30a '   ██▓█  
 word    $a82a '    ██   
+

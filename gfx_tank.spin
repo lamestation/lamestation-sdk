@@ -11,6 +11,7 @@ gfx_data
 
 word    64 ' frameboost
 word    16, 16 ' width, height
+' frame 0
 word    $00aa,$a8fc '     █████▓▓▓█   
 word    $552a,$a350 '    █░░░░██░░▓█  
 word    $552a,$a3dc '    █░░░░█▓░▓▓█  
@@ -27,6 +28,7 @@ word    $c1ce,$91c1 '  ▓█▓░██▓░██▓░█░
 word    $0306,$b303 '  ░██▓███▓███▓█▓ 
 word    $003a,$a400 '   ▓██████████░  
 word    $776a,$ab77 '    ░▓░▓░▓░▓░▓   
+' frame 1
 word    $3f2a,$aa00 '    █▓▓▓█████    
 word    $05ca,$a855 '   █▓░░██░░░░█   
 word    $37ca,$a855 '   █▓▓░▓█░░░░█   
@@ -43,3 +45,4 @@ word    $4346,$b343 '  ░█░▓██░▓██░▓█▓
 word    $c0ce,$90c0 '  ▓█▓███▓███▓██░ 
 word    $001a,$ac00 '   ░██████████▓  
 word    $ddea,$a9dd '    ▓░▓░▓░▓░▓░   
+

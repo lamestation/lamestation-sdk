@@ -11,6 +11,7 @@ gfx_data
 
 word    64 ' frameboost
 word    16, 16 ' width, height
+' frame 0
 word    $caa2,$aaad '  █    █▓░▓      
 word    $7ca2,$aa35 '  █  █▓▓░░░▓█    
 word    $5722,$ab55 '  █ █▓░░░░░░░▓   
@@ -27,3 +28,4 @@ word    $000a,$a00c '   ███████▓████
 word    $c02a,$a83f '    ████▓▓▓▓██   
 word    $00aa,$aa00 '     ████████    
 word    $0aaa,$aaa0 '       ████      
+
