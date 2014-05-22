@@ -1,22 +1,24 @@
-{{
-KS0108 Sprite And Tile Graphics Library Demo
-─────────────────────────────────────────────────
-Version: 1.0
-Copyright (c) 2013 LameStation LLC
-See end of file for terms of use.
-
-Authors: Brett Weir
-─────────────────────────────────────────────────
-}}
-
-'' Why is this necessary?
-'' http://en.wikipedia.org/wiki/Flat_memory_model
-
-
+'             _____        _____
+'               '. \      / .'
+'             ()  ' \    / '        ||
+'       __    __   \ \  / /    __   ||
+'   ___|| \\__||____\ \/ /____//_|__||___
+'   ___||_//__||_____)  (_____\\_,__||___
+'      ||           / /\ \
+'      ||          / /  \ \
+'              __-'_/    \_'-__
+'
+'         Amazing Action Platformer Game
+' *********************************************************
+'  Copyright (c) 2014 LameStation LLC
+'  See end of file for terms of use.
+'  
+'  Authors: Brett Weir
+' *********************************************************
 
 CON
-    _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
-    _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
+    _clkmode        = xtal1 + pll16x
+    _xinfreq        = 5_000_000
 
 
     ' screensize constants
