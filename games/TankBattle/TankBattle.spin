@@ -11,8 +11,8 @@ Authors: Brett Weir
 
 
 CON
-    _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
-    _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
+    _clkmode        = xtal1 + pll16x
+    _xinfreq        = 5_000_000
                      
     SCREEN_W = 128
     SCREEN_H = 64
@@ -32,10 +32,6 @@ CON
     
     WIFI_RX = 22
     WIFI_TX = 23
-
-    
-    
-
 
 
     'SONG PLAYER
