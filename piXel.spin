@@ -51,11 +51,25 @@ CON
 
 
 OBJ
-        lcd     :               "LameLCD" 
-        gfx     :               "LameGFX"  
-        audio   :               "LameAudio"
-        ctrl    :               "LameControl"
-        fn      :               "LameFunctions"
+        lcd     : "LameLCD" 
+        gfx     : "LameGFX"  
+        audio   : "LameAudio"
+        ctrl    : "LameControl"
+        fn      : "LameFunctions"
+        
+        gfx_player      : "gfx_player"
+        gfx_ibot        : "gfx_ibot"
+        gfx_idrone      : "gfx_idrone"
+        gfx_tank        : "gfx_tank"    
+        gfx_macrosoth   : "gfx_macrosoth"
+        gfx_laser       : "gfx_laser"
+        gfx_bullet      : "gfx_bullet"        
+        gfx_head        : "gfx_head"
+        gfx_boom        : "gfx_boom"
+        gfx_healthbar   : "gfx_healthbar"
+        gfx_starmap     : "gfx_starmap"
+        gfx_pixmain     : "gfx_pixmain"
+
 
 VAR
 
@@ -106,14 +120,13 @@ PUB Main
                         InitGame
                         gamestate := STARTLEVEL
 
-
 PUB TitleScreen
     ctrl.Update
     gfx.ClearScreen
 
 
     gfx.PutString(string("p  i      e  l"), 8, 30)
-    gfx.Sprite(@gfx_pixmain, 40, 8, 0)        
+    gfx.Sprite(gfx_pixmain.Addr, 40, 8, 0)        
     gfx.PutString(string("press A/B"), 28, 56)
 
     if ctrl.A or ctrl.B
@@ -126,7 +139,7 @@ PUB TitleScreen
 
 PUB GameLoop
             ctrl.Update
-            gfx.Blit(@gfx_starmap)      
+            gfx.Blit(gfx_starmap.Addr)
             HandlePlayer                        
             ControlOffset
             gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
@@ -160,7 +173,7 @@ PUB Victory
 
     
 PUB ShowGameView
-            gfx.Blit(@gfx_starmap)
+            gfx.Blit(gfx_starmap.Addr)
             HandlePlayer                        
             ControlOffset
             gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
@@ -200,7 +213,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
 
          
         ControlOffset
-        gfx.Blit(@gfx_starmap)
+        gfx.Blit(gfx_starmap.Addr)
         gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
         DrawPlayer
 
@@ -235,7 +248,7 @@ PUB ItsGameOver
     
             StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
         
-            gfx.Blit(@gfx_starmap)
+            gfx.Blit(gfx_starmap.Addr)
             gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
             DrawPlayer            
             gfx.PutString(string("Press A and "),18,24)
@@ -364,7 +377,7 @@ PUB HandlePlayer
     if jumping
         pos_frame := 3
 
-    if gfx.TestMapCollision(playerx, playery, word[@gfx_player][1], word[@gfx_player][2])
+    if gfx.TestMapCollision(playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
         playerx := pos_oldx
 
     if ctrl.A
@@ -394,7 +407,7 @@ PUB HandlePlayer
     pos_speed += 1
     playery += pos_speed
 
-    if gfx.TestMapCollision(playerx, playery, word[@gfx_player][1], word[@gfx_player][2])
+    if gfx.TestMapCollision(playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
         if  pos_speed > 0
             jumping := 0
         playery := pos_oldy
@@ -413,9 +426,9 @@ PUB HandlePlayer
 PUB DrawPlayer
     if not playerhealth_timeout or (playerhealth_timeout & $2)
         if pos_dir == LEFT
-            gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, 5+pos_frame)
+            gfx.Sprite(gfx_player.Addr,playerx-xoffset,playery-yoffset, 5+pos_frame)
         if pos_dir == RIGHT
-            gfx.Sprite(@gfx_player,playerx-xoffset,playery-yoffset, pos_frame)
+            gfx.Sprite(gfx_player.Addr,playerx-xoffset,playery-yoffset, pos_frame)
 
 PUB KillPlayer
     if playerlives > 1
@@ -434,10 +447,10 @@ PUB HitPlayer
 PUB HandleStatusBar | x
 
     repeat x from 0 to (playerlives-1)
-        gfx.Sprite(@gfx_head, x<<3, 56, 0)
+        gfx.Sprite(gfx_head.Addr, x<<3, 56, 0)
         
     repeat x from 0 to (playerhealth-1)
-        gfx.Sprite(@gfx_healthbar, 124-x<<2, 56, 0)        
+        gfx.Sprite(gfx_healthbar.Addr, 124-x<<2, 56, 0)        
 
 
 
@@ -499,7 +512,7 @@ PUB HandleEffects | effectxtemp, effectytemp, index
                 effectytemp := effecty[index] - yoffset
       
                 if (effectxtemp => 0) and (effectxtemp =< SCREEN_W-1) and (effectytemp => 0) and (effectytemp =< SCREEN_H - 1)          
-                    gfx.Sprite(@gfx_boom, effectxtemp , effectytemp, effectframe[index])
+                    gfx.Sprite(gfx_boom.Addr, effectxtemp , effectytemp, effectframe[index])
                 else
                     effecton[index] := 0
 
@@ -512,11 +525,11 @@ VAR
     word    objecthealth[8]
     
 PUB InitGraphicAssets
-    objectgraphics[PLAYER] := @gfx_player
-    objectgraphics[TANK] := @gfx_tank
-    objectgraphics[IBOT] := @gfx_ibot
-    objectgraphics[IDRONE] := @gfx_idrone
-    objectgraphics[BOSS] := @gfx_vortex
+    objectgraphics[PLAYER] := gfx_player.Addr
+    objectgraphics[TANK] := gfx_tank.Addr
+    objectgraphics[IBOT] := gfx_ibot.Addr
+    objectgraphics[IDRONE] := gfx_idrone.Addr
+    objectgraphics[BOSS] := gfx_macrosoth.Addr
     
     objecthealth[TANK]   := 3
     objecthealth[IBOT]   := 1
@@ -613,11 +626,11 @@ PUB HandleBullets | bulletxtemp, bulletytemp
           bulletytemp := bullety[bulletindex] - yoffset
 
           if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)
-              if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1, playerx, playery, word[@gfx_player][1], word[@gfx_player][2])
+              if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1, playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
                   HitPlayer
                   bulleton[bulletindex] := 0
               else
-                  gfx.Sprite(@gfx_laser, bulletxtemp , bulletytemp, 0)
+                  gfx.Sprite(gfx_laser.Addr, bulletxtemp , bulletytemp, 0)
           else
               bulleton[bulletindex] := 0
               
@@ -817,14 +830,14 @@ PUB ControlOffset | bound_x, bound_y
     bound_x := gfx.GetMapWidth << 3 - SCREEN_W
     bound_y := gfx.GetMapHeight << 3 - SCREEN_H
     
-    xoffset := playerx + (word[@gfx_player][1]>>1) - (SCREEN_W>>1)
+    xoffset := playerx + (word[gfx_player.Addr][1]>>1) - (SCREEN_W>>1)
     if xoffset < 0
         xoffset := 0      
     elseif xoffset > bound_x
         xoffset := bound_x
         
         
-    yoffset := playery + (word[@gfx_player][2]>>1) - (SCREEN_H>>1)
+    yoffset := playery + (word[gfx_player.Addr][2]>>1) - (SCREEN_H>>1)
     if yoffset < 0
         yoffset := 0      
     elseif yoffset > bound_y
@@ -832,88 +845,6 @@ PUB ControlOffset | bound_x, bound_y
 
 
 DAT
-
-gfx_laser
-word    16  'frameboost
-word    8, 8   'width, height
-
-word    $aaaa, $aaaa, $aaaa, $aaaa, $d557, $aaaa, $aaaa, $aaaa
-
-gfx_bullet
-word    16  'frameboost
-word    8, 8   'width, height
-
-word    $aaaa, $aaaa, $a96a, $a7ca, $a7ca, $a82a, $aaaa, $aaaa
-
-gfx_head
-word    16  'frameboost
-word    8, 8   'width, height
-
-word    $aaaa, $800a, $3f72, $04f2, $04f2, $3fc2, $000a, $aaaa
-
-
-gfx_healthbar
-word    16  'frameboost
-word    8, 8   'width, height
-
-word    $aad7, $aa7c, $aa7c, $aa7c, $aa7c, $aa7c, $aa7c, $aac0
-
-
-gfx_boom
-word    16  'frameboost
-word    8, 8   'width, height
-
-word    $aaaa, $a16a, $85d2, $8736, $bfce, $a70e, $ac2a, $aaaa, $a0f2, $935e, $354c, $f751, $30d4, $143c, $81f0, $8002
-word    $9e7a, $dbdb, $7fbe, $fbdf, $bfee, $ebb7, $9ff6, $a6da
-
-
-
-
-
-gfx_player
-word    32  'frameboost
-word    8, 16   'width, height
-
-word    $acaa, $bf2a, $972e, $bc0a, $a071, $a373, $55d3, $5f30, $800a, $a02a, $ac2a, $a72a, $a70a, $a30a, $a00a, $9f2a
-word    $acaa, $bf2a, $972e, $bc0a, $a871, $a373, $55d3, $5f30, $800a, $a00a, $80cf, $001f, $30f7, $323c, $8280, $72bc
-word    $acaa, $bf2a, $972e, $bc0a, $a871, $a373, $55d3, $5f30, $800a, $a00a, $8c0a, $1702, $1c32, $323c, $0280, $7ebc
-word    $ab2a, $afca, $a5ca, $af0a, $a871, $a373, $55d3, $5f30, $800a, $dc2a, $702a, $000a, $1832, $7806, $ea0e, $aafa
-word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $ab2a, $afca, $a5ca, $af71, $55f3, $5f03, $c002, $dc0e, $00c0, $7c3c
-word    $aa3a, $a8fe, $b8d6, $a03e, $4d0a, $cdca, $c755, $0cf5, $a002, $a80a, $a83a, $a8da, $a0da, $a0ca, $a00a, $a8f6
-word    $aa3a, $a8fe, $b8d6, $a03e, $4d2a, $cdca, $c755, $0cf5, $a002, $a00a, $f302, $f400, $df0c, $3c8c, $0282, $3e8d
-word    $aa3a, $a8fe, $a8d6, $a03e, $4d2a, $cdca, $c755, $0cf5, $a002, $a00a, $a032, $80d4, $8c34, $3c8c, $0280, $3efd
-word    $a8ea, $a3fa, $a35a, $a0fa, $4d2a, $cdca, $c755, $0cf5, $a002, $a837, $a80d, $a000, $8c24, $902d, $b0ab, $afaa
-word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $a8ea, $a3fa, $a35a, $4dfa, $cf55, $c0f5, $8003, $b037, $0300, $3c3d
-
-
-
-
-
-gfx_pixmain
-word    576  'frameboost
-word    48, 48   'width, height
-
-word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa
-word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $5556, $5555, $abd5, $5aaa, $5555, $bd55, $55aa, $5555
-word    $aabd, $aaaa, $5556, $aaf5, $5aaa, $5555, $aaaf, $aaaa, $555a, $aaaf, $aaaa, $d555, $aaab, $aaaa, $d55a, $aaab
-word    $aaaa, $d556, $aaab, $aaaa, $f55a, $aaaa, $aaaa, $5556, $000f, $0000, $bd54, $aaaa, $aaaa, $555a, $000f, $0000
-word    $af54, $aaaa, $aaaa, $556a, $003d, $0000, $abd5, $aaaa, $aaaa, $55aa, $00f5, $4000, $abd5, $aaaa, $aaaa, $55ea
-word    $00f5, $4000, $acf5, $aaaa, $2aaa, $5700, $f7d5, $5fff, $03fd, $aaa0, $2aaa, $5f00, $ff55, $57ff, $03ff, $aaa0
-word    $2aaa, $7f00, $fd55, $d5ff, $03ff, $aaa0, $2aaa, $7f00, $fd55, $f57f, $03ff, $aaa0, $2aaa, $ff00, $f555, $f55f
-word    $03ff, $aaa0, $2aaa, $ff00, $d557, $7d53, $0000, $aaa0, $2aaa, $ff00, $555f, $5f57, $0000, $aaa0, $2aaa, $ff00
-word    $555f, $57d5, $0000, $aaa0, $2aaa, $ff00, $557f, $55f5, $0000, $aaa0, $2aaa, $ff00, $55ff, $55f5, $0000, $aaa0
-word    $2aaa, $ff00, $57ff, $57d5, $0000, $aaa0, $2aaa, $ff00, $57ff, $57d5, $0000, $aaa0, $2aaa, $ff00, $55ff, $5f55
-word    $0000, $aaa0, $2aaa, $ff00, $757f, $7d55, $0000, $aaa0, $2aaa, $ff00, $3d5f, $f555, $0000, $aaa0, $2aaa, $0000
-word    $ff54, $d557, $03ff, $aaa0, $2aaa, $0000, $ff55, $d557, $03ff, $aaa0, $2aaa, $0000, $ffd5, $555f, $03ff, $aaa0
-word    $2aaa, $4000, $fff5, $557f, $03fd, $aaa0, $2aaa, $5000, $fffd, $55ff, $03f5, $aaa0, $aaaa, $54aa, $000f, $5500
-word    $00f5, $aaa0, $aaaa, $d5aa, $0003, $5400, $03d5, $aaa0, $aaaa, $d56a, $0003, $5000, $0f55, $aaa0, $aaaa, $f56a
-word    $0000, $5000, $0f55, $aaa0, $aaaa, $3d5a, $0000, $4000, $3d55, $aaa0, $aaaa, $af56, $aaaa, $aaaa, $f555, $aaaa
-word    $aaaa, $af55, $aaaa, $aaaa, $d555, $aaab, $6aaa, $abd5, $aaaa, $aaaa, $d555, $aaab, $56aa, $abd5, $aaaa, $6aaa
-word    $5555, $aabd, $556a, $af55, $aaaa, $5aaa, $5555, $aaf5, $5556, $d555, $aaab, $55aa, $5555, $bd55, $aaaa, $aaaa
-word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa
-
-
-
 
 
 gfx_chars_cropped
@@ -966,151 +897,6 @@ word    $0000, $0000, $1414, $0550, $0140, $0550, $1414, $0000, $0000, $0000, $1
 word    $0000, $0000, $1554, $0500, $0140, $0050, $1554, $0000, $0540, $0050, $0050, $0014, $0050, $0050, $0540, $0000
 word    $0140, $0140, $0140, $0000, $0140, $0140, $0140, $0000, $0150, $0500, $0500, $1400, $0500, $0500, $0150, $0000
 word    $0000, $0000, $5150, $1514, $0000, $0000, $0000, $0000, $0000, $0100, $0540, $1450, $5014, $5014, $5554, $0000
-
-
-
-
-
-
-gfx_starmap
-word    2048  'frameboost
-word    128, 64   'width, height
-
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0100, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0300, $0000, $0000, $0004, $0000, $0000
-word    $0000, $0000, $0000, $0000, $3000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0300, $0000, $0000, $0000, $0100, $0000, $0000, $0000, $0000, $0000, $0000, $0300, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0c00, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $3c00, $3000, $0000, $0000, $0000, $0000, $0000, $3000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $d700, $0000, $0000, $0300, $0000, $0000, $0000, $0000, $0000, $0400, $0000, $0000
-word    $0000, $0000, $0000, $0000, $d700, $0000, $0000, $0000, $0000, $0300, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0003, $1000, $3c00, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0100, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0004, $0000, $0000, $0000, $0000, $3000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0003, $3000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0400, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $000c, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $00c0, $0000, $0000, $0000, $0000, $0001, $0000, $0000, $0000, $0000
-word    $0300, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $c000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0001, $0000, $0000, $0000, $0300, $c000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $000c, $0000, $0000, $0000, $0000, $0030, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $3000, $0000, $4000, $0000, $0000, $0100, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0400, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0300, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0001, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0004
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $3000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0003, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $1000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $3000, $0000, $0100, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0300, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $00c0, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0004, $0000, $0000, $0000, $0010, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $c000, $0000, $0000, $0000, $0000, $0c00, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0300, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0030, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0040, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0400, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0030, $0000, $0000, $0000, $0000, $0c00, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0c00, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0400, $0000, $0000, $0000, $0000, $0000, $0000, $0003, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $c000, $000d, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0003, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $3000, $4000, $0000, $0030, $0000, $0000, $0000, $0000, $0030, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $3000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0300, $0000, $0000, $0000, $0000, $0003, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0c00, $0000, $0000
-word    $0000, $0000, $000c, $0000, $0000, $0000, $0000, $0000, $0000, $0100, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $00c0, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0030
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $3000, $0000, $0000, $0000, $0000
-
-
-
-
-
-
-
-gfx_tank
-word    64  'frameboost
-word    16, 16   'width, height
-
-word    $00aa, $a8fc, $552a, $a350, $552a, $a3dc, $000a, $a0f4, $57ca, $bfc1, $57ca, $b551, $0000, $bff0, $fffc, $b553
-word    $5554, $8771, $fffc, $b573, $0000, $8ff0, $001a, $8000, $c1ce, $91c1, $0306, $b303, $003a, $a400, $776a, $ab77
-word    $3f2a, $aa00, $05ca, $a855, $37ca, $a855, $1f0a, $a000, $43fe, $a3d5, $455e, $a3d5, $0ffe, $0000, $c55e, $3fff
-word    $4dd2, $1555, $cd5e, $3fff, $0ff2, $0000, $0002, $a400, $4346, $b343, $c0ce, $90c0, $001a, $ac00, $ddea, $a9dd
-
-
-
-gfx_ibot
-word    16  'frameboost
-word    8, 8   'width, height
-
-word    $ab29, $adcb, $8303, $d554, $3d7c, $8002, $a30a, $a82a
-
-
-gfx_idrone
-word    64  'frameboost
-word    16, 16   'width, height
-
-word    $caa2, $aaad, $7ca2, $aa35, $5722, $ab55, $5fc2, $ad55, $fff2, $8d7f, $5f02, $8ff5, $f155, $555c, $7003, $c011
-word    $7003, $c0d1, $d371, $7d5f, $0002, $8030, $0002, $b000, $000a, $a00c, $c02a, $a83f, $00aa, $aa00, $0aaa, $aaa0
-
-
-
-gfx_vortex
-word    1024  'frameboost
-word    64, 64   'width, height
-
-word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $00aa, $0000, $0000, $aa80
-word    $aaaa, $aaaa, $aaaa, $aaaa, $002a, $0000, $3d5f, $aa80, $aaaa, $aaaa, $aaaa, $aaaa, $540a, $1550, $5540, $aa03
-word    $aaaa, $aaaa, $aaaa, $aaaa, $5402, $1571, $5444, $aa0d, $aaaa, $aaaa, $aaaa, $2aaa, $fc03, $15c3, $4344, $aa3d
-word    $aaaa, $aaaa, $aaaa, $00aa, $0000, $4700, $0d44, $a835, $aaaa, $aaaa, $02aa, $0000, $ffc0, $4f0f, $3d44, $a834
-word    $aaaa, $aaaa, $f2aa, $57ff, $5555, $4035, $fd44, $a0f4, $aaaa, $aaaa, $5caa, $5555, $5555, $0fd5, $f541, $80d0
-word    $aaaa, $aaaa, $570a, $f555, $d557, $3d57, $3550, $03d4, $aaaa, $aaaa, $5542, $5555, $5555, $ff55, $0150, $0fd5
-word    $aaaa, $aaaa, $d570, $555f, $5555, $ffd5, $5354, $ff55, $aaaa, $aaaa, $55f2, $0055, $57d4, $3ff5, $5c54, $ff55
-word    $aaaa, $aaaa, $5f02, $54d5, $5550, $0ffd, $54d5, $fff5, $aaaa, $aaaa, $f002, $54d5, $d551, $43ff, $550d, $003f
-word    $aaaa, $aaaa, $0002, $5357, $f551, $10ff, $f570, $4103, $aaaa, $aaaa, $3fc2, $4d5c, $fd45, $0c3f, $3555, $0054
-word    $aaaa, $aaaa, $d570, $0570, $fc15, $50c3, $cd55, $0005, $aaaa, $aaaa, $5570, $35f3, $c155, $5430, $43d5, $0005
-word    $aaaa, $aaaa, $5ff2, $35f1, $0555, $5500, $73d5, $0005, $aaaa, $aaaa, $5002, $37cd, $0554, $5550, $53f5, $0035
-word    $aaaa, $aaaa, $5052, $ff33, $555c, $1555, $73ff, $0015, $aaaa, $aaaa, $5402, $fc3c, $555c, $0155, $7000, $00d5
-word    $aaaa, $aaaa, $d572, $f0cc, $555c, $4055, $47c0, $0355, $aaaa, $aaaa, $100a, $f3f3, $555c, $5035, $c7f4, $3555
-word    $aaaa, $aaaa, $c5ca, $0f54, $555c, $c001, $05d0, $1555, $aaaa, $aaaa, $f1ca, $0f54, $d55c, $0050, $1544, $5557
-word    $aaaa, $aaaa, $3c02, $0f55, $3557, $c154, $1400, $557c, $aaaa, $aaaa, $4f02, $03d5, $0d57, $ccd5, $03f0, $7fc0
-word    $aaaa, $aaaa, $53f2, $30f5, $4155, $103c, $fd50, $0000, $aaaa, $aaaa, $543c, $3cf5, $c05f, $1d03, $5554, $fffd
-word    $aaaa, $aaaa, $554f, $373d, $f0df, $1743, $4155, $5455, $aaaa, $aaaa, $55f0, $35cf, $4037, $17c0, $5155, $5455
-word    $aaaa, $aaaa, $d5fc, $3553, $0537, $c5f0, $5055, $5455, $aaaa, $aaaa, $d5f2, $3553, $f5f7, $c5f0, $5c55, $5c55
-word    $aaaa, $aaaa, $f7f2, $0554, $3d0f, $c57c, $7c55, $5c55, $aaaa, $aaaa, $3fca, $0355, $4cf3, $c570, $7c55, $7c55
-word    $aaaa, $aaaa, $0f0a, $43d5, $4740, $0500, $f05f, $7055, $aaaa, $aaaa, $730a, $54fd, $047d, $0001, $c0ff, $f0ff
-word    $aaaa, $aaaa, $dc02, $5407, $45f5, $0005, $0000, $0000, $aaaa, $aaaa, $7f02, $55f3, $55d5, $5555, $0000, $0000
-word    $a800, $aaaa, $ff00, $55fc, $57fd, $5555, $5555, $5555, $00fc, $0aa8, $0ff0, $d5ff, $55f5, $5555, $5555, $0555
-word    $3f5c, $0000, $c000, $f17f, $05f5, $0030, $1000, $fc30, $d55c, $ffff, $f3ff, $c14f, $c7f5, $ffff, $5fff, $fffd
-word    $555e, $5555, $f355, $5557, $c3d5, $5517, $5555, $fd7d, $1572, $5000, $f055, $5575, $4dd5, $5555, $5555, $fd77
-word    $5572, $5555, $f0d5, $f755, $71d5, $5501, $5555, $ff77, $1fca, $5554, $c0f1, $dfd5, $f1d5, $5501, $5555, $c337
-word    $ffea, $1550, $c0fc, $d7d5, $c1d7, $5535, $5555, $c0f3, $fc2a, $1503, $c0ff, $cdf7, $cdd7, $5535, $7515, $f0f7
-word    $f0aa, $54ff, $c0ff, $c3f7, $ccd7, $5c35, $7415, $000f, $02aa, $17f0, $c03f, $c017, $43f7, $7c31, $7407, $000f
-word    $aaaa, $ffc0, $c00f, $c03f, $c3f7, $7017, $7c05, $0007, $aaaa, $f002, $003f, $c03c, $c037, $f41f, $7c01, $0000
-word    $aaaa, $002a, $000c, $c03c, $003f, $f01f, $fc01, $0000, $aaaa, $00aa, $0000, $40f0, $000f, $f00f, $3c07, $0000
-word    $aaaa, $2aaa, $0000, $00c0, $000f, $c03c, $300f, $0004, $aaaa, $2aaa, $0000, $0000, $0000, $0000, $300d, $0000
-word    $aaaa, $aaaa, $0000, $0000, $0000, $0000, $0400, $0000, $aaaa, $aaaa, $0000, $0000, $0000, $0000, $0000, $0000
-word    $aaaa, $aaaa, $0002, $0000, $0000, $0000, $0000, $0000, $aaaa, $aaaa, $0002, $0000, $0000, $0000, $0000, $0000
-
 
 
 
