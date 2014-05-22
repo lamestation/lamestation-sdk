@@ -11,6 +11,7 @@ gfx_data
 
 word    576 ' frameboost
 word    48, 48 ' width, height
+' frame 0
 word    $aaaa,$aaaa,$aaaa,$aaaa,$aaaa,$aaaa '                                                 
 word    $aaaa,$aaaa,$aaaa,$aaaa,$aaaa,$aaaa '                                                 
 word    $aaaa,$aaaa,$aaaa,$aaaa,$aaaa,$aaaa '                                                 
@@ -59,3 +60,4 @@ word    $5556,$d555,$aaab,$55aa,$5555,$bd55 '  ░░░░░░░░░░░
 word    $aaaa,$aaaa,$aaaa,$aaaa,$aaaa,$aaaa '                                                 
 word    $aaaa,$aaaa,$aaaa,$aaaa,$aaaa,$aaaa '                                                 
 word    $aaaa,$aaaa,$aaaa,$aaaa,$aaaa,$aaaa '                                                 
+

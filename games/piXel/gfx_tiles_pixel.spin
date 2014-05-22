@@ -8,7 +8,7 @@ PUB Addr
 DAT
 
 gfx_data
-
+' frame 0
 word    $0000 ' ████████
 word    $0000 ' ████████
 word    $0000 ' ████████
@@ -17,6 +17,7 @@ word    $0000 ' ████████
 word    $0000 ' ████████
 word    $0000 ' ████████
 word    $0000 ' ████████
+' frame 1
 word    $3333 ' ▓█▓█▓█▓█
 word    $cccc ' █▓█▓█▓█▓
 word    $3333 ' ▓█▓█▓█▓█
@@ -25,6 +26,7 @@ word    $3333 ' ▓█▓█▓█▓█
 word    $cccc ' █▓█▓█▓█▓
 word    $3333 ' ▓█▓█▓█▓█
 word    $cccc ' █▓█▓█▓█▓
+' frame 2
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $ffff ' ▓▓▓▓▓▓▓▓
@@ -33,6 +35,7 @@ word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $ffff ' ▓▓▓▓▓▓▓▓
+' frame 3
 word    $dddd ' ░▓░▓░▓░▓
 word    $7777 ' ▓░▓░▓░▓░
 word    $dddd ' ░▓░▓░▓░▓
@@ -41,6 +44,7 @@ word    $dddd ' ░▓░▓░▓░▓
 word    $7777 ' ▓░▓░▓░▓░
 word    $dddd ' ░▓░▓░▓░▓
 word    $7777 ' ▓░▓░▓░▓░
+' frame 4
 word    $5555 ' ░░░░░░░░
 word    $5555 ' ░░░░░░░░
 word    $5555 ' ░░░░░░░░
@@ -49,6 +53,7 @@ word    $5555 ' ░░░░░░░░
 word    $5555 ' ░░░░░░░░
 word    $5555 ' ░░░░░░░░
 word    $5555 ' ░░░░░░░░
+' frame 5
 word    $3033 ' ▓█▓███▓█
 word    $0f30 ' ██▓█▓▓██
 word    $30cc ' █▓█▓██▓█
@@ -57,6 +62,7 @@ word    $3cf0 ' ██▓▓█▓▓█
 word    $f3cc ' █▓█▓▓█▓▓
 word    $3033 ' ▓█▓███▓█
 word    $030c ' █▓██▓███
+' frame 6
 word    $df77 ' ▓░▓░▓▓░▓
 word    $5555 ' ░░░░░░░░
 word    $d75d ' ░▓░░▓░░▓
@@ -65,6 +71,7 @@ word    $f7f5 ' ░░▓▓▓░▓▓
 word    $7f4f ' ▓▓█░▓▓▓░
 word    $f4f3 ' ▓█▓▓█░▓▓
 word    $330c ' █▓██▓█▓█
+' frame 7
 word    $3033 ' ▓█▓███▓█
 word    $0f30 ' ██▓█▓▓██
 word    $30cc ' █▓█▓██▓█
@@ -73,6 +80,7 @@ word    $0030 ' ██▓█████
 word    $cc00 ' █████▓█▓
 word    $000c ' █▓██████
 word    $0000 ' ████████
+' frame 8
 word    $557c ' █▓▓░░░░░
 word    $ddf3 ' ▓█▓▓░▓░▓
 word    $77cc ' █▓█▓▓░▓░
@@ -81,6 +89,7 @@ word    $d5cc ' █▓█▓░░░▓
 word    $77f0 ' ██▓▓▓░▓░
 word    $d7c0 ' ███▓▓░░▓
 word    $0f00 ' ████▓▓██
+' frame 9
 word    $5555 ' ░░░░░░░░
 word    $7777 ' ▓░▓░▓░▓░
 word    $4444 ' █░█░█░█░
@@ -89,6 +98,7 @@ word    $cccc ' █▓█▓█▓█▓
 word    $cccc ' █▓█▓█▓█▓
 word    $0000 ' ████████
 word    $0f00 ' ████▓▓██
+' frame 10
 word    $d57f ' ▓▓▓░░░░▓
 word    $4c31 ' ░█▓██▓█░
 word    $700d ' ░▓████▓░
@@ -97,6 +107,7 @@ word    $4003 ' ▓██████░
 word    $c003 ' ▓██████▓
 word    $c003 ' ▓██████▓
 word    $c003 ' ▓██████▓
+' frame 11
 word    $55ff ' ▓▓▓▓░░░░
 word    $fff5 ' ░░▓▓▓▓▓▓
 word    $0c05 ' ░░███▓██
@@ -105,6 +116,7 @@ word    $00c7 ' ▓░█▓████
 word    $003f ' ▓▓▓█████
 word    $0007 ' ▓░██████
 word    $0007 ' ▓░██████
+' frame 12
 word    $f555 ' ░░░░░░▓▓
 word    $5fff ' ▓▓▓▓▓▓░░
 word    $5030 ' ██▓███░░
@@ -113,6 +125,7 @@ word    $f300 ' ████▓█▓▓
 word    $7c00 ' █████▓▓░
 word    $7000 ' ██████▓░
 word    $f000 ' ██████▓▓
+' frame 13
 word    $000f ' ▓▓██████
 word    $0007 ' ▓░██████
 word    $0005 ' ░░██████
@@ -121,6 +134,7 @@ word    $0004 ' █░██████
 word    $000f ' ▓▓██████
 word    $0004 ' █░██████
 word    $000c ' █▓██████
+' frame 14
 word    $7000 ' ██████▓░
 word    $f000 ' ██████▓▓
 word    $7000 ' ██████▓░
@@ -129,6 +143,7 @@ word    $7000 ' ██████▓░
 word    $f000 ' ██████▓▓
 word    $4000 ' ███████░
 word    $4000 ' ███████░
+' frame 15
 word    $5555 ' ░░░░░░░░
 word    $5555 ' ░░░░░░░░
 word    $5555 ' ░░░░░░░░
@@ -137,6 +152,7 @@ word    $7575 ' ░░▓░░░▓░
 word    $7575 ' ░░▓░░░▓░
 word    $f1f1 ' ░█▓▓░█▓▓
 word    $d1d1 ' ░█░▓░█░▓
+' frame 16
 word    $0000 ' ████████
 word    $0000 ' ████████
 word    $0000 ' ████████
@@ -145,6 +161,7 @@ word    $3030 ' ██▓███▓█
 word    $1010 ' ██░███░█
 word    $d0d0 ' ██░▓██░▓
 word    $d0d0 ' ██░▓██░▓
+' frame 17
 word    $4001 ' ░██████░
 word    $1554 ' █░░░░░░█
 word    $0054 ' █░░░████
@@ -153,6 +170,7 @@ word    $0054 ' █░░░████
 word    $1554 ' █░░░░░░█
 word    $0054 ' █░░░████
 word    $4001 ' ░██████░
+' frame 18
 word    $c003 ' ▓██████▓
 word    $300c ' █▓████▓█
 word    $cc33 ' ▓█▓██▓█▓
@@ -161,6 +179,7 @@ word    $c103 ' ▓███░██▓
 word    $cc33 ' ▓█▓██▓█▓
 word    $300c ' █▓████▓█
 word    $cd73 ' ▓█▓░░▓█▓
+' frame 19
 word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $ff33 ' ▓█▓█▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
@@ -169,6 +188,7 @@ word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $ff33 ' ▓█▓█▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
+' frame 20
 word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $fcf3 ' ▓█▓▓█▓▓▓
 word    $ffcf ' ▓▓█▓▓▓▓▓
@@ -177,6 +197,7 @@ word    $3cff ' ▓▓▓▓█▓▓█
 word    $f3ff ' ▓▓▓▓▓█▓▓
 word    $cfff ' ▓▓▓▓▓▓█▓
 word    $3fff ' ▓▓▓▓▓▓▓█
+' frame 21
 word    $fffc ' █▓▓▓▓▓▓▓
 word    $fcf3 ' ▓█▓▓█▓▓▓
 word    $ffcf ' ▓▓█▓▓▓▓▓
@@ -185,6 +206,7 @@ word    $3cff ' ▓▓▓▓█▓▓█
 word    $f3ff ' ▓▓▓▓▓█▓▓
 word    $cfff ' ▓▓▓▓▓▓█▓
 word    $3fff ' ▓▓▓▓▓▓▓█
+' frame 22
 word    $fffc ' █▓▓▓▓▓▓▓
 word    $ff33 ' ▓█▓█▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
@@ -193,6 +215,7 @@ word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $ff33 ' ▓█▓█▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
+' frame 23
 word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $ff33 ' ▓█▓█▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
@@ -201,6 +224,7 @@ word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $ff33 ' ▓█▓█▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
+' frame 24
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $0fff ' ▓▓▓▓▓▓██
 word    $f3ff ' ▓▓▓▓▓█▓▓
@@ -209,6 +233,7 @@ word    $cf3f ' ▓▓▓█▓▓█▓
 word    $ffcf ' ▓▓█▓▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $ff33 ' ▓█▓█▓▓▓▓
+' frame 25
 word    $3fff ' ▓▓▓▓▓▓▓█
 word    $cfff ' ▓▓▓▓▓▓█▓
 word    $f3ff ' ▓▓▓▓▓█▓▓
@@ -217,6 +242,7 @@ word    $cf3f ' ▓▓▓█▓▓█▓
 word    $ffcf ' ▓▓█▓▓▓▓▓
 word    $fff3 ' ▓█▓▓▓▓▓▓
 word    $ff3c ' █▓▓█▓▓▓▓
+' frame 26
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $0000 ' ████████
 word    $ffff ' ▓▓▓▓▓▓▓▓
@@ -225,3 +251,49 @@ word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $ffff ' ▓▓▓▓▓▓▓▓
+' frame 27
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+' frame 28
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+' frame 29
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+' frame 30
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+' frame 31
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+word    $aaaa '         
+

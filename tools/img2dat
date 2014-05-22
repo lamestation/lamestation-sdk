@@ -157,7 +157,7 @@ def assembleSpinHeader(image):
 def assembleWordHeader(image):
     output = ""
     output += "word    "+str(frameboost)+" ' frameboost\n"
-    output += "word    "+str(len(image[0]))+", "+str(len(image))+" ' width, height"
+    output += "word    "+str(len(image[0]))+", "+str(len(image))+" ' width, height\n"
     return output
 
 def assembleLine(line, radix):

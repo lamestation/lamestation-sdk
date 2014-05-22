@@ -11,6 +11,7 @@ gfx_data
 
 word    16 ' frameboost
 word    8, 8 ' width, height
+' frame 0
 word    $aaaa '         
 word    $aaaa '         
 word    $aaaa '         
@@ -19,3 +20,4 @@ word    $d557 ' ▓░░░░░░▓
 word    $aaaa '         
 word    $aaaa '         
 word    $aaaa '         
+
