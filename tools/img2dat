@@ -63,7 +63,7 @@ def getCommandLineArguments():
     return parser.parse_args()
 
 def printImageTag():
-    print "'   Creating:",newfilename
+    print "'   Creating:",getFullFilename(prefix, filename, "spin")
     print "'  Bit depth:", args.bits[0]
     print "' Image Type:", args.mode[0]
     print "' Image size:",im.size
@@ -160,8 +160,6 @@ def assembleWordHeader(image):
     output += "word    "+str(len(image[0]))+", "+str(len(image))+" ' width, height"
     return output
 
-
-
 def assembleLine(line, radix):
     output = ""
     colordata = 0
@@ -215,6 +213,25 @@ def assembleData(image, radix):
 
     return output
 
+def assembleSpinFile(sprite):
+    output = ""
+    output += assembleSpinHeader(imagedata)
+    output += "\n"
+
+    if args.mode[0] == 'sprite':
+        output += "\n"
+        output += assembleWordHeader(imagedata)
+
+    for s in spritedata:
+        output += assembleData(s,'both')
+    output += "\n"
+
+    return output
+
+
+def getFullFilename(prefix, filename, ext):
+    return os.path.join(os.path.dirname(filename),str(prefix)+os.path.splitext(os.path.basename(filename))[0]+"."+str(ext))
+
 
 args = getCommandLineArguments()
 filenames = cleanFilenames(args.filenames)
@@ -222,180 +239,177 @@ filenames = cleanFilenames(args.filenames)
 
 if not filenames:
     print "No valid files selected"
-else:
-    for filename in filenames:
+    sys.exit(1)
 
-        im = openImage(filename)
+for filename in filenames:
 
-        newfilename = filename+".dat"
+    im = openImage(filename)
+
+    if args.mode[0] == 'font':
+        prefix = 'font_'
+    else:
+        prefix = 'gfx_'
 
 
-        if args.mode[0] == 'font':
-            prefix = 'font_'
+
+    if args.mode[0] == 'sprite':
+
+        if args.framesize:
+            framesize = getFrameSize(args.framesize, im)
         else:
-            prefix = 'gfx_'
-
-
-
-        if args.mode[0] == 'sprite':
-
-            if args.framesize:
-                framesize = getFrameSize(args.framesize, im)
-            else:
-                framesize = im.size
-
-            # Calculate frameboost constant, the precalculated frame size so 
-            # that jumping to a frame requires only one multiplication, not three.
-            frameboost = (framesize[0]*BITS_PER_PIXEL*framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF
-            dimensions = (framesize[0] & 0xFFFF , framesize[1] & 0xFFFF) 
-
-        elif args.mode[0] == 'box':
             framesize = im.size
 
-        elif args.mode[0] == 'tilemap':
-            framesize = DEFAULT_FRAME
+        # Calculate frameboost constant, the precalculated frame size so 
+        # that jumping to a frame requires only one multiplication, not three.
+        frameboost = (framesize[0]*BITS_PER_PIXEL*framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF
+        dimensions = (framesize[0] & 0xFFFF , framesize[1] & 0xFFFF) 
+
+    elif args.mode[0] == 'box':
+        framesize = im.size
+
+    elif args.mode[0] == 'tilemap':
+        framesize = DEFAULT_FRAME
 
 
 
 
-        # Allow padding of tilized images for arbitrary font sizes
-        if args.mode[0] == 'font':
-            if args.framesize:
-                framesize = getFrameSize(args.framesize, im)
-            else:
-                framesize = im.size
-
-            output_framesize = tuple([ceilMultiple(framesize[0], TILESIZE),ceilMultiple(framesize[1], TILESIZE)])
-            output_size = tuple([im.size[0]*output_framesize[0]/framesize[0],im.size[1]*output_framesize[1]/framesize[1]])
-
-
-            print output_size
-
-            framesize = requireFrameSize(args.framesize)
-            output_im = Image.new("RGB",output_size)
-
-            print output_framesize
+    # Allow padding of tilized images for arbitrary font sizes
+    if args.mode[0] == 'font':
+        if args.framesize:
+            framesize = getFrameSize(args.framesize, im)
         else:
-            output_framesize = framesize
-            output_im = Image.new("RGB",im.size)
+            framesize = im.size
+
+        output_framesize = tuple([ceilMultiple(framesize[0], TILESIZE),ceilMultiple(framesize[1], TILESIZE)])
+        output_size = tuple([im.size[0]*output_framesize[0]/framesize[0],im.size[1]*output_framesize[1]/framesize[1]])
 
 
-        output_im.paste(TRANSPARENT_COLOR)
+        print output_size
 
-        if args.bits[0] == 2:
-            if args.mode[0] == 'font':
-                padFrameSize(framesize, TILESIZE)
-            else:
-                requirePower3FrameSize(framesize)
+        framesize = requireFrameSize(args.framesize)
+        output_im = Image.new("RGB",output_size)
 
-
-
-        count_tiles_x = im.size[0]/framesize[0]
-        count_tiles_y = im.size[1]/framesize[1]
+        print output_framesize
+    else:
+        output_framesize = framesize
+        output_im = Image.new("RGB",im.size)
 
 
-        # Iterate over image to splice into subdivisions
-        for frame_y in range(0,count_tiles_y):
-            for frame_x in range(0,count_tiles_x):
+    output_im.paste(TRANSPARENT_COLOR)
 
-                for py in range(0,framesize[1]):
-
-                    for px in range(0,framesize[0]):
-
-                        x = frame_x*framesize[0] + px
-                        y = frame_y*framesize[1] + py
-
-                        out_x = frame_x*output_framesize[0] + px
-                        out_y = frame_y*output_framesize[1] + py
-
-                        pixeldata = im.getpixel((x,y))
-
-                        if args.bits[0] == 2:
-
-                            coloravg = getAverageColor(pixeldata)
-
-                            if pixeldata == TRANSPARENT_COLOR:
-                                output_im.putpixel((out_x,out_y), TRANSPARENT_COLOR)
-                            elif coloravg < 40: # black
-                                output_im.putpixel((out_x,out_y), (0,0,0))
-                            elif 40 < coloravg < 210: # gray
-                                output_im.putpixel((out_x,out_y), (128,128,128))
-                            elif coloravg > 210: # white
-                                output_im.putpixel((out_x,out_y), (255,255,255))
-
-                        elif args.bits[0] == 8:
-                            if type(pixeldata) is tuple:
-                                r = pixeldata[0] >> 6 << 6
-                                g = pixeldata[1] >> 6 << 6
-                                b = pixeldata[2] >> 6 << 6
-                                output_im.putpixel((x,y), (r, g, b))
-                            else:
-                                print "Color data not in tuple format?"
-                                sys.exit(1)
+    if args.bits[0] == 2:
+        if args.mode[0] == 'font':
+            padFrameSize(framesize, TILESIZE)
+        else:
+            requirePower3FrameSize(framesize)
 
 
 
-        # Iterate again to render DAT output
-        output_count_tiles_x = output_im.size[0]/output_framesize[0]
-        output_count_tiles_y = output_im.size[1]/output_framesize[1]
+    count_tiles_x = im.size[0]/framesize[0]
+    count_tiles_y = im.size[1]/framesize[1]
 
-        frame = 0
+
+    # Iterate over image to splice into subdivisions
+    for frame_y in range(0,count_tiles_y):
+        for frame_x in range(0,count_tiles_x):
+
+            for py in range(0,framesize[1]):
+
+                for px in range(0,framesize[0]):
+
+                    x = frame_x*framesize[0] + px
+                    y = frame_y*framesize[1] + py
+
+                    out_x = frame_x*output_framesize[0] + px
+                    out_y = frame_y*output_framesize[1] + py
+
+                    pixeldata = im.getpixel((x,y))
+
+                    if args.bits[0] == 2:
+
+                        coloravg = getAverageColor(pixeldata)
+
+                        if pixeldata == TRANSPARENT_COLOR:
+                            output_im.putpixel((out_x,out_y), TRANSPARENT_COLOR)
+                        elif coloravg < 40: # black
+                            output_im.putpixel((out_x,out_y), (0,0,0))
+                        elif 40 < coloravg < 210: # gray
+                            output_im.putpixel((out_x,out_y), (128,128,128))
+                        elif coloravg > 210: # white
+                            output_im.putpixel((out_x,out_y), (255,255,255))
+
+                    elif args.bits[0] == 8:
+                        if type(pixeldata) is tuple:
+                            r = pixeldata[0] >> 6 << 6
+                            g = pixeldata[1] >> 6 << 6
+                            b = pixeldata[2] >> 6 << 6
+                            output_im.putpixel((x,y), (r, g, b))
+                        else:
+                            print "Color data not in tuple format?"
+                            sys.exit(1)
+
+
+
+    # Iterate again to render DAT output
+    output_count_tiles_x = output_im.size[0]/output_framesize[0]
+    output_count_tiles_y = output_im.size[1]/output_framesize[1]
+
+    frame = 0
+    
+    spritedata = []
+
+    for frame_y in range(0,output_count_tiles_y):
+        for frame_x in range(0,output_count_tiles_x):
+
+            imagedata = []
+
+            for py in range(0,output_framesize[1]):
+
+                linedata = []
+
+                for px in range(0,output_framesize[0]):
+
+                    x = frame_x*output_framesize[0] + px
+                    y = frame_y*output_framesize[1] + py
+
+                    colorchar = 0
+                    pixeldata = output_im.getpixel((x,y))
+
+                    if args.bits[0] == 2:
+                        color = getColorValue(pixeldata)
+                        linedata.append(color)
+
+                        output_im.putpixel((x,y),colorvalue[color]['output'])
+
+                    elif args.bits[0] == 8:
+                        if type(pixeldata) is tuple:
+                            r = pixeldata[0] >> 6 << 6
+                            g = pixeldata[1] >> 6 << 6
+                            b = pixeldata[2] >> 6 << 6
+                            colorchar = (r) + (g >> 2) + (b >> 4)
+                        else:
+                            print "Color data not in tuple format?"
+                            sys.exit(1)
+
+
+                imagedata.append(linedata)
+            spritedata.append(imagedata)
+            frame += 1
+
+    if args.display:
+        canvas = Image.new("RGB",(output_im.size[0],im.size[1]+output_im.size[1]))
+    
+        canvas.paste(im,(0,0,im.size[0],im.size[1]))
+        canvas.paste(output_im,(0,im.size[1]))
         
-        spritedata = []
+        canvas = canvas.resize(tupleMultiply(SCALEFACTOR,(output_im.size[0],im.size[1]+output_im.size[1])))
+        canvas.show()
 
-        for frame_y in range(0,output_count_tiles_y):
-            for frame_x in range(0,output_count_tiles_x):
+    spin = assembleSpinFile(spritedata)
+    print spin
 
-                imagedata = []
+    f = open(getFullFilename(prefix, filename, "spin"),"w")
+    f.write(spin)
+    f.close()
 
-                for py in range(0,output_framesize[1]):
-
-                    linedata = []
-
-                    for px in range(0,output_framesize[0]):
-
-                        x = frame_x*output_framesize[0] + px
-                        y = frame_y*output_framesize[1] + py
-
-                        colorchar = 0
-                        pixeldata = output_im.getpixel((x,y))
-
-                        if args.bits[0] == 2:
-                            color = getColorValue(pixeldata)
-                            linedata.append(color)
-
-                            output_im.putpixel((x,y),colorvalue[color]['output'])
-
-                        elif args.bits[0] == 8:
-                            if type(pixeldata) is tuple:
-                                r = pixeldata[0] >> 6 << 6
-                                g = pixeldata[1] >> 6 << 6
-                                b = pixeldata[2] >> 6 << 6
-                                colorchar = (r) + (g >> 2) + (b >> 4)
-                            else:
-                                print "Color data not in tuple format?"
-                                sys.exit(1)
-
-
-                    imagedata.append(linedata)
-                spritedata.append(imagedata)
-                frame += 1
-
-        if args.display:
-            canvas = Image.new("RGB",(output_im.size[0],im.size[1]+output_im.size[1]))
-        
-            canvas.paste(im,(0,0,im.size[0],im.size[1]))
-            canvas.paste(output_im,(0,im.size[1]))
-            
-            canvas = canvas.resize(tupleMultiply(SCALEFACTOR,(output_im.size[0],im.size[1]+output_im.size[1])))
-            canvas.show()
-
-        print assembleSpinHeader(imagedata)
-        if args.mode[0] == 'sprite':
-            print assembleWordHeader(imagedata)
-
-        for s in spritedata:
-            print assembleData(s,'both')
-
-
-        #printImageTag()
+    #printImageTag()
