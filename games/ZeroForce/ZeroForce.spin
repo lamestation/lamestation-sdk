@@ -61,8 +61,6 @@ VAR
     byte    blinkstate
     byte    collided
     byte    bosshealth
-    
-    long    x
 
     
 PUB Main
@@ -86,7 +84,16 @@ PUB Main
         BossStage
 
 
-PUB StaticScreen
+PUB Static | ran, x
+'' This command sprays garbage data onto the framebuffer
+    gfx.WaitToDraw
+    
+    ran := cnt
+    repeat x from 0 to constant(gfx#SCREENSIZE_BYTES/2-1) step 1
+         word[@buffer][x] := ran?
+
+
+PUB StaticScreen | x
 
     audio.SetWaveform(4, 127)
     audio.SetADSR(127, 127, 127, 127) 
@@ -95,12 +102,12 @@ PUB StaticScreen
     
     repeat x from 0 to 50
         gfx.TranslateBuffer(@buffer, screen)
-        gfx.Static
+        Static
         
     audio.StopSong
 
 
-PUB LogoScreen
+PUB LogoScreen | x
 
     gfx.ClearScreen
     gfx.TranslateBuffer(@buffer, screen)
@@ -216,7 +223,7 @@ PUB SpawnEnemy(dx, dy, type)
         enemycount++
         
         
-PUB CreateFixedEnemies
+PUB CreateFixedEnemies | x
         currentenemies := word[@level1][currentenemiesoffset]
         currentenemiestmp := currentenemies
         repeat x from 0 to 5
@@ -226,7 +233,7 @@ PUB CreateFixedEnemies
             currentenemies >>= 2
             
             
-PUB CreateRandomEnemies | ran
+PUB CreateRandomEnemies | ran, x
     ran := cnt
     
     currentenemies := ran? & ran?

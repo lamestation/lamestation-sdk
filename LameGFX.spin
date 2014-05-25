@@ -18,9 +18,6 @@
 '' and one for receiving. These are:
 ''
 '' * **instruction1** - send data to assembly cog
-'' * **instruction2** - receive data from cog
-''
-''
 ''
 
 CON
@@ -41,11 +38,6 @@ CON
     ' text printing
     NL = 10
     LF = 13
-    TEXTPADDING = 2
-
-    SPACEBAR = 32
-    SPACEWIDTH = 1
-    MAXCHARWIDTH = 6
 
     ' assembly interface constants
     INST_IDLE = 0
@@ -55,13 +47,7 @@ CON
     INST_BOX = 4
     INST_TEXTBOX = 5
     INST_SETCLIPRECT = 6
-    INST_TRANSLATE = 7
-
-
-
-    ' locking semaphore
-    SCREENLOCK = 0
-    
+    INST_TRANSLATE = 7    
     
 '' This table 
 '' 
@@ -123,6 +109,8 @@ PUB Start(buffer, screen)
     drawsurface := buffer
     copysurface := screen
 
+PUB WaitToDraw
+    repeat until not instruction1
 
 PRI SendASMCommand(source, instruction)
 '' This is just a little function to allow for reuse
@@ -134,8 +122,6 @@ PRI SendASMCommand(source, instruction)
 '' This command maintains the lock so it is not necessary
 '' to request it in your drawing function
 ''
-    
-    'repeat until not lockset(SCREENLOCK)
     repeat until not instruction1
                                 
     sourcegfx := source  
@@ -148,16 +134,6 @@ PUB ClearScreen
 '' in a tile-based game).
 
     SendASMCommand(0, INST_CLEARSCREEN)
-
-
-PUB Static | ran
-'' This command sprays garbage data onto the framebuffer
-    repeat until not lockset(SCREENLOCK)
-    
-    ran := cnt
-    repeat imgpointer from 0 to constant(SCREENSIZE_BYTES/2-1) step 1
-         word[drawsurface][imgpointer] := ran?
-
 
 
 PUB Blit(source)
@@ -1027,7 +1003,6 @@ outputAddr              long    0
 instruct1               long    0
 instruct1full           long    0
 instruct2               long    0
-frmpoint                long    0
 destscrn                long    0
 destscrnAddr            long    0
 
@@ -1035,8 +1010,6 @@ fulscreen               long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVI
 valutemp                long    0
 valutemp2               long    0
 
-
-_screenlock             long    SCREENLOCK
 
 datatemp                long    0
 datatemp2               long    0
@@ -1048,7 +1021,6 @@ h00FF0000               long    $00FF0000
 hFF000000               long    $FF000000
 
 hFFFF                   long    $FFFF
-hAAAA                   long    $AAAA
 h5555                   long    $5555
 
 invert                  long    %01010_1010_1010_1010_1010_1010_1010_101
@@ -1060,14 +1032,7 @@ frameboost              long    0
 w1                      long    0
 h1                      long    0
 
-colorbyte1              long    0
 flipbyte1               long    0
-oldcolorbyte1           long    0
-oldflipbyte1            long    0    
-selectbyte1             long    0
-bit_clipping            long    1 << 31
-bit_transparent         long    1 << 30  
-
 
 index1                  long    0
 index2                  long    0

@@ -33,13 +33,13 @@ PUB Main
 
         
         if ctrl.Right
-        	   x++
+               x++
         if ctrl.Left
             x--
         if ctrl.Up
-        	   paddle1_y--
+               paddle1_y--
         if ctrl.Down
-        	   paddle1_y++
+               paddle1_y++
          
         gfx.Sprite(paddle.Addr, 4, paddle1_y, 0)
         gfx.Sprite(paddle.Addr, 116, paddle2_y, 0)
