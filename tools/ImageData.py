@@ -29,36 +29,24 @@ class ImageData:
 
     def openImage(self,filename):
         try:
-            self.im_old = Image.open(filename)
-            self.im_old = self.im_old.convert("RGB")
-            self.im_new = self.im_old
+            self.im = Image.open(filename)
+            self.im = self.im.convert("RGB")
             self.filename = filename
             self.fullfilename = files.getFullFilename(self.prefix, self.filename, 'spin')
         except IOError:
             print filename, "is not a valid image file"
             sys.exit(1)
 
-    def setNewImage(self,output_im):
-        self.im_new = output_im
-
-    def displayResult(self,scale):
-        canvas = Image.new("RGB",(self.im_new.size[0],self.im_old.size[1]+self.im_new.size[1]))
-    
-        canvas.paste(self.im_old,(0,0,self.im_old.size[0],self.im_old.size[1]))
-        canvas.paste(self.im_new,(0,self.im_old.size[1]))
-        
-        canvas = canvas.resize(tuple([scale*x for x in (self.im_new.size[0],self.im_old.size[1]+self.im_new.size[1])]))
-        canvas.show()
-        
-
     def getImage(self):
-        return self.im_old
+        return self.im
 
 
     def setFrameSize(self,framesize):
         self.framesize = framesize
         self.frameboost = (self.framesize[0]*self.bitdepth*self.framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF
         self.dimensions = (self.framesize[0] & 0xFFFF , self.framesize[1] & 0xFFFF) 
+        self.frames_x = self.im.size[0]/self.framesize[0]
+        self.frames_y = self.im.size[1]/self.framesize[1]
 
     def setMode(self,mode):
         self.mode = mode
@@ -176,7 +164,7 @@ class ImageData:
         print "'   Creating:",self.fullfilename
         print "'  Bit depth:",self.bitdepth
         print "' Image Type:",self.mode
-        print "' Image size:",self.im_old.size
+        print "' Image size:",self.im.size
         print "' Frame size:",self.framesize
 #        print "'     Frames:",count_tiles_x,",",count_tiles_x
 
