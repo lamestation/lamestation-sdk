@@ -90,7 +90,6 @@ for filename in filenames:
     oldim = imgdata.im
 
     imgdata.padFrames()
-    imgdata.setFrameSize(imgdata.framesize)
     spritedata = imgdata.renderSpriteData()
 
     if args.display:

@@ -60,10 +60,6 @@ class ImageData:
             print filename, "is not a valid image file"
             sys.exit(1)
 
-    def getImage(self):
-        return self.im
-
-
 
     def ceilMultiple(self, x, multiple):
         if x % multiple == 0:
@@ -83,11 +79,8 @@ class ImageData:
         newimage = Image.new("RGB",newsize)
         newimage.paste(TRANSPARENT_COLOR)
 
-        count_tiles_x = newimage.size[0]/newframesize[0]
-        count_tiles_y = newimage.size[1]/newframesize[1]
-
-        for frame_y in range(0,count_tiles_y):
-            for frame_x in range(0,count_tiles_x):
+        for frame_y in range(0,self.frames_y):
+            for frame_x in range(0,self.frames_x):
                 x = frame_x*self.framesize[0]
                 y = frame_y*self.framesize[1]
 
@@ -96,9 +89,8 @@ class ImageData:
 
                 newimage.paste(self.im.crop((x,y,x+self.framesize[0],y+self.framesize[1])),(out_x,out_y,out_x+self.framesize[0],out_y+self.framesize[1]))
 
-        self.setFrameSize(newframesize)
         self.im = newimage
-
+        self.setFrameSize(newframesize)
 
     def setFrameSize(self,framesize):
         self.framesize = framesize
