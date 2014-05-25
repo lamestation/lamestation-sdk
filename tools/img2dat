@@ -9,27 +9,8 @@ import files
 import ImageData
 
 
-SCALEFACTOR = 4
-
-PIXELS_PER_ADDRESS = 8
-BITS_PER_PIXEL = 2
-
-
-
 DEFAULT_FRAME=(8,8)
-TRANSPARENT_COLOR = (255,0,255)
 
-TILESIZE = 8
-
-
-def tupleMultiply(scalar,tup):
-    return tuple([scalar*x for x in tup])
-
-def ceilMultiple(x, multiple):
-    if x % multiple == 0:
-        return x
-    else:
-        return ((x/multiple)+1)*multiple
 
 def getCommandLineArguments():
     parser = argparse.ArgumentParser(description='Convert images to Propeller Spin data blocks for use with Lame Graphics.')
@@ -53,17 +34,6 @@ def getCommandLineArguments():
 
 
 
-def getAverageColor(pixel):
-    if type(pixel) is tuple:
-        return sum(pixel)/3
-    else:
-        return pixel
-
-
-def padFrameSize(framesize, size):
-    return tuple([ceilMultiple(framesize[0], size),ceilMultiple(framesize[1], size)])
-
-
 def getFrameSize(framesize, image):
     framesize = tuple(framesize)
     if not framesize < image.size:
@@ -79,41 +49,6 @@ def requireFrameSize(framesize):
 
     return framesize
 
-def getColorValue(pixeldata):
-    coloravg = getAverageColor(pixeldata)
-
-    if pixeldata == TRANSPARENT_COLOR:
-        return 'none'
-    elif coloravg < 40:
-        return 'black'
-    elif 40 < coloravg and coloravg < 210:
-        return 'gray'
-    elif coloravg > 210:
-        return 'white'
-    else:
-        raise "Bad input data"
-
-def padFrames(image, framesize):
-    newframesize = padFrameSize(framesize, TILESIZE)
-    newsize = tuple([image.size[0]*newframesize[0]/framesize[0],image.size[1]*newframesize[1]/framesize[1]])
-    newimage = Image.new("RGB",newsize)
-    newimage.paste(TRANSPARENT_COLOR)
-
-    count_tiles_x = newimage.size[0]/newframesize[0]
-    count_tiles_y = newimage.size[1]/newframesize[1]
-
-    for frame_y in range(0,count_tiles_y):
-        for frame_x in range(0,count_tiles_x):
-            x = frame_x*framesize[0]
-            y = frame_y*framesize[1]
-
-            out_x = frame_x*newframesize[0]
-            out_y = frame_y*newframesize[1]
-
-            newimage.paste(image.crop((x,y,x+framesize[0],y+framesize[1])),(out_x,out_y,out_x+framesize[0],out_y+framesize[1]))
-
-    return newimage
-
 
 def displayResult(scale, oldimage, newimage):
     canvas = Image.new("RGB",(newimage.size[0],oldimage.size[1]+newimage.size[1]))
@@ -124,8 +59,6 @@ def displayResult(scale, oldimage, newimage):
     canvas = canvas.resize(tuple([scale*x for x in (newimage.size[0],oldimage.size[1]+newimage.size[1])]))
     canvas.show()
         
-
-
 
 args = getCommandLineArguments()
 filenames = files.cleanFilenames(args.filenames)
@@ -140,75 +73,28 @@ for filename in filenames:
     imgdata = ImageData.ImageData()
     imgdata.openImage(filename)
 
-    im = imgdata.getImage()
-
     if args.mode[0] == 'sprite' or args.mode[0] == 'font':
         if args.framesize:
-            framesize = getFrameSize(args.framesize, im)
+            imgdata.framesize = getFrameSize(args.framesize, imgdata.im)
         else:
-            framesize = im.size
+            imgdata.framesize = imgdata.im.size
     else:
-        framesize = DEFAULT_FRAME
+        imgdata.framesize = DEFAULT_FRAME
 
-    # Allow padding of tilized images for arbitrary font sizes
     if args.mode[0] == 'font':
-        framesize = requireFrameSize(args.framesize)
+        imgdata.framesize = requireFrameSize(args.framesize)
 
     imgdata.setMode(args.mode[0])
-    imgdata.setFrameSize(framesize)
+    imgdata.setFrameSize(imgdata.framesize)
 
+    oldim = imgdata.im
 
-    output_im = padFrames(im,framesize)
-    framesize = padFrameSize(framesize, TILESIZE)
-
-    output_count_tiles_x = output_im.size[0]/framesize[0]
-    output_count_tiles_y = output_im.size[1]/framesize[1]
-
-    frame = 0
-    
-    spritedata = []
-
-    for frame_y in range(0,output_count_tiles_y):
-        for frame_x in range(0,output_count_tiles_x):
-
-            imagedata = []
-
-            for py in range(0,framesize[1]):
-
-                linedata = []
-
-                for px in range(0,framesize[0]):
-
-                    x = frame_x*framesize[0] + px
-                    y = frame_y*framesize[1] + py
-
-                    colorchar = 0
-                    pixeldata = output_im.getpixel((x,y))
-
-                    if args.bits[0] == 2:
-                        color = getColorValue(pixeldata)
-                        linedata.append(color)
-
-                        output_im.putpixel((x,y),ImageData.colorvalue[color]['output'])
-
-                    elif args.bits[0] == 8:
-                        if type(pixeldata) is tuple:
-                            r = pixeldata[0] >> 6 << 6
-                            g = pixeldata[1] >> 6 << 6
-                            b = pixeldata[2] >> 6 << 6
-                            colorchar = (r) + (g >> 2) + (b >> 4)
-                        else:
-                            print "Color data not in tuple format?"
-                            sys.exit(1)
-
-
-                imagedata.append(linedata)
-            spritedata.append(imagedata)
-            print frame
-            frame += 1
+    imgdata.padFrames()
+    imgdata.setFrameSize(imgdata.framesize)
+    spritedata = imgdata.renderSpriteData()
 
     if args.display:
-        displayResult(4, im, output_im)
+        displayResult(4, oldim, imgdata.im)
         
     spin = imgdata.assembleSpinFile(spritedata)
     print spin

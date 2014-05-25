@@ -4,8 +4,10 @@ import files
 from PIL import Image
 
 PIXELS_PER_ADDRESS = 8
+TILESIZE = 8
 
 BITS_PER_BLOCK = 8
+TRANSPARENT_COLOR = (255,0,255)
 
 colorvalue = {}
 colorvalue = {'white':{}}
@@ -18,6 +20,27 @@ colorvalue['gray'] = {'unicode': u"\u2593", 'char': 3, 'output': (177,125,225)}
 colorvalue['black']= {'unicode': u"\u2588", 'char': 0, 'output': (145,64,254)}
 colorvalue['none'] = {'unicode': u" ", 'char': 2, 'output': (255,0,255)}
 
+
+def getAverageColor(pixel):
+    if type(pixel) is tuple:
+        return sum(pixel)/3
+    else:
+        return pixel
+
+
+def getColorValue(pixeldata):
+    coloravg = getAverageColor(pixeldata)
+
+    if pixeldata == TRANSPARENT_COLOR:
+        return 'none'
+    elif coloravg < 40:
+        return 'black'
+    elif 40 < coloravg and coloravg < 210:
+        return 'gray'
+    elif coloravg > 210:
+        return 'white'
+    else:
+        raise "Bad input data"
 
 
 class ImageData:
@@ -41,6 +64,42 @@ class ImageData:
         return self.im
 
 
+
+    def ceilMultiple(self, x, multiple):
+        if x % multiple == 0:
+            return x
+        else:
+            return ((x/multiple)+1)*multiple
+
+
+    def padFrameSize(self, framesize, size):
+        return tuple([self.ceilMultiple(framesize[0], size),self.ceilMultiple(framesize[1], size)])
+
+
+
+    def padFrames(self):
+        newframesize = self.padFrameSize(self.framesize, TILESIZE)
+        newsize = tuple([self.im.size[0]*newframesize[0]/self.framesize[0],self.im.size[1]*newframesize[1]/self.framesize[1]])
+        newimage = Image.new("RGB",newsize)
+        newimage.paste(TRANSPARENT_COLOR)
+
+        count_tiles_x = newimage.size[0]/newframesize[0]
+        count_tiles_y = newimage.size[1]/newframesize[1]
+
+        for frame_y in range(0,count_tiles_y):
+            for frame_x in range(0,count_tiles_x):
+                x = frame_x*self.framesize[0]
+                y = frame_y*self.framesize[1]
+
+                out_x = frame_x*newframesize[0]
+                out_y = frame_y*newframesize[1]
+
+                newimage.paste(self.im.crop((x,y,x+self.framesize[0],y+self.framesize[1])),(out_x,out_y,out_x+self.framesize[0],out_y+self.framesize[1]))
+
+        self.setFrameSize(newframesize)
+        self.im = newimage
+
+
     def setFrameSize(self,framesize):
         self.framesize = framesize
         self.frameboost = (self.framesize[0]*self.bitdepth*self.framesize[1]/PIXELS_PER_ADDRESS) & 0xFFFF
@@ -56,6 +115,31 @@ class ImageData:
         else:
             prefix = 'gfx_'
 
+    def renderSpriteData(self):
+        frame = 0
+        self.spritedata = []
+        for frame_y in range(0,self.frames_y):
+            for frame_x in range(0,self.frames_x):
+
+                imagedata = []
+                for py in range(0,self.framesize[1]):
+
+                    linedata = []
+                    for px in range(0,self.framesize[0]):
+
+                        x = frame_x*self.framesize[0] + px
+                        y = frame_y*self.framesize[1] + py
+
+                        pixeldata = self.im.getpixel((x,y))
+                        color = getColorValue(pixeldata)
+                        linedata.append(color)
+                        self.im.putpixel((x,y),colorvalue[color]['output'])
+
+                    imagedata.append(linedata)
+                self.spritedata.append(imagedata)
+                frame += 1
+
+        return self.spritedata
 
 
     def lineRule(self):
@@ -166,5 +250,5 @@ class ImageData:
         print "' Image Type:",self.mode
         print "' Image size:",self.im.size
         print "' Frame size:",self.framesize
-#        print "'     Frames:",count_tiles_x,",",count_tiles_x
+        print "'     Frames:",self.frames_x,",",self.frames_y
 
