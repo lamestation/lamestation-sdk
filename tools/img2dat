@@ -103,6 +103,16 @@ def getColorValue(pixeldata):
     else:
         raise "Bad input data"
 
+def displayResult(scale,oldimage, newimage):
+    canvas = Image.new("RGB",(newimage.size[0],oldimage.size[1]+newimage.size[1]))
+
+    canvas.paste(self.oldimage,(0,0,oldimage.size[0],oldimage.size[1]))
+    canvas.paste(self.newimage,(0,oldimage.size[1]))
+    
+    canvas = canvas.resize(tuple([scale*x for x in (newimage.size[0],oldimage.size[1]+newimage.size[1])]))
+    canvas.show()
+        
+
 
 
 args = getCommandLineArguments()
@@ -243,7 +253,8 @@ for filename in filenames:
 
     if args.display:
         imgdata.setNewImage(output_im)
-        imgdata.displayResult(4)
+        displayResult(4)
+        
 
     spin = imgdata.assembleSpinFile(spritedata)
     print spin
