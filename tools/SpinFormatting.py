@@ -14,9 +14,9 @@ def commentBox(text):
 
     return output
 
-def addrBox(prefix):
+def addrBox(prefix,extra=""):
     output = ""
-    output += "PUB Addr\n"
+    output += "PUB "+extra+"Addr\n"
     output += "    return @"+prefix+"data\n\n"
     output += "DAT\n\n"
     output += prefix+"data"

@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
 import sys, os, re
+import files
+import ImageData
 import xml.etree.ElementTree as ET
-import base64
+import base64, zlib
 import argparse
+import SpinFormatting as SF
 
 import subprocess
 
@@ -13,172 +16,261 @@ from PIL import Image
 parser = argparse.ArgumentParser(description="""\
         Convert tmx maps to data blocks for in-game tiled maps
 
-        Currently, CSV maps are supported.
+        Currently, CSV, XML, and uncompressed Base64 maps are supported.
 
         This tool will create pack files that will contain compatible
         map and tile data in a single file.
         """)
 parser.add_argument('filenames', metavar='FILE', nargs='+', help='Maps to convert')
+parser.add_argument('-w','--write',action='store_true',
+            help="Write results to file.")
+parser.add_argument('--noprint', action='store_true',
+        help="Don't print conversion output to screen.")
 
 args = parser.parse_args()
 
 filenames = [ i for i in args.filenames if os.path.splitext(i)[1] == '.tmx' and os.path.isfile(i) ]
 
-oldtilemap_name = ""
-mapsets = {}
+
+def getObjects():
+    output = ""
+    object_data = root.findall(".//objectgroup")
+    if object_data is not None and not object_data == []:
+
+            output += SF.addrBox("obj_","obj")
+
+            totalobjects = 0
+            for og in object_data:
+                for o in og:
+                    if 'name' in o.attrib:
+                        totalobjects += 1
+
+            if (totalobjects >> 8) > 0:
+                raise ValueError(str(totalobjects)+" objects; that's a lot of objects! Max is "+str(0xFF))
+
+            output += "\nword\t\t"+str(totalobjects)+"\n"
+
+            for og in object_data:
+                for o in og:
+                    if 'name' in o.attrib:
+                        output += "\nbyte\t\t"\
+                                +str(int(o.attrib['x'])/tilemap.tilew)+", "\
+                                +str(int(o.attrib['y'])/tilemap.tilew)+", "\
+                                +o.attrib['name']
+    return output
+
+
+
+def CSVtoLevelData(text):
+    return re.sub(r"[\r\n]","", text)
+
+
+def Base64toCSV(text):
+    output = ""
+
+    count = 0
+    spacer = 0
+    for t in text:
+        if spacer % 4 == 0:
+            output += "%3i" % ord(t)
+
+            if count < len(text)/4-1:
+                output += ", "
+
+            count += 1
+        spacer += 1
+
+    return output
+
+def XMLtoCSV(datablock):
+    output = ""
+    count = 0
+    for o in object_data:
+        output += o.attrib['gid']
+        if  count < len(object_data)-1:
+            output += ","
+        count += 1
+    return output
+
+
+
+
+class LevelData:
+    def openLevel(self,filename):
+        tree = ET.parse(filename)
+        self.root = tree.getroot()
+        self.width = int(self.root.attrib['width'])
+        self.height = int(self.root.attrib['height'])
+        self.filename = filename
+        self.fullfilename = files.getFullFilename("", self.filename, 'spin')
+        self.shortname = files.getShortFilename(self.filename)
+        self.data = {}
+
+        return self.root
+
+    def assembleWordHeader(self):
+        output = ""
+        #output += "\n"+self.shortname+"\n"
+        output += SF.addrBox("map_")
+        output += "\nbyte\t%3i,%3i  'width, height\n\n" % (self.width, self.height)
+        return output
+
+    def assembleSpinHeader(self):
+        output = ""
+
+        output += SF.commentBox(\
+                self.shortname+".spin\n"\
+                +"Level conversion by map2dat")
+
+        return output
+
+    def buildLevelData(self):
+        for child in self.root.iter('layer'):
+            self.maplayer = child.attrib['name']
+            data = child.find('data')
+
+            text = data.text
+            if 'encoding' in data.attrib:
+                if data.attrib['encoding'] == 'csv':
+                    text = CSVtoLevelData(text)
+
+                elif data.attrib['encoding'] == 'base64':
+                    if 'compression' in data.attrib:
+                        if data.attrib['compression'] == 'zlib' or data.attrib['compression'] == 'gzip':
+                            text = zlib.decompress(text)
+                        else:
+                            raise ValueError("Unsupported compression scheme!")
+                    text = base64.decodestring(text)
+                    text = Base64toCSV(text)
+
+                else:
+                    raise ValueError("Unsupported encoding scheme!")
+
+            else: # XML
+                object_data = data.findall(".//tile")
+                if not object_data is None:
+                    text = XMLtoCSV(object_data)
+
+            text = text.split(',')
+            self.data[child.attrib['name']] = text
+
+            try:
+                self.collision_data = Image.open(self.collisionmap).convert("RGB")
+            except (IOError, KeyError): # No collision layer found
+                text = self.processCollision(self.layer_no_collision)
+            else: # Collision layer found
+                text = self.processCollision(self.layer_with_collision)
+
+        return text
+
+
+
+    def processCollision(self,process_stage):
+        output = ""
+
+        for child in self.root.iter('layer'):
+            for i in range(0,len(self.data[child.attrib['name']])):
+                if i % self.width == 0:
+                    output += "byte\t"
+
+                output += "%3i" % process_stage(self.data,i)
+
+                if i % self.width != self.width-1:
+                    output += ","
+                else:
+                    output += "\n"
+
+        return output
+
+
+    def layer_with_collision(self,leveldatavalue,j):
+        value = int(leveldatavalue[self.maplayer][j]) - 1
+    
+        tilex = (value) % tilemap.inc
+        tiley = value / tilemap.inc
+    
+    
+        if value > 0:
+            if not sum(self.collision_data.getpixel((tilex*tilemap.tilew,tiley*tilemap.tileh)))/3 > 0:
+                value += 1 << 7
+    
+        return value + 1
+    
+    def layer_no_collision(self,leveldatavalue,j):
+        return int(leveldatavalue[self.maplayer][j])
+
+
+
+    def getLongName(self):
+        return self.fullfilename
+    
+    def getShortName(self):
+        return self.shortname
+
+
+class TileMap:
+    def __init__(self, tileset):
+        self.name = tileset.find('image').attrib['source']
+        self.w = int(tileset.find('image').attrib['width'])
+        self.h = int(tileset.find('image').attrib['height'])
+        self.tilew = int(tileset.attrib['tilewidth'])
+        self.tileh = int(tileset.attrib['tilewidth'])
+        self.inc = self.w/self.tilew
 
 
 if not filenames:
     print "No valid file paths given."
     sys.exit(1)
-else:
-    for filename in args.filenames:
-        tree = ET.parse(filename)
-
-        root = tree.getroot()
-
-        width = int(root.attrib['width'])
-        height = int(root.attrib['height'])
-
-        newfilename = filename+'.dat'
-        f = open(newfilename,'w')
-
-        reference_name = "map_" + os.path.splitext(os.path.basename(filename))[0]
-        f.write("\n%s\n" % reference_name)
-        f.write("byte\t%3i, %3i  'width, height\n" % (width, height))
-
-        tileset = root.find(".//tileset[@firstgid='1']")
-        tilemap_name = tileset.find('image').attrib['source']
-        tilemap_w = int(tileset.find('image').attrib['width'])
-        tilemap_tilew = int(tileset.attrib['tilewidth'])
-        tilemap_tileh = int(tileset.attrib['tilewidth'])
-        tilemap_inc = tilemap_w/tilemap_tilew
-
-        fullpath_tilemap_name = os.path.join(os.path.dirname(newfilename),tilemap_name)
-        newtilemap_name = fullpath_tilemap_name+'.dat'
-
-        ## See if a corresponding collision map is available
-        collisionmap_name = os.path.splitext(fullpath_tilemap_name)[0]
-        collisionmap_name = collisionmap_name + '_collision' + os.path.splitext(fullpath_tilemap_name)[1]
-        #print collisionmap_name
-
-        if not oldtilemap_name == tilemap_name:
-            mapsets[newtilemap_name] = {}
-            try:
-                child = subprocess.check_call([os.path.join(os.path.dirname(__file__),"img2dat"), "--mode","tilemap",fullpath_tilemap_name])
-            except:
-                sys.exit(1)
-
-            oldtilemap_name = tilemap_name
-            
-        mapinfo = {"reference": reference_name, "width": width, "height": height}
-        mapsets[newtilemap_name][newfilename] = mapinfo
-
-        leveldata = {}
-
-        for child in root.iter('layer'):
-            maplayer = child.attrib['name']
-            data = child.find('data')
-            if data.attrib['encoding'] == 'csv':
-
-                text = re.sub(r"[\r\n]","", data.text)
-                text = text.split(',')
-                n = len(text)
-
-                leveldata[child.attrib['name']] = text
-            else:
-                print "Unsupported encoding scheme; exiting!"
-                sys.exit(1)
-
-        def layer_with_collision(leveldatavalue,j):
-            value = int(leveldatavalue[maplayer][j]) - 1
-
-            tilex = (value) % tilemap_inc
-            tiley = value / tilemap_inc
 
 
-            if value > 0:
-                if not sum(collision_data.getpixel((tilex*tilemap_tilew,tiley*tilemap_tileh)))/3 > 0:
-                    value += 1 << 7
+oldtilemap_name = ""
 
-            return value + 1
+for filename in args.filenames:
+    leveldata = LevelData()
+    root = leveldata.openLevel(filename)
 
-        def layer_no_collision(leveldatavalue,j):
-            return int(leveldatavalue[maplayer][j])
+    output = ""
 
+    output += leveldata.assembleSpinHeader()
+    output += leveldata.assembleWordHeader()
 
-        def process_output(process_stage):
-            for i in range(0,len(text)):
-                if i % width == 0:
-                    f.write("byte\t")
+    # Use internal or external tileset
+    tilemaproot = root.find(".//tileset[@firstgid='1']")
+    if 'source' in tilemaproot.attrib:
+        external_tilemap_name = os.path.join(os.path.dirname(leveldata.getLongName()),tilemaproot.attrib['source'])
+        tree = ET.parse(external_tilemap_name)
+        tilemaproot = tree.getroot()
 
-                f.write("%3i" % process_stage(leveldata,i))
+    tilemap = TileMap(tilemaproot)
 
-                if i % width != width-1:
-                    f.write(",")
-                else:
-                    f.write("\n")
-
+    fullpath_tilemap_name = os.path.join(os.path.dirname(leveldata.getLongName()),tilemap.name)
+    if not oldtilemap_name == tilemap.name:
         try:
-            #leveldata['Collision']
-            collision_data = Image.open(collisionmap_name).convert("RGB")
-        except IOError:
-            process_output(layer_no_collision)
-        except KeyError:
-            #print "No collision layer"
-            process_output(layer_no_collision)
-        else:
-            #print "Collision layer found"
-            process_output(layer_with_collision)
+            arguments = [os.path.join(files.getScriptDir(),"img2dat")]
 
+            if args.write:
+                arguments.append("--write")
+
+            arguments.append("--noprint")
+            for x in ["--framesize",str(tilemap.tilew),str(tilemap.tileh)]:
+                arguments.append(x)
+            arguments.append(fullpath_tilemap_name)
+
+            child = subprocess.check_call(arguments)
+        except:
+            print "Could not find img2dat"
+            sys.exit(1)
+        oldtilemap_name = tilemap.name
         
+    collisionmap_name = os.path.splitext(fullpath_tilemap_name)[0]
+    collisionmap_name = collisionmap_name + '_collision' + os.path.splitext(fullpath_tilemap_name)[1]
+    leveldata.collisionmap =  collisionmap_name
 
-        # Start locations
-        object_data = root.find(".//objectgroup[@name='start']")
-        if object_data is not None:
-            if not object_data == []:
-                f.write("\n' startlocations\n")
+    output += leveldata.buildLevelData()
+    output += getObjects()
 
-                f.write("\nbyte\t%i" % len(object_data))
+    if args.write:
+        files.writeFile(output,leveldata.fullfilename)
 
-                for o in object_data:
-                    f.write("\nbyte\t"+str(int(o.attrib['x'])/tilemap_tilew)+", "
-                            +str(int(o.attrib['y'])/tilemap_tilew))
-
-        # OBjects
-        object_data = root.find(".//objectgroup[@name='objects']")
-        if object_data is not None:
-            if not object_data == []:
-                f.write("\n' objects\n")
-
-                f.write("\nbyte\t\t%i, 0" % len(object_data))
-
-                for o in object_data:
-                    f.write("\nbyte\t\t"+str(int(o.attrib['x'])/tilemap_tilew)+", "
-                            +str(int(o.attrib['y'])/tilemap_tilew)+", "+o.attrib['name'])
-
-
-
-        f.close()
-
-
-for tilemap in mapsets:
-    packfile = tilemap+".pack"
-    f = open(packfile,'w')
-
-    f.write("\nmapTable_%s\nword\t@" % os.path.basename(tilemap).split('.')[0])
-
-    flist = []
-    for level in mapsets[tilemap]:
-        flist.append(mapsets[tilemap][level]['reference'])
-
-    f.write(", @".join(flist))
-    f.write("\n\n")
-
-#    f.write(open(tilemap).read())
-
-    for level in mapsets[tilemap]:
-        f.write(open(level).read())
-    f.close()
-
-print open(packfile,'r').read()
+    if not args.noprint:
+        print output

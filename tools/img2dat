@@ -16,10 +16,12 @@ def getCommandLineArguments():
             help="Bit depth of images.")
     parser.add_argument('-f','--framesize', nargs=2, metavar=('WIDTH','HEIGHT'), type=int,
             help="Size of individual sprite frames (only needed for sprites).")
-    parser.add_argument('-d', action='store_true',
+    parser.add_argument('-d','--display', action='store_true',
             help="Display conversion results.")
-    parser.add_argument('-p', action='store_true',
-            help="Print conversion output to screen.")
+    parser.add_argument('-w','--write',action='store_true',
+            help="Write results to file.")
+    parser.add_argument('--noprint', action='store_true',
+            help="Don't print conversion output to screen.")
 
     parser.add_argument('filenames', metavar='FILE', nargs='+', help='Files to convert')
     return parser.parse_args()
@@ -58,14 +60,13 @@ for filename in filenames:
 
     imgdata.padFrames()
     spritedata = imgdata.renderSpriteData()
-
-    if args.d:
-        displayResult(4, oldim, imgdata.im)
-        
     spin = imgdata.assembleSpinFile(spritedata)
 
-    if args.p:
-        print spin
+    if args.display:
+        displayResult(4, oldim, imgdata.im)
 
-    imgdata.writeSpinFile(spin)
-    #imgdata.printImageTag()
+    if args.write:
+        files.writeFile(spin,imgdata.fullfilename)
+
+    if not args.noprint:
+        print spin
