@@ -10,3 +10,10 @@ def cleanFilenames(filenames):
     filenames = [ i for i in filenames if not os.path.splitext(i)[1] == '.txt' ]
     return filenames
 
+
+# Determine if application is a script file or frozen exe
+def getScriptDir():
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    elif __file__:
+        return os.path.dirname(__file__)

@@ -9,46 +9,20 @@ import files
 import ImageData
 
 
-DEFAULT_FRAME=(8,8)
-
-
 def getCommandLineArguments():
     parser = argparse.ArgumentParser(description='Convert images to Propeller Spin data blocks for use with Lame Graphics.')
 
-    parser.add_argument('-m','--mode', nargs=1, metavar=('MODE'), choices=['box','sprite','font','tilemap'], default=['sprite'],
-            help="""Indicates what the image is to be converted into:
-                box - An image with a fixed 8x8 size, compatible with the box command.
-                tilemap - A collection of boxes chopped from a tilemap image.
-                sprite - An image of any width and height that may have multiple frames.
-                font - Parse the image as a bitmap font.
-            """)
     parser.add_argument('-b','--bits', nargs=1, metavar=('BITS'), type=int, choices=[2,8],default=[2],
             help="Bit depth of images.")
     parser.add_argument('-f','--framesize', nargs=2, metavar=('WIDTH','HEIGHT'), type=int,
             help="Size of individual sprite frames (only needed for sprites).")
-    parser.add_argument('-d','--display', action='store_true',
-            help="Show graphic comparison of old and new images.")
+    parser.add_argument('-d', action='store_true',
+            help="Display conversion results.")
+    parser.add_argument('-p', action='store_true',
+            help="Print conversion output to screen.")
 
     parser.add_argument('filenames', metavar='FILE', nargs='+', help='Files to convert')
     return parser.parse_args()
-
-
-
-def getFrameSize(framesize, image):
-    framesize = tuple(framesize)
-    if not framesize < image.size:
-        print "Frame is larger than image; exiting"
-        sys.exit(1)
-    return framesize
-
-
-def requireFrameSize(framesize):
-    if not framesize:
-        print "Frame size required for",args.mode[0]+"; exiting"
-        sys.exit(1)
-
-    return framesize
-
 
 def displayResult(scale, oldimage, newimage):
     canvas = Image.new("RGB",(newimage.size[0],oldimage.size[1]+newimage.size[1]))
@@ -73,30 +47,25 @@ for filename in filenames:
     imgdata = ImageData.ImageData()
     imgdata.openImage(filename)
 
-    if args.mode[0] == 'sprite' or args.mode[0] == 'font':
-        if args.framesize:
-            imgdata.framesize = getFrameSize(args.framesize, imgdata.im)
-        else:
-            imgdata.framesize = imgdata.im.size
-    else:
-        imgdata.framesize = DEFAULT_FRAME
-
-    if args.mode[0] == 'font':
-        imgdata.framesize = requireFrameSize(args.framesize)
-
-    imgdata.setMode(args.mode[0])
-    imgdata.setFrameSize(imgdata.framesize)
+    if args.framesize:
+        try:
+            imgdata.setFrameSize(tuple(args.framesize))
+        except ValueError as detail:
+            print "error:",detail
+            sys.exit(1)
 
     oldim = imgdata.im
 
     imgdata.padFrames()
     spritedata = imgdata.renderSpriteData()
 
-    if args.display:
+    if args.d:
         displayResult(4, oldim, imgdata.im)
         
     spin = imgdata.assembleSpinFile(spritedata)
-    print spin
+
+    if args.p:
+        print spin
 
     imgdata.writeSpinFile(spin)
-    imgdata.printImageTag()
+    #imgdata.printImageTag()
