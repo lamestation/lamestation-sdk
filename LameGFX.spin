@@ -34,7 +34,6 @@ CON
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
     SCREENSIZE_BYTES_END = SCREENSIZE_BYTES-1
 
-
     ' text printing
     NL = 10
     LF = 13
@@ -44,10 +43,9 @@ CON
     INST_CLEARSCREEN = 1
     INST_BLITSCREEN = 2
     INST_SPRITE = 3
-    INST_BOX = 4
-    INST_TEXTBOX = 5
-    INST_SETCLIPRECT = 6
-    INST_TRANSLATE = 7    
+    INST_TEXTBOX = 4
+    INST_SETCLIPRECT = 5
+    INST_TRANSLATE = 6  
     
 '' This table 
 '' 
@@ -160,14 +158,10 @@ PUB Box(source, x, y)
 '' 00000000 00000000 00000000  00000000
 '' </pre>
 ''
-    SendASMCommand(source, INST_BOX + ((x & $FF) << 8) + ((y & $FF) << 16))
+    SendASMCommand(source, INST_SPRITE + ((x & $FF) << 8) + ((y & $FF) << 16))
     
 
 PUB Sprite(source, x, y, frame)
-'' This is the original sprite function and has been
-'' largely superseded by SpriteTrans, which supports
-'' transparency and frames.
-''
 '' * **source** - Memory address of the source image
 '' * **x** - Horizontal destination position (0-15)
 '' * **y** - Vertical destination position (0-7)
@@ -258,7 +252,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
             tilecnt := tilecnttemp + (offset_x >> 3) + x
             tile := (byte[map_levelmap][tilecnt] & TILEBYTE) - 1
             if tile => 0
-                 Box(map_tilemap + (tile << 4), (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7))
+                 Sprite(map_tilemap, (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7),tile)
 
         tilecnttemp += byte[map_levelmap][0]
         
@@ -276,7 +270,7 @@ PUB LoadFont(sourcevar, startingcharvar, tilesize_xvar, tilesize_yvar)
     tilesize_y := tilesize_yvar
 
 PUB PutChar(char, x, y)
-    Box(font + (char - startingchar)<<4 + 1, x, y)
+    Sprite(font, x, y, char - startingchar)
 
 PUB PutString(stringvar, origin_x, origin_y) | stringcursor, char, x, y
    
@@ -285,7 +279,7 @@ PUB PutString(stringvar, origin_x, origin_y) | stringcursor, char, x, y
     y := origin_y
     repeat while byte[stringvar][stringcursor] <> 0
         char := byte[stringvar][stringcursor]
-        Box(font + (char - startingchar)<<4 + 1, x, y)
+        Sprite(font, x, y, char - startingchar)
         x += tilesize_x
         stringcursor++
         
@@ -302,7 +296,7 @@ PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
         elseif char == " "
             x += tilesize_x
         else   
-            Box(font + (char - startingchar)<<4 + 1, x, y)
+            Sprite(font, x, y, char - startingchar)
             if x+tilesize_x => origin_x+w      
                 y += tilesize_y
                 x := origin_x
@@ -372,13 +366,11 @@ if_z                    jmp     #clearscreen1
 if_z                    jmp     #blitscreen1
                         cmp     instruct1, #3   wz      'SPRITE
 if_z                    jmp     #sprite1
-                        cmp     instruct1, #4   wz      'BOX
-if_z                    jmp     #box1
-'                        cmp     instruct1, #5   wz      'TEXT
+'                        cmp     instruct1, #4   wz      'TEXT
 'if_z                    jmp     #tex
-                        cmp     instruct1, #6   wz      'SET CLIP RECT
+                        cmp     instruct1, #5   wz      'SET CLIP RECT
 if_z                    jmp     #setcliprect1
-                        cmp     instruct1, #7   wz      'TRANSLATE
+                        cmp     instruct1, #6   wz      'TRANSLATE
 if_z                    jmp     #translatebuffer1
 
 
@@ -473,7 +465,7 @@ sprite1                 mov     Addrtemp, destscrn
                         'frame
                         mov     frame1, instruct1full
                         shr     frame1, #24
-                        and     frame1, #$3F   ' get frame number
+                        and     frame1, #$FF   ' get frame number
 
                         ' read header from sprite
                         rdword  sourceAddrTemp, sourceAddr                             
@@ -599,130 +591,6 @@ if_nc                   jmp     #:skipblender2
 ' INDEX_Y LOOP END -------------------------------------                       
                         
                         jmp     #loopexit
-
-
-
-
-
-
-
-'' #### BLIT BOX
-'' ---------------------------------------------------
-''
-'' ###### instruction1 format
-''
-'' <pre>
-'' clip trans   frame     y        x        instr
-''  -     -     ------ -------- --------  --------
-''  0     0     000000 00000000 00000000  00000000   
-'' </pre>
-
-box1                    mov     Addrtemp, destscrn
-                        rdword  sourceAddrTemp, sourceAddr
-
-                        
-                        ' get x position of box
-                        mov     x1, instruct1full
-                        shl     x1, #16                 ' perform sign extend with masking
-                        sar     x1, #24
-                        mov     x2, x1
-                        adds    x2, #8
-                        
-                        mov     iter_x, x1             ' this value rotates the word for the blender
-                        shl     iter_x, #1             ' x << 1                        
-                        and     iter_x, #$F            ' x % 8
-                        
-                        mov     datatemp, x1
-                        sar     datatemp, #2            ' x / 4    ' n pixels = 2*n bits
-                        adds    Addrtemp, datatemp                        
-
-                        ' get y position of box
-                        mov     y1, instruct1full
-                        shl     y1, #8                  ' perform sign extend with masking
-                        sar     y1, #24
-                        mov     y2, y1
-                        adds    y2, #8
-                        
-                        mov     iter_y, y1             ' this value iterates from y1 to y2
-
-                        mov     datatemp, y1
-                        shl     datatemp, #5
-                        adds    Addrtemp, datatemp
-
-'' ---------------------------------------------------
-                        '' Begin copying data
-                        mov     valutemp, #8
-:loop                   mov     datatemp, Addrtemp
-
-                        cmps    iter_y, _clipy1             wc
-if_c                    jmp     #:skipall
-                        cmps    iter_y, _clipy2             wc
-if_nc                   jmp     #:skipall
-
-
-                        '' Read old data in display buffer
-                        rdword  datatemp2, datatemp
-                        add     datatemp, #2
-                        rdword  blender1, datatemp
-                        shl     blender1, #16
-                        add     blender1, datatemp2
-                        
-                        
-                        ' read new word
-                        rdword  datatemp2, sourceAddrTemp
-                        shl     datatemp2, iter_x      ' rotate source word
-
-
-                        ' prepare mask for blending old and new
-                        mov     blendermask, hFFFF
-                        shl     blendermask, iter_x
-                        
-                        andn    blender1, blendermask
-                        add     blender1, datatemp2
-
-
-                        ' split long into two words because we don't know whether this word
-                        ' falls on a long boundary, so we have to write it one at a time.
-                        mov     blender2, blender1    ' copy situation
-
-                        and     blender1, hFFFF
-                        shr     blender2, #16
-                        and     blender2, hFFFF
-                        
-                        
-                        
-                        
-                        mov     datatemp, Addrtemp
-                        ' perform sprite clipping
-                        cmps    x1, _clipx1                  wc
-if_c                    jmp     #:skipblender1
-                        cmps    x1, _clipx2                  wc
-if_nc                   jmp     #:skipblender1 
-                        wrword  blender1, datatemp
-:skipblender1
-                        add     datatemp, #2
-                        
-                        cmps    x2, _clipx1                  wc
-if_c                    jmp     #:skipblender2
-                        cmps    x2, _clipx2                  wc
-if_nc                   jmp     #:skipblender2
-
-                        wrword  blender2, datatemp
-:skipblender2
-
-                        
-:skipall                add     Addrtemp, #32               ' 16 words
-                        add     sourceAddrTemp, #2
-                        adds    iter_y, #1
-                        djnz    valutemp, #:loop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
-'' ---------------------------------------------------
-                        
-                        jmp     #loopexit
-
-
-
-
-
 
 
 
