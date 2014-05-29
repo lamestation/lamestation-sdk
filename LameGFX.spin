@@ -100,7 +100,7 @@ PUB Start(buffer, screen)
 '                                                              number of arguments -1 --+ |
 '                                                                                       | |
     c_clearscreen := @p_clearscreen << 16 | (@clearscreen1 - @graphicsdriver) >> 2 | %000_0 << 12
-    c_blitscreen  := @p_blitscreen  << 16 | (@blitscreen1  - @graphicsdriver) >> 2 | %000_1 << 12
+    c_blitscreen  := @p_blitscreen  << 16 | (@blitscreen   - @graphicsdriver) >> 2 | %000_1 << 12
     c_sprite      := @p_sprite      << 16 | (@sprite1      - @graphicsdriver) >> 2 | %011_1 << 12
     c_setcliprect := @p_setcliprect << 16 | (@setcliprect1 - @graphicsdriver) >> 2 | %011_1 << 12
     c_translate   := @p_translate   << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
@@ -344,29 +344,6 @@ graphicsdriver          jmpret  $, #setup
 ''
 '' 00000000 00000000 00000000   00000000
 
-' CLEAR THE SCREEN
-clearscreen1            mov     arg1, destscrn
-                        mov     arg3, fullscreen
-
-:loop                   wrword  zero, arg1
-                        add     arg1, #2
-                        djnz    arg3, #:loop
-
-                        jmp     %%0                     ' return
-
-'' #### BLIT FULL SCREEN
-blitscreen1             mov     arg1, destscrn
-                        mov     arg3, fullscreen
-                        
-                        add     arg0, #6                ' skip header
-       
-:loop                   rdword  arg2, arg0
-                        add     arg0, #2
-                        wrword  arg2, arg1
-                        add     arg1, #2
-                        djnz    arg3, #:loop
-
-                        jmp     %%0                     ' return
 
 '' #### BLIT SPRITE
 '' ---------------------------------------------------
@@ -638,7 +615,20 @@ translateLCD            mov     arg2, #0                ' offset from base
 
 ' support code
 
-translateVGA            mov     arg3, fullscreen
+clearscreen1            mov     arg1, destscrn
+                        mov     arg3, fullscreen
+
+:loop                   wrword  zero, arg1
+                        add     arg1, #2
+                        djnz    arg3, #:loop
+
+                        jmp     %%0                     ' return
+
+
+blitscreen              add     arg0, #6                ' skip sprite header
+                        mov     arg1, destscrn          ' override destination
+
+translateVGA            mov     arg3, fullscreen        ' words per screen
                         
 :loop                   rdword  arg2, arg0
                         add     arg0, #2
@@ -646,7 +636,7 @@ translateVGA            mov     arg3, fullscreen
                         add     arg1, #2
                         djnz    arg3, #:loop
 
-                        jmp     %%0
+                        jmp     %%0                     ' return
 
 
 args                    rdlong  arg0, addr              ' read 1st argument                 
