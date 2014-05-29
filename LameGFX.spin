@@ -330,26 +330,12 @@ graphicsdriver          jmpret  $, #setup
 '{n/a}          if_c    addx    addr, #3                ' advance beyond last argument
                         jmp     code                    ' execute function
 
-'' instruct1 does not pass values that are big, and it's reading in a long.
-'' I can use the rest of the room in the long to pass through parameters like
-'' x, y, frame, duration. The screen isn't any larger than 128x64, so 256
-'' should be sufficient; just need to watch for signs.
-''
-'' param3   param2   param1    instr/flags
-''
-'' 00000000 00000000 00000000   00000000
-
-
-'' #### BLIT SPRITE
-'' ---------------------------------------------------
-''
-'' ###### instruction format
-''
-'' <pre>
-'' clip trans   frame     y        x        instr
-''  -     -     ------ -------- --------  --------
-''  0     0     000000 00000000 00000000  00000000   
-'' </pre>
+' #### BLIT SPRITE
+' ------------------------------------------------------
+' parameters: arg0: source buffer (word aligned)
+'             arg1: x
+'             arg2: y
+'             arg3: frame
 
 sprite1                 mov     Addrtemp, destscrn
                         mov     sourceAddrTemp, arg0
@@ -502,23 +488,12 @@ if_nc                   jmp     #:skipblender2
 
                         jmp     %%0                     ' return
 
-
-
-
-'' WRITE TEXT
-textbox1
-
-
-'' #### SetClipRectangle
-'' ---------------------------------------------------
-''
-'' ###### instruction format
-''
-'' <pre>
-''  clipx1 clipy1  clipx2  clipy2  instr
-''  ------ ------ ------- -------  ------
-''  000000 000000 0000000 0000000  000000   
-'' </pre>
+' #### SET CLIP RECTANGLE
+' ------------------------------------------------------
+' parameters: arg0: x1
+'             arg1: y1
+'             arg2: y2
+'             arg3: y2
 
 setcliprect1            mov     _clipx1, arg0           ' |
                         mov     _clipy1, arg1           ' |
@@ -527,12 +502,32 @@ setcliprect1            mov     _clipx1, arg0           ' |
 
                         jmp     %%0                     ' return
                         
-'' #### TRANSLATE BUFFER
-'' ---------------------------------------------------
-'' clip trans   frame     y        x        instr
-''  -     -     ------ -------- --------  --------
-''  0     0     000000 00000000 00000000  00000000   
-'' --------------------------------------------------- 
+' #### TRANSLATE BUFFER
+' ------------------------------------------------------
+' parameters: arg0: source buffer       (word aligned)
+'             arg1: destination buffer  (word aligned)
+'
+' Given screen dimensions of 128x64 pixel and 2 bits/pixel we're looking at
+' a linear buffer of 64*128*2 bits == 64*32 bytes == 2K. The LCD buffers needs
+' the bytes effectively rotated by 90 deg.
+'                                         
+'    +---------------+---------------+    An 8x8 pixel block holds 16bytes or     
+' R0 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    8 words. The LCD expects data to be     
+'    +---------------+---------------+    formatted in a way that all 0 bits      
+' R1 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    are delivered first starting with R0.0  
+'    +---------------+---------------+    in bit position 0 and R7.0 in position  
+' R2 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    7. This new byte is followed by column  
+'    +---------------+---------------+    1 and so on until column F.             
+' R3 |0 1 2 3 4 5 6 7|8 9 A B C D E F|                                            
+'    +---------------+---------------+    To achieve this we scan all 16x8 blocks 
+' R4 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    of the structure shown to the left. This
+'    +---------------+---------------+    gives us outer and inner loop. Address  
+' R5 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    offsets increment by 2 (word) for each
+'    +---------------+---------------+    column and 8*32 == 256 for each row.    
+' R6 |0 1 2 3 4 5 6 7|8 9 A B C D E F|
+'    +---------------+---------------+
+' R7 |0 1 2 3 4 5 6 7|8 9 A B C D E F|
+'    +---------------+---------------+
 
 translateLCD            mov     arg2, #0                ' offset from base
 
@@ -541,6 +536,8 @@ translateLCD            mov     arg2, #0                ' offset from base
 
 :columns                mov     addr, arg0              ' |
                         add     addr, arg2              ' base + offset
+
+' read 8 words of an 8x8 pixel block (words are separated by a whole line, 32 bytes)
                         
                         rdword  xsrc+0, addr            ' load 8x8 pixel block
                         add     addr, #32
@@ -558,9 +555,9 @@ translateLCD            mov     arg2, #0                ' offset from base
                         add     addr, #32
                         rdword  xsrc+7, addr
 
-                        mov     pcnt, #8
+                        mov     pcnt, #8                ' scan 8 columns
 
-:loop                   shr     xsrc+0, #1 wc           ' even column(s)
+:loop                   shr     xsrc+0, #1 wc           ' extract even column(s)
                         rcr     trgt, #1
                         shr     xsrc+1, #1 wc
                         rcr     trgt, #1
@@ -577,7 +574,7 @@ translateLCD            mov     arg2, #0                ' offset from base
                         shr     xsrc+7, #1 wc
                         rcr     trgt, #1
 
-                        shr     xsrc+0, #1 wc           ' odd column(s)
+                        shr     xsrc+0, #1 wc           ' extract odd column(s)
                         rcr     trgt, #1
                         shr     xsrc+1, #1 wc
                         rcr     trgt, #1
@@ -594,8 +591,8 @@ translateLCD            mov     arg2, #0                ' offset from base
                         shr     xsrc+7, #1 wc
                         rcr     trgt, #17
 
-                        wrword  trgt, arg1
-                        add     arg1, #2
+                        wrword  trgt, arg1              ' write out one pixel column
+                        add     arg1, #2                ' advance destination
 
                         djnz    pcnt, #:loop
 
@@ -607,7 +604,9 @@ translateLCD            mov     arg2, #0                ' offset from base
 
                         jmp     %%0                     ' return
 
-' support code
+' #### CLEAR SCREEN
+' ------------------------------------------------------
+' parameters: none
 
 clearscreen1            mov     arg1, destscrn
                         mov     arg3, fullscreen
@@ -618,6 +617,10 @@ clearscreen1            mov     arg1, destscrn
 
                         jmp     %%0                     ' return
 
+' #### BLIT SCREEN
+' ------------------------------------------------------
+' parameters: arg0: source buffer       (word aligned)
+'             arg1: destination buffer  (word aligned)
 
 blitscreen              add     arg0, #6                ' skip sprite header
                         mov     arg1, destscrn          ' override destination
@@ -632,6 +635,7 @@ translateVGA            mov     arg3, fullscreen        ' words per screen
 
                         jmp     %%0                     ' return
 
+' support code (fetching up to 4 arguments)
 
 args                    rdlong  arg0, addr              ' read 1st argument                 
                         cmpsub  addr, delta wc          ' [increment address and] check exit
