@@ -681,14 +681,10 @@ h1                      long    0
 
 flipbyte1               long    0
 
-'index1                 long    0
-'index2                 long    0
 index_x                 long    0
 index_y                 long    0
 iter_x                  long    0
 iter_y                  long    0
-'srcpointer             long    0
-'destpointer            long    0
 
 
 _clipx1                 long    0
