@@ -1,11 +1,12 @@
+''
 '' LameGFX Fast Drawing Library
-'' ─────────────────────────────────────────────────
+'' -------------------------------------------------
 '' Version: 1.0
 '' Copyright (c) 2013-2014 LameStation LLC
 '' See end of file for terms of use.
 '' 
 '' Authors: Brett Weir
-'' ─────────────────────────────────────────────────
+'' -------------------------------------------------
 '' This is a graphics library designed for use on the
 '' LameStation portable gaming handheld. It is designed
 '' to be straightforward to use and easy to set up.
@@ -17,9 +18,8 @@
 '' driver establishes two longs, one for sending information
 '' and one for receiving. These are:
 ''
-'' * **instruction1** - send data to assembly cog
+'' * **instruction** - send data to assembly cog
 ''
-
 CON
 
 
@@ -38,15 +38,6 @@ CON
     NL = 10
     LF = 13
 
-    ' assembly interface constants
-    INST_IDLE = 0
-    INST_CLEARSCREEN = 1
-    INST_BLITSCREEN = 2
-    INST_SPRITE = 3
-    INST_TEXTBOX = 4
-    INST_SETCLIPRECT = 5
-    INST_TRANSLATE = 6  
-    
 '' This table 
 '' 
 '' +------+-------+------+-------------+
@@ -77,20 +68,13 @@ CON
     
 
 VAR
-
-    long    imgpointer
-    long    temp3
-    
-    
 '' These longs make up the interface between Spin and
 '' assembly.
 '' They must apppear in this order.
 '' ---------------------------------------------------
-    long    instruction1
-    long    instruction2
+    long    instruction
     long    outputlong
-    long    sourcegfx
-    word    drawsurface
+    long    drawsurface
 '' ---------------------------------------------------
 
     word    copysurface
@@ -100,39 +84,42 @@ VAR
     byte    tilesize_x
     byte    tilesize_y
 
+VAR
+    long    c_clearscreen,    c_blitscreen,    c_sprite,     c_setcliprect,    c_translate
+    long    p_clearscreen[0], p_blitscreen[1], p_sprite[4],  p_setcliprect[4], p_translate[2]
+
+PUB null
+'' This is not a top level object.
 
 PUB Start(buffer, screen)
-    cognew(@graphicsdriver, @instruction1)
 
     drawsurface := buffer
     copysurface := screen
+    cognew(@graphicsdriver, @instruction)
+'                                                   function has(1) no(0) argument(s) ----+
+'                                                              number of arguments -1 --+ |
+'                                                                                       | |
+    c_clearscreen := @p_clearscreen << 16 | (@clearscreen1 - @graphicsdriver) >> 2 | %000_0 << 12
+    c_blitscreen  := @p_blitscreen  << 16 | (@blitscreen1  - @graphicsdriver) >> 2 | %000_1 << 12
+    c_sprite      := @p_sprite      << 16 | (@sprite1      - @graphicsdriver) >> 2 | %011_1 << 12
+    c_setcliprect := @p_setcliprect << 16 | (@setcliprect1 - @graphicsdriver) >> 2 | %011_1 << 12
+    c_translate   := @p_translate   << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
+'   c_translate   := @p_translate   << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
 
 PUB WaitToDraw
-    repeat until not instruction1
 
-PRI SendASMCommand(source, instruction)
-'' This is just a little function to allow for reuse
-'' of the assembly interface code.
-''
-'' * **source** - The memory address of the graphics
-'' * **instruction** - Instruction / parameters to send to LameGFX.
-''  
-'' This command maintains the lock so it is not necessary
-'' to request it in your drawing function
-''
-    repeat until not instruction1
-                                
-    sourcegfx := source  
-    instruction1 := instruction     'send instructions to cog
-
+    repeat
+    while instruction
 
 PUB ClearScreen
 '' This command clears the screen to black. Recommended if your game
 '' display is sparse and not likely to be overdrawn every frame (like
 '' in a tile-based game).
 
-    SendASMCommand(0, INST_CLEARSCREEN)
+    repeat
+    while instruction
 
+    instruction := c_clearscreen
 
 PUB Blit(source)
 '' This command blits a 128x64 size image to the screen. The source image
@@ -140,8 +127,11 @@ PUB Blit(source)
 '' primarily influenced for reference on drawing to the screen, not for
 '' its game utility so much.
     
-    SendASMCommand(source, INST_BLITSCREEN)
+    repeat
+    while instruction
 
+    p_blitscreen{0} := source
+    instruction := c_blitscreen
 
 PUB Box(source, x, y)
 '' This function displays an 8x8 tile from an address. This address could
@@ -158,8 +148,7 @@ PUB Box(source, x, y)
 '' 00000000 00000000 00000000  00000000
 '' </pre>
 ''
-    SendASMCommand(source, INST_SPRITE + ((x & $FF) << 8) + ((y & $FF) << 16))
-    
+    Sprite(source, x, y, 0)
 
 PUB Sprite(source, x, y, frame)
 '' * **source** - Memory address of the source image
@@ -182,9 +171,11 @@ PUB Sprite(source, x, y, frame)
 '' Read more on img2dat to see how you can generate source images to use with this
 '' drawing command.
 
-    SendASMCommand(source, INST_SPRITE + ((x & $FF) << 8) + ((y & $FF) << 16) + (frame << 24))
+    repeat
+    while instruction
 
-
+    longmove(@p_sprite{0}, @source, 4)
+    instruction := c_sprite
 
 ' *********************************************************
 '  Maps
@@ -194,7 +185,8 @@ VAR
     word    map_levelmap
     
 PUB LoadMap(source_tilemap, source_levelmap)
-    map_tilemap := source_tilemap
+
+    map_tilemap  := source_tilemap
     map_levelmap := source_levelmap
     
 PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt, tilecnttemp, x, y
@@ -221,9 +213,11 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt
         tilecnttemp += byte[map_levelmap][0]
         
 PUB GetMapWidth
+
     return byte[map_levelmap][0] 
     
 PUB GetMapHeight
+
     return byte[map_levelmap][1]
     
 PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
@@ -246,7 +240,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
     repeat while y < (offset_y>>3)
         tilecnttemp += byte[map_levelmap][0]
         y++
-        
+
     repeat y from 0 to box_y2-box_y1
         repeat x from 0 to box_x2-box_x1
             tilecnt := tilecnttemp + (offset_x >> 3) + x
@@ -255,35 +249,31 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
                  Sprite(map_tilemap, (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7),tile)
 
         tilecnttemp += byte[map_levelmap][0]
-        
-        
-    SetClipRectangle(0,0,128,64)
 
+    SetClipRectangle(0, 0, 128, 64)
 
 ' *********************************************************
 '  Text
 ' *********************************************************  
 PUB LoadFont(sourcevar, startingcharvar, tilesize_xvar, tilesize_yvar)
+
     font := sourcevar
     startingchar := startingcharvar
     tilesize_x := tilesize_xvar
     tilesize_y := tilesize_yvar
 
 PUB PutChar(char, x, y)
+
     Sprite(font, x, y, char - startingchar)
 
-PUB PutString(stringvar, origin_x, origin_y) | stringcursor, char, x, y
+PUB PutString(stringvar, origin_x, origin_y)
    
-    stringcursor := 0
-    x := origin_x
-    y := origin_y
-    repeat while byte[stringvar][stringcursor] <> 0
-        char := byte[stringvar][stringcursor]
-        Sprite(font, x, y, char - startingchar)
-        x += tilesize_x
-        stringcursor++
+    repeat strsize(stringvar)
+        Sprite(font, origin_x, origin_y, byte[stringvar++] - startingchar)
+        origin_x += tilesize_x
         
 PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
+
     stringcursor := 0
     x := origin_x
     y := origin_y
@@ -304,79 +294,46 @@ PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
                 x += tilesize_x
         stringcursor++
 
-
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
 '' Defaults to 0, 0, 128, 64.
 '' Use only multiples of 8.
 
-    SendASMCommand( (clipx1 << 24) + (clipy1 << 16) + (clipx2 << 8) + clipy2, INST_SETCLIPRECT)
+    repeat
+    while instruction
+
+    longmove(@p_setcliprect{0}, @clipx1, 4)
+    instruction := c_setcliprect
 
 PUB TranslateBuffer(sourcebuffer, destbuffer)
 '' This command converts a linear framebuffer to one formatted
 '' for the KS0108 LCD memory map. The destination and source
 '' buffer addresses are packed into the sourcegfx long.
 
-    SendASMCommand(sourcebuffer + (destbuffer << 16), INST_TRANSLATE)
+    repeat
+    while instruction
 
+    longmove(@p_translate{0}, @sourcebuffer, 2)
+    instruction := c_translate
 
 PUB DrawScreen
+
     TranslateBuffer(drawsurface, copysurface)
 
+DAT                     org     0
 
+graphicsdriver          jmpret  $, #setup
 
-DAT
-                        org     0
+{done}                  wrlong  zero, par
+{idle}                  rdlong  code, par wz
+                        test    code, argn wc           ' check for arguments
+                if_z    jmp     #$-2
 
-graphicsdriver          mov     Addr, par
-
-                        mov     instruct1Addr, Addr    'get first instruction long   
-                        add     Addr, #4
-
-                        mov     instruct2Addr, Addr    'get second instruction long       
-                        add     Addr, #4                         
-
-                        mov     outputAddr, Addr       'get output long              
-                        add     Addr, #4
-                        
-                        mov     sourceAddr, Addr       'get sourceaddr long
-                        add     Addr, #4
-                      
-                        mov destscrnAddr, Addr
-                        rdword  destscrn, destscrnAddr                       
-
-                        'START MAIN LOOP                       
-mainloop                rdlong  instruct1full, instruct1Addr
-
-
-
-
-
-                        ' Decide which command to execute next      
-                        cmp     instruct1full, #0   wz
-if_z                    jmp     #mainloop                       
-
-                        mov     instruct1, instruct1full
-                        and     instruct1, #$FF
-
-
-                        cmp     instruct1, #1   wz      'CLEARSCREEN
-if_z                    jmp     #clearscreen1
-                        cmp     instruct1, #2   wz      'BLITSCREEN
-if_z                    jmp     #blitscreen1
-                        cmp     instruct1, #3   wz      'SPRITE
-if_z                    jmp     #sprite1
-'                        cmp     instruct1, #4   wz      'TEXT
-'if_z                    jmp     #tex
-                        cmp     instruct1, #5   wz      'SET CLIP RECT
-if_z                    jmp     #setcliprect1
-                        cmp     instruct1, #6   wz      'TRANSLATE
-if_z                    jmp     #translatebuffer1
-
-
-                        jmp     #mainloop
-
-
+                        mov     addr, code              ' args:n:[!Z]:cmd = 16:4:3:9
+                        ror     addr, #16               ' extract argument location
+                if_c    call    #args                   ' fetch arguments
+'{n/a}          if_c    addx    addr, #3                ' advance beyond last argument
+                        jmp     code                    ' execute function
 
 '' instruct1 does not pass values that are big, and it's reading in a long.
 '' I can use the rest of the room in the long to pass through parameters like
@@ -387,44 +344,34 @@ if_z                    jmp     #translatebuffer1
 ''
 '' 00000000 00000000 00000000   00000000
 
-
-
-
 ' CLEAR THE SCREEN
-clearscreen1            mov     Addrtemp, destscrn
-                        mov     valutemp, fulscreen
-       
-:loop                   wrword  zero, Addrtemp
-                        add     Addrtemp, #2
-                        djnz    valutemp, #:loop
-                        jmp     #loopexit
+clearscreen1            mov     arg1, destscrn
+                        mov     arg3, fullscreen
 
+:loop                   wrword  zero, arg1
+                        add     arg1, #2
+                        djnz    arg3, #:loop
+
+                        jmp     %%0                     ' return
 
 '' #### BLIT FULL SCREEN
-blitscreen1             mov     Addrtemp, destscrn
-                        rdword  sourceAddrTemp, sourceAddr
-                        mov     valutemp, fulscreen
+blitscreen1             mov     arg1, destscrn
+                        mov     arg3, fullscreen
                         
-                        add     sourceAddrTemp, #6
+                        add     arg0, #6
        
-:loop                   mov     datatemp, Addrtemp
-           
-                        rdword  datatemp2, sourceAddrTemp
+:loop                   rdword  arg2, arg0
+                        add     arg0, #2
+                        wrword  arg2, arg1
+                        add     arg1, #2
+                        djnz    arg3, #:loop
 
-                        wrword  datatemp2, datatemp
-                        
-                        add     Addrtemp, #2
-                        add     sourceAddrTemp, #2
-                        djnz    valutemp, #:loop
-                        jmp     #loopexit
-
-
-
+                        jmp     %%0                     ' return
 
 '' #### BLIT SPRITE
 '' ---------------------------------------------------
 ''
-'' ###### instruction1 format
+'' ###### instruction format
 ''
 '' <pre>
 '' clip trans   frame     y        x        instr
@@ -433,14 +380,11 @@ blitscreen1             mov     Addrtemp, destscrn
 '' </pre>
 
 sprite1                 mov     Addrtemp, destscrn
-                        rdword  sourceAddrTemp, sourceAddr
+                        mov     sourceAddrTemp, arg0
                         mov     valutemp, #8
                         
                         ' get x position of box
-                        mov     x1, instruct1full
-                        shl     x1, #16                 ' perform sign extend with masking
-                        sar     x1, #24
-
+                        mov     x1, arg1
                         
                         mov     iter_x, x1             ' this value rotates the word for the blender
                         shl     iter_x, #1             ' x << 1                        
@@ -451,9 +395,7 @@ sprite1                 mov     Addrtemp, destscrn
                         adds    Addrtemp, datatemp                        
 
                         ' get y position of box
-                        mov     y1, instruct1full
-                        shl     y1, #8                  ' perform sign extend with masking
-                        sar     y1, #24
+                        mov     y1, arg2
 
                         mov     iter_y, y1             ' this value iterates from y1 to y2
 
@@ -463,12 +405,10 @@ sprite1                 mov     Addrtemp, destscrn
 
                         
                         'frame
-                        mov     frame1, instruct1full
-                        shr     frame1, #24
-                        and     frame1, #$FF   ' get frame number
+                        mov     frame1, arg3            ' get frame number
 
                         ' read header from sprite
-                        rdword  sourceAddrTemp, sourceAddr                             
+'                       rdword  sourceAddrTemp, sourceAddr                             
                         rdword  frameboost, sourceAddrTemp
                         add     sourceAddrTemp, #2 
                         
@@ -477,7 +417,7 @@ sprite1                 mov     Addrtemp, destscrn
                         rdword  w1, sourceAddrTemp
                         add     sourceAddrTemp, #2
                         rdword  h1, sourceAddrTemp       ' only width is left-shifted because height has 8 pages only
-                        add     sourceAddrTemp, #2       'get ready to start reading data
+                        add     sourceAddrTemp, #2       ' get ready to start reading data
                         
                         mov     x2, x1
                         adds    x2, #8
@@ -489,7 +429,7 @@ sprite1                 mov     Addrtemp, destscrn
 if_nz                   add     sourceAddrTemp, frameboost
 if_nz                   sub     frame1, #1
 if_nz                   jmp     #:frameboostloop
-  
+
                         
 
                        ' Begin copying data       
@@ -586,11 +526,10 @@ if_nc                   jmp     #:skipblender2
                         adds    Addrtemp, #32
                         adds    iter_y, #1
                         
-                        
                         djnz    index_y, #:indexyloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
 ' INDEX_Y LOOP END -------------------------------------                       
-                        
-                        jmp     #loopexit
+
+                        jmp     %%0                     ' return
 
 
 
@@ -599,17 +538,10 @@ if_nc                   jmp     #:skipblender2
 textbox1
 
 
-
-
-
-
-
-
-
 '' #### SetClipRectangle
 '' ---------------------------------------------------
 ''
-'' ###### instruction1 format
+'' ###### instruction format
 ''
 '' <pre>
 ''  clipx1 clipy1  clipx2  clipy2  instr
@@ -617,284 +549,151 @@ textbox1
 ''  000000 000000 0000000 0000000  000000   
 '' </pre>
 
-setcliprect1            rdlong  sourceAddrTemp, sourceAddr  'use sourcegfx long since instruct1 is too small
+setcliprect1            mov     _clipx1, arg0                   ' |
+                        mov     _clipy1, arg1                   ' |
+                        mov     _clipx2, arg2                   ' |
+                        mov     _clipy2, arg3                   ' copy parameters
 
-
-                        mov     _clipx1, sourceAddrTemp
-                        shr     _clipx1, #24
-                        and     _clipx1, #$FF
-
-                        mov     _clipy1, sourceAddrTemp
-                        shr     _clipy1, #16
-                        and     _clipy1, #$FF
-
-                        mov     _clipx2, sourceAddrTemp
-                        shr     _clipx2, #8
-                        and     _clipx2, #$FF
-
-                        mov     _clipy2, sourceAddrTemp
-                        and     _clipy2, #$FF
-
-
-                        jmp     #loopexit
-
+                        jmp     %%0                             ' return
+                        
 '' #### TRANSLATE BUFFER
 '' ---------------------------------------------------
 '' clip trans   frame     y        x        instr
 ''  -     -     ------ -------- --------  --------
 ''  0     0     000000 00000000 00000000  00000000   
 '' --------------------------------------------------- 
-                        'get extract address words from sourcegfx long
-translatebuffer1        rdlong  sourceAddrTemp, sourceAddr   
-                        mov     Addrtemp, sourceAddrTemp
+
+translateLCD            mov     arg2, #0                ' offset from base
+
+                        mov     rcnt, #8                '  8 blocks of 8 rows
+:rows                   mov     ccnt, #16               ' 16 blocks of 8 columns
+
+:columns                mov     addr, arg0              ' |
+                        add     addr, arg2              ' base + offset
                         
+                        rdword  xsrc+0, addr            ' load 8x8 pixel block
+                        add     addr, #32
+                        rdword  xsrc+1, addr
+                        add     addr, #32
+                        rdword  xsrc+2, addr
+                        add     addr, #32
+                        rdword  xsrc+3, addr
+                        add     addr, #32
+                        rdword  xsrc+4, addr
+                        add     addr, #32
+                        rdword  xsrc+5, addr
+                        add     addr, #32
+                        rdword  xsrc+6, addr
+                        add     addr, #32
+                        rdword  xsrc+7, addr
+
+                        mov     pcnt, #8
+
+:loop                   shr     xsrc+0, #1 wc           ' even column(s)
+                        rcr     trgt, #1
+                        shr     xsrc+1, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+2, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+3, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+4, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+5, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+6, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+7, #1 wc
+                        rcr     trgt, #1
+
+                        shr     xsrc+0, #1 wc           ' odd column(s)
+                        rcr     trgt, #1
+                        shr     xsrc+1, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+2, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+3, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+4, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+5, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+6, #1 wc
+                        rcr     trgt, #1
+                        shr     xsrc+7, #1 wc
+                        rcr     trgt, #17
+
+                        wrword  trgt, arg1
+                        add     arg1, #2
+
+                        djnz    pcnt, #:loop
+
+                        add     arg2, #2                ' next 8 pixel columns
+                        djnz    ccnt, #:columns
+
+                        add     arg2, #256 -32          ' next 8 rows
+                        djnz    rcnt, #:rows
+
+                        jmp     %%0                     ' return
+
+' support code
+
+translateVGA            mov     arg3, fullscreen
                         
-                        and     sourceAddrTemp, hFFFF
-                        shr     Addrtemp, #16
-                        and     Addrtemp, hFFFF
+:loop                   rdword  arg2, arg0
+                        add     arg0, #2
+                        wrword  arg2, arg1
+                        add     arg1, #2
+                        djnz    arg3, #:loop
+
+                        jmp     %%0
 
 
-                        ' to translate the linear framebuffer, we divide the
-                        ' the buffer into 16 x 8 blocks, each 8x8 pixels,
-                        ' and then translate one block at a time.
+args                    rdlong  arg0, addr              ' read 1st argument                 
+                        cmpsub  addr, delta wc          ' [increment address and] check exit
+                if_nc   jmpret  zero, args_ret nr,wc    ' cond: early return                
+                                                                                            
+                        rdlong  arg1, addr              ' read 2nd argument                 
+                        cmpsub  addr, delta wc                                              
+                if_nc   jmpret  zero, args_ret nr,wc                                        
+                                                                                            
+                        rdlong  arg2, addr              ' read 3rd argument                 
+                        cmpsub  addr, delta wc                                              
+                if_nc   jmpret  zero, args_ret nr,wc                                        
+                                                                                            
+                        rdlong  arg3, addr              ' read 4th argument                 
+'                       cmpsub  addr, delta wc                                              
+'               if_nc   jmpret  zero, args_ret nr,wc                                        
 
-                       ' Begin copying data       
-' INDEX_Y LOOP -------------------------------------
-                        mov     index_y, #8                 
-:indexyloop             
+args_ret                ret
 
+' initialised data and/or presets
 
-' INDEX_X LOOP -------------------------------------
-                        mov     index_x, #8
-:indexxloop                 
-          
-                        ' srcpointer  := (index_x << 1 )+ (index_y << 8)   (y is the long axis in linear mode; 256 bytes)
-                        '             := ((index_y << 7) + index_x) << 1     ' refactor to not need temp variables
-                        mov     valutemp, #8
-                        sub     valutemp, index_y
-                        mov     valutemp2, #8
-                        sub     valutemp2, index_x                        
-                        
-                        
-                        mov     srcpointer, valutemp
-                        shl     srcpointer, #6
-                        add     srcpointer, valutemp2
-                        shl     srcpointer, #2
-
-                        add     srcpointer, sourceAddrTemp
-                        
-                        ' destpointer := (index_x << 4) + (index_y << 8)      ' x is long axis in LCD layout
-                        '             := ((index_y << 4) + index_x) << 4          
-                        mov     destpointer, valutemp
-                        shl     destpointer, #3
-                        add     destpointer, valutemp2
-                        shl     destpointer, #5
-                        add     destpointer, AddrTemp
-                       
-          
-
-                        ' COPY FROM SRC        
-                        ' repeat index1 from 0 to 31
-                        '     translatematrix_dest[index1] := 0
-                        
-                        ' attempt at pointers; read with movs, write with movd
-                        ' http://forums.parallax.com/showthread.php/116075-indirect-addressing-in-assembly
-                        ' "The "0-0" is just a placeholder. By convention, that implies that the instruction field will be modified somewhere else in the code."
-                        ' Apparently when addressing, you add the length and subtract the index; that way, you can use
-                        ' djnz for your loop while still address from 0 onwards, instead of the other end.                        
-                        
-                        ' important note: all cog memory is long-addressed, so you add 1 to get
-                        ' to the next long, not 4, as in the byte-addressed hub memory.
-' INITDESTMATRIX LOOP -------------------------------------
-                        mov     index1, #32
-:initmatrixloop                                 
-                        mov     datatemp, #translatematrix_dest
-                        add     datatemp, #32
-                        sub     datatemp, index1
-                        movd    :writearray,datatemp
-                        nop
-:writearray             mov     0-0, #0
-                        
-                        
-                        djnz    index1, #:initmatrixloop
-' INITDESTMATRIX LOOP END -------------------------------------
-
-
-
-' READSRCMATRIX LOOP -------------------------------------
-                        mov     index1, #8
-:readsrcmatrixloop      
-                        mov     datatemp, #8
-                        sub     datatemp, index1
-                        shl     datatemp, #5           ' 16 words fit horizontally on the screen = 32 bytes
-                        add     datatemp, srcpointer                                
-
-                        rdlong  translatelong, datatemp
- 
-                        ' potential inverter effect                       
-'                        xor     translatelong, invert
-
-                        mov     datatemp2, #translatematrix_src
-                        add     datatemp2, #8
-                        sub     datatemp2, index1
-
-                        
-
-                        movd    :readsrcarray,datatemp2
-                        nop
-:readsrcarray           mov     0-0, translatelong
-                        
-                        djnz    index1, #:readsrcmatrixloop
-' READSRCMATRIX LOOP END -------------------------------------
-
-
-
-
-
-                        ' TRANSLATION
-                        ' repeat index1 from 0 to 7
-                        '   translatematrix_src[index1] := word[sourcebuffer][srcpointer + (index1 << 4)] 
-                        ' 
-                        '   rotate := 1
-                        '   repeat index2 from 0 to 15
-                        '     translatematrix_dest[index2] += ( translatematrix_src[index1] & rotate ) >> index2 << index1
-                        '     rotate <<= 1
-' TRANSLATE OUTER LOOP -------------------------------------
-                        
-                        mov     index1, #8
-:translateloop_outer                        
-                        mov     valutemp, #8
-                        sub     valutemp, index1
-
-                        mov     datatemp, #translatematrix_src
-                        add     datatemp, #8
-                        sub     datatemp, index1                        
-                        movs    :readsrcarray_2, datatemp
-                        nop
-:readsrcarray_2         mov     translatelong, 0-0
-
-                        mov     rotate, #1
-                
-' TRANSLATE INNER LOOP -------------------------------------    
-                        mov     index2, #32
-:translateloop_inner
-
-                        mov     datatemp2, translatelong
-                        and     datatemp2, rotate
-                        
-                        mov     valutemp2, #32
-                        sub     valutemp2, index2
-                        
-                        shr     datatemp2, valutemp2
-                        shl     datatemp2, valutemp
-                        
-                        shl     rotate, #1
-      
-                        mov     datatemp, #translatematrix_dest                       
-                        add     datatemp, #32
-                        sub     datatemp, index2
-                        movd    :translatearray,datatemp
-                        nop
-:translatearray         add     0-0, datatemp2
-
-
-                        djnz    index2, #:translateloop_inner
-' TRANSLATE INNER LOOP END -------------------------------------   
-                        
-                        djnz    index1, #:translateloop_outer
-' TRANSLATE OUTER LOOP END -------------------------------------
-
-
-
-                        ' COPY TO DEST
-                        ' repeat index1 from 0 to 15
-                        '     byte[destbuffer][destpointer + index1] := translatematrix_dest[index1]
-' COPYMATRIX LOOP -------------------------------------
-                        mov     index1, #32
-:copymatrixloop          
-                        mov     datatemp, #translatematrix_dest
-                        add     datatemp, #32
-                        sub     datatemp, index1
-                        movs    :readarray,datatemp
-                        nop
-:readarray              mov     datatemp2, 0-0
-                        
-                        mov     datatemp3, destpointer
-                        add     datatemp3, #32
-                        sub     datatemp3, index1
-                        
-                        wrbyte  datatemp2, datatemp3
-
-                        
-                        djnz    index1, #:copymatrixloop
-' COPYMATRIX LOOP END -------------------------------------
-
-
-
-
-
-                        
-                        djnz    index_x, #:indexxloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
-' INDEX_X LOOP END -------------------------------------                                                
-                        
-
-                        djnz    index_y, #:indexyloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
-' INDEX_Y LOOP END -------------------------------------
-
-                        jmp     #loopexit
-
-
-
-
-
-
-                        
-loopexit                wrlong  destscrn, outputAddr  'change this to get data back out of assembly
-                        wrlong  zero, instruct1Addr
-
-                        jmp     #mainloop
-
-
-
-
-
-
-
-' VARIABLES
-Addr                    long    0
 Addrtemp                long    0
 sourceAddrTemp          long    0
-instruct1Addr           long    0
-instruct2Addr           long    0
-outputAddr              long    0      
 
-instruct1               long    0
-instruct1full           long    0
-instruct2               long    0
-destscrn                long    0
-destscrnAddr            long    0
+outputAddr              long    4      
+destscrn                long    8
 
-fulscreen               long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
+fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
 valutemp                long    0
-valutemp2               long    0
+'valutemp2              long    0
 
 
 datatemp                long    0
 datatemp2               long    0
 datatemp3               long    0
-zero                    long    0
 
-h0000FF00               long    $0000FF00
-h00FF0000               long    $00FF0000
-hFF000000               long    $FF000000
+'h0000FF00              long    $0000FF00
+'h00FF0000              long    $00FF0000
+'hFF000000              long    $FF000000
 
 hFFFF                   long    $FFFF
 h5555                   long    $5555
 
-invert                  long    %01010_1010_1010_1010_1010_1010_1010_101
-'invert                  long    $FFFF_FFFF
+'invert                 long    %01010_1010_1010_1010_1010_1010_1010_101
+'invert                 long    $FFFF_FFFF
 
-sourceAddr              long    0
 frame1                  long    0
 frameboost              long    0
 w1                      long    0
@@ -902,14 +701,14 @@ h1                      long    0
 
 flipbyte1               long    0
 
-index1                  long    0
-index2                  long    0
+'index1                 long    0
+'index2                 long    0
 index_x                 long    0
 index_y                 long    0
 iter_x                  long    0
 iter_y                  long    0
-srcpointer              long    0
-destpointer             long    0
+'srcpointer             long    0
+'destpointer            long    0
 
 
 _clipx1                 long    0
@@ -920,12 +719,25 @@ _clipy2                 long    64
 blender1                long    0
 blender2                long    0
 blendermask             long    0
-blenderoffset           long    0
+'blenderoffset          long    0
 
-translatelong           long    0
-rotate                  long    0
-translatematrix_src     res     8
-translatematrix_dest    res     32
+
+delta                   long    %001_0 << 28 | $FFFC    ' %10 deal with movi setup
+                                                        ' -(-4) address increment
+argn                    long    |< 12                   ' function does have arguments
+
+' Stuff below is re-purposed for temporary storage.
+
+setup                   add     outputAddr, par         ' get output long            
+                        add     destscrn, par
+                        rdword  destscrn, destscrn                           
+
+                        jmp     %%0                     ' return
+
+' uninitialised data and/or temporaries
+
+                        org     setup
+
 x1                      res     1
 y1                      res     1
 x2                      res     1
@@ -934,32 +746,44 @@ xtmp1                   res     1
 xtmp2                   res     1
 
 
+addr                    res     1
+code                    res     1
 
-                        fit 496   
+arg0                    res     1
+arg1                    res     1
+arg2                    res     1
+arg3                    res     1
 
+pcnt                    res     1
+rcnt                    res     1
+ccnt                    res     1
+trgt                    res     1
+xsrc                    res     8
 
+tail                    fit       
 
+CON
+  zero = $1F0                                           ' par (dst only)
 
-
+DAT
 {{
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│                           TERMS OF USE: MIT License                                  │                                                            
-├──────────────────────────────────────────────────────────────────────────────────────┤
-│Permission is hereby granted, free of charge, to any person obtaining a copy of this  │
-│software and associated documentation files (the "Software"), to deal in the Software │ 
-│without restriction, including without limitation the rights to use, copy, modify,    │
-│merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    │
-│permit persons to whom the Software is furnished to do so, subject to the following   │
-│conditions:                                                                           │
-│                                                                                      │
-│The above copyright notice and this permission notice shall be included in all copies │
-│or substantial portions of the Software.                                              │
-│                                                                                      │
-│THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   │
-│INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         │
-│PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    │
-│HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION     │
-│OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        │
-│SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+
+ TERMS OF USE: MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ associated documentation files (the "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
+ following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or substantial
+ portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 }}
+DAT
