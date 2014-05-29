@@ -5,7 +5,7 @@
 '' Copyright (c) 2013-2014 LameStation LLC
 '' See end of file for terms of use.
 '' 
-'' Authors: Brett Weir
+'' Authors: Brett Weir, Marko Lukat
 '' -------------------------------------------------
 '' This is a graphics library designed for use on the
 '' LameStation portable gaming handheld. It is designed
@@ -14,14 +14,9 @@
 '' Creating your first program is simple! First, include
 '' the graphics object in an object block.
 ''
-'' To communicate between Spin and assembly, the GFX
-'' driver establishes two longs, one for sending information
-'' and one for receiving. These are:
-''
 '' * **instruction** - send data to assembly cog
 ''
 CON
-
 
     ' screensize constants
     SCREEN_W = 128
@@ -385,7 +380,6 @@ sprite1                 mov     Addrtemp, destscrn
                         mov     frame1, arg3            ' get frame number
 
                         ' read header from sprite
-'                       rdword  sourceAddrTemp, sourceAddr                             
                         rdword  frameboost, sourceAddrTemp
                         add     sourceAddrTemp, #2 
                         
@@ -667,22 +661,14 @@ destscrn                long    8
 
 fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
 valutemp                long    0
-'valutemp2              long    0
 
 
 datatemp                long    0
 datatemp2               long    0
 datatemp3               long    0
 
-'h0000FF00              long    $0000FF00
-'h00FF0000              long    $00FF0000
-'hFF000000              long    $FF000000
-
 hFFFF                   long    $FFFF
 h5555                   long    $5555
-
-'invert                 long    %01010_1010_1010_1010_1010_1010_1010_101
-'invert                 long    $FFFF_FFFF
 
 frame1                  long    0
 frameboost              long    0
@@ -709,7 +695,6 @@ _clipy2                 long    64
 blender1                long    0
 blender2                long    0
 blendermask             long    0
-'blenderoffset          long    0
 
 
 delta                   long    %001_0 << 28 | $FFFC    ' %10 deal with movi setup
