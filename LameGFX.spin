@@ -358,7 +358,7 @@ clearscreen1            mov     arg1, destscrn
 blitscreen1             mov     arg1, destscrn
                         mov     arg3, fullscreen
                         
-                        add     arg0, #6
+                        add     arg0, #6                ' skip header
        
 :loop                   rdword  arg2, arg0
                         add     arg0, #2
@@ -549,12 +549,12 @@ textbox1
 ''  000000 000000 0000000 0000000  000000   
 '' </pre>
 
-setcliprect1            mov     _clipx1, arg0                   ' |
-                        mov     _clipy1, arg1                   ' |
-                        mov     _clipx2, arg2                   ' |
-                        mov     _clipy2, arg3                   ' copy parameters
+setcliprect1            mov     _clipx1, arg0           ' |
+                        mov     _clipy1, arg1           ' |
+                        mov     _clipx2, arg2           ' |
+                        mov     _clipy2, arg3           ' copy parameters
 
-                        jmp     %%0                             ' return
+                        jmp     %%0                     ' return
                         
 '' #### TRANSLATE BUFFER
 '' ---------------------------------------------------
