@@ -80,8 +80,8 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_blitscreen,    c_sprite,     c_setcliprect,    c_translate
-    long    p_blitscreen[1], p_sprite[4],  p_setcliprect[4], p_translate[2]
+    long    c_blitscreen, c_sprite, c_setcliprect, c_translate
+    long    c_parameters[4]
 
 PUB null
 '' This is not a top level object.
@@ -91,14 +91,14 @@ PUB Start(buffer, screen)
     drawsurface := buffer
     copysurface := screen
     cognew(@graphicsdriver, @instruction)
-'                                                   function has(1) no(0) argument(s) ----+
-'                                                              number of arguments -1 --+ |
-'                                                                                       | |
-    c_blitscreen  := @p_blitscreen  << 16 | (@blitscreen   - @graphicsdriver) >> 2 | %000_1 << 12
-    c_sprite      := @p_sprite      << 16 | (@drawsprite   - @graphicsdriver) >> 2 | %011_1 << 12
-    c_setcliprect := @p_setcliprect << 16 | (@setcliprect  - @graphicsdriver) >> 2 | %011_1 << 12
-    c_translate   := @p_translate   << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
-'   c_translate   := @p_translate   << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
+'                                                  function has(1) no(0) argument(s) ----+
+'                                                             number of arguments -1 --+ |
+'                                                                                      | |
+    c_blitscreen  := @c_parameters << 16 | (@blitscreen   - @graphicsdriver) >> 2 | %000_1 << 12
+    c_sprite      := @c_parameters << 16 | (@drawsprite   - @graphicsdriver) >> 2 | %011_1 << 12
+    c_setcliprect := @c_parameters << 16 | (@setcliprect  - @graphicsdriver) >> 2 | %011_1 << 12
+    c_translate   := @c_parameters << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
+'   c_translate   := @c_parameters << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
 
 PUB WaitToDraw
 
@@ -121,7 +121,7 @@ PUB Blit(source)
     repeat
     while instruction
 
-    p_blitscreen{0} := source
+    c_parameters{0} := source
     instruction := c_blitscreen
 
 PUB Box(source, x, y)
@@ -165,7 +165,7 @@ PUB Sprite(source, x, y, frame)
     repeat
     while instruction
 
-    longmove(@p_sprite{0}, @source, 4)
+    longmove(@c_parameters{0}, @source, 4)
     instruction := c_sprite
 
 ' *********************************************************
@@ -281,7 +281,7 @@ PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
     repeat
     while instruction
 
-    longmove(@p_setcliprect{0}, @clipx1, 4)
+    longmove(@c_parameters{0}, @clipx1, 4)
     instruction := c_setcliprect
 
 PUB TranslateBuffer(sourcebuffer, destbuffer)
@@ -292,7 +292,7 @@ PUB TranslateBuffer(sourcebuffer, destbuffer)
     repeat
     while instruction
 
-    longmove(@p_translate{0}, @sourcebuffer, 2)
+    longmove(@c_parameters{0}, @sourcebuffer, 2)
     instruction := c_translate
 
 PUB DrawScreen
