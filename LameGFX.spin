@@ -350,9 +350,6 @@ sprite1                 mov     Addrtemp, destscrn
                         adds    Addrtemp, datatemp
 
                         
-                        'frame
-                        mov     frame1, arg3            ' get frame number
-
                         ' read header from sprite
                         rdword  frameboost, sourceAddrTemp
                         add     sourceAddrTemp, #2 
@@ -369,13 +366,12 @@ sprite1                 mov     Addrtemp, destscrn
                         mov     y2, y1
                         adds    y2, h1
 
-                        'add frameboost to sourceAddr (frame) number of times
-:frameboostloop         cmp     frame1, #0                  wz
-if_nz                   add     sourceAddrTemp, frameboost
-if_nz                   sub     frame1, #1
-if_nz                   jmp     #:frameboostloop
+                        'frame
+                        cmp     arg3, #0 wz             ' frame number
 
-                        
+                        'add frameboost to sourceAddr (frame) number of times
+                if_nz   add     sourceAddrTemp, frameboost
+                if_nz   djnz    arg3, #$-1
 
                        ' Begin copying data       
 ' INDEX_Y LOOP -------------------------------------
@@ -662,7 +658,6 @@ datatemp3               long    0
 hFFFF                   long    $FFFF
 h5555                   long    $5555
 
-frame1                  long    0
 frameboost              long    0
 w1                      long    0
 h1                      long    0
