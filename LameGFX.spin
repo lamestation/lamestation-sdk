@@ -80,8 +80,8 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_clearscreen,    c_blitscreen,    c_sprite,     c_setcliprect,    c_translate
-    long    p_clearscreen[0], p_blitscreen[1], p_sprite[4],  p_setcliprect[4], p_translate[2]
+    long    c_blitscreen,    c_sprite,     c_setcliprect,    c_translate
+    long    p_blitscreen[1], p_sprite[4],  p_setcliprect[4], p_translate[2]
 
 PUB null
 '' This is not a top level object.
@@ -94,10 +94,9 @@ PUB Start(buffer, screen)
 '                                                   function has(1) no(0) argument(s) ----+
 '                                                              number of arguments -1 --+ |
 '                                                                                       | |
-    c_clearscreen := @p_clearscreen << 16 | (@clearscreen1 - @graphicsdriver) >> 2 | %000_0 << 12
     c_blitscreen  := @p_blitscreen  << 16 | (@blitscreen   - @graphicsdriver) >> 2 | %000_1 << 12
-    c_sprite      := @p_sprite      << 16 | (@sprite1      - @graphicsdriver) >> 2 | %011_1 << 12
-    c_setcliprect := @p_setcliprect << 16 | (@setcliprect1 - @graphicsdriver) >> 2 | %011_1 << 12
+    c_sprite      := @p_sprite      << 16 | (@drawsprite   - @graphicsdriver) >> 2 | %011_1 << 12
+    c_setcliprect := @p_setcliprect << 16 | (@setcliprect  - @graphicsdriver) >> 2 | %011_1 << 12
     c_translate   := @p_translate   << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
 '   c_translate   := @p_translate   << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
 
@@ -111,10 +110,7 @@ PUB ClearScreen
 '' display is sparse and not likely to be overdrawn every frame (like
 '' in a tile-based game).
 
-    repeat
-    while instruction
-
-    instruction := c_clearscreen
+    Blit(0)
 
 PUB Blit(source)
 '' This command blits a 128x64 size image to the screen. The source image
@@ -318,14 +314,14 @@ graphicsdriver          jmpret  $, #setup
 '{n/a}          if_c    addx    addr, #3                ' advance beyond last argument
                         jmp     code                    ' execute function
 
-' #### BLIT SPRITE
+' #### DRAW SPRITE
 ' ------------------------------------------------------
 ' parameters: arg0: source buffer (word aligned)
 '             arg1: x
 '             arg2: y
 '             arg3: frame
 
-sprite1                 mov     Addrtemp, destscrn
+drawsprite              mov     Addrtemp, destscrn
                         mov     sourceAddrTemp, arg0
                         mov     valutemp, #8
                         
@@ -468,7 +464,7 @@ if_nc                   jmp     #:skipblender2
 '             arg2: y2
 '             arg3: y2
 
-setcliprect1            mov     _clipx1, arg0           ' |
+setcliprect             mov     _clipx1, arg0           ' |
                         mov     _clipy1, arg1           ' |
                         mov     _clipx2, arg2           ' |
                         mov     _clipy2, arg3           ' copy parameters
@@ -581,8 +577,7 @@ translateLCD            mov     arg2, #0                ' offset from base
 ' ------------------------------------------------------
 ' parameters: none
 
-clearscreen1            mov     arg1, destscrn
-                        mov     arg3, fullscreen
+clear                   mov     arg3, fullscreen
 
 :loop                   wrword  zero, arg1
                         add     arg1, #2
@@ -595,8 +590,9 @@ clearscreen1            mov     arg1, destscrn
 ' parameters: arg0: source buffer       (word aligned)
 '             arg1: destination buffer  (word aligned)
 
-blitscreen              add     arg0, #6                ' skip sprite header
-                        mov     arg1, destscrn          ' override destination
+blitscreen              mov     arg1, destscrn          ' override destination
+                        tjz     arg0, #clear            ' no source, clear screen
+                        add     arg0, #6                ' skip sprite header
 
 translateVGA            mov     arg3, fullscreen        ' words per screen
                         
