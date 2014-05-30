@@ -80,8 +80,8 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_clearscreen,    c_blitscreen,    c_sprite,     c_setcliprect,    c_translate
-    long    p_clearscreen[0], p_blitscreen[1], p_sprite[4],  p_setcliprect[4], p_translate[2]
+    long    c_blitscreen,    c_sprite,     c_setcliprect,    c_translate
+    long    p_blitscreen[1], p_sprite[4],  p_setcliprect[4], p_translate[2]
 
 PUB null
 '' This is not a top level object.
@@ -94,10 +94,9 @@ PUB Start(buffer, screen)
 '                                                   function has(1) no(0) argument(s) ----+
 '                                                              number of arguments -1 --+ |
 '                                                                                       | |
-    c_clearscreen := @p_clearscreen << 16 | (@clearscreen1 - @graphicsdriver) >> 2 | %000_0 << 12
     c_blitscreen  := @p_blitscreen  << 16 | (@blitscreen   - @graphicsdriver) >> 2 | %000_1 << 12
-    c_sprite      := @p_sprite      << 16 | (@sprite1      - @graphicsdriver) >> 2 | %011_1 << 12
-    c_setcliprect := @p_setcliprect << 16 | (@setcliprect1 - @graphicsdriver) >> 2 | %011_1 << 12
+    c_sprite      := @p_sprite      << 16 | (@drawsprite   - @graphicsdriver) >> 2 | %011_1 << 12
+    c_setcliprect := @p_setcliprect << 16 | (@setcliprect  - @graphicsdriver) >> 2 | %011_1 << 12
     c_translate   := @p_translate   << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
 '   c_translate   := @p_translate   << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
 
@@ -111,10 +110,7 @@ PUB ClearScreen
 '' display is sparse and not likely to be overdrawn every frame (like
 '' in a tile-based game).
 
-    repeat
-    while instruction
-
-    instruction := c_clearscreen
+    Blit(0)
 
 PUB Blit(source)
 '' This command blits a 128x64 size image to the screen. The source image
@@ -193,23 +189,18 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt
     objtiley := objy >> 3
      
     tilecnt := 0
-    tilecnttemp := 2
-    
-    y := 0
-    repeat while y < objtiley
-        tilecnttemp += byte[map_levelmap][0]
-        y++
+    tilecnttemp := 2 + byte[map_levelmap]{0} * objtiley
         
     repeat y from objtiley to objtiley + (objh>>3)
         repeat x from objtilex to objtilex + (objw>>3)
             tilecnt := tilecnttemp + x
             if (byte[map_levelmap][tilecnt] & COLLIDEBIT)
                 return 1                
-        tilecnttemp += byte[map_levelmap][0]
+        tilecnttemp += byte[map_levelmap]{0}
         
 PUB GetMapWidth
 
-    return byte[map_levelmap][0] 
+    return byte[map_levelmap]{0} 
     
 PUB GetMapHeight
 
@@ -229,12 +220,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
     SetClipRectangle(box_x1<<3, box_y1<<3, box_x2<<3, box_y2<<3)
 
     tilecnt := 0
-    tilecnttemp := 2
-    
-    y := 0
-    repeat while y < (offset_y>>3)
-        tilecnttemp += byte[map_levelmap][0]
-        y++
+    tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y>>3)
 
     repeat y from 0 to box_y2-box_y1
         repeat x from 0 to box_x2-box_x1
@@ -243,7 +229,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
             if tile => 0
                  Sprite(map_tilemap, (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7),tile)
 
-        tilecnttemp += byte[map_levelmap][0]
+        tilecnttemp += byte[map_levelmap]{0}
 
     SetClipRectangle(0, 0, 128, 64)
 
@@ -267,14 +253,13 @@ PUB PutString(stringvar, origin_x, origin_y)
         Sprite(font, origin_x, origin_y, byte[stringvar++] - startingchar)
         origin_x += tilesize_x
         
-PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
+PUB TextBox(stringvar, origin_x, origin_y, w, h) | char, x, y
 
-    stringcursor := 0
     x := origin_x
     y := origin_y
     
-    repeat while byte[stringvar][stringcursor] <> 0
-        char := byte[stringvar][stringcursor]
+    repeat strsize(stringvar)
+        char := byte[stringvar++]
         if char == NL or char == LF
             y += tilesize_y
             x := origin_x          
@@ -287,7 +272,6 @@ PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
                 x := origin_x
             else
                 x += tilesize_x
-        stringcursor++
 
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
@@ -330,23 +314,23 @@ graphicsdriver          jmpret  $, #setup
 '{n/a}          if_c    addx    addr, #3                ' advance beyond last argument
                         jmp     code                    ' execute function
 
-' #### BLIT SPRITE
+' #### DRAW SPRITE
 ' ------------------------------------------------------
 ' parameters: arg0: source buffer (word aligned)
 '             arg1: x
 '             arg2: y
 '             arg3: frame
 
-sprite1                 mov     Addrtemp, destscrn
+drawsprite              mov     Addrtemp, destscrn
                         mov     sourceAddrTemp, arg0
                         mov     valutemp, #8
                         
                         ' get x position of box
                         mov     x1, arg1
                         
-                        mov     iter_x, x1             ' this value rotates the word for the blender
-                        shl     iter_x, #1             ' x << 1                        
-                        and     iter_x, #$F            ' x % 8
+                        mov     iter_x, x1              ' this value rotates the word for the blender
+                        shl     iter_x, #1              ' x << 1                       
+                        and     iter_x, #$F             ' x % 8
                         
                         mov     datatemp, x1
                         sar     datatemp, #2            ' x / 4    ' n pixels = 2*n bits
@@ -355,16 +339,13 @@ sprite1                 mov     Addrtemp, destscrn
                         ' get y position of box
                         mov     y1, arg2
 
-                        mov     iter_y, y1             ' this value iterates from y1 to y2
+                        mov     iter_y, y1              ' this value iterates from y1 to y2
 
                         mov     datatemp, y1
                         shl     datatemp, #5
                         adds    Addrtemp, datatemp
 
                         
-                        'frame
-                        mov     frame1, arg3            ' get frame number
-
                         ' read header from sprite
                         rdword  frameboost, sourceAddrTemp
                         add     sourceAddrTemp, #2 
@@ -373,22 +354,21 @@ sprite1                 mov     Addrtemp, destscrn
                         ' get image width and height
                         rdword  w1, sourceAddrTemp
                         add     sourceAddrTemp, #2
-                        rdword  h1, sourceAddrTemp       ' only width is left-shifted because height has 8 pages only
-                        add     sourceAddrTemp, #2       ' get ready to start reading data
+                        rdword  h1, sourceAddrTemp      ' only width is left-shifted because height has 8 pages only
+                        add     sourceAddrTemp, #2      ' get ready to start reading data
                         
                         mov     x2, x1
                         adds    x2, #8
                         mov     y2, y1
                         adds    y2, h1
 
+                        'frame
+                        cmp     arg3, #0 wz             ' frame number
+
                         'add frameboost to sourceAddr (frame) number of times
-:frameboostloop         cmp     frame1, #0                  wz
-if_nz                   add     sourceAddrTemp, frameboost
-if_nz                   sub     frame1, #1
-if_nz                   jmp     #:frameboostloop
-
-                        
-
+                if_nz   add     sourceAddrTemp, frameboost
+                if_nz   djnz    arg3, #$-1              ' a proper multiply may be beneficial here
+                                                        ' depending on max framecount
                        ' Begin copying data       
 ' INDEX_Y LOOP -------------------------------------
                         mov     index_y, h1           
@@ -398,7 +378,7 @@ if_nz                   jmp     #:frameboostloop
 
 ' INDEX_X LOOP -------------------------------------
                         mov     index_x, w1
-                        shr     index_x, #3                     '8 pixels in one word.
+                        shr     index_x, #3             '8 pixels in one word.
 :indexxloop             mov     datatemp, datatemp3                        
                         
                         cmps    iter_y, _clipy1             wc
@@ -406,50 +386,38 @@ if_c                    jmp     #:skipall
                         cmps    iter_y, _clipy2             wc
 if_nc                   jmp     #:skipall
 
-
-                        '' Read old data in display buffer
-                        '' only if this is first block in drawing operation
+                        ' Read old data in display buffer
+                        ' only if this is first block in drawing operation
                         rdword  datatemp2, datatemp
                         add     datatemp, #2
                         rdword  blender1, datatemp
                         shl     blender1, #16
                         add     blender1, datatemp2
                         
-                        
                         ' read new word
                         rdword  datatemp2, sourceAddrTemp
-
 
                         ' prepare mask for blending old and new
                         mov     flipbyte1, datatemp2
                         shr     flipbyte1, #1
-                        andn    flipbyte1, datatemp2 'color bits
+                        andn    flipbyte1, datatemp2    'color bits
                         and     flipbyte1, h5555                        
                         
                         mov     blendermask, flipbyte1
-                        shl     flipbyte1, #1
+                        add     blendermask, flipbyte1
                         add     blendermask, flipbyte1
                         
                         xor     blendermask, hFFFF
                         and     datatemp2, blendermask
                         
-                        
-                        
-                        shl     datatemp2, iter_x      ' rotate source words
+                        shl     datatemp2, iter_x       ' rotate source words
                         shl     blendermask, iter_x
                         
                         andn    blender1, blendermask
                         add     blender1, datatemp2
 
-
                         ' split long into two words because we don't know whether this word
                         ' falls on a long boundary, so we have to write it one at a time.
-                        mov     blender2, blender1    ' copy situation
-
-                        and     blender1, hFFFF
-                        shr     blender2, #16
-                        and     blender2, hFFFF
-                        
                         mov     datatemp, datatemp3
 
                         ' perform sprite clipping
@@ -466,24 +434,25 @@ if_c                    jmp     #:skipblender2
                         cmps    xtmp2, _clipx2                  wc
 if_nc                   jmp     #:skipblender2
 
-                        wrword  blender2, datatemp
+                        shr     blender1, #16
+                        wrword  blender1, datatemp
 :skipblender2
 
                         adds    xtmp1, #8
                         adds    xtmp2, #8
 
-                        
+
 :skipall                
                         add     sourceAddrTemp, #2
                         adds    datatemp3, #2
 
                         
-                        djnz    index_x, #:indexxloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+                        djnz    index_x, #:indexxloop   ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
 ' INDEX_X LOOP END -------------------------------------                                                
                         adds    Addrtemp, #32
                         adds    iter_y, #1
                         
-                        djnz    index_y, #:indexyloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+                        djnz    index_y, #:indexyloop   ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
 ' INDEX_Y LOOP END -------------------------------------                       
 
                         jmp     %%0                     ' return
@@ -495,7 +464,7 @@ if_nc                   jmp     #:skipblender2
 '             arg2: y2
 '             arg3: y2
 
-setcliprect1            mov     _clipx1, arg0           ' |
+setcliprect             mov     _clipx1, arg0           ' |
                         mov     _clipy1, arg1           ' |
                         mov     _clipx2, arg2           ' |
                         mov     _clipy2, arg3           ' copy parameters
@@ -608,8 +577,7 @@ translateLCD            mov     arg2, #0                ' offset from base
 ' ------------------------------------------------------
 ' parameters: none
 
-clearscreen1            mov     arg1, destscrn
-                        mov     arg3, fullscreen
+clear                   mov     arg3, fullscreen
 
 :loop                   wrword  zero, arg1
                         add     arg1, #2
@@ -622,8 +590,9 @@ clearscreen1            mov     arg1, destscrn
 ' parameters: arg0: source buffer       (word aligned)
 '             arg1: destination buffer  (word aligned)
 
-blitscreen              add     arg0, #6                ' skip sprite header
-                        mov     arg1, destscrn          ' override destination
+blitscreen              mov     arg1, destscrn          ' override destination
+                        tjz     arg0, #clear            ' no source, clear screen
+                        add     arg0, #6                ' skip sprite header
 
 translateVGA            mov     arg3, fullscreen        ' words per screen
                         
@@ -674,7 +643,6 @@ datatemp3               long    0
 hFFFF                   long    $FFFF
 h5555                   long    $5555
 
-frame1                  long    0
 frameboost              long    0
 w1                      long    0
 h1                      long    0
