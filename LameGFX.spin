@@ -332,9 +332,9 @@ sprite1                 mov     Addrtemp, destscrn
                         ' get x position of box
                         mov     x1, arg1
                         
-                        mov     iter_x, x1             ' this value rotates the word for the blender
-                        shl     iter_x, #1             ' x << 1                        
-                        and     iter_x, #$F            ' x % 8
+                        mov     iter_x, x1              ' this value rotates the word for the blender
+                        shl     iter_x, #1              ' x << 1                       
+                        and     iter_x, #$F             ' x % 8
                         
                         mov     datatemp, x1
                         sar     datatemp, #2            ' x / 4    ' n pixels = 2*n bits
@@ -343,7 +343,7 @@ sprite1                 mov     Addrtemp, destscrn
                         ' get y position of box
                         mov     y1, arg2
 
-                        mov     iter_y, y1             ' this value iterates from y1 to y2
+                        mov     iter_y, y1              ' this value iterates from y1 to y2
 
                         mov     datatemp, y1
                         shl     datatemp, #5
@@ -358,8 +358,8 @@ sprite1                 mov     Addrtemp, destscrn
                         ' get image width and height
                         rdword  w1, sourceAddrTemp
                         add     sourceAddrTemp, #2
-                        rdword  h1, sourceAddrTemp       ' only width is left-shifted because height has 8 pages only
-                        add     sourceAddrTemp, #2       ' get ready to start reading data
+                        rdword  h1, sourceAddrTemp      ' only width is left-shifted because height has 8 pages only
+                        add     sourceAddrTemp, #2      ' get ready to start reading data
                         
                         mov     x2, x1
                         adds    x2, #8
@@ -404,7 +404,7 @@ if_nc                   jmp     #:skipall
                         ' prepare mask for blending old and new
                         mov     flipbyte1, datatemp2
                         shr     flipbyte1, #1
-                        andn    flipbyte1, datatemp2 'color bits
+                        andn    flipbyte1, datatemp2    'color bits
                         and     flipbyte1, h5555                        
                         
                         mov     blendermask, flipbyte1
@@ -414,7 +414,7 @@ if_nc                   jmp     #:skipall
                         xor     blendermask, hFFFF
                         and     datatemp2, blendermask
                         
-                        shl     datatemp2, iter_x      ' rotate source words
+                        shl     datatemp2, iter_x       ' rotate source words
                         shl     blendermask, iter_x
                         
                         andn    blender1, blendermask
@@ -451,12 +451,12 @@ if_nc                   jmp     #:skipblender2
                         adds    datatemp3, #2
 
                         
-                        djnz    index_x, #:indexxloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+                        djnz    index_x, #:indexxloop   ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
 ' INDEX_X LOOP END -------------------------------------                                                
                         adds    Addrtemp, #32
                         adds    iter_y, #1
                         
-                        djnz    index_y, #:indexyloop    ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+                        djnz    index_y, #:indexyloop   ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
 ' INDEX_Y LOOP END -------------------------------------                       
 
                         jmp     %%0                     ' return
