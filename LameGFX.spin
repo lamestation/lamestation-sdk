@@ -390,19 +390,16 @@ if_c                    jmp     #:skipall
                         cmps    iter_y, _clipy2             wc
 if_nc                   jmp     #:skipall
 
-
-                        '' Read old data in display buffer
-                        '' only if this is first block in drawing operation
+                        ' Read old data in display buffer
+                        ' only if this is first block in drawing operation
                         rdword  datatemp2, datatemp
                         add     datatemp, #2
                         rdword  blender1, datatemp
                         shl     blender1, #16
                         add     blender1, datatemp2
                         
-                        
                         ' read new word
                         rdword  datatemp2, sourceAddrTemp
-
 
                         ' prepare mask for blending old and new
                         mov     flipbyte1, datatemp2
@@ -411,13 +408,11 @@ if_nc                   jmp     #:skipall
                         and     flipbyte1, h5555                        
                         
                         mov     blendermask, flipbyte1
-                        shl     flipbyte1, #1
+                        add     blendermask, flipbyte1
                         add     blendermask, flipbyte1
                         
                         xor     blendermask, hFFFF
                         and     datatemp2, blendermask
-                        
-                        
                         
                         shl     datatemp2, iter_x      ' rotate source words
                         shl     blendermask, iter_x
@@ -425,15 +420,8 @@ if_nc                   jmp     #:skipall
                         andn    blender1, blendermask
                         add     blender1, datatemp2
 
-
                         ' split long into two words because we don't know whether this word
                         ' falls on a long boundary, so we have to write it one at a time.
-                        mov     blender2, blender1    ' copy situation
-
-                        and     blender1, hFFFF
-                        shr     blender2, #16
-                        and     blender2, hFFFF
-                        
                         mov     datatemp, datatemp3
 
                         ' perform sprite clipping
@@ -450,13 +438,14 @@ if_c                    jmp     #:skipblender2
                         cmps    xtmp2, _clipx2                  wc
 if_nc                   jmp     #:skipblender2
 
-                        wrword  blender2, datatemp
+                        shr     blender1, #16
+                        wrword  blender1, datatemp
 :skipblender2
 
                         adds    xtmp1, #8
                         adds    xtmp2, #8
 
-                        
+
 :skipall                
                         add     sourceAddrTemp, #2
                         adds    datatemp3, #2
