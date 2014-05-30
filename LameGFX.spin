@@ -197,7 +197,7 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt
     
     y := 0
     repeat while y < objtiley
-        tilecnttemp += byte[map_levelmap][0]
+        tilecnttemp += byte[map_levelmap]{0}
         y++
         
     repeat y from objtiley to objtiley + (objh>>3)
@@ -205,11 +205,11 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt
             tilecnt := tilecnttemp + x
             if (byte[map_levelmap][tilecnt] & COLLIDEBIT)
                 return 1                
-        tilecnttemp += byte[map_levelmap][0]
+        tilecnttemp += byte[map_levelmap]{0}
         
 PUB GetMapWidth
 
-    return byte[map_levelmap][0] 
+    return byte[map_levelmap]{0} 
     
 PUB GetMapHeight
 
@@ -233,7 +233,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
     
     y := 0
     repeat while y < (offset_y>>3)
-        tilecnttemp += byte[map_levelmap][0]
+        tilecnttemp += byte[map_levelmap]{0}
         y++
 
     repeat y from 0 to box_y2-box_y1
@@ -243,7 +243,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
             if tile => 0
                  Sprite(map_tilemap, (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7),tile)
 
-        tilecnttemp += byte[map_levelmap][0]
+        tilecnttemp += byte[map_levelmap]{0}
 
     SetClipRectangle(0, 0, 128, 64)
 
@@ -267,14 +267,13 @@ PUB PutString(stringvar, origin_x, origin_y)
         Sprite(font, origin_x, origin_y, byte[stringvar++] - startingchar)
         origin_x += tilesize_x
         
-PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
+PUB TextBox(stringvar, origin_x, origin_y, w, h) | char, x, y
 
-    stringcursor := 0
     x := origin_x
     y := origin_y
     
-    repeat while byte[stringvar][stringcursor] <> 0
-        char := byte[stringvar][stringcursor]
+    repeat strsize(stringvar)
+        char := byte[stringvar++]
         if char == NL or char == LF
             y += tilesize_y
             x := origin_x          
@@ -287,7 +286,6 @@ PUB TextBox(stringvar, origin_x, origin_y, w, h) | stringcursor, char, x, y
                 x := origin_x
             else
                 x += tilesize_x
-        stringcursor++
 
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
