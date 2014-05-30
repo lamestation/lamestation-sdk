@@ -193,12 +193,7 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt
     objtiley := objy >> 3
      
     tilecnt := 0
-    tilecnttemp := 2
-    
-    y := 0
-    repeat while y < objtiley
-        tilecnttemp += byte[map_levelmap]{0}
-        y++
+    tilecnttemp := 2 + byte[map_levelmap]{0} * objtiley
         
     repeat y from objtiley to objtiley + (objh>>3)
         repeat x from objtilex to objtilex + (objw>>3)
@@ -229,12 +224,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
     SetClipRectangle(box_x1<<3, box_y1<<3, box_x2<<3, box_y2<<3)
 
     tilecnt := 0
-    tilecnttemp := 2
-    
-    y := 0
-    repeat while y < (offset_y>>3)
-        tilecnttemp += byte[map_levelmap]{0}
-        y++
+    tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y>>3)
 
     repeat y from 0 to box_y2-box_y1
         repeat x from 0 to box_x2-box_x1
