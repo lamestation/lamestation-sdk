@@ -162,7 +162,7 @@ PUB Victory
             ShowGameView
             gfx.TextBox(string("YOU WIN"), 40, 30, 100, 60)
             gfx.DrawScreen
-            fn.Sleep(200000)
+            fn.Sleep(2000)
 
             audio.StopAllSound
             audio.SetWaveform(1, 127)
@@ -194,7 +194,7 @@ PUB PlayerDied
             ShowGameView
             gfx.TextBox(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
             gfx.DrawScreen
-            fn.Sleep(200000)
+            fn.Sleep(2000)
 
 PUB StarWarsReel(text,reeltime) | x, choice
     x := 0
@@ -222,7 +222,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
         gfx.TextBox(text, 16, 64-x, 108, 64) 
     
         gfx.DrawScreen
-        fn.Sleep(13000)
+        fn.Sleep(100)
         x++
 
 PUB ItsGameOver
@@ -235,7 +235,7 @@ PUB ItsGameOver
             ShowGameView
             gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
             gfx.DrawScreen
-            fn.Sleep(300000)
+            fn.Sleep(2000)
             
             jumping := 0
             crouching := 1

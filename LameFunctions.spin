@@ -1,5 +1,5 @@
-PUB Sleep(time) | count
-    repeat count from 0 to time
+PUB Sleep(milliseconds) | count
+    waitcnt(clkfreq/1000*milliseconds + cnt)       ' delay for 1ms
     
         
 PUB TestBoxCollision(obj1x, obj1y, obj1w, obj1h, obj2x, obj2y, obj2w, obj2h)

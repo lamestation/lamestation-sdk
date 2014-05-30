@@ -38,6 +38,9 @@ PUB Start
 PUB Update
     controls := ina
     
+
+' 'On' is a logic low for every control pin coming
+' from the hardware, so they must all be inverted.
 PUB A
     return not controls & SW_A
     
