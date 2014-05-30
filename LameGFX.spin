@@ -371,8 +371,8 @@ sprite1                 mov     Addrtemp, destscrn
 
                         'add frameboost to sourceAddr (frame) number of times
                 if_nz   add     sourceAddrTemp, frameboost
-                if_nz   djnz    arg3, #$-1
-
+                if_nz   djnz    arg3, #$-1              ' a proper multiply may be beneficial here
+                                                        ' depending on max framecount
                        ' Begin copying data       
 ' INDEX_Y LOOP -------------------------------------
                         mov     index_y, h1           
@@ -382,7 +382,7 @@ sprite1                 mov     Addrtemp, destscrn
 
 ' INDEX_X LOOP -------------------------------------
                         mov     index_x, w1
-                        shr     index_x, #3                     '8 pixels in one word.
+                        shr     index_x, #3             '8 pixels in one word.
 :indexxloop             mov     datatemp, datatemp3                        
                         
                         cmps    iter_y, _clipy1             wc
