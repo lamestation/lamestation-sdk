@@ -2,8 +2,8 @@
 '' LameLCD to VGA
 ''
 ''        Author: Marko Lukat
-'' Last modified: 2014/05/28
-''       Version: 0.1
+'' Last modified: 2014/05/31
+''       Version: 0.2
 ''
 CON
   lcd_x = 128
@@ -29,7 +29,7 @@ PUB Start : n | b
     
   repeat 256
     repeat b from 2 to 8 step 2
-      palette.byte[n++] := lookupz((n >> b) & %11: $00, $55, $AA, $FF)
+      palette.byte[n++] := lookupz((n >> b) & %11: $00, $AA, $C0, $55)
 
   n := driver.init(-1, @scan{0})
 
