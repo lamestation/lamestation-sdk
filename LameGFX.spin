@@ -461,7 +461,7 @@ if_nc                   jmp     #:skipblender2
 ' ------------------------------------------------------
 ' parameters: arg0: x1
 '             arg1: y1
-'             arg2: y2
+'             arg2: x2
 '             arg3: y2
 
 setcliprect             mov     _clipx1, arg0           ' |
