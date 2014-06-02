@@ -96,7 +96,7 @@ PUB Main
     InitGame
     InitLevel
     
-    audio.SetWaveform(1, 127)
+    audio.SetWaveform(1)
     audio.SetADSR(127, 10, 100, 10)
     audio.LoadSong(@pixel_theme)
     audio.LoopSong
@@ -154,7 +154,7 @@ PUB GameLoop
 PUB Victory
             audio.StopAllSound
             audio.StopSong
-            audio.SetWaveform(1, 127)
+            audio.SetWaveform(1)
             audio.SetADSR(127, 10, 100, 10)
             audio.LoadSong(@song_yeah)
             audio.LoopSong
@@ -165,7 +165,7 @@ PUB Victory
             fn.Sleep(2000)
 
             audio.StopAllSound
-            audio.SetWaveform(1, 127)
+            audio.SetWaveform(1)
             audio.SetADSR(127, 10, 100, 10)
             audio.LoadSong(@pixel_theme)
             audio.LoopSong            
@@ -186,7 +186,7 @@ PUB PlayerDied
             playerlives--
             
             audio.StopAllSound
-            audio.SetWaveform(1, 127)
+            audio.SetWaveform(1)
             audio.SetADSR(127, 10, 100, 10)
             audio.LoadSong(@song_ohnooo)
             audio.PlaySong         
@@ -227,7 +227,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
 
 PUB ItsGameOver
             audio.StopAllSound
-            audio.SetWaveform(1, 127)
+            audio.SetWaveform(1)
             audio.SetADSR(127, 10, 100, 10)
             audio.LoadSong(@song_superohnooo)
             audio.PlaySong     
@@ -242,7 +242,7 @@ PUB ItsGameOver
             pos_frame := 4
 
             audio.StopSong   
-            audio.SetWaveform(3, 127)
+            audio.SetWaveform(3)
             audio.SetADSR(127, 3, 0, 3)
             audio.LoadSong(@song_sad)
             audio.LoopSong    
@@ -265,7 +265,7 @@ PUB GameIntro
     pos_frame := 0
     
     audio.StopSong   
-    audio.SetWaveform(3, 127)
+    audio.SetWaveform(3)
     audio.SetADSR(127, 3, 0, 3)
     audio.LoadSong(@song_sad)
     audio.LoopSong    
@@ -492,7 +492,7 @@ PUB SpawnEffect(x, y, type)
     if effect > constant(EFFECTS-1)
         effect := 0
         
-    audio.SetWaveform(4, 127)
+    audio.SetWaveform(4)
     audio.SetADSR(127, 10, 0, 70)
     audio.PlaySound(2,40)
 
@@ -602,7 +602,7 @@ PUB SpawnBullet(x, y, dir)
     if bullet > constant(BULLETS-1)
         bullet := 0
 
-    audio.SetWaveform(1, 127)
+    audio.SetWaveform(1)
     audio.SetADSR(127, 50, 0, 50)
     audio.PlaySound(2,50)        
 
@@ -769,7 +769,7 @@ PUB EnemyBoss(index) | dx, dy
     if not bossspawned
         bossspawned := 1
     
-        audio.SetWaveform(1, 127)
+        audio.SetWaveform(1)
         audio.SetADSR(127, 10, 100, 10)
         audio.LoadSong(@song_boss)
         audio.LoopSong    
