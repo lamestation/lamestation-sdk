@@ -2,7 +2,7 @@
 LameAudio Synthesizer
 ─────────────────────────────────────────────────
 Version: 1.0
-Copyright (c) 2013 LameStation LLC
+Copyright (c) 2013-2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
