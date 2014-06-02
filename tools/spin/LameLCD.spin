@@ -74,6 +74,10 @@ fill            rdbyte  zwei, base              '  +0 =
                 cmp     trgt, #(res_y-lcd_y)/2 + lcd_y wz
         if_ne   jmp     #main
 
+                rdlong  lcnt, blnk
+                cmp     lcnt, trgt wz
+        if_ne   jmp     #$-2                    ' wait for target
+
                 mov     eins, #lcd_x/4
                 mov     scrn, par
                 add     scrn, #(res_x-lcd_x)/2
