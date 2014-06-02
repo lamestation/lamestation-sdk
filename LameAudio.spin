@@ -61,7 +61,6 @@ CON
     SNOP = 253
     SOFF = 252 
 
-    BARRESOLUTION = 8
     BYTES_SONGHEADER = 3
     BYTES_BARHEADER = 1
 
@@ -145,6 +144,9 @@ VAR
 
     long    LoopingPlayStack[20]
 
+PUB null
+'' This is not a top-level object.
+
 PUB Start
       
     parameter := @freqTable
@@ -206,7 +208,6 @@ PUB LoadSong(songBarAddrvar)
     totalbars := byte[songBarAddrvar][0]
     timeconstant := CalculateTimeConstant(byte[songBarAddrvar][1])
     barres := byte[songBarAddrvar][2]
-    notesperbeat := byte[songBarAddrvar][3]
     loopsongPtr := barAddr + totalbars*(barres+BYTES_BARHEADER) + BYTES_SONGHEADER        
     
     songcursor := 0
@@ -239,12 +240,13 @@ PRI FindLoopBarFromSongPointer | x
         barshift += barres+BYTES_BARHEADER
 
 PRI CalculateTimeConstant(bpm)
-    return ( clkfreq / bpm * 60 ) >> 1
+    return ( clkfreq / bpm * 15 ) ' 60 / 4 for 16th note alignment
 
 PRI LoopingSongParser | repeattime
-    repeattime := cnt
+    
 
     repeat
+        repeattime := cnt
         
         if replay
             play := 1
