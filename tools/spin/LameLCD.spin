@@ -31,6 +31,8 @@ PUB Start : n | b
     repeat b from 2 to 8 step 2
       palette.byte[n++] := lookupz((n >> b) & %11: $00, $AA, $C0, $55)
 
+  wordfill(@screen{0}, %%2222_2222, 1024)
+
   n := driver.init(-1, @scan{0})
 
   ifnot cognew(@entry, @scan{0}) +1
@@ -73,6 +75,10 @@ fill            rdbyte  zwei, base              '  +0 =
                 add     trgt, #1
                 cmp     trgt, #(res_y-lcd_y)/2 + lcd_y wz
         if_ne   jmp     #main
+
+                rdlong  lcnt, blnk
+                cmp     lcnt, trgt wz
+        if_ne   jmp     #$-2                    ' wait for target
 
                 mov     eins, #lcd_x/4
                 mov     scrn, par

@@ -461,7 +461,7 @@ if_nc                   jmp     #:skipblender2
 ' ------------------------------------------------------
 ' parameters: arg0: x1
 '             arg1: y1
-'             arg2: y2
+'             arg2: x2
 '             arg3: y2
 
 setcliprect             mov     _clipx1, arg0           ' |
@@ -498,31 +498,26 @@ setcliprect             mov     _clipx1, arg0           ' |
 ' R7 |0 1 2 3 4 5 6 7|8 9 A B C D E F|
 '    +---------------+---------------+
 
-translateLCD            mov     arg2, #0                ' offset from base
-
-                        mov     rcnt, #8                '  8 blocks of 8 rows
+translateLCD            mov     rcnt, #8                '  8 blocks of 8 rows
 :rows                   mov     ccnt, #16               ' 16 blocks of 8 columns
-
-:columns                mov     addr, arg0              ' |
-                        add     addr, arg2              ' base + offset
 
 ' read 8 words of an 8x8 pixel block (words are separated by a whole line, 32 bytes)
                         
-                        rdword  xsrc+0, addr            ' load 8x8 pixel block
-                        add     addr, #32
-                        rdword  xsrc+1, addr
-                        add     addr, #32
-                        rdword  xsrc+2, addr
-                        add     addr, #32
-                        rdword  xsrc+3, addr
-                        add     addr, #32
-                        rdword  xsrc+4, addr
-                        add     addr, #32
-                        rdword  xsrc+5, addr
-                        add     addr, #32
-                        rdword  xsrc+6, addr
-                        add     addr, #32
-                        rdword  xsrc+7, addr
+:columns                rdword  xsrc+0, arg0            ' load 8x8 pixel block
+                        add     arg0, #32
+                        rdword  xsrc+1, arg0
+                        add     arg0, #32
+                        rdword  xsrc+2, arg0
+                        add     arg0, #32
+                        rdword  xsrc+3, arg0
+                        add     arg0, #32
+                        rdword  xsrc+4, arg0
+                        add     arg0, #32
+                        rdword  xsrc+5, arg0
+                        add     arg0, #32
+                        rdword  xsrc+6, arg0
+                        add     arg0, #32
+                        rdword  xsrc+7, arg0
 
                         mov     pcnt, #8                ' scan 8 columns
 
@@ -565,10 +560,10 @@ translateLCD            mov     arg2, #0                ' offset from base
 
                         djnz    pcnt, #:loop
 
-                        add     arg2, #2                ' next 8 pixel columns
+                        sub     arg0, #32*7 -2          ' rewind loader, next 8 columns
                         djnz    ccnt, #:columns
 
-                        add     arg2, #256 -32          ' next 8 rows
+                        add     arg0, #256 -32          ' next 8 rows
                         djnz    rcnt, #:rows
 
                         jmp     %%0                     ' return
