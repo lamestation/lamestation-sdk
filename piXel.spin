@@ -128,7 +128,7 @@ PUB TitleScreen
 
     gfx.PutString(string("p  i      e  l"), 8, 30)
     gfx.Sprite(gfx_pixmain.Addr, 40, 8, 0)        
-    'gfx.PutString(string("press A/B"), 28, 56)
+    gfx.PutString(string("press A/B"), 28, 56)
 
     if ctrl.A or ctrl.B
         if not clicked
@@ -222,7 +222,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
         gfx.TextBox(text, 16, 64-x, 108, 64) 
     
         gfx.DrawScreen
-        fn.Sleep(100)
+        fn.Sleep(70)
         x++
 
 PUB ItsGameOver
@@ -925,7 +925,7 @@ byte        6, 43, PLAYER
 
 song_yeah
 byte    2
-byte    50
+byte    120
 byte    13
 
 byte    0, 27, 27, 27, 29, 29, 29, 31, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF
@@ -937,7 +937,7 @@ byte    SONGOFF
 
 song_ohnooo
 byte    2
-byte    50
+byte    120
 byte    7
 
 byte    0, 30, 29, 28, 27, SNOP, SNOP, SOFF
@@ -949,7 +949,7 @@ byte    SONGOFF
 
 song_superohnooo
 byte    2
-byte    100
+byte    75
 byte    7
 
 byte    0, 27, 26, 25, 24, SNOP, SNOP, SOFF
@@ -960,7 +960,7 @@ byte    SONGOFF
 
 song_boss
 byte    2
-byte    60
+byte    100
 byte    8
 
 byte    0, 26,26,26,SNOP,SNOP,SNOP,27,26
@@ -973,7 +973,7 @@ byte    SONGOFF
 
 song_sad
 byte    14
-byte    140
+byte    35
 byte    8
 'low part
 byte    0, 32,  39, 42, 46, 32, 39, 42, 46
@@ -1007,7 +1007,7 @@ byte    SONGOFF
 
 pixel_theme
 byte    14     'number of bars
-byte    40     'tempo
+byte    110     'tempo
 byte    8      'bar resolution
 
 'MAIN SECTION
