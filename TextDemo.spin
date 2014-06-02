@@ -31,7 +31,7 @@ PUB TextDemo | x, ran, y
     gfx.Start(@buffer,lcd.Start)    
 
     audio.Start
-    audio.SetWaveform(0, 127)
+    audio.SetWaveform(0)
     audio.SetADSR(120, 80, 40, 110) 
 
     
