@@ -89,7 +89,7 @@ PUB Static | ran, x
 
 PUB StaticScreen | x
 
-    audio.SetWaveform(4, 127)
+    audio.SetWaveform(4)
     audio.SetADSR(127, 127, 127, 127) 
     audio.LoadSong(@staticSong)
     audio.LoopSong
@@ -112,7 +112,7 @@ PUB LogoScreen | x
     gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
     gfx.TranslateBuffer(@buffer, screen)
 
-    audio.SetWaveform(3, 127)
+    audio.SetWaveform(3)
     audio.SetADSR(127, 10, 0, 10)
     audio.LoadSong(@logoScreenSound)  
     audio.PlaySong
@@ -124,7 +124,7 @@ PUB LogoScreen | x
 
 PUB TitleScreen
 
-    audio.SetWaveform(1, 127)
+    audio.SetWaveform(1)
     audio.SetADSR(127, 100, 40, 100) 
     audio.LoadSong(@titleScreenSong)
     audio.LoopSong
@@ -419,7 +419,7 @@ PUB HandleBoss
 
 PUB BossStage
 
-    audio.SetWaveform(1, 127)
+    audio.SetWaveform(1)
     audio.SetADSR(127, 100, 40, 100) 
     audio.LoadSong(@lastBossSong)
     audio.PlaySong
