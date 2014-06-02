@@ -63,7 +63,7 @@ PUB MusicPlayer
     
     ' Initialize the audio system
     audio.Start
-    audio.SetWaveform(0, 127)
+    audio.SetWaveform(0)
     audio.SetADSR(127, 100, 40, 100) 
 
 

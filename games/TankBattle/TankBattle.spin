@@ -146,7 +146,7 @@ PUB LogoScreen
     gfx.Sprite(gfx_logo_teamlame.Addr, -2, 24, 0)
     gfx.DrawScreen
 
-    audio.SetWaveform(3, 127)
+    audio.SetWaveform(3)
     audio.SetADSR(127, 10, 0, 10)
     audio.LoadSong(@logoScreenSound)
     audio.PlaySong
@@ -157,7 +157,7 @@ PUB LogoScreen
 
 PUB TitleScreen
 
-    audio.SetWaveform(1, 127)
+    audio.SetWaveform(1)
     audio.SetADSR(127, 127, 100, 127) 
     audio.LoadSong(@titleScreenSong)
     audio.PlaySong
@@ -363,7 +363,7 @@ PUB TankFaceOff
 PUB GameLoop : menureturn
 
     audio.StopSong
-    audio.SetWaveform(4, 127)
+    audio.SetWaveform(4)
     audio.SetADSR(127, 70, 0, 70)
   
     InitLevel
