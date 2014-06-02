@@ -18,12 +18,6 @@ CON
     
     PLAYERSPEED = 2
     BULLSPEED = 8
-
-    'SONG PLAYER
-    ENDOFSONG = 0
-    TIMEWAIT = 1
-    NOTEON = 2
-    NOTEOFF = 3
     
     SONGS = 2
     SONGOFF = 255
@@ -98,7 +92,7 @@ PUB StaticScreen | x
     audio.SetWaveform(4, 127)
     audio.SetADSR(127, 127, 127, 127) 
     audio.LoadSong(@staticSong)
-    audio.PlaySong
+    audio.LoopSong
     
     repeat x from 0 to 50
         gfx.TranslateBuffer(@buffer, screen)
@@ -120,7 +114,8 @@ PUB LogoScreen | x
 
     audio.SetWaveform(3, 127)
     audio.SetADSR(127, 10, 0, 10)
-    audio.PlaySequence(@logoScreenSound)  
+    audio.LoadSong(@logoScreenSound)  
+    audio.PlaySong
 
     repeat x from 0 to 120000 
 
@@ -132,7 +127,7 @@ PUB TitleScreen
     audio.SetWaveform(1, 127)
     audio.SetADSR(127, 100, 40, 100) 
     audio.LoadSong(@titleScreenSong)
-    audio.PlaySong
+    audio.LoopSong
 
     choice := 1
     repeat until choice == 0  
@@ -734,31 +729,15 @@ word %%3333_3333 ' End level symbol
 
 
 
-
 logoScreenSound
-byte    NOTEON,0,72
-byte    TIMEWAIT,8
+byte    1
+byte    18
+byte    12
 
-byte    NOTEON,1,70
-byte    TIMEWAIT,8
+byte    0,72,SNOP,70,SNOP,68,SNOP,63,SNOP,51,75,87,SOFF
+byte    0,BAROFF
 
-byte    NOTEON,2,68
-byte    TIMEWAIT,8
-
-byte    NOTEON,3,63
-byte    TIMEWAIT,8
-
-byte    NOTEON,4,51
-byte    TIMEWAIT,7
-byte    NOTEON,5,75
-byte    TIMEWAIT,6
-byte    NOTEON,6,87
-byte    TIMEWAIT,5
-
-byte    ENDOFSONG
-
-
-
+byte    SONGOFF
 
 
 
