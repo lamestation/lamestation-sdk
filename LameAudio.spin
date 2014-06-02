@@ -167,24 +167,83 @@ PUB Start
     cognew(LoopingSongParser, @LoopingPlayStack)
     
 
-PUB SetADSR(attackvar, decayvar, sustainvar, releasevar)
-
+PUB SetAttack(attackvar)
     channelADSR := (channelADSR & A_MASK) + (attackvar << A_OFFSET)
-    channelADSR := (channelADSR & D_MASK) + (decayvar << D_OFFSET)
-    channelADSR := (channelADSR & S_MASK) + (sustainvar << S_OFFSET)
-    channelADSR := (channelADSR & R_MASK) + (releasevar << R_OFFSET)
-  
-PUB SetWaveform(waveformvar, volumevar)
 
+PUB SetDecay(decayvar)
+    channelADSR := (channelADSR & D_MASK) + (decayvar << D_OFFSET)
+
+PUB SetSustain(sustainvar)
+    channelADSR := (channelADSR & S_MASK) + (sustainvar << S_OFFSET)
+
+PUB SetRelease(releasevar)
+    channelADSR := (channelADSR & R_MASK) + (releasevar << R_OFFSET)
+
+PUB SetWaveform(waveformvar)
     channelADSR := (channelADSR & W_MASK) + (waveformvar << W_OFFSET)
+
+PUB SetVolume(volumevar)
     channelparam := (channelparam & $FFFF00FF) + (volumevar << 8)
+
+PUB SetADSR(attackvar, decayvar, sustainvar, releasevar)
+    SetAttack(attackvar)
+    SetDecay(decayvar)
+    SetSustain(sustainvar)
+    SetRelease(releasevar)
+
+
+PUB PressPedal
+    channelADSR |= SUSPEDALBIT
+
+PUB ReleasePedal
+    channelADSR &= !SUSPEDALBIT
+    repeat oscoffindexer from 0 to OSCREGS-1 step REGPEROSC
+        if oscRegister[oscoffindexer] & HELDBIT == 0           'if note is not being held
+            oscRegister[oscoffindexer] &= !KEYONBIT        '9th bit
+
 
 PUB LoadInstr(instrnum)
 
     channelADSR := LONG[@instruments][instrnum]
+
+PUB FindFreeOscillator
+    oscindexcounter := 0
+    repeat while oscRegister[oscindexer+1] & ADSRBITS <> 0 and oscindexcounter < OSCILLATORS
+        oscindexcounter += 1
+        oscindexer += 4
+        oscindexer &= OSCBITMASK
+
+PUB PlayNewNote(note)
+    FindFreeOscillator
+
+    if oscRegister[oscindexer] & HELDBIT == 0
+        oscRegister[oscindexer] := note + KEYBITS
+    else
+        oscindexcounter := 0
+        repeat while oscRegister[oscindexer] & HELDBIT <> 0 and oscindexcounter < OSCILLATORS
+            oscindexcounter += 1
+            oscindexer += 4
+            oscindexer &= OSCBITMASK
+        oscRegister[oscindexer] := note + KEYBITS
+
+    oscindexer += 4
+    oscindexer &= OSCBITMASK
+
+PUB StopNote(note)
+
+    if channelADSR & SUSPEDALBIT == 0
+        repeat oscoffindexer from 0 to OSCREGS-1 step REGPEROSC
+            if oscRegister[oscoffindexer] & NOTEBITS == note
+                oscRegister[oscoffindexer] &= !KEYBITS
+    else
+        repeat oscoffindexer from 0 to OSCREGS-1 step REGPEROSC
+            if oscRegister[oscoffindexer] & NOTEBITS == note
+                oscRegister[oscoffindexer] &= !HELDBIT           '9th bit
+
+
+        
   
 PUB PlaySound(channel, note)
-
     if note < 128 and channel < VOICES
         oscindexer := channel << 2
         oscRegister[oscindexer] &= !KEYBITS          
