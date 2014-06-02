@@ -22,15 +22,7 @@ CON
     OSCILLATORS = VOICES*PERVOICE
     REGPEROSC = 4
 
-    OUTPUTPIN_LMONO = 27
-    OUTPUTPIN_R = 27
-
-  '  OUTPUTPIN_LMONO = 15
-   ' OUTPUTPIN_R = 15
-
-    'MIDIPIN = 25
-    MIDIPIN = 23
-
+    OUTPUTPIN_MONO = 27
     
     KEYBITS = $180
     HELDBIT = $80
@@ -62,13 +54,6 @@ CON
     S_MASK = !($7F << S_OFFSET)
     R_MASK = !($7F << R_OFFSET)
     W_MASK = !($F << W_OFFSET)
-        
-
-    'SONG PLAYER
-    ENDOFSONG = 0
-    TIMEWAIT = 1
-    NOTEON = 2
-    NOTEOFF = 3
     
     SONGS = 1
     SONGOFF = 255
@@ -120,6 +105,9 @@ CON
     OSCBITMASK = (OSCILLATORS-1) << 2
     INITVAL = 127
 
+OBJ
+
+    fn  :       "LameFunctions"
 
 VAR
 
@@ -137,21 +125,11 @@ VAR
     byte    oscindexcounter
     byte    oscoffindexer
 
-    byte    channelbyte
-    byte    instrumentbyte
-
     long    songcursor
     long    barcursor
-    long    seqcursor
-    byte    seqbyte 
-    byte    songbyte
-    long    repeatlong
-    long    repeatindex
-    long    repeatseqindex
+    long    timeconstant
     word    loopsongPtr     '' This value points to the first address of the song definition in a song
 
-    byte    songchoice
-    byte    looping
     byte    bar
     byte    barinc   
     byte    totalbars
@@ -169,11 +147,9 @@ VAR
 
 PUB Start
       
-    parameter := @sine
+    parameter := @freqTable
     channelparam := (INITVAL << 8)
     channelADSR := LONG[@instruments][0]
-    songchoice := SONGOFF
-    looping := 0  
     play := 0
     
     
@@ -222,44 +198,25 @@ PUB StopSound(channel)
 PUB StopAllSound
 
     repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
-        oscRegister[oscindexer] &= !KEYBITS 
-
-PUB PlaySequence(songAddrvar)
-    seqcursor := 0
-    
-    repeat while byte[songAddrvar][seqcursor] <> ENDOFSONG
-        seqbyte := byte[songAddrvar][seqcursor]
-        if seqbyte == TIMEWAIT
-            repeatlong := byte[songAddrvar][seqcursor] << 13
-            repeat repeatseqindex from 0 to repeatlong
-            seqcursor += 2
-        
-        elseif seqbyte == NOTEON
-            PlaySound(byte[songAddrvar][seqcursor+1],byte[songAddrvar][seqcursor+2])   
-            seqcursor += 3
-        
-        elseif seqbyte == NOTEOFF
-            StopSound(byte[songAddrvar][seqcursor+1])
-            seqcursor += 2
+        oscRegister[oscindexer] &= !KEYBITS
 
 PUB LoadSong(songBarAddrvar)
 
     barAddr := songBarAddrvar
     totalbars := byte[songBarAddrvar][0]
-    repeatlong := byte[songBarAddrvar][1] << 8
+    timeconstant := CalculateTimeConstant(byte[songBarAddrvar][1])
     barres := byte[songBarAddrvar][2]
+    notesperbeat := byte[songBarAddrvar][3]
     loopsongPtr := barAddr + totalbars*(barres+BYTES_BARHEADER) + BYTES_SONGHEADER        
     
     songcursor := 0
     barcursor := 0
 
 PUB PlaySong
-
     play := 1
     replay := 0
     
 PUB LoopSong
-
     play := 1
     replay := 1    
 
@@ -272,21 +229,23 @@ PUB StopSong
 PUB SongPlaying
     return play
         
-PRI FindLoopBarFromSongPointer
+PRI FindLoopBarFromSongPointer | x
 '' This function increments the loop pointer by
 '' the value of the song pointr
 
-    barinc := 0
+    x := 0
     barshift := 0
-    repeat while barinc < byte[loopsongPtr][songcursor]
+    repeat while x++ < byte[loopsongPtr][songcursor]
         barshift += barres+BYTES_BARHEADER
-        barinc++
 
+PRI CalculateTimeConstant(bpm)
+    return ( clkfreq / bpm * 60 ) >> 1
 
-PRI LoopingSongParser
+PRI LoopingSongParser | repeattime
+    repeattime := cnt
 
     repeat
-
+        
         if replay
             play := 1
             
@@ -296,6 +255,8 @@ PRI LoopingSongParser
                 
                 barcursor := songcursor
                 repeat linecursor from 0 to (barres-1)
+
+                    waitcnt(repeattime += timeconstant)
                 
                     songcursor := barcursor
 
@@ -314,10 +275,8 @@ PRI LoopingSongParser
                             PlaySound( byte[barAddr][barshift+BYTES_SONGHEADER] , byte[barAddr][bartmp] )  'channel, note
 
                             
-                        songcursor += 1
-                    
-                    repeat repeatindex from 0 to repeatlong
-                   
+                        songcursor += 1                    
+
                 songcursor += 1
 
             play := 0
@@ -344,21 +303,6 @@ DAT
 
     'accordion
     long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (64 << R_OFFSET) + (5 << W_OFFSET))
-
-
-
-
-
-    'quarter sine table
-    sine 
-    byte    0,1,3,4,6,7,9,10,12,13,15,17,18,20,21,23
-    byte    24,26,27,29,30,32,33,35,36,38,39,41,42,44,45,47
-    byte    48,50,51,52,54,55,57,58,59,61,62,63,65,66,67,69
-    byte    70,71,73,74,75,76,78,79,80,81,82,84,85,86,87,88
-    byte    89,90,91,93,94,95,96,97,98,99,100,101,102,102,103,104
-    byte    105,106,107,108,108,109,110,111,112,112,113,114,114,115,116,116
-    byte    117,117,118,119,119,120,120,121,121,121,122,122,123,123,123,124
-    byte    124,124,125,125,125,125,126,126,126,126,126,126,126,126,126,126
 
 
 
@@ -395,15 +339,9 @@ oscmodule               mov       dira, diraval       'set APIN to output
 
 'ESTABLISH COMMUNICATION LINK BETWEEN SPIN AND PASM              
 
-                        'get address of sine table
-                        mov       Addr, par
-                        rdlong    tableAddr, Addr
-
-              
-              
                         'get address of frequency table
-                        mov       freqAddr, tableAddr
-                        add       freqAddr, #128
+                        mov       Addr, par
+                        rdlong    freqAddr, Addr
 
                         mov       organAddr, freqAddr
                         add       organAddr, fivetwelve
@@ -688,8 +626,8 @@ if_nz                   add     osctemp, multtemp
 
 
 
-diraval       long      |< OUTPUTPIN_LMONO               'APIN=0
-ctraval       long      %00100 << 26 + OUTPUTPIN_LMONO   'NCO/PWM APIN=0
+diraval       long      |< OUTPUTPIN_MONO               'APIN=0
+ctraval       long      %00100 << 26 + OUTPUTPIN_MONO   'NCO/PWM APIN=0
 period        long      PERIOD1               '800kHz period (_clkfreq / period)
 time          long      0
 
@@ -756,7 +694,6 @@ output        long      0
 
 Addr          long      0
 Addrtemp      long      0
-tableAddr     long      0
 freqAddr      long      0
 outputAddr    long      0
 sineAddr      long      $E000
