@@ -29,91 +29,65 @@ VAR
     byte    databyte2
 
 OBJ
-        pst     :       "LameSerial"
-        pst2    :       "LameSerial" 
-        audio   :       "LameAudio"      
+    pst     :       "LameSerial"
+    pst2    :       "LameSerial" 
+    audio   :       "LameAudio"      
 
 PRI ControlNote
 
-            databyte1 := newbyte
-            databyte2 := pst.CharIn
-
-            pst2.Dec(databyte1)
-            pst2.Char(" ")
-            pst2.Dec(databyte2)
-            pst2.Char(" ")
-
-            'TURN NOTE ON
-            if statusnibble == $90
-                audio.PlayNewNote(databyte1)
-            'TURN NOTE OFF
-            if statusnibble == $80 or databyte2 == 0
-                audio.StopNote(databyte1)
+    databyte1 := newbyte
+    databyte2 := pst.CharIn
+    
+    pst2.Dec(databyte1)
+    pst2.Char(" ")
+    pst2.Dec(databyte2)
+    pst2.Char(" ")
+    
+    'TURN NOTE ON
+    if statusnibble == $90
+        audio.PlayNewNote(databyte1)
+    'TURN NOTE OFF
+    if statusnibble == $80 or databyte2 == 0
+        audio.StopNote(databyte1)
 
 PRI ControlKnob
 
-            databyte1 := newbyte
-            databyte2 := pst.CharIn
-
-            pst2.Hex(databyte1,2)
-            pst2.Char(" ")
-            pst2.Hex(databyte2,2)
-            pst2.Char(" ")
-
-            'modulation wheel
-           if databyte1 == $01
-
-            'ADSR controls
-           elseif databyte1 == $4A          'attack
-                audio.SetAttack(databyte2)
-
-           elseif databyte1 == $47          'decay
-                audio.SetDecay(databyte2)
-
-           elseif databyte1 == $0A          'sustain
-                audio.SetSustain(databyte2)
-
-           elseif databyte1 == $07          'release
-                audio.SetRelease(databyte2)
-
-            'waveform control
-           elseif databyte1 == $49          'waveform
-                audio.SetWaveform(databyte2)
-
-           'same knobs with assign button pressed
-           elseif databyte1 == $48
-                audio.SetVolume(databyte2)
-
-           elseif databyte1 == $5B
-
-           elseif databyte1 == $5D
-
-             'SUSTAIN PEDAL
-           elseif databyte1 == $40
-                if databyte2 <> 0
+    databyte1 := newbyte
+    databyte2 := pst.CharIn
+    
+    'modulation wheel
+    case databyte1
+        ' Modulation
+        $01:
+    
+        ' ADSR
+        $4A:    audio.SetAttack(databyte2)
+        $47:    audio.SetDecay(databyte2)
+        $0A:    audio.SetSustain(databyte2)
+        $07:    audio.SetRelease(databyte2)
+        $48:    audio.SetVolume(databyte2)
+        $49:    audio.SetWaveform(databyte2)
+    
+        ' SUSTAIN PEDAL
+        $40:    if databyte2 <> 0
                     audio.PressPedal
                 else
                     audio.ReleasePedal
 
-
-           else
-
 PRI ControlPitchBend
 
-            databyte1 := newbyte
-            databyte2 := pst.CharIn
+    databyte1 := newbyte
+    databyte2 := pst.CharIn
+    
+    pst2.Dec(databyte1)
+    pst2.Char(" ")
+    pst2.Dec(databyte2)
+    pst2.Char(" ")
+    
+    pst2.Char(pst#NL)
 
-            pst2.Dec(databyte1)
-            pst2.Char(" ")
-            pst2.Dec(databyte2)
-            pst2.Char(" ")
-            
-            pst2.Char(pst#NL)
+PUB Main
 
-PRI InitPlugin
-
-
-PUB go | x                                                 
     pst.StartRxTx(MIDIPIN, MIDIPIN+1, 0, 31250)
     pst2.StartRxTx(31, 30, 0, 115200)
     pst2.Clear
@@ -122,30 +96,26 @@ PUB go | x
   
     repeat
         'system control messages begin with $FF
-      'status byte, data bytes (1-2)
+        'status byte, data bytes (1-2)
+        'status messages begin with the left-most bit = 1
 
-      newbyte := pst.CharIn
+        newbyte := pst.CharIn
 
-      if newbyte & $80
-         statusbyte := newbyte
-         statusnibble := statusbyte & $F0
-         statuschannel := statusbyte & $0F
-         pst2.Char(pst#NL)
-         pst2.Hex(statusbyte, 2)
-         pst2.Char(" ")
+        if newbyte & $80
+            statusbyte := newbyte
+            statusnibble := statusbyte & $F0
+            statuschannel := statusbyte & $0F
+            pst2.Char(pst#NL)
+            pst2.Hex(statusbyte, 2)
+            pst2.Char(" ")
 
-      else
-         if statusnibble == $E0
-           ControlPitchBend
-
-         elseif statusnibble == $B0
-           ControlKnob
-
-         elseif statusnibble == $90 or statusnibble == $80
-           ControlNote
-
-         'ACTIVE SENSING (output by some keyboards)
-         elseif statusbyte == $FE
+        else
+            case statusnibble
+                $E0:        ControlPitchBend
+                $B0:        ControlKnob
+                $90, $80:   ControlNote
+                $FE:    'ACTIVE SENSING (output by some keyboards)
+                other:
 
 
 {{
