@@ -3,7 +3,7 @@
 ''
 ''        Author: Marko Lukat
 '' Last modified: 2014/06/05
-''       Version: 0.2
+''       Version: 0.3
 ''
 '' 20140605: initial version
 ''
@@ -40,12 +40,10 @@ PUB setn(address, sidx)
 ''
 '' parameters
 ''  address: ... of 128x64 px buffer or NULL (remove)
-''     sidx: screen index (0..3, 4)
-''
-'' Note: in order to remove screen 0 an index of 4 is required (%100).
+''     sidx: screen index (0..3)
 
   sidx.word[1] := address
-  insn := sidx
+  insn := sidx|%100
 
   repeat
   while insn
