@@ -85,9 +85,9 @@ def Base64toCSV(text):
 def XMLtoCSV(datablock):
     output = ""
     count = 0
-    for o in object_data:
+    for o in datablock:
         output += o.attrib['gid']
-        if  count < len(object_data)-1:
+        if  count < len(datablock)-1:
             output += ","
         count += 1
     return output
