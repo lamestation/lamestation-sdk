@@ -2,8 +2,8 @@
 '' multi buffer view (VGA)
 ''
 ''        Author: Marko Lukat
-'' Last modified: 2014/06/05
-''       Version: 0.3
+'' Last modified: 2014/06/06
+''       Version: 0.4
 ''
 '' 20140605: initial version
 ''
@@ -48,6 +48,14 @@ PUB setn(address, sidx)
   repeat
   while insn
 
+PUB waitVBL
+'' Block execution until vertical sync pulse starts.
+
+  repeat
+  until line == res_y                           ' last line has been fetched
+  repeat
+  until line <> res_y                           ' vertical blank starts (res_y/0 transition)
+  
 DAT             org     0                       ' multi screen driver
 
 entry           jmp     #setup
