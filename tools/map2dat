@@ -156,6 +156,7 @@ class LevelData:
 
             try:
                 self.collision_data = Image.open(self.collisionmap).convert("RGB")
+
             except (IOError, KeyError): # No collision layer found
                 text = self.processCollision(self.layer_no_collision)
             else: # Collision layer found
@@ -188,8 +189,7 @@ class LevelData:
     
         tilex = (value) % tilemap.inc
         tiley = value / tilemap.inc
-    
-    
+        
         if value > 0:
             if not sum(self.collision_data.getpixel((tilex*tilemap.tilew,tiley*tilemap.tileh)))/3 > 0:
                 value += 1 << 7
@@ -244,26 +244,35 @@ for filename in args.filenames:
     tilemap = TileMap(tilemaproot)
 
     fullpath_tilemap_name = os.path.join(os.path.dirname(leveldata.getLongName()),tilemap.name)
+    if not os.path.isfile(fullpath_tilemap_name):
+        raise Exception("Tilemap "+fullpath_tilemap_name+" not found!")
+
     if not oldtilemap_name == tilemap.name:
+        arguments = [os.path.join(files.getScriptDir(),"img2dat")]
+
+        if args.write:
+            arguments.append("--write")
+
+        arguments.append("--noprint")
+
+        for x in ["--framesize",str(tilemap.tilew),str(tilemap.tileh)]:
+            arguments.append(x)
+
+        arguments.append(fullpath_tilemap_name)
+
         try:
-            arguments = [os.path.join(files.getScriptDir(),"img2dat")]
-
-            if args.write:
-                arguments.append("--write")
-
-            arguments.append("--noprint")
-            for x in ["--framesize",str(tilemap.tilew),str(tilemap.tileh)]:
-                arguments.append(x)
-            arguments.append(fullpath_tilemap_name)
-
-            child = subprocess.check_call(arguments)
+            subprocess.check_call(arguments)
         except:
-            print "Could not find img2dat"
-            sys.exit(1)
+            raise Exception("Call to img2dat failed")
+
         oldtilemap_name = tilemap.name
         
     collisionmap_name = os.path.splitext(fullpath_tilemap_name)[0]
     collisionmap_name = collisionmap_name + '_collision' + os.path.splitext(fullpath_tilemap_name)[1]
+
+    if not os.path.isfile(collisionmap_name):
+        raise Exception("Collision map "+collisionmap_name+" not found!")
+
     leveldata.collisionmap =  collisionmap_name
 
     output += leveldata.buildLevelData()
