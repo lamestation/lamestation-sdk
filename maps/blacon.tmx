@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="100" height="80" tilewidth="8" tileheight="8" backgroundcolor="#ff00ff">
  <tileset firstgid="1" name="tiles_2b_poketron" tilewidth="8" tileheight="8">
-  <image source="tiles_2b_poketron.png" trans="ff00ff" width="104" height="80"/>
+     <image source="../games/TankBattle/tiles_2b_poketron.png" trans="ff00ff" width="104" height="80"/>
   <terraintypes>
    <terrain name="Water" tile="-1"/>
    <terrain name="Grass" tile="-1"/>
