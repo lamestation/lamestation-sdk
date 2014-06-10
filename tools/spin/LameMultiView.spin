@@ -29,7 +29,7 @@ PUB null
 '' This is not a top level object.
 
 PUB init(primary) | n
-'' Initializes the viewer object and the underlying graphics driver.
+'' Initializes the viewer object and any underlying graphics driver.
 ''
 '' parameters
 ''  primary: optional screen buffer (to be attached at index 0) or NULL (none)

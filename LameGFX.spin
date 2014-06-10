@@ -97,8 +97,8 @@ PUB Start(buffer, screen)
     c_blitscreen  := @c_parameters << 16 | (@blitscreen   - @graphicsdriver) >> 2 | %000_1 << 12
     c_sprite      := @c_parameters << 16 | (@drawsprite   - @graphicsdriver) >> 2 | %011_1 << 12
     c_setcliprect := @c_parameters << 16 | (@setcliprect  - @graphicsdriver) >> 2 | %011_1 << 12
-    c_translate   := @c_parameters << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
-'   c_translate   := @c_parameters << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
+'   c_translate   := @c_parameters << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
+    c_translate   := @c_parameters << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
 
 PUB WaitToDraw
 
