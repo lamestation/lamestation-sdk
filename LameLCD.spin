@@ -9,6 +9,7 @@
 '' -------------------------------------------------
 ''
 '' 20140610: view API on hold, move code back to LCD
+''           announce frame ID change immediately after work is done
 ''
 CON
 '' These indicate which pins connect to what. If developing your own prototype,
@@ -131,21 +132,16 @@ read            if_nz   mov     eins, line              ' read data or black (de
                         cmp     rcnt, rmsk wz           ' check recently drawn page
                 if_ne   jmp     #main                   ' for all pages
 
+                        xor     idnt, #1                ' toggle frame identifier
+                        wrlong  idnt, blnk              ' and announce it
+
                         waitcnt LCD_time, LCD_frameperiod
-{
-                        add     ina, cnt
-                        wrlong  ina, $+1
-                        long    $7FFC
-                        neg     ina, cnt
-}
+
                         rdlong  eins, par wz            ' |
                 if_nz   shr     eins, #16               ' |
                 if_nz   mov     scrn, eins              ' update display buffer
                 if_nz   wrlong  zero, par               ' acknowledge command
 
-                        xor     idnt, #1                ' advance frame counter
-                        wrlong  idnt, blnk              ' and announce it
-                
                         jmp     #main                   ' next frame
 
 ' min enable pulse width: 450ns
