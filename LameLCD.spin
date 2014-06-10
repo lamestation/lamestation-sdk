@@ -70,7 +70,9 @@ PUB Start
   ifnot cognew(@screen, @insn) +1
     abort
 
-  SetScreen(@screen{0}, 0)
+  SetScreen(0, 0)                                       ' make sure cog is running
+  longfill(@screen{0}, 0, 512)                          ' clear screen
+  SetScreen(@screen{0}, 0)                              ' activate screen
 
   return @screen{0}
 
