@@ -97,7 +97,6 @@ PUB Start(buffer, screen)
     c_blitscreen  := @c_parameters << 16 | (@blitscreen   - @graphicsdriver) >> 2 | %000_1 << 12
     c_sprite      := @c_parameters << 16 | (@drawsprite   - @graphicsdriver) >> 2 | %011_1 << 12
     c_setcliprect := @c_parameters << 16 | (@setcliprect  - @graphicsdriver) >> 2 | %011_1 << 12
-'   c_translate   := @c_parameters << 16 | (@translateLCD - @graphicsdriver) >> 2 | %001_1 << 12
     c_translate   := @c_parameters << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
 
 PUB WaitToDraw
@@ -468,103 +467,6 @@ setcliprect             mov     _clipx1, arg0           ' |
                         mov     _clipy1, arg1           ' |
                         mov     _clipx2, arg2           ' |
                         mov     _clipy2, arg3           ' copy parameters
-
-                        jmp     %%0                     ' return
-                        
-' #### TRANSLATE BUFFER
-' ------------------------------------------------------
-' parameters: arg0: source buffer       (word aligned)
-'             arg1: destination buffer  (word aligned)
-'
-' Given screen dimensions of 128x64 pixel and 2 bits/pixel we're looking at
-' a linear buffer of 64*128*2 bits == 64*32 bytes == 2K. The LCD buffers needs
-' the bytes effectively rotated by 90 deg.
-'                                         
-'    +---------------+---------------+    An 8x8 pixel block holds 16bytes or     
-' R0 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    8 words. The LCD expects data to be     
-'    +---------------+---------------+    formatted in a way that all 0 bits      
-' R1 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    are delivered first starting with R0.0  
-'    +---------------+---------------+    in bit position 0 and R7.0 in position  
-' R2 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    7. This new byte is followed by column  
-'    +---------------+---------------+    1 and so on until column F.             
-' R3 |0 1 2 3 4 5 6 7|8 9 A B C D E F|                                            
-'    +---------------+---------------+    To achieve this we scan all 16x8 blocks 
-' R4 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    of the structure shown to the left. This
-'    +---------------+---------------+    gives us outer and inner loop. Address  
-' R5 |0 1 2 3 4 5 6 7|8 9 A B C D E F|    offsets increment by 2 (word) for each
-'    +---------------+---------------+    column and 8*32 == 256 for each row.    
-' R6 |0 1 2 3 4 5 6 7|8 9 A B C D E F|
-'    +---------------+---------------+
-' R7 |0 1 2 3 4 5 6 7|8 9 A B C D E F|
-'    +---------------+---------------+
-
-translateLCD            mov     rcnt, #8                '  8 blocks of 8 rows
-:rows                   mov     ccnt, #16               ' 16 blocks of 8 columns
-
-' read 8 words of an 8x8 pixel block (words are separated by a whole line, 32 bytes)
-                        
-:columns                rdword  xsrc+0, arg0            ' load 8x8 pixel block
-                        add     arg0, #32
-                        rdword  xsrc+1, arg0
-                        add     arg0, #32
-                        rdword  xsrc+2, arg0
-                        add     arg0, #32
-                        rdword  xsrc+3, arg0
-                        add     arg0, #32
-                        rdword  xsrc+4, arg0
-                        add     arg0, #32
-                        rdword  xsrc+5, arg0
-                        add     arg0, #32
-                        rdword  xsrc+6, arg0
-                        add     arg0, #32
-                        rdword  xsrc+7, arg0
-
-                        mov     pcnt, #8                ' scan 8 columns
-
-:loop                   shr     xsrc+0, #1 wc           ' extract even column(s)
-                        rcr     trgt, #1
-                        shr     xsrc+1, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+2, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+3, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+4, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+5, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+6, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+7, #1 wc
-                        rcr     trgt, #1
-
-                        shr     xsrc+0, #1 wc           ' extract odd column(s)
-                        rcr     trgt, #1
-                        shr     xsrc+1, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+2, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+3, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+4, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+5, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+6, #1 wc
-                        rcr     trgt, #1
-                        shr     xsrc+7, #1 wc
-                        rcr     trgt, #17
-
-                        wrword  trgt, arg1              ' write out one pixel column
-                        add     arg1, #2                ' advance destination
-
-                        djnz    pcnt, #:loop
-
-                        sub     arg0, #32*7 -2          ' rewind loader, next 8 columns
-                        djnz    ccnt, #:columns
-
-                        add     arg0, #256 -32          ' next 8 rows
-                        djnz    rcnt, #:rows
 
                         jmp     %%0                     ' return
 
