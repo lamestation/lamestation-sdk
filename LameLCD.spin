@@ -10,6 +10,7 @@
 ''
 '' 20140610: view API on hold, move code back to LCD
 ''           announce frame ID change immediately after work is done
+'' 20140611: relaxed interface timing
 ''
 CON
 '' These indicate which pins connect to what. If developing your own prototype,
@@ -41,8 +42,8 @@ CON
 ''
 '' * KS0108, white on blue STN LCD - (133, 190)
 ''
-  FRAMERATE = 134
-  BYTEPERIOD = 190
+  SYNC_PERIOD = 80_000_000/73
+  BUSY_PERIOD = 400
     
   ' screensize constants
   SCREEN_W = 128
@@ -147,20 +148,24 @@ read            if_nz   mov     eins, line              ' read data or black (de
                         jmp     #main                   ' next frame
 
 ' min enable pulse width: 450ns
-'    min data setup time: 200ns
+' min address setup time: 140ns (before enable high)
 '     min data hold time:  10ns
+'
+' cycle timing assumes 80MHz system clock
 
-sendLCDcommand          mov     outa, eins
+sendLCDcommand          mov     outa, eins              ' DI(RS), data, CSA/B
 
                         mov     cnt, cnt
-                        add     cnt, #13{18} +22
-                        or      outa, LCD_Enable
-                        waitcnt cnt, #BYTEPERIOD
-                        
-                        andn    outa, LCD_Enable
+                        add     cnt, #9{14} + BUSY_PERIOD
+'                                     |            |
+'                                     |            +----  covers busy period
+'                                     +-----------------  (14+4)*12.5ns = 225ns
 
-                        waitcnt cnt, #BYTEPERIOD
+                        waitcnt cnt, #40                ' 500ns
+                        or      outa, LCD_Enable
+
                         waitcnt cnt, #0
+                        andn    outa, LCD_Enable
 
 sendLCDcommand_ret      ret
 
@@ -261,8 +266,8 @@ translateLCD_ret        ret                             ' return
 
 ' initialised data and/or presets
 
-LCD_time                long    80_000_000/73
-LCD_frameperiod         long    80_000_000/73
+LCD_time                long    SYNC_PERIOD
+LCD_frameperiod         long    SYNC_PERIOD
 
 CMD_DisplayOff          long    %11 << CSA | $3E << DB
 CMD_DisplayOn           long    %11 << CSA | $3F << DB
