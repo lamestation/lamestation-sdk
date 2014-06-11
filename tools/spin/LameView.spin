@@ -1,12 +1,11 @@
 ''
-'' multi buffer view (VGA)
+'' single buffer view (VGA)
 ''
 ''        Author: Marko Lukat
 '' Last modified: 2014/06/09
-''       Version: 0.6
+''       Version: 0.3
 ''
-'' 20140605: initial version
-'' 20140609: documented init method
+'' 20140609: catch up with LameMultiView API
 ''
 CON
   lcd_x = 128
@@ -18,7 +17,7 @@ CON
   quads = res_x / 4
 
 OBJ
-  driver: "waitvid.400x300.driver.2048"
+  driver: "waitvid.256x192.driver.2048"
   
 VAR
   long  insn                                    ' scan[-2]
@@ -38,7 +37,7 @@ PUB init(primary) | n
 ''   Aborts when any part of the initialization fails, otherwise an address
 ''   of an internal buffer which can be used as a screen buffer (DAT reuse)
 ''   or NULL of no such buffer is available.
-        
+
   n := driver.init(-1, @scan{0})
 
   ifnot cognew(@entry, @scan{0}) +1
@@ -53,13 +52,14 @@ PUB setn(address, sidx)
 ''
 '' parameters
 ''  address: ... of 128x64 px buffer or NULL (remove)
-''     sidx: screen index (0..3)
+''     sidx: screen index (must be 0)
 
-  sidx.word[1] := address
-  insn := sidx|%100
+  ifnot sidx
+    sidx.word[1] := address
+    insn := sidx|%100
 
-  repeat
-  while insn
+    repeat
+    while insn
 
 PUB waitVBL
 '' Block execution until vertical sync pulse starts.
@@ -69,7 +69,7 @@ PUB waitVBL
   repeat
   until line <> res_y                           ' vertical blank starts (res_y/0 transition)
   
-DAT             org     0                       ' multi screen driver
+DAT             org     0                       ' single screen driver
 
 entry           jmp     #setup
 
@@ -112,22 +112,12 @@ loop            rdlong  lcnt, blnk
 
                 call    #update                 ' re/set screen
 
-                mov     tgtL, #tl_y + lcd_y*0   ' first ...         
-                mov     tgtH, #tl_y + lcd_y*1   ' last scanline     
-                                                                    
-                mov     idxL, eins              ' |                 
-                mov     idxR, zwei              ' select buffers ...
-                                                
-                call    #display                ' ... and display them
+                mov     tgtL, #tl_y + lcd_y*0   ' first ...
+                mov     tgtH, #tl_y + lcd_y*1   ' last scanline
 
-                mov     tgtL, #tl_y + lcd_y*2   ' first ...           
-                mov     tgtH, #tl_y + lcd_y*3   ' last scanline       
-                                                                      
-                mov     idxL, drei              ' |                   
-                mov     idxR, vier              ' select buffers ...  
-                                                                      
-                call    #display                ' ... and display them
+                mov     indx, eins              ' select buffer ...
 
+                call    #display                ' ... and display it
                 jmp     #loop
 
 
@@ -137,36 +127,22 @@ display         call    #wait                   ' wait for first line
                 add     scrn, #tl_x
 
                 mov     bcnt, #lcd_x/4
-                cmp     idxL, #0 wz             ' |
-        if_z    movd    scrL, #colN             ' screen is off, show idle screen
+                cmp     indx, #0 wz             ' |                              
+        if_z    movd    putc, #colN             ' screen is off, show idle screen
         
-                rdbyte  temp, idxL              '  +0 =
-        if_nz   movd    $+2, temp               '  +8
-        if_nz   add     idxL, #1                '  +4
+                rdbyte  temp, indx              '  +0 =
+        if_nz   movd    putc, temp              '  +8
+        if_nz   add     indx, #1                '  +4
                 
-scrL            wrlong  colN, scrn              '  +0 =
+putc            wrlong  colN, scrn              '  +0 =
                 add     scrn, #4                '  +8
-                djnz    bcnt, #$-5              '  -4   insert line from left screen
-
-                add     scrn, #lcd_y
-                
-                mov     bcnt, #lcd_x/4
-                cmp     idxR, #0 wz             ' |
-        if_z    movd    scrR, #colN             ' screen is off, show idle screen
-
-                rdbyte  temp, idxR              '  +0 =
-        if_nz   movd    $+2, temp               '  +8
-        if_nz   add     idxR, #1                '  +4
-                
-scrR            wrlong  colN, scrn              '  +0 =
-                add     scrn, #4                '  +8
-                djnz    bcnt, #$-5              '  -4   insert line from right screen
+                djnz    bcnt, #$-5              '  -4   insert line from screen
 
                 add     tgtL, #1
                 cmp     tgtL, tgtH wz
-        if_ne   jmp     #display                ' for all required scanlines
-
-                call    #wait                   ' wait for last line to be fetched
+        if_ne   jmp     #display                ' for all required scanlines        
+                                                                                    
+                call    #wait                   ' wait for last line to be fetched  
                 call    #block                  ' clear buffer to avoid ghost images
 
 display_ret     ret
@@ -178,20 +154,13 @@ block           mov     scrn, par               ' reset scanline buffer to black
 
                 wrlong  zero, scrn
                 add     scrn, #4
-                djnz    bcnt, #$-2              ' for left screen
-
-                add     scrn, #lcd_y
-                mov     bcnt, #lcd_x/4
-
-                wrlong  zero, scrn
-                add     scrn, #4
-                djnz    bcnt, #$-2              ' for right screen
+                djnz    bcnt, #$-2
 
 block_ret       ret
 
 
 wait            rdlong  lcnt, blnk              ' wait for scan line to be fetched
-                cmp     lcnt, tgtL wz           ' (so it's safe to overwrite)     
+                cmp     lcnt, tgtL wz           ' (so it's safe to overwrite)
         if_ne   jmp     #$-2
 
 wait_ret        ret
@@ -200,13 +169,9 @@ wait_ret        ret
 update          rdlong  temp, cmnd wz
         if_z    jmp     update_ret
         
-                andn    temp, #%1_11111100      ' extract screen ID ...
-                wrlong  zero, cmnd              ' acknowledge
-                add     temp, #eins             ' ... plus table base
-
-                movd    $+2, temp
                 shr     temp, #16               ' address only
-                mov     0-0, temp
+                wrlong  zero, cmnd              ' acknowledge
+                mov     eins, temp
 
 update_ret      ret
 
@@ -218,10 +183,6 @@ cmnd            long    -8                      ' @insn
 blnk            long    -4                      ' @line
 
 eins            long    0
-zwei            long    0
-drei            long    0
-vier            long    0
-
 colN            long    $54545454
 
 ' Stuff below is re-purposed for temporary storage.
@@ -247,8 +208,7 @@ scrn            res     1
 lcnt            res     1
 bcnt            res     1
 
-idxL            res     1
-idxR            res     1
+indx            res     1
 
 tgtL            res     1
 tgtH            res     1
@@ -258,7 +218,7 @@ tail            fit
 CON
   zero = $1F0                                   ' par (dst only)
 
-  tl_x = res_x/2 - lcd_y/2 - lcd_x
-  tl_y = res_y/2 - lcd_y/2 - lcd_y
+  tl_x = res_x/2 - lcd_x/2
+  tl_y = res_y/2 - lcd_y/2
 
 DAT
