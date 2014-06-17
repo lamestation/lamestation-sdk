@@ -8,6 +8,16 @@
 ''       Version: 0.2
 '' -------------------------------------------------
 ''
+'' ### Usage 
+''
+''  * Include the *ScreenCapture* object into your project (requires FullDuplexSerial)
+''  * Pass a screen buffer address to the Capture method
+''  * Capture the BASE64-encoded output from the serial terminal (it's 78 lines long)
+''  * Convert to a bitmap using [this tool](http://www.motobit.com/util/base64-decoder-encoder.asp) 
+''  (set decode and export as a binary file with a `.bmp` extension).
+''
+'' *NOTE: you may also pass a 128x64 sprite as an address, if you skip the sprite header.*
+
 OBJ
     serial: "FullDuplexSerial"
 
