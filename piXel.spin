@@ -149,6 +149,7 @@ PUB GameLoop
     HandleEffects
     HandleStatusBar
     gfx.DrawScreen
+    fn.Sleep(10)
             
 PUB Victory
     audio.StopAllSound
