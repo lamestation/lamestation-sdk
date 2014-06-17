@@ -2,8 +2,8 @@
 '' single buffer view (VGA)
 ''
 ''        Author: Marko Lukat
-'' Last modified: 2014/06/09
-''       Version: 0.3
+'' Last modified: 2014/06/19
+''       Version: 0.4
 ''
 '' 20140609: catch up with LameMultiView API
 ''
@@ -44,8 +44,8 @@ PUB init(primary) | n
     cogstop(--n)
     abort
 
-  if primary
-    setn(primary, 0)
+  setn(primary, 0)                                      ' make sure cog is running
+                                                        ' before making DAT public
 
 PUB setn(address, sidx)
 '' Add or remove a screen buffer from display.

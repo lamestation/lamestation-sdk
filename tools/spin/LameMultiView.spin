@@ -2,8 +2,8 @@
 '' multi buffer view (VGA)
 ''
 ''        Author: Marko Lukat
-'' Last modified: 2014/06/09
-''       Version: 0.6
+'' Last modified: 2014/06/16
+''       Version: 0.7
 ''
 '' 20140605: initial version
 '' 20140609: documented init method
@@ -45,8 +45,8 @@ PUB init(primary) | n
     cogstop(--n)
     abort
 
-  if primary
-    setn(primary, 0)
+  setn(primary, 0)                                      ' make sure cog is running
+                                                        ' before making DAT public
 
 PUB setn(address, sidx)
 '' Add or remove a screen buffer from display.
