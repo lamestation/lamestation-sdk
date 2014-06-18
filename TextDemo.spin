@@ -20,7 +20,9 @@ OBJ
         
         font_8x8    :           "Font8x8"
         font_6x8    :           "Font6x8"
-        font_4x4    :           "4x4"
+        font_4x4    :           "Font4x4"
+
+        famus   :               "spacegirl"
         
 VAR
 
@@ -31,23 +33,27 @@ PUB TextDemo | x, ran, y
     gfx.Start(@buffer,lcd.Start)    
 
     audio.Start
-    audio.SetWaveform(0)
-    audio.SetADSR(120, 80, 40, 110) 
+
 
     
 
     repeat
         LSLogo
         gfx.ClearScreen
-        
+
+
         ThisIsATest
+
+        Derrtroid
     
         RandomEverywhere
         ZoomToCenter
         HouseOfLeaves     
 
+        audio.SetWaveform(0)
+        audio.SetADSR(120, 80, 40, 110) 
         audio.LoadSong(@iBelieve)
-        audio.PlaySong
+        audio.LoopSong
     
         StarWarsReel(@inaworld,120)
         Lame
@@ -64,7 +70,55 @@ PUB LSLogo
     gfx.DrawScreen
         
     fn.Sleep(1000)
-        
+
+
+PUB Typewriter(stringvar, origin_x, origin_y, w, h, tilesize_x, tilesize_y, countmax) | char, x, y, count
+
+    x := origin_x
+    y := origin_y
+    
+    count := 0
+    repeat strsize(stringvar)
+        count++
+        char := byte[stringvar++]
+        if char == 10 or char == 13
+            y += tilesize_y
+            x := origin_x          
+        elseif char == " "
+            x += tilesize_x
+        else   
+            gfx.Sprite(font_6x8.Addr, x, y, char - " ")
+            if x+tilesize_x => origin_x+w      
+                y += tilesize_y
+                x := origin_x
+            else
+                x += tilesize_x
+        if count > countmax
+            return
+
+PUB Derrtroid | count
+
+    audio.SetWaveform(1)
+    audio.SetADSR(110, 90, 30, 100) 
+    audio.LoadSong(@blehTroid)
+    audio.LoopSong
+
+    gfx.ClearScreen
+
+    count := 0
+    repeat
+        gfx.Sprite(famus.Addr,38,0,0)
+        Typewriter(string("I FIRST BATTLED THE",10,"DURPEES ON THE PLANET",10,"PHEEBES. IT WAS THERE",10,"THAT I FOILED MY",10,"DINNER AND HAD TO",10,"ASK FOR THE CHECK..."),0,0,128,64, 6, 9, count)
+        count++
+        fn.Sleep(80)
+
+        gfx.DrawScreen
+    while count < 160
+    
+
+    audio.StopSong
+
+
 PUB ThisIsATest
     gfx.LoadFont(font_8x8.Addr, " ", 8, 8)
     gfx.ClearScreen
@@ -171,6 +225,7 @@ PUB RandomEverywhere | x, y, char, ran, count
         char := ran? & %11111
         gfx.PutChar("A" + char, x-8, y-8)
         gfx.DrawScreen
+        fn.Sleep(2)
 
 PUB StarWarsReel(text,reeltime) | x
     gfx.LoadFont(font_6x8.Addr, " ", 6, 8)
@@ -358,7 +413,7 @@ DAT
 
 iBelieve
 byte    12     'number of bars
-byte    55    'tempo
+byte    80    'tempo
 byte    16    'bar resolution
 
 'main
@@ -395,6 +450,30 @@ byte    0,4,8,BAROFF
 byte    1,5,9,BAROFF
 byte    2,6,10,BAROFF
 byte    3,7,11,BAROFF
+
+byte    SONGOFF
+
+
+blehTroid
+byte    2     'number of bars
+byte    110    'tempo
+byte    16    'bar resolution
+
+'main
+'byte    0,  53, 53, 55, 55, 58, 58, 57, 57, 60, 60, 58, 58, 63, 63, 62, 62
+byte    0,  33, 33, 35, 35, 38, 38, 37, 37, 40, 40, 38, 38, 43, 43, 42, 42
+byte    1,  SNOP, SNOP, 23, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF
+
+'SONG ------
+
+byte    0,BAROFF
+byte    0,BAROFF
+byte    0,BAROFF
+byte    0,BAROFF
+byte    0,1,BAROFF
+byte    0,BAROFF
+byte    0,1,BAROFF
+byte    0,BAROFF
 
 byte    SONGOFF
 
