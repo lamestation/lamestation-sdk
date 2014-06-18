@@ -91,13 +91,13 @@ PUB Start(buffer, screen)
     drawsurface := buffer
     copysurface := screen
     cognew(@graphicsdriver, @instruction)
-'                                                  function has(1) no(0) argument(s) ----+
-'                                                             number of arguments -1 --+ |
-'                                                                                      | |
-    c_blitscreen  := @c_parameters << 16 | (@blitscreen   - @graphicsdriver) >> 2 | %000_1 << 12
-    c_sprite      := @c_parameters << 16 | (@drawsprite   - @graphicsdriver) >> 2 | %011_1 << 12
-    c_setcliprect := @c_parameters << 16 | (@setcliprect  - @graphicsdriver) >> 2 | %011_1 << 12
-    c_translate   := @c_parameters << 16 | (@translateVGA - @graphicsdriver) >> 2 | %001_1 << 12
+'                                                 function has(1) no(0) argument(s) ----+
+'                                                            number of arguments -1 --+ |
+'                                                                                     | |
+    c_blitscreen  := @c_parameters << 16 | (@blitscreen  - @graphicsdriver) >> 2 | %000_1 << 12
+    c_sprite      := @c_parameters << 16 | (@drawsprite  - @graphicsdriver) >> 2 | %011_1 << 12
+    c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
+    c_translate   := @c_parameters << 16 | (@translate   - @graphicsdriver) >> 2 | %001_1 << 12
 
 PUB WaitToDraw
 
@@ -128,15 +128,7 @@ PUB Box(source, x, y)
 '' for structuring their data. However, take a look at some of the tile
 '' functions to see how Box can be used to build larger functionality
 '' like tile mapping.
-''
-'' This is the instruction mapping for Box.
-''
-'' <pre>
-''             y        x        instr
-''          -------- --------  --------
-'' 00000000 00000000 00000000  00000000
-'' </pre>
-''
+
     Sprite(source, x, y, 0)
 
 PUB Sprite(source, x, y, frame)
@@ -144,14 +136,6 @@ PUB Sprite(source, x, y, frame)
 '' * **x** - Horizontal destination position (0-15)
 '' * **y** - Vertical destination position (0-7)
 '' * **frame** - If the image has multiple frames, this integer will select which to use.
-''
-'' This is the instruction mapping for Sprite.
-''
-'' <pre>
-'' clip  frame     y        x        instr
-''  -   ------- -------- --------  --------
-''  0   0000000 00000000 00000000  00000000
-'' </pre>
 ''
 '' This function allows the user to blit an arbitrarily-sized image
 '' from a memory address. It is designed to accept the sprite output from img2dat,
@@ -273,8 +257,7 @@ PUB TextBox(stringvar, origin_x, origin_y, w, h) | char, x, y
 
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
-'' Defaults to 0, 0, 128, 64.
-'' Use only multiples of 8.
+'' Defaults to 0, 0, 128, 64. Use only multiples of 8.
 
     repeat
     while instruction
@@ -283,9 +266,10 @@ PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
     instruction := c_setcliprect
 
 PUB TranslateBuffer(sourcebuffer, destbuffer)
-'' This command converts a linear framebuffer to one formatted
-'' for the KS0108 LCD memory map. The destination and source
-'' buffer addresses are packed into the sourcegfx long.
+'' This command used to convert a linear framebuffer to one formatted
+'' for the KS0108 LCD memory map. After the transformation had been
+'' moved to the LCD driver this call simply does a linear copy from
+'' source buffer to destination buffer.
 
     repeat
     while instruction
@@ -294,6 +278,7 @@ PUB TranslateBuffer(sourcebuffer, destbuffer)
     instruction := c_translate
 
 PUB DrawScreen
+'' Copy render buffer to screen buffer.
 
     TranslateBuffer(drawsurface, copysurface)
 
@@ -501,7 +486,7 @@ blitscreen              mov     arg1, destscrn          ' override destination
                         tjz     arg0, #clear            ' no source, clear screen
                         add     arg0, #6                ' skip sprite header
 
-translateVGA            mov     arg3, fullscreen        ' words per screen
+translate               mov     arg3, fullscreen        ' words per screen
 
 :loop                   rdword  arg2, arg0
                         add     arg0, #2
