@@ -177,7 +177,7 @@ class ImageData:
                         output += ","
 
             elif radix == 'unicode':
-                output += colorvalue[line[x]]['unicode'].encode('utf-8')
+                output += unicode(colorvalue[line[x]]['unicode'])
         return output
 
 
