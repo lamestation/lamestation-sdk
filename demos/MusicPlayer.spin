@@ -36,8 +36,8 @@ OBJ
 VAR
 
 
-    word    songs[SONGCOUNT]   '' This array contains memory address, so we use data type word.    
-    word    songnames[SONGCOUNT]   '' This array contains memory address, so we use data type word.
+    word    songs[SONGCOUNT]
+    word    songnames[SONGCOUNT]
 
     word    buffer[1024]
 
@@ -66,11 +66,6 @@ PUB MusicPlayer
     audio.Start
     audio.SetWaveform(0)
     audio.SetADSR(127, 100, 40, 100) 
-
-
-    songoffset := 0
-    songchoice := 0
-    songplaying := 0
     
     character[1] := 0
 
@@ -142,7 +137,7 @@ PUB MusicPlayer
                     songplaying := songchoice
                     audio.StopSong
                     audio.LoadSong(songs[songplaying])
-                    audio.PlaySong
+                    audio.LoopSong
         else
             buttonpressed := 0
                 
@@ -175,7 +170,7 @@ tankbattle_theme
 '' ------
 
     byte    15     'number of bars
-    byte    28    'tempo
+    byte    180    'tempo
     byte    8       'bar resolution
 
 '' Loop Definitions
@@ -250,7 +245,7 @@ tankbattle_theme
 
 zeroforce_theme
 byte    18     'number of bars
-byte    30     'tempo
+byte    150     'tempo
 byte    8      'bar resolution
 
 'MAIN SECTION
@@ -330,7 +325,7 @@ byte    SONGOFF
 
 pixel_theme
 byte    14     'number of bars
-byte    40    'tempo
+byte    120    'tempo
 byte    8    'bar resolution
 
 'MAIN SECTION
@@ -424,7 +419,7 @@ byte    SONGOFF
 lastboss_theme
 
 byte    4     'number of bars
-byte    30    'tempo
+byte    150    'tempo
 byte    12     'notes/bar
 
 'MAIN SECTION
