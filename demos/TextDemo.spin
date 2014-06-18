@@ -18,7 +18,7 @@ OBJ
         fn      :               "LameFunctions"
         audio   :               "LameAudio"
         
-        font_8x8    :           "CGA8x8thin"
+        font_8x8    :           "Font8x8"
         font_6x8    :           "Font6x8"
         font_4x4    :           "4x4"
         
