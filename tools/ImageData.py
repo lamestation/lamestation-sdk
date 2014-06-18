@@ -36,9 +36,9 @@ def getColorValue(pixeldata):
         return 'none'
     elif coloravg < 40:
         return 'black'
-    elif 40 < coloravg and coloravg < 210:
+    elif 40 <= coloravg and coloravg < 210:
         return 'gray'
-    elif coloravg > 210:
+    elif coloravg >= 210:
         return 'white'
     else:
         raise ValueError("Bad input data")
