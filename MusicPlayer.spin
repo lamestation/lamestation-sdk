@@ -1,8 +1,8 @@
 {{
-KS0108 Sprite And Tile Graphics Library Demo
+The Music Box - a LameStation jukebox
 ─────────────────────────────────────────────────
 Version: 1.0
-Copyright (c) 2013 LameStation LLC
+Copyright (c) 2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
@@ -16,7 +16,7 @@ CON
     _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
   
     SONGCOUNT = 4
-    SONGPOS = 40
+    SONGPOS = 38
     SONGWINDOW = 3
 
     SONGOFF = 255
@@ -30,7 +30,9 @@ OBJ
         audio   :               "LameAudio"
         ctrl    :               "LameControl"
 
-        font    :               "Font6x8"
+        font    :               "Font4x6"
+
+        juke    :               "gfx_jukebox"
 
 
 VAR
@@ -57,7 +59,7 @@ PUB MusicPlayer
     ' Initialize the video system
     gfx.Start(@buffer, lcd.Start)
     
-    gfx.LoadFont(font.Addr, " ", 6, 8)
+    gfx.LoadFont(font.Addr, " ", 4, 6)
     
     ' Initialize the user controls
     ctrl.Start
@@ -88,24 +90,23 @@ PUB MusicPlayer
 
         'Make sure to call update before attempting to check values
         ctrl.Update
-        gfx.ClearScreen
+        gfx.Blit(juke.Addr)
         
         'Put some awesome text on the screen
-        gfx.PutString(string("-= The Music Box =-"),2,0)
-        gfx.PutString(string("Up/down to choose;"),0,8)
-        gfx.PutString(string("A or B to select"), 0, 16)
-        gfx.PutString(string("NOW:"), 0, 32)
+        gfx.TextBox(string("The Music Box"),0,0,64,32)
+        gfx.TextBox(string("Up/dn: choose",10,"  A/B: select"), 74, 0,64,32)
+        gfx.PutString(string("NOW:"), 22, 26)
         
         if audio.SongPlaying        
-            gfx.PutString(songnames[songplaying], 40, 32)
+            gfx.PutString(songnames[songplaying], 40, 26)
         
         repeat songinc from 0 to constant(SONGWINDOW-1)
         
             if songinc+songoffset == songchoice
-                gfx.PutString(string("->"), 0, SONGPOS+songinc<<3)
+                gfx.PutString(string(">"), 30, SONGPOS+songinc<<3-1)
                 
-            gfx.PutChar("1" + songinc + songoffset, 16, SONGPOS+songinc<<3)
-            gfx.PutString(songnames[songinc+songoffset], 32, SONGPOS+songinc<<3)
+            gfx.PutChar("1" + songinc + songoffset, 35, SONGPOS+songinc<<3)
+            gfx.PutString(songnames[songinc+songoffset], 40, SONGPOS+songinc<<3)
         
        
         ' Receive user input
