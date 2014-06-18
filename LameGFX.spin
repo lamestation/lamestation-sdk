@@ -4,7 +4,7 @@
 '' Version: 1.0
 '' Copyright (c) 2013-2014 LameStation LLC
 '' See end of file for terms of use.
-'' 
+''
 '' Authors: Brett Weir, Marko Lukat
 '' -------------------------------------------------
 '' This is a graphics library designed for use on the
@@ -22,7 +22,7 @@ CON
     SCREEN_W = 128
     SCREEN_H = 64
     BITSPERPIXEL = 2
-    
+
     SCREEN_H_BYTES = SCREEN_H / 8
     SCREENSIZE = SCREEN_W*SCREEN_H
 
@@ -33,8 +33,8 @@ CON
     NL = 10
     LF = 13
 
-'' This table 
-'' 
+'' This table
+''
 '' +------+-------+------+-------------+
 '' | Flip | Color | Mask | Color       |
 '' +------+-------+------+-------------+
@@ -44,23 +44,23 @@ CON
 '' +------+-------+------+-------------+
 '' |   1  |   0   |   1  | Transparent |
 '' +------+-------+------+-------------+
-'' |   1  |   1   |   0  | Black       |
+'' |   1  |   1   |   0  | Gray        |
 '' +------+-------+------+-------------+
 ''
 '' This operation is equivalent to `Mask = Flip & !Color`.
 ''
 '' The color constant definitions here correspond to this.
-''    
+''
     BLACK = 0
     WHITE = 1
     TRANSPARENT = 2
     GRAY = 3
-    
-    
-    ' draw map function    
+
+
+    ' draw map function
     COLLIDEBIT = $80
     TILEBYTE = COLLIDEBIT-1
-    
+
 
 VAR
 '' These longs make up the interface between Spin and
@@ -112,11 +112,10 @@ PUB ClearScreen
     Blit(0)
 
 PUB Blit(source)
-'' This command blits a 128x64 size image to the screen. The source image
-'' must not use the sprite header used in other commands. This command is
+'' This command blits a 128x64 size image to the screen. This command is
 '' primarily influenced for reference on drawing to the screen, not for
 '' its game utility so much.
-    
+
     repeat
     while instruction
 
@@ -169,42 +168,42 @@ PUB Sprite(source, x, y, frame)
 
 ' *********************************************************
 '  Maps
-' *********************************************************  
+' *********************************************************
 VAR
     word    map_tilemap
     word    map_levelmap
-    
+
 PUB LoadMap(source_tilemap, source_levelmap)
 
     map_tilemap  := source_tilemap
     map_levelmap := source_levelmap
-    
+
 PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt, tilecnttemp, x, y
 '' Returns 1 if collision, 0 otherwise
 
     objx #>= 0
     objy #>= 0
-    objtilex := objx >> 3 
+    objtilex := objx >> 3
     objtiley := objy >> 3
-     
+
     tilecnt := 0
     tilecnttemp := 2 + byte[map_levelmap]{0} * objtiley
-        
+
     repeat y from objtiley to objtiley + (objh>>3)
         repeat x from objtilex to objtilex + (objw>>3)
             tilecnt := tilecnttemp + x
             if (byte[map_levelmap][tilecnt] & COLLIDEBIT)
-                return 1                
+                return 1
         tilecnttemp += byte[map_levelmap]{0}
-        
+
 PUB GetMapWidth
 
-    return byte[map_levelmap]{0} 
-    
+    return byte[map_levelmap]{0}
+
 PUB GetMapHeight
 
     return byte[map_levelmap][1]
-    
+
 PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
 '' This function uses the Box command to draw an array of tiles to the screen.
 '' Used in conjunction with the map2dat program included with this kit, it is
@@ -234,7 +233,7 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
 
 ' *********************************************************
 '  Text
-' *********************************************************  
+' *********************************************************
 PUB LoadFont(sourcevar, startingcharvar, tilesize_xvar, tilesize_yvar)
 
     font := sourcevar
@@ -247,26 +246,26 @@ PUB PutChar(char, x, y)
     Sprite(font, x, y, char - startingchar)
 
 PUB PutString(stringvar, origin_x, origin_y)
-   
+
     repeat strsize(stringvar)
         Sprite(font, origin_x, origin_y, byte[stringvar++] - startingchar)
         origin_x += tilesize_x
-        
+
 PUB TextBox(stringvar, origin_x, origin_y, w, h) | char, x, y
 
     x := origin_x
     y := origin_y
-    
+
     repeat strsize(stringvar)
         char := byte[stringvar++]
         if char == NL or char == LF
             y += tilesize_y
-            x := origin_x          
+            x := origin_x
         elseif char == " "
             x += tilesize_x
-        else   
+        else
             Sprite(font, x, y, char - startingchar)
-            if x+tilesize_x => origin_x+w      
+            if x+tilesize_x => origin_x+w
                 y += tilesize_y
                 x := origin_x
             else
@@ -323,17 +322,17 @@ graphicsdriver          jmpret  $, #setup
 drawsprite              mov     Addrtemp, destscrn
                         mov     sourceAddrTemp, arg0
                         mov     valutemp, #8
-                        
+
                         ' get x position of box
                         mov     x1, arg1
-                        
+
                         mov     iter_x, x1              ' this value rotates the word for the blender
-                        shl     iter_x, #1              ' x << 1                       
+                        shl     iter_x, #1              ' x << 1
                         and     iter_x, #$F             ' x % 8
-                        
+
                         mov     datatemp, x1
                         sar     datatemp, #2            ' x / 4    ' n pixels = 2*n bits
-                        adds    Addrtemp, datatemp                        
+                        adds    Addrtemp, datatemp
 
                         ' get y position of box
                         mov     y1, arg2
@@ -344,18 +343,18 @@ drawsprite              mov     Addrtemp, destscrn
                         shl     datatemp, #5
                         adds    Addrtemp, datatemp
 
-                        
+
                         ' read header from sprite
                         rdword  frameboost, sourceAddrTemp
-                        add     sourceAddrTemp, #2 
-                        
+                        add     sourceAddrTemp, #2
+
 
                         ' get image width and height
                         rdword  w1, sourceAddrTemp
                         add     sourceAddrTemp, #2
                         rdword  h1, sourceAddrTemp      ' only width is left-shifted because height has 8 pages only
                         add     sourceAddrTemp, #2      ' get ready to start reading data
-                        
+
                         mov     x2, x1
                         adds    x2, #8
                         mov     y2, y1
@@ -368,9 +367,9 @@ drawsprite              mov     Addrtemp, destscrn
                 if_nz   add     sourceAddrTemp, frameboost
                 if_nz   djnz    arg3, #$-1              ' a proper multiply may be beneficial here
                                                         ' depending on max framecount
-                       ' Begin copying data       
+                       ' Begin copying data
 ' INDEX_Y LOOP -------------------------------------
-                        mov     index_y, h1           
+                        mov     index_y, h1
 :indexyloop             mov     datatemp3, Addrtemp
                         mov     xtmp1, x1
                         mov     xtmp2, x2
@@ -378,8 +377,8 @@ drawsprite              mov     Addrtemp, destscrn
 ' INDEX_X LOOP -------------------------------------
                         mov     index_x, w1
                         shr     index_x, #3             '8 pixels in one word.
-:indexxloop             mov     datatemp, datatemp3                        
-                        
+:indexxloop             mov     datatemp, datatemp3
+
                         cmps    iter_y, _clipy1             wc
 if_c                    jmp     #:skipall
                         cmps    iter_y, _clipy2             wc
@@ -392,7 +391,7 @@ if_nc                   jmp     #:skipall
                         rdword  blender1, datatemp
                         shl     blender1, #16
                         add     blender1, datatemp2
-                        
+
                         ' read new word
                         rdword  datatemp2, sourceAddrTemp
 
@@ -400,18 +399,18 @@ if_nc                   jmp     #:skipall
                         mov     flipbyte1, datatemp2
                         shr     flipbyte1, #1
                         andn    flipbyte1, datatemp2    'color bits
-                        and     flipbyte1, h5555                        
-                        
+                        and     flipbyte1, h5555
+
                         mov     blendermask, flipbyte1
                         add     blendermask, flipbyte1
                         add     blendermask, flipbyte1
-                        
+
                         xor     blendermask, hFFFF
                         and     datatemp2, blendermask
-                        
+
                         shl     datatemp2, iter_x       ' rotate source words
                         shl     blendermask, iter_x
-                        
+
                         andn    blender1, blendermask
                         add     blender1, datatemp2
 
@@ -423,11 +422,11 @@ if_nc                   jmp     #:skipall
                         cmps    xtmp1, _clipx1                  wc
 if_c                    jmp     #:skipblender1
                         cmps    xtmp1, _clipx2                  wc
-if_nc                   jmp     #:skipblender1 
+if_nc                   jmp     #:skipblender1
                         wrword  blender1, datatemp
 :skipblender1
                         adds     datatemp, #2
-                        
+
                         cmps    xtmp2, _clipx1                  wc
 if_c                    jmp     #:skipblender2
                         cmps    xtmp2, _clipx2                  wc
@@ -441,18 +440,18 @@ if_nc                   jmp     #:skipblender2
                         adds    xtmp2, #8
 
 
-:skipall                
+:skipall
                         add     sourceAddrTemp, #2
                         adds    datatemp3, #2
 
-                        
+
                         djnz    index_x, #:indexxloop   ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
-' INDEX_X LOOP END -------------------------------------                                                
+' INDEX_X LOOP END -------------------------------------
                         adds    Addrtemp, #32
                         adds    iter_y, #1
-                        
+
                         djnz    index_y, #:indexyloop   ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
-' INDEX_Y LOOP END -------------------------------------                       
+' INDEX_Y LOOP END -------------------------------------
 
                         jmp     %%0                     ' return
 
@@ -463,10 +462,21 @@ if_nc                   jmp     #:skipblender2
 '             arg2: x2
 '             arg3: y2
 
-setcliprect             mov     _clipx1, arg0           ' |
-                        mov     _clipy1, arg1           ' |
-                        mov     _clipx2, arg2           ' |
-                        mov     _clipy2, arg3           ' copy parameters
+setcliprect             mov     _clipx1, arg0           ' copy and sanity check
+                        mins    _clipx1, #0
+                        maxs    _clipx1, #res_x
+
+                        mov     _clipy1, arg1
+                        mins    _clipy1, #0
+                        maxs    _clipy1, #res_y
+
+                        mov     _clipx2, arg2
+                        mins    _clipx2, #0
+                        maxs    _clipx2, #res_x
+
+                        mov     _clipy2, arg3
+                        mins    _clipy2, #0
+                        maxs    _clipy2, #res_y
 
                         jmp     %%0                     ' return
 
@@ -492,7 +502,7 @@ blitscreen              mov     arg1, destscrn          ' override destination
                         add     arg0, #6                ' skip sprite header
 
 translateVGA            mov     arg3, fullscreen        ' words per screen
-                        
+
 :loop                   rdword  arg2, arg0
                         add     arg0, #2
                         wrword  arg2, arg1
@@ -501,23 +511,23 @@ translateVGA            mov     arg3, fullscreen        ' words per screen
 
                         jmp     %%0                     ' return
 
-' support code (fetching up to 4 arguments)
+' support code (fetch up to 4 arguments)
 
-args                    rdlong  arg0, addr              ' read 1st argument                 
+args                    rdlong  arg0, addr              ' read 1st argument
                         cmpsub  addr, delta wc          ' [increment address and] check exit
-                if_nc   jmpret  zero, args_ret nr,wc    ' cond: early return                
-                                                                                            
-                        rdlong  arg1, addr              ' read 2nd argument                 
-                        cmpsub  addr, delta wc                                              
-                if_nc   jmpret  zero, args_ret nr,wc                                        
-                                                                                            
-                        rdlong  arg2, addr              ' read 3rd argument                 
-                        cmpsub  addr, delta wc                                              
-                if_nc   jmpret  zero, args_ret nr,wc                                        
-                                                                                            
-                        rdlong  arg3, addr              ' read 4th argument                 
-'                       cmpsub  addr, delta wc                                              
-'               if_nc   jmpret  zero, args_ret nr,wc                                        
+                if_nc   jmpret  zero, args_ret nr,wc    ' cond: early return
+
+                        rdlong  arg1, addr              ' read 2nd argument
+                        cmpsub  addr, delta wc
+                if_nc   jmpret  zero, args_ret nr,wc
+
+                        rdlong  arg2, addr              ' read 3rd argument
+                        cmpsub  addr, delta wc
+                if_nc   jmpret  zero, args_ret nr,wc
+
+                        rdlong  arg3, addr              ' read 4th argument
+'                       cmpsub  addr, delta wc
+'               if_nc   jmpret  zero, args_ret nr,wc
 
 args_ret                ret
 
@@ -526,7 +536,7 @@ args_ret                ret
 Addrtemp                long    0
 sourceAddrTemp          long    0
 
-outputAddr              long    4      
+outputAddr              long    4
 destscrn                long    8
 
 fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
@@ -568,9 +578,9 @@ argn                    long    |< 12                   ' function does have arg
 
 ' Stuff below is re-purposed for temporary storage.
 
-setup                   add     outputAddr, par         ' get output long            
+setup                   add     outputAddr, par         ' get output long
                         add     destscrn, par
-                        rdword  destscrn, destscrn                           
+                        rdword  destscrn, destscrn
 
                         jmp     %%0                     ' return
 
@@ -600,10 +610,13 @@ ccnt                    res     1
 trgt                    res     1
 xsrc                    res     8
 
-tail                    fit       
+tail                    fit
 
 CON
   zero = $1F0                                           ' par (dst only)
+
+  res_x = 128                                           ' |
+  res_y = 64                                            ' UI support
 
 DAT
 {{
