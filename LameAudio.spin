@@ -316,8 +316,6 @@ PRI LoopingSongParser | repeattime
                 
                 barcursor := songcursor
                 repeat linecursor from 0 to (barres-1)
-
-                    waitcnt(repeattime += timeconstant)
                 
                     songcursor := barcursor
 
@@ -336,7 +334,9 @@ PRI LoopingSongParser | repeattime
                             PlaySound( byte[barAddr][barshift+BYTES_SONGHEADER] , byte[barAddr][bartmp] )  'channel, note
 
                             
-                        songcursor += 1                    
+                        songcursor += 1
+
+                    waitcnt(repeattime += timeconstant)               
 
                 songcursor += 1
 
