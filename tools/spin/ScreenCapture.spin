@@ -113,9 +113,10 @@ image   byte    "B", "M"
         byte    4, 0, 0, 0
         byte    0, 0, 0, 0
 
+        'format  B    G    R    A (ignored)
         byte    $FE, $40, $71, $00          'black
-        byte    $CC, $CC, $CC, $00          'gray
+        byte    $CC, $CC, $CC, $00          'white
         byte    $FF, $00, $FF, $00          'transparent
-        byte    $E1, $7D, $B1, $00          'white
+        byte    $E1, $7D, $B1, $00          'gray
 
 tail    byte    0[4096]
