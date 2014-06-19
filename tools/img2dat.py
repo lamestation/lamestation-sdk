@@ -2,11 +2,12 @@
 
 import wx
 import os
-import ImageData
+import ImageData, Dialog
 import PILtoWx
 
 
 PROGRAM_TITLE = "IMG2DAT - Image Converter"
+MIN_SIZE = 2
 
 class ImageViewer(wx.Panel):
     def __init__(self, parent, name):
@@ -23,7 +24,7 @@ class ImageViewer(wx.Panel):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(self.text, 0, wx.ALL, 0)
         vbox.Add(self.imageCtrl, 1, wx.ALL, 0)
-        vbox.SetMinSize((256,128))
+        vbox.SetMinSize((256,256))
         self.SetSizer(vbox)
 
 
@@ -47,30 +48,32 @@ class Example(wx.Frame):
 #        fileMenu.Append(wx.ID_SAVE, '&Save', 'Save Image')
 #        fileMenu.Append(wx.ID_SAVEAS, 'Save &As...', 'Save Image As...')
         fileMenu.AppendSeparator()
-        fileMenu.Append(wx.ID_CLOSE, '&Close', 'Close image')
+        exp = fileMenu.Append(wx.ID_ANY, '&Export', 'Export Image As Spin')
+        fileMenu.AppendSeparator()
+#        fileMenu.Append(wx.ID_CLOSE, '&Close', 'Close image')
         fileMenu.Append(wx.ID_EXIT, '&Quit\tCtrl+Q', 'Quit application')
 
         wx.EVT_MENU(self, wx.ID_EXIT, self.OnQuit)
         wx.EVT_MENU(self, wx.ID_OPEN, self.OnBrowse)
-#        wx.EVT_MENU(self, wx.ID_SAVE, self.OnExport)
+        self.Bind(wx.EVT_MENU, self.OnExport, exp)
 
         return fileMenu
 
-    def ViewMenu(self):
-        viewMenu = wx.Menu()
-        self.shst = viewMenu.Append(wx.ID_ANY, 'Show statubar', 
-                'Show Statusbar', kind=wx.ITEM_CHECK)
-        self.shtl = viewMenu.Append(wx.ID_ANY, 'Show toolbar', 
-                'Show Toolbar', kind=wx.ITEM_CHECK)
-
-        viewMenu.Check(self.shst.GetId(), True)
-        viewMenu.Check(self.shtl.GetId(), True)
-
-
-        self.Bind(wx.EVT_MENU, self.ToggleStatusBar, self.shst)
-        self.Bind(wx.EVT_MENU, self.ToggleToolBar, self.shtl)
-
-        return viewMenu
+#    def ViewMenu(self):
+#        viewMenu = wx.Menu()
+#        self.shst = viewMenu.Append(wx.ID_ANY, 'Show statubar', 
+#                'Show Statusbar', kind=wx.ITEM_CHECK)
+#        self.shtl = viewMenu.Append(wx.ID_ANY, 'Show toolbar', 
+#                'Show Toolbar', kind=wx.ITEM_CHECK)
+#
+#        viewMenu.Check(self.shst.GetId(), True)
+#        viewMenu.Check(self.shtl.GetId(), True)
+#
+#
+#        self.Bind(wx.EVT_MENU, self.ToggleStatusBar, self.shst)
+#        self.Bind(wx.EVT_MENU, self.ToggleToolBar, self.shtl)
+#
+#        return viewMenu
 
     def HelpMenu(self):
         helpMenu = wx.Menu()
@@ -84,34 +87,39 @@ class Example(wx.Frame):
         menubar = wx.MenuBar()
 
         menubar.Append(self.FileMenu(), '&File')
-        menubar.Append(self.ViewMenu(), '&View')
+#        menubar.Append(self.ViewMenu(), '&View')
         menubar.Append(self.HelpMenu(), '&Help')
 
         return menubar
 
     def ToolBar(self):
         self.toolbar = self.CreateToolBar()
-        self.toolbar.AddLabelTool(wx.ID_EXIT,'Quit',wx.ArtProvider.GetBitmap(wx.ART_QUIT))
+#        self.toolbar.AddLabelTool(wx.ID_EXIT,'Quit',wx.ArtProvider.GetBitmap(wx.ART_QUIT))
         #self.toolbar.AddLabelTool(wx.ID_NEW,'New',wx.ArtProvider.GetBitmap(wx.ART_NEW))
         self.toolbar.AddLabelTool(wx.ID_OPEN,'Open Image',wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN))
 #        self.toolbar.AddLabelTool(wx.ID_SAVE,'Save Image',wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE))
 #        self.toolbar.AddLabelTool(wx.ID_SAVEAS,'Save Image As...',wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE_AS))
 
+        self.export = wx.Button(self.toolbar,label="Export")
+        self.toolbar.AddControl(self.export)
+        self.export.Bind(wx.EVT_BUTTON, self.OnExport)
+
+        self.export.Enable(False)
         self.toolbar.EnableTool(wx.ID_SAVE, False)
 
         self.toolbar.AddSeparator()
 
 #        self.fcb = wx.CheckBox(self.toolbar,label="Chop image")
         self.fcb = wx.ToggleButton(self.toolbar,label="Chop image")
-        self.fx = wx.SpinCtrl(self.toolbar,size=(50,-1),value='8',min=1, max=128)
-        self.fy = wx.SpinCtrl(self.toolbar,size=(50,-1),value='8',min=1, max=128)
+        self.fx = wx.SpinCtrl(self.toolbar,size=(50,-1),value='8',min=MIN_SIZE, max=128)
+        self.fy = wx.SpinCtrl(self.toolbar,size=(50,-1),value='8',min=MIN_SIZE, max=128)
         self.toolbar.AddControl(self.fcb)
         self.toolbar.AddControl(self.fx)
         self.toolbar.AddControl(self.fy)
 
         self.fcb.Bind(wx.EVT_TOGGLEBUTTON, self.ToggleFrameSize)
-        self.fx.Bind(wx.EVT_SPINCTRL, self.OnSetFrameSize)
-        self.fy.Bind(wx.EVT_SPINCTRL, self.OnSetFrameSize)
+        self.fx.Bind(wx.EVT_SPINCTRL, self.OnUpdate)
+        self.fy.Bind(wx.EVT_SPINCTRL, self.OnUpdate)
 
         self.fcb.Enable(False)
         self.fx.Enable(False)
@@ -124,10 +132,7 @@ class Example(wx.Frame):
 
         self.zoom.Bind(wx.EVT_COMBOBOX, self.OnZoom)
 
-        self.toolbar.AddSeparator()
 
-        self.export = wx.Button(self.toolbar,-1,label="Export")
-        self.export.Bind(wx.EVT_BUTTON, self.OnExport)
 
 
         self.toolbar.Realize()
@@ -153,7 +158,6 @@ class Example(wx.Frame):
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.hbox.Add(self.vbox)
 
-#        self.hbox.SetMinSize((350,256))
         self.SetSizer(self.hbox)
 
 
@@ -170,12 +174,7 @@ class Example(wx.Frame):
         self.Center()
         self.Show(True)
 
-
         self.Bind(wx.EVT_CLOSE, self.OnQuit)
-
-        self.aboutme = wx.MessageDialog( self, " A sample editor \n"
-                            " in wxPython","About Sample Editor", wx.OK)
-
 
     def ToggleFrameSize(self, e):
         if self.fcb.GetValue():
@@ -188,31 +187,31 @@ class Example(wx.Frame):
         self.OnUpdate(None)
 
 
-    def ToggleStatusBar(self, e):
-
-        if self.shst.IsChecked():
-            self.statusbar.Show()
-        else:
-            self.statusbar.Hide()
-
-
-    def ToggleToolBar(self, e):
-
-        if self.shtl.IsChecked():
-            self.toolbar.Show()
-        else:
-            self.toolbar.Hide()        
-
+#    def ToggleStatusBar(self, e):
+#
+#        if self.shst.IsChecked():
+#            self.statusbar.Show()
+#        else:
+#            self.statusbar.Hide()
+#
+#
+#    def ToggleToolBar(self, e):
+#
+#        if self.shtl.IsChecked():
+#            self.toolbar.Show()
+#        else:
+#            self.toolbar.Hide()        
+#
 
     def OnAbout(self,e):
-        self.aboutme.ShowModal()
+        Dialog.About()
 
 
     def OnBrowse(self, event):
         wildcard = "All files (*)|*|PNG files (*.png)|*.png|GIF files (*.gif)|*.gif|Bitmap files (*.bmp)|*.bmp|GIF files (*.gif)|*.gif|JPEG files (*.jpg)|*.jpg"
         dialog = wx.FileDialog(None, "Choose a file",
                 wildcard=wildcard,
-                style=wx.OPEN)
+                style=wx.FD_OPEN|wx.FD_CHANGE_DIR|wx.FD_PREVIEW)
         if dialog.ShowModal() == wx.ID_OK:
             self.filename = dialog.GetPath()
             self.statusbar.SetStatusText(self.filename)
@@ -223,18 +222,37 @@ class Example(wx.Frame):
 
 
     def OnExport(self, event):
-        print self.spin
+        wildcard = "Spin files (*.spin)|*.spin"
+        dialog = wx.FileDialog(None, "Choose a file",
+                wildcard=wildcard,
+                style=wx.FD_SAVE|wx.OVERWRITE_PROMPT)
+        if dialog.ShowModal() == wx.ID_OK:
+            f = open(dialog.GetPath(),"w")
+            f.write(self.spin.encode('utf8'))
+            f.close()
 
- 
+            self.statusbar.SetStatusText("Wrote to "+dialog.GetPath())
+        dialog.Destroy()
+
+
     def OnLoad(self):
         self.imgdata = ImageData.ImageData()
-        self.imgdata.openImage(self.filename)
 
         try:
-            self.imgdata.im
+            self.imgdata.openImage(self.filename)
         except:
-            print "BAHL"
+            wx.MessageBox('That is not a valid image file', 'Info', 
+                wx.OK | wx.ICON_EXCLAMATION)
+            return
 
+        # old image
+        self.oldim = self.imgdata.im
+        self.fx.SetRange(MIN_SIZE,self.oldim.size[0])
+        self.fy.SetRange(MIN_SIZE,self.oldim.size[1])
+
+        self.statusbar.SetStatusText('Opened '+self.filename)
+
+        self.export.Enable(True)
         self.fcb.Enable(True)
         self.toolbar.EnableTool(wx.ID_SAVE, True)
 
@@ -244,45 +262,21 @@ class Example(wx.Frame):
         self.scale = int(self.zoom.GetValue().split('x')[0])
         self.OnUpdate(None)
 
-
-    def OnSetFrameSize(self, event):
-
-        if self.fx.GetValue() > self.imgdata.im.size[0]:
-            self.fx.SetValue(self.imgdata.im.size[0])
-            return
-
-        if self.fy.GetValue() > self.imgdata.im.size[1]:
-            self.fy.SetValue(self.imgdata.im.size[1])
-            return
-        
-        print self.imgdata.im.size
-        print self.fx.GetValue()
-        print self.fy.GetValue()
-        self.OnUpdate(None)
-
     def OnUpdate(self, e):
 
         try:
-            self.imgdata
-        except AttributeError:
-            self.statusbar.SetStatusText('You should open an image first.')
-            return
-
-        try:
-            self.imgdata.openImage(self.filename)
+            self.imgdata.im = self.oldim
         except:
-            self.statusbar.SetStatusText('Failed to open image!')
-
-        self.statusbar.SetStatusText('Opened '+self.filename)
-
-        # old image
-        img = PILtoWx.PilImageToWxImage(self.imgdata.im)
-        self.panel1.SetBitmap(img,self.scale)
+            return
 
         if self.fcb.GetValue():
             self.imgdata.setFrameSize(tuple([self.fx.GetValue(),self.fy.GetValue()]))
         else:
             self.imgdata.setFrameSize(self.imgdata.im.size)
+
+        # old image
+        img = PILtoWx.PilImageToWxImage(self.oldim)
+        self.panel1.SetBitmap(img,self.scale)
 
         # new image
         self.imgdata.padFrames()
@@ -298,11 +292,8 @@ class Example(wx.Frame):
         self.SetSizerAndFit(self.hbox)
 
     def OnQuit(self, e):
-#        dial = wx.MessageDialog(None, "Are you sure you want to quit?","Question",
-#                wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
-#        result = dial.ShowModal()
-#        if result == wx.ID_YES:
-            self.Destroy()
+    #    if Dialog.Quit() == wx.ID_YES:
+        self.Destroy()
 
 
 if __name__ == '__main__':

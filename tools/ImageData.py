@@ -76,6 +76,7 @@ class ImageData:
     def padFrames(self):
         newframesize = self.padFrameSize(self.framesize, TILESIZE)
         newsize = tuple([self.im.size[0]*newframesize[0]/self.framesize[0],self.im.size[1]*newframesize[1]/self.framesize[1]])
+        newsize = tuple([self.frames_x*newframesize[0],self.frames_y*newframesize[1]])
         newimage = Image.new("RGB",newsize)
         newimage.paste(TRANSPARENT_COLOR)
 
