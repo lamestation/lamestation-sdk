@@ -306,7 +306,6 @@ graphicsdriver          jmpret  $, #setup
 
 drawsprite              mov     Addrtemp, destscrn
                         mov     sourceAddrTemp, arg0
-                        mov     valutemp, #8
 
                         ' get x position of box
                         mov     x1, arg1
@@ -342,19 +341,14 @@ drawsprite              mov     Addrtemp, destscrn
 
                         mov     x2, x1
                         adds    x2, #8
-                        mov     y2, y1
-                        adds    y2, h1
-
-                        'frame
-                        cmp     arg3, #0 wz             ' frame number
 
                         'add frameboost to sourceAddr (frame) number of times
+                        cmp     arg3, #0 wz             ' frame index
                 if_nz   add     sourceAddrTemp, frameboost
                 if_nz   djnz    arg3, #$-1              ' a proper multiply may be beneficial here
                                                         ' depending on max framecount
                        ' Begin copying data
 ' INDEX_Y LOOP -------------------------------------
-                        mov     index_y, h1
 :indexyloop             mov     datatemp3, Addrtemp
                         mov     xtmp1, x1
                         mov     xtmp2, x2
@@ -367,7 +361,7 @@ drawsprite              mov     Addrtemp, destscrn
                         cmps    iter_y, _clipy1             wc
 if_c                    jmp     #:skipall
                         cmps    iter_y, _clipy2             wc
-if_nc                   jmp     #:skipall
+if_nc                   jmp     %%0                     ' if greater equal _clipy2 just exit
 
                         ' Read old data in display buffer
                         ' only if this is first block in drawing operation
@@ -375,67 +369,56 @@ if_nc                   jmp     #:skipall
                         add     datatemp, #2
                         rdword  blender1, datatemp
                         shl     blender1, #16
-                        add     blender1, datatemp2
+                        or      blender1, datatemp2
 
                         ' read new word
-                        rdword  datatemp2, sourceAddrTemp
+                        rdword  blender2, sourceAddrTemp
+                        or      blender2, hAAAA0000
+                        rol     blender2, iter_x
 
                         ' prepare mask for blending old and new
-                        mov     flipbyte1, datatemp2
-                        shr     flipbyte1, #1
-                        andn    flipbyte1, datatemp2    'color bits
-                        and     flipbyte1, h5555
+                        mov     frqb, blender2
+                        shr     frqb, #1
+                        andn    frqb, blender2
+                        and     frqb, h55555555
 
-                        mov     blendermask, flipbyte1
-                        add     blendermask, flipbyte1
-                        add     blendermask, flipbyte1
+                        mov     phsb, frqb
+                        mov     frqb, phsb              ' frqb *= 3
 
-                        xor     blendermask, hFFFF
-                        and     datatemp2, blendermask
-
-                        shl     datatemp2, iter_x       ' rotate source words
-                        shl     blendermask, iter_x
-
-                        andn    blender1, blendermask
-                        add     blender1, datatemp2
+                        andn    blender2, frqb
+                        and     blender1, frqb
+                        or      blender1, blender2
 
                         ' split long into two words because we don't know whether this word
                         ' falls on a long boundary, so we have to write it one at a time.
                         mov     datatemp, datatemp3
 
                         ' perform sprite clipping
-                        cmps    xtmp1, _clipx1                  wc
+                        cmps    xtmp1, _clipx1 wc
 if_c                    jmp     #:skipblender1
-                        cmps    xtmp1, _clipx2                  wc
-if_nc                   jmp     #:skipblender1
-                        wrword  blender1, datatemp
+                        cmps    xtmp1, _clipx2 wc
+if_c                    wrword  blender1, datatemp
 :skipblender1
-                        adds     datatemp, #2
-
-                        cmps    xtmp2, _clipx1                  wc
-if_c                    jmp     #:skipblender2
-                        cmps    xtmp2, _clipx2                  wc
-if_nc                   jmp     #:skipblender2
-
+                        adds    datatemp, #2
                         shr     blender1, #16
-                        wrword  blender1, datatemp
-:skipblender2
 
+                        cmps    xtmp2, _clipx1 wc
+if_c                    jmp     #:skipblender2
+                        cmps    xtmp2, _clipx2 wc
+if_c                    wrword  blender1, datatemp
+:skipblender2
                         adds    xtmp1, #8
                         adds    xtmp2, #8
-
-
 :skipall
                         add     sourceAddrTemp, #2
                         adds    datatemp3, #2
 
-
-                        djnz    index_x, #:indexxloop   ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+                        djnz    index_x, #:indexxloop
 ' INDEX_X LOOP END -------------------------------------
                         adds    Addrtemp, #32
                         adds    iter_y, #1
 
-                        djnz    index_y, #:indexyloop   ' djnz stops decrementing at 0, so valutemp needs to be initialized to 8, not 7.
+                        djnz    h1, #:indexyloop
 ' INDEX_Y LOOP END -------------------------------------
 
                         jmp     %%0                     ' return
@@ -525,37 +508,31 @@ outputAddr              long    4
 destscrn                long    8
 
 fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
-valutemp                long    0
 
 
 datatemp                long    0
 datatemp2               long    0
 datatemp3               long    0
 
-hFFFF                   long    $FFFF
-h5555                   long    $5555
+h55555555               long    $55555555
+hAAAA0000               long    $AAAA0000
 
 frameboost              long    0
 w1                      long    0
 h1                      long    0
 
-flipbyte1               long    0
-
 index_x                 long    0
-index_y                 long    0
 iter_x                  long    0
 iter_y                  long    0
+
+blender1                long    0
+blender2                long    0
 
 
 _clipx1                 long    0
 _clipy1                 long    0
 _clipx2                 long    128
 _clipy2                 long    64
-
-blender1                long    0
-blender2                long    0
-blendermask             long    0
-
 
 delta                   long    %001_0 << 28 | $FFFC    ' %10 deal with movi setup
                                                         ' -(-4) address increment
@@ -567,6 +544,7 @@ setup                   add     outputAddr, par         ' get output long
                         add     destscrn, par
                         rdword  destscrn, destscrn
 
+                        movi    ctrb, #%0_11111_000     ' general magic support
                         jmp     %%0                     ' return
 
 ' uninitialised data and/or temporaries
@@ -576,7 +554,6 @@ setup                   add     outputAddr, par         ' get output long
 x1                      res     1
 y1                      res     1
 x2                      res     1
-y2                      res     1
 xtmp1                   res     1
 xtmp2                   res     1
 
