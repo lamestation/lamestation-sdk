@@ -224,6 +224,8 @@ class Example(wx.Frame):
     def OnExport(self, event):
         wildcard = "Spin files (*.spin)|*.spin"
         dialog = wx.FileDialog(None, "Choose a file",
+                defaultDir=os.path.dirname(self.filename),
+                defaultFile=os.path.splitext(os.path.basename(self.filename))[0]+".spin",
                 wildcard=wildcard,
                 style=wx.FD_SAVE|wx.OVERWRITE_PROMPT)
         if dialog.ShowModal() == wx.ID_OK:
