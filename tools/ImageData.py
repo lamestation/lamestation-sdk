@@ -52,14 +52,13 @@ class ImageData:
     def openImage(self,filename):
         try:
             self.im = Image.open(filename)
-            self.im = self.im.convert("RGB")
-            self.filename = filename
-            self.fullfilename = files.getFullFilename(self.prefix, self.filename, 'spin')
-            self.setFrameSize(self.im.size)
-
         except IOError:
-            print filename, "is not a valid image file"
-            sys.exit(1)
+            raise NameError(filename,"is not a valid image file")
+
+        self.im = self.im.convert("RGB")
+        self.filename = filename
+        self.fullfilename = files.getFullFilename(self.prefix, self.filename, 'spin')
+        self.setFrameSize(self.im.size)
 
 
     def ceilMultiple(self, x, multiple):
