@@ -302,20 +302,35 @@ graphicsdriver          jmpret  $, #setup
 '             arg2: y
 '             arg3: frame
 
-drawsprite              mov     x1, arg1
+drawsprite              rdword  scrn, destscrn          ' render buffer
 
-                        mov     iter_x, x1              ' this value rotates the word for the blender
+                        mov     iter_x, arg1            ' this value rotates the word for the blender
                         shl     iter_x, #1              ' x << 1
                         and     iter_x, #$F             ' x % 8
 
-                        sar     arg1, #2                ' x / 4    ' n pixels = 2*n bits
-                        add     arg1, destscrn
-
                         mov     iter_y, arg2            ' row index
 
-                        shl     arg2, #5
-                        add     arg1, arg2
+                        shl     arg2, #5                ' y * 32
+                        add     scrn, arg2              ' line start (inclusive)
+                        mov     send, #32
+                        add     send, scrn              ' line end (exclusive)
 
+                        sar     arg1, #3                ' x /= 8, n pixels = 2n bits
+                        shl     arg1, #1                ' back to byte offset
+                        add     arg1, scrn              ' address ready, 2n
+
+                        mov     arg2, _clipx1
+                        shr     arg2, #3                ' word offset
+                        shl     arg2, #1                ' back to byte offset
+                        add     scrn, arg2              ' apply clipping, 2n
+
+                        mov     arg2, #128
+                        sub     arg2, _clipx2
+                        shr     arg2, #3                ' word offset
+                        shl     arg2, #1                ' back to byte offset
+                        sub     send, arg2              ' apply clipping, 2n
+
+                        
                         rdword  arg2, arg0
                         add     arg0, #2                ' get frame size
 
@@ -324,11 +339,10 @@ drawsprite              mov     x1, arg1
                         rdword  hs, arg0
                         add     arg0, #2                ' get image width and height
 
-                        mov     x2, x1
-                        adds    x2, #8
-
                         mov     wb, ws
                         shr     wb, #2                  ' byte length (4 px/byte)
+
+                        shr     ws, #3                  ' 8 px/word
 
                         cmp     arg3, #0 wz             ' frame index
                 if_nz   add     arg0, arg2              ' a proper multiply may be beneficial here
@@ -336,6 +350,7 @@ drawsprite              mov     x1, arg1
 
 ' arg0: src byte address (xxword OK)
 ' arg1: dst byte address (xxword OK)
+'   ws: column (word) count
 '   hs: row count
 '   wb: source width in byte (row advance)
 
@@ -345,16 +360,13 @@ drawsprite              mov     x1, arg1
                         cmps    iter_y, _clipy2 wc
                 if_nc   jmp     %%0                     ' if greater equal _clipy2 just exit
 
-                        mov     xtmp1, x1
-                        mov     xtmp2, x2
                         mov     index_x, ws
-                        shr     index_x, #3             ' 8 pixels in one word.
 
                         mov     dstT, arg1
                         mov     srcT, arg0
 ' ----- X LOOP -----------------------------------------
-:xloop                  rdword  dstL, dstT
-                        add     dstT, #2
+                        rdword  dstL, dstT
+:xloop                  add     dstT, #2
                         rdword  dstH, dstT
                         shl     dstH, #16
                         or      dstL, dstH              ' extract 16 dst pixel
@@ -372,31 +384,41 @@ drawsprite              mov     x1, arg1
                         mov     phsb, frqb
                         mov     frqb, phsb              ' frqb *= 3
 
+                        cmp     dstT, scrn wz
+                if_e    or      frqb, mskLH
+
+                        cmp     dstT, send wz
+                if_e    or      frqb, mskRH
+
+                        add     dstT, #2
+                        cmp     dstT, send wz
+                if_e    or      frqb, mskRL
+                        sub     dstT, #4                ' rewind
+                        cmp     dstT, scrn wz
+                if_e    or      frqb, mskLL
+                
                         andn    srcW, frqb              ' clear transparent pixels
                         and     dstL, frqb              ' make space for src      
                         or      dstL, srcW              ' combine dst/src         
 
-                        sub     dstT, #2                ' rewind
-
-                        cmps    xtmp1, _clipx1 wc
-                if_c    jmp     #:skipblender1
-                        cmps    xtmp1, _clipx2 wc
+                        cmp     dstT, scrn wc
+                if_c    jmp     #$+3
+                        cmp     dstT, send wc
                 if_c    wrword  dstL, dstT
 
-:skipblender1           shr     dstL, #16               ' dstL := dstH
+                        shr     dstL, #16               ' dstL := dstH
                         add     dstT, #2                ' advance (again)
 
-                        cmps    xtmp2, _clipx1 wc
-                if_c    jmp     #:skipblender2
-                        cmps    xtmp2, _clipx2 wc
+                        cmp     dstT, scrn wc
+                if_c    jmp     #$+3
+                        cmp     dstT, send wc
                 if_c    wrword  dstL, dstT
 
-:skipblender2           adds    xtmp1, #8
-                        adds    xtmp2, #8
-
-                        djnz    index_x, #:xloop +1     ' dstL is already up-to-date
+                        djnz    index_x, #:xloop        ' for all columns
 ' ----- X LOOP END -------------------------------------
-:skipall                add     arg1, #128/4            ' |
+:skipall                add     scrn, #128/4            ' |
+                        add     send, #128/4            ' |
+                        add     arg1, #128/4            ' |
                         add     arg0, wb                ' advance
                         add     iter_y, #1              ' |
 
@@ -427,6 +449,24 @@ setcliprect             mov     _clipx1, arg0           ' copy and sanity check
                         mins    _clipy2, #0
                         maxs    _clipy2, #res_y
 
+                        test    $, #1 wc                ' set carry
+
+                        mov     arg0, _clipx1           ' clipping masks
+                        and     arg0, #%111
+                        mov     mskLL, #0
+                        rcl     mskLL, arg0
+                        rcl     mskLL, arg0             ' %%00000000_0???????
+                        mov     mskLH, mskLL
+                        rcl     mskLH, #16              ' %%0???????_????????
+
+                        neg     arg2, _clipx2
+                        and     arg2, #%111
+                        mov     mskRL, #0
+                        rcr     mskRL, arg2
+                        rcr     mskRL, arg2             ' %%???????0_00000000
+                        mov     mskRH, mskRL
+                        rcr     mskRH, #16              ' %%????????_???????0
+
                         jmp     %%0                     ' return
 
 ' #### CLEAR SCREEN
@@ -446,7 +486,7 @@ clear                   mov     arg3, fullscreen
 ' parameters: arg0: source buffer       (word aligned)
 '             arg1: destination buffer  (word aligned)
 
-blitscreen              mov     arg1, destscrn          ' override destination
+blitscreen              rdword  arg1, destscrn          ' override destination
                         tjz     arg0, #clear            ' no source, clear screen
                         add     arg0, #6                ' skip sprite header
 
@@ -494,14 +534,18 @@ _clipy1                 long    0
 _clipx2                 long    128
 _clipy2                 long    64
 
+mskLH                   long    0
+mskLL                   long    0
+mskRH                   long    0
+mskRL                   long    0
+
 delta                   long    %001_0 << 28 | $FFFC    ' %10 deal with movi setup
                                                         ' -(-4) address increment
 argn                    long    |< 12                   ' function does have arguments
 
 ' Stuff below is re-purposed for temporary storage.
 
-setup                   add     destscrn, par
-                        rdword  destscrn, destscrn
+setup                   add     destscrn, par           ' default render buffer location
 
                         movi    ctrb, #%0_11111_000     ' general magic support
                         jmp     %%0                     ' return
@@ -510,15 +554,12 @@ setup                   add     destscrn, par
 
                         org     setup
 
-x1                      res     1
-x2                      res     1
-xtmp1                   res     1
-xtmp2                   res     1
-
 index_x                 res     1
 iter_x                  res     1
 iter_y                  res     1
 
+scrn                    res     1
+send                    res     1
 
 ws                      res     1
 hs                      res     1
