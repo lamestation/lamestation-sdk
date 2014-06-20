@@ -68,10 +68,8 @@ VAR
 '' They must apppear in this order.
 '' ---------------------------------------------------
     long    instruction
-    long    outputlong
     long    drawsurface
 '' ---------------------------------------------------
-
     word    copysurface
 
     word    font
@@ -304,123 +302,106 @@ graphicsdriver          jmpret  $, #setup
 '             arg2: y
 '             arg3: frame
 
-drawsprite              mov     Addrtemp, destscrn
-                        mov     sourceAddrTemp, arg0
-
-                        ' get x position of box
-                        mov     x1, arg1
+drawsprite              mov     x1, arg1
 
                         mov     iter_x, x1              ' this value rotates the word for the blender
                         shl     iter_x, #1              ' x << 1
                         and     iter_x, #$F             ' x % 8
 
-                        mov     datatemp, x1
-                        sar     datatemp, #2            ' x / 4    ' n pixels = 2*n bits
-                        adds    Addrtemp, datatemp
+                        sar     arg1, #2                ' x / 4    ' n pixels = 2*n bits
+                        add     arg1, destscrn
 
-                        ' get y position of box
-                        mov     y1, arg2
+                        mov     iter_y, arg2            ' row index
 
-                        mov     iter_y, y1              ' this value iterates from y1 to y2
+                        shl     arg2, #5
+                        add     arg1, arg2
 
-                        mov     datatemp, y1
-                        shl     datatemp, #5
-                        adds    Addrtemp, datatemp
+                        rdword  arg2, arg0
+                        add     arg0, #2                ' get frame size
 
-
-                        ' read header from sprite
-                        rdword  frameboost, sourceAddrTemp
-                        add     sourceAddrTemp, #2
-
-
-                        ' get image width and height
-                        rdword  w1, sourceAddrTemp
-                        add     sourceAddrTemp, #2
-                        rdword  h1, sourceAddrTemp      ' only width is left-shifted because height has 8 pages only
-                        add     sourceAddrTemp, #2      ' get ready to start reading data
+                        rdword  ws, arg0
+                        add     arg0, #2
+                        rdword  hs, arg0
+                        add     arg0, #2                ' get image width and height
 
                         mov     x2, x1
                         adds    x2, #8
 
-                        'add frameboost to sourceAddr (frame) number of times
+                        mov     wb, ws
+                        shr     wb, #2                  ' byte length (4 px/byte)
+
                         cmp     arg3, #0 wz             ' frame index
-                if_nz   add     sourceAddrTemp, frameboost
-                if_nz   djnz    arg3, #$-1              ' a proper multiply may be beneficial here
-                                                        ' depending on max framecount
-                       ' Begin copying data
-' INDEX_Y LOOP -------------------------------------
-:indexyloop             mov     datatemp3, Addrtemp
+                if_nz   add     arg0, arg2              ' a proper multiply may be beneficial here
+                if_nz   djnz    arg3, #$-1              ' depending on max framecount
+
+' arg0: src byte address (xxword OK)
+' arg1: dst byte address (xxword OK)
+'   hs: row count
+'   wb: source width in byte (row advance)
+
+' ----- Y LOOP -----------------------------------------
+:yloop                  cmps    iter_y, _clipy1 wc      ' ToDo: clipping belongs outside any loop
+                if_c    jmp     #:skipall
+                        cmps    iter_y, _clipy2 wc
+                if_nc   jmp     %%0                     ' if greater equal _clipy2 just exit
+
                         mov     xtmp1, x1
                         mov     xtmp2, x2
+                        mov     index_x, ws
+                        shr     index_x, #3             ' 8 pixels in one word.
 
-' INDEX_X LOOP -------------------------------------
-                        mov     index_x, w1
-                        shr     index_x, #3             '8 pixels in one word.
-:indexxloop             mov     datatemp, datatemp3
+                        mov     dstT, arg1
+                        mov     srcT, arg0
+' ----- X LOOP -----------------------------------------
+:xloop                  rdword  dstL, dstT
+                        add     dstT, #2
+                        rdword  dstH, dstT
+                        shl     dstH, #16
+                        or      dstL, dstH              ' extract 16 dst pixel
 
-                        cmps    iter_y, _clipy1             wc
-if_c                    jmp     #:skipall
-                        cmps    iter_y, _clipy2             wc
-if_nc                   jmp     %%0                     ' if greater equal _clipy2 just exit
+                        rdword  srcW, srcT              ' extract 8 src pixel
+                        add     srcT, #2
+                        or      srcW, hAAAA0000         ' high word is always transparent
+                        rol     srcW, iter_x            ' align with dst
 
-                        ' Read old data in display buffer
-                        ' only if this is first block in drawing operation
-                        rdword  datatemp2, datatemp
-                        add     datatemp, #2
-                        rdword  blender1, datatemp
-                        shl     blender1, #16
-                        or      blender1, datatemp2
-
-                        ' read new word
-                        rdword  blender2, sourceAddrTemp
-                        or      blender2, hAAAA0000
-                        rol     blender2, iter_x
-
-                        ' prepare mask for blending old and new
-                        mov     frqb, blender2
+                        mov     frqb, srcW              ' %10 is transparent
                         shr     frqb, #1
-                        andn    frqb, blender2
-                        and     frqb, h55555555
+                        andn    frqb, srcW
+                        and     frqb, h55555555         ' extract transparent pixel
 
                         mov     phsb, frqb
                         mov     frqb, phsb              ' frqb *= 3
 
-                        andn    blender2, frqb
-                        and     blender1, frqb
-                        or      blender1, blender2
+                        andn    srcW, frqb              ' clear transparent pixels
+                        and     dstL, frqb              ' make space for src      
+                        or      dstL, srcW              ' combine dst/src         
 
-                        ' split long into two words because we don't know whether this word
-                        ' falls on a long boundary, so we have to write it one at a time.
-                        mov     datatemp, datatemp3
+                        sub     dstT, #2                ' rewind
 
-                        ' perform sprite clipping
                         cmps    xtmp1, _clipx1 wc
-if_c                    jmp     #:skipblender1
+                if_c    jmp     #:skipblender1
                         cmps    xtmp1, _clipx2 wc
-if_c                    wrword  blender1, datatemp
-:skipblender1
-                        adds    datatemp, #2
-                        shr     blender1, #16
+                if_c    wrword  dstL, dstT
+
+:skipblender1           shr     dstL, #16               ' dstL := dstH
+                        add     dstT, #2                ' advance (again)
 
                         cmps    xtmp2, _clipx1 wc
-if_c                    jmp     #:skipblender2
+                if_c    jmp     #:skipblender2
                         cmps    xtmp2, _clipx2 wc
-if_c                    wrword  blender1, datatemp
-:skipblender2
-                        adds    xtmp1, #8
+                if_c    wrword  dstL, dstT
+
+:skipblender2           adds    xtmp1, #8
                         adds    xtmp2, #8
-:skipall
-                        add     sourceAddrTemp, #2
-                        adds    datatemp3, #2
 
-                        djnz    index_x, #:indexxloop
-' INDEX_X LOOP END -------------------------------------
-                        adds    Addrtemp, #32
-                        adds    iter_y, #1
+                        djnz    index_x, #:xloop +1     ' dstL is already up-to-date
+' ----- X LOOP END -------------------------------------
+:skipall                add     arg1, #128/4            ' |
+                        add     arg0, wb                ' advance
+                        add     iter_y, #1              ' |
 
-                        djnz    h1, #:indexyloop
-' INDEX_Y LOOP END -------------------------------------
-
+                        djnz    hs, #:yloop             ' for all rows
+' ----- Y LOOP END -------------------------------------
                         jmp     %%0                     ' return
 
 ' #### SET CLIP RECTANGLE
@@ -501,33 +482,12 @@ args_ret                ret
 
 ' initialised data and/or presets
 
-Addrtemp                long    0
-sourceAddrTemp          long    0
-
-outputAddr              long    4
-destscrn                long    8
+destscrn                long    4
 
 fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
 
-
-datatemp                long    0
-datatemp2               long    0
-datatemp3               long    0
-
 h55555555               long    $55555555
 hAAAA0000               long    $AAAA0000
-
-frameboost              long    0
-w1                      long    0
-h1                      long    0
-
-index_x                 long    0
-iter_x                  long    0
-iter_y                  long    0
-
-blender1                long    0
-blender2                long    0
-
 
 _clipx1                 long    0
 _clipy1                 long    0
@@ -540,8 +500,7 @@ argn                    long    |< 12                   ' function does have arg
 
 ' Stuff below is re-purposed for temporary storage.
 
-setup                   add     outputAddr, par         ' get output long
-                        add     destscrn, par
+setup                   add     destscrn, par
                         rdword  destscrn, destscrn
 
                         movi    ctrb, #%0_11111_000     ' general magic support
@@ -552,10 +511,25 @@ setup                   add     outputAddr, par         ' get output long
                         org     setup
 
 x1                      res     1
-y1                      res     1
 x2                      res     1
 xtmp1                   res     1
 xtmp2                   res     1
+
+index_x                 res     1
+iter_x                  res     1
+iter_y                  res     1
+
+
+ws                      res     1
+hs                      res     1
+wb                      res     1
+
+dstT{ransfer}           res     1
+srcT{ransfer}           res     1
+
+dstH{igh}               res     1
+dstL{ow}                res     1
+srcW{ord}               res     1
 
 
 addr                    res     1
@@ -565,12 +539,6 @@ arg0                    res     1
 arg1                    res     1
 arg2                    res     1
 arg3                    res     1
-
-pcnt                    res     1
-rcnt                    res     1
-ccnt                    res     1
-trgt                    res     1
-xsrc                    res     8
 
 tail                    fit
 
