@@ -45,7 +45,7 @@ class Example(wx.Frame):
         fileMenu = wx.Menu()
         fileMenu.Append(wx.ID_OPEN, '&Open', 'Open Image')
         fileMenu.AppendSeparator()
-        exp = fileMenu.Append(wx.ID_ANY, '&Export', 'Export Image As Spin')
+        exp = fileMenu.Append(wx.ID_ANY, '&Export\tCtrl+E', 'Export Image As Spin')
         fileMenu.AppendSeparator()
         fileMenu.Append(wx.ID_EXIT, '&Quit\tCtrl+Q', 'Quit application')
 
