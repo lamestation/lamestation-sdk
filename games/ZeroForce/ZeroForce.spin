@@ -74,7 +74,7 @@ PUB Main
     
     repeat
         TitleScreen
-        LevelStage
+        'LevelStage
         BossStage
 
 
@@ -731,7 +731,7 @@ word %%3333_3333 ' End level symbol
 
 logoScreenSound
 byte    1
-byte    18
+byte    255
 byte    12
 
 byte    0,72,SNOP,70,SNOP,68,SNOP,63,SNOP,51,75,87,SOFF
@@ -761,7 +761,7 @@ byte    SONGOFF
 
 titleScreenSong
 byte    18     'number of bars
-byte    30    'tempo
+byte    160    'tempo
 byte    8       ' meter/4
 
 'MAIN SECTION
@@ -841,7 +841,7 @@ byte    SONGOFF
 lastBossSong
 
 byte    4     'number of bars
-byte    30    'tempo
+byte    150    'tempo
 byte    12     'notes/bar
 
 'MAIN SECTION

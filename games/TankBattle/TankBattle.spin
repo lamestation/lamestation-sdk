@@ -160,7 +160,7 @@ PUB TitleScreen
     audio.SetWaveform(1)
     audio.SetADSR(127, 127, 100, 127) 
     audio.LoadSong(@titleScreenSong)
-    audio.PlaySong
+    audio.LoopSong
 
 
 

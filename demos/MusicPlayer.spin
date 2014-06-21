@@ -1,8 +1,8 @@
 {{
-KS0108 Sprite And Tile Graphics Library Demo
+The Music Box - a LameStation jukebox
 ─────────────────────────────────────────────────
 Version: 1.0
-Copyright (c) 2013 LameStation LLC
+Copyright (c) 2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
@@ -16,7 +16,7 @@ CON
     _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
   
     SONGCOUNT = 4
-    SONGPOS = 40
+    SONGPOS = 38
     SONGWINDOW = 3
 
     SONGOFF = 255
@@ -30,12 +30,16 @@ OBJ
         audio   :               "LameAudio"
         ctrl    :               "LameControl"
 
+        font    :               "Font4x6"
+
+        juke    :               "gfx_jukebox"
+
 
 VAR
 
 
-    word    songs[SONGCOUNT]   '' This array contains memory address, so we use data type word.    
-    word    songnames[SONGCOUNT]   '' This array contains memory address, so we use data type word.
+    word    songs[SONGCOUNT]
+    word    songnames[SONGCOUNT]
 
     word    buffer[1024]
 
@@ -55,8 +59,7 @@ PUB MusicPlayer
     ' Initialize the video system
     gfx.Start(@buffer, lcd.Start)
     
-    gfx.LoadFont(@font_Font6x8, " ", 6, 8)
-    'gfx.LoadFont(@gfx_4x4, " ", 4,4)
+    gfx.LoadFont(font.Addr, " ", 4, 6)
     
     ' Initialize the user controls
     ctrl.Start
@@ -65,11 +68,6 @@ PUB MusicPlayer
     audio.Start
     audio.SetWaveform(0)
     audio.SetADSR(127, 100, 40, 100) 
-
-
-    songoffset := 0
-    songchoice := 0
-    songplaying := 0
     
     character[1] := 0
 
@@ -92,24 +90,23 @@ PUB MusicPlayer
 
         'Make sure to call update before attempting to check values
         ctrl.Update
-        gfx.ClearScreen
+        gfx.Blit(juke.Addr)
         
         'Put some awesome text on the screen
-        gfx.PutString(string("-= The Music Box =-"),2,0)
-        gfx.PutString(string("Up/down to choose;"),0,8)
-        gfx.PutString(string("A or B to select"), 0, 16)
-        gfx.PutString(string("NOW:"), 0, 32)
+        gfx.TextBox(string("The Music Box"),0,0,64,32)
+        gfx.TextBox(string("Up/dn: choose",10,"  A/B: select"), 74, 0,64,32)
+        gfx.PutString(string("NOW:"), 22, 26)
         
         if audio.SongPlaying        
-            gfx.PutString(songnames[songplaying], 40, 32)
+            gfx.PutString(songnames[songplaying], 40, 26)
         
         repeat songinc from 0 to constant(SONGWINDOW-1)
         
             if songinc+songoffset == songchoice
-                gfx.PutString(string("->"), 0, SONGPOS+songinc<<3)
+                gfx.PutString(string(">"), 30, SONGPOS+songinc<<3-1)
                 
-            gfx.PutChar("1" + songinc + songoffset, 16, SONGPOS+songinc<<3)
-            gfx.PutString(songnames[songinc+songoffset], 32, SONGPOS+songinc<<3)
+            gfx.PutChar("1" + songinc + songoffset, 35, SONGPOS+songinc<<3)
+            gfx.PutString(songnames[songinc+songoffset], 40, SONGPOS+songinc<<3)
         
        
         ' Receive user input
@@ -141,7 +138,7 @@ PUB MusicPlayer
                     songplaying := songchoice
                     audio.StopSong
                     audio.LoadSong(songs[songplaying])
-                    audio.PlaySong
+                    audio.LoopSong
         else
             buttonpressed := 0
                 
@@ -168,83 +165,13 @@ lastboss_name               byte    "Enter Darkness",0
 
 
 
-gfx_4x4
-
-word    $0400, $0400, $0000, $0400, $1515, $1515, $1105, $0000, $1511, $1100, $1500, $0000, $1505, $0115, $1515, $0000
-word    $1104, $0405, $1115, $0000, $1505, $0511, $1505, $0000, $0404, $0414, $0015, $0000, $0515, $1105, $1501, $0000
-word    $0410, $1004, $0410, $0000, $1511, $0415, $1511, $0000, $0415, $1515, $0404, $0000, $1110, $0511, $1115, $0000
-word    $0000, $1500, $0004, $0004, $1501, $1501, $1115, $0000, $1000, $0400, $0104, $0000, $1505, $1111, $1511, $0000
-word    $0505, $0411, $1514, $0000, $1515, $1115, $0501, $0000, $1505, $1404, $1514, $0000, $1415, $0405, $0511, $0000
-word    $1414, $0415, $0510, $0000, $1115, $1104, $1504, $0000, $1501, $1015, $0415, $0000, $1111, $1511, $1504, $0000
-word    $1504, $1515, $1015, $0000, $1111, $1504, $0411, $0000, $0400, $0004, $0404, $0100, $1405, $0404, $1414, $0000
-word    $1510, $0004, $1510, $0000, $0501, $0404, $0510, $0000, $1504, $1410, $0004, $0400, $0004, $0011, $0000, $5500
-
-
-
-font_Font6x8
-
-word    $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a040, $a150, $a150, $a040, $a040, $a000, $a040, $a000
-word    $a514, $a514, $a104, $a000, $a000, $a000, $a000, $a000, $a000, $a110, $a554, $a110, $a110, $a554, $a110, $a000
-word    $a010, $a150, $a004, $a050, $a100, $a054, $a040, $a000, $a414, $a414, $a100, $a040, $a010, $a504, $a504, $a000
-word    $a010, $a044, $a044, $a010, $a444, $a104, $a450, $a000, $a050, $a050, $a010, $a000, $a000, $a000, $a000, $a000
-word    $a040, $a010, $a010, $a010, $a010, $a010, $a040, $a000, $a010, $a040, $a040, $a040, $a040, $a040, $a010, $a000
-word    $a000, $a110, $a150, $a554, $a150, $a110, $a000, $a000, $a000, $a040, $a040, $a554, $a040, $a040, $a000, $a000
-word    $a000, $a000, $a000, $a000, $a000, $a050, $a050, $a010, $a000, $a000, $a000, $a554, $a000, $a000, $a000, $a000
-word    $a000, $a000, $a000, $a000, $a000, $a050, $a050, $a000, $a000, $a400, $a100, $a040, $a010, $a004, $a000, $a000
-word    $a150, $a404, $a504, $a444, $a414, $a404, $a150, $a000, $a040, $a050, $a040, $a040, $a040, $a040, $a150, $a000
-word    $a150, $a404, $a400, $a140, $a010, $a004, $a554, $a000, $a150, $a404, $a400, $a150, $a400, $a404, $a150, $a000
-word    $a100, $a140, $a110, $a104, $a554, $a100, $a100, $a000, $a554, $a004, $a004, $a154, $a400, $a404, $a150, $a000
-word    $a140, $a010, $a004, $a154, $a404, $a404, $a150, $a000, $a554, $a400, $a100, $a040, $a010, $a010, $a010, $a000
-word    $a150, $a404, $a404, $a150, $a404, $a404, $a150, $a000, $a150, $a404, $a404, $a550, $a400, $a100, $a050, $a000
-word    $a000, $a000, $a050, $a050, $a000, $a050, $a050, $a000, $a000, $a000, $a050, $a050, $a000, $a050, $a050, $a010
-word    $a100, $a040, $a010, $a004, $a010, $a040, $a100, $a000, $a000, $a000, $a554, $a000, $a000, $a554, $a000, $a000
-word    $a010, $a040, $a100, $a400, $a100, $a040, $a010, $a000, $a150, $a404, $a400, $a140, $a040, $a000, $a040, $a000
-word    $a150, $a404, $a544, $a444, $a544, $a004, $a150, $a000, $a150, $a404, $a404, $a404, $a554, $a404, $a404, $a000
-word    $a154, $a404, $a404, $a154, $a404, $a404, $a154, $a000, $a150, $a404, $a004, $a004, $a004, $a404, $a150, $a000
-word    $a154, $a404, $a404, $a404, $a404, $a404, $a154, $a000, $a554, $a004, $a004, $a154, $a004, $a004, $a554, $a000
-word    $a554, $a004, $a004, $a154, $a004, $a004, $a004, $a000, $a150, $a404, $a004, $a544, $a404, $a404, $a550, $a000
-word    $a404, $a404, $a404, $a554, $a404, $a404, $a404, $a000, $a150, $a040, $a040, $a040, $a040, $a040, $a150, $a000
-word    $a400, $a400, $a400, $a400, $a404, $a404, $a150, $a000, $a404, $a104, $a044, $a014, $a044, $a104, $a404, $a000
-word    $a004, $a004, $a004, $a004, $a004, $a004, $a554, $a000, $a404, $a514, $a444, $a404, $a404, $a404, $a404, $a000
-word    $a404, $a414, $a444, $a504, $a404, $a404, $a404, $a000, $a150, $a404, $a404, $a404, $a404, $a404, $a150, $a000
-word    $a154, $a404, $a404, $a154, $a004, $a004, $a004, $a000, $a150, $a404, $a404, $a404, $a444, $a104, $a450, $a000
-word    $a154, $a404, $a404, $a154, $a104, $a404, $a404, $a000, $a150, $a404, $a004, $a150, $a400, $a404, $a150, $a000
-word    $a554, $a040, $a040, $a040, $a040, $a040, $a040, $a000, $a404, $a404, $a404, $a404, $a404, $a404, $a150, $a000
-word    $a404, $a404, $a404, $a404, $a404, $a110, $a040, $a000, $a404, $a404, $a444, $a444, $a444, $a444, $a110, $a000
-word    $a404, $a404, $a110, $a040, $a110, $a404, $a404, $a000, $a404, $a404, $a404, $a110, $a040, $a040, $a040, $a000
-word    $a154, $a100, $a040, $a010, $a004, $a004, $a154, $a000, $a150, $a010, $a010, $a010, $a010, $a010, $a150, $a000
-word    $a000, $a004, $a010, $a040, $a100, $a400, $a000, $a000, $a150, $a100, $a100, $a100, $a100, $a100, $a150, $a000
-word    $a040, $a110, $a404, $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a555
-word    $a050, $a050, $a040, $a000, $a000, $a000, $a000, $a000, $a000, $a000, $a150, $a400, $a550, $a404, $a550, $a000
-word    $a004, $a004, $a154, $a404, $a404, $a404, $a154, $a000, $a000, $a000, $a150, $a404, $a004, $a404, $a150, $a000
-word    $a400, $a400, $a550, $a404, $a404, $a404, $a550, $a000, $a000, $a000, $a150, $a404, $a154, $a004, $a150, $a000
-word    $a140, $a010, $a010, $a154, $a010, $a010, $a010, $a000, $a000, $a000, $a550, $a404, $a404, $a550, $a400, $a150
-word    $a004, $a004, $a054, $a104, $a104, $a104, $a104, $a000, $a040, $a000, $a040, $a040, $a040, $a040, $a140, $a000
-word    $a100, $a000, $a140, $a100, $a100, $a100, $a104, $a050, $a004, $a004, $a104, $a044, $a014, $a044, $a104, $a000
-word    $a040, $a040, $a040, $a040, $a040, $a040, $a140, $a000, $a000, $a000, $a114, $a444, $a444, $a404, $a404, $a000
-word    $a000, $a000, $a054, $a104, $a104, $a104, $a104, $a000, $a000, $a000, $a150, $a404, $a404, $a404, $a150, $a000
-word    $a000, $a000, $a154, $a404, $a404, $a404, $a154, $a004, $a000, $a000, $a550, $a404, $a404, $a404, $a550, $a400
-word    $a000, $a000, $a144, $a410, $a010, $a010, $a054, $a000, $a000, $a000, $a150, $a004, $a150, $a400, $a150, $a000
-word    $a000, $a010, $a154, $a010, $a010, $a110, $a040, $a000, $a000, $a000, $a104, $a104, $a104, $a144, $a110, $a000
-word    $a000, $a000, $a404, $a404, $a404, $a110, $a040, $a000, $a000, $a000, $a404, $a404, $a444, $a554, $a110, $a000
-word    $a000, $a000, $a104, $a104, $a050, $a104, $a104, $a000, $a000, $a000, $a104, $a104, $a104, $a150, $a040, $a014
-word    $a000, $a000, $a154, $a100, $a050, $a004, $a154, $a000, $a140, $a010, $a010, $a014, $a010, $a010, $a140, $a000
-word    $a040, $a040, $a040, $a000, $a040, $a040, $a040, $a000, $a050, $a100, $a100, $a500, $a100, $a100, $a050, $a000
-word    $a110, $a044, $a000, $a000, $a000, $a000, $a000, $a000, $a040, $a150, $a514, $a404, $a404, $a554, $a000, $a000
-
-
-
-
-
-
-
 
 tankbattle_theme
 '' Header
 '' ------
 
     byte    15     'number of bars
-    byte    28    'tempo
+    byte    180    'tempo
     byte    8       'bar resolution
 
 '' Loop Definitions
@@ -319,7 +246,7 @@ tankbattle_theme
 
 zeroforce_theme
 byte    18     'number of bars
-byte    30     'tempo
+byte    150     'tempo
 byte    8      'bar resolution
 
 'MAIN SECTION
@@ -399,7 +326,7 @@ byte    SONGOFF
 
 pixel_theme
 byte    14     'number of bars
-byte    40    'tempo
+byte    120    'tempo
 byte    8    'bar resolution
 
 'MAIN SECTION
@@ -493,7 +420,7 @@ byte    SONGOFF
 lastboss_theme
 
 byte    4     'number of bars
-byte    30    'tempo
+byte    150    'tempo
 byte    12     'notes/bar
 
 'MAIN SECTION

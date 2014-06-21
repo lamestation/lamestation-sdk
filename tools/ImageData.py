@@ -36,9 +36,9 @@ def getColorValue(pixeldata):
         return 'none'
     elif coloravg < 40:
         return 'black'
-    elif 40 < coloravg and coloravg < 210:
+    elif 40 <= coloravg and coloravg < 210:
         return 'gray'
-    elif coloravg > 210:
+    elif coloravg >= 210:
         return 'white'
     else:
         raise ValueError("Bad input data")
@@ -52,14 +52,13 @@ class ImageData:
     def openImage(self,filename):
         try:
             self.im = Image.open(filename)
-            self.im = self.im.convert("RGB")
-            self.filename = filename
-            self.fullfilename = files.getFullFilename(self.prefix, self.filename, 'spin')
-            self.setFrameSize(self.im.size)
-
         except IOError:
-            print filename, "is not a valid image file"
-            sys.exit(1)
+            raise NameError(filename,"is not a valid image file")
+
+        self.im = self.im.convert("RGB")
+        self.filename = filename
+        self.fullfilename = files.getFullFilename(self.prefix, self.filename, 'spin')
+        self.setFrameSize(self.im.size)
 
 
     def ceilMultiple(self, x, multiple):
@@ -77,6 +76,7 @@ class ImageData:
     def padFrames(self):
         newframesize = self.padFrameSize(self.framesize, TILESIZE)
         newsize = tuple([self.im.size[0]*newframesize[0]/self.framesize[0],self.im.size[1]*newframesize[1]/self.framesize[1]])
+        newsize = tuple([self.frames_x*newframesize[0],self.frames_y*newframesize[1]])
         newimage = Image.new("RGB",newsize)
         newimage.paste(TRANSPARENT_COLOR)
 
@@ -177,7 +177,7 @@ class ImageData:
                         output += ","
 
             elif radix == 'unicode':
-                output += colorvalue[line[x]]['unicode'].encode('utf-8')
+                output += unicode(colorvalue[line[x]]['unicode'])
         return output
 
 
