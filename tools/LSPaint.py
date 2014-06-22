@@ -78,7 +78,7 @@ class DrawWindow(wx.Panel):
         dc.SelectObject(self.bmp)
         dc.Clear()
         dc.SetBrush(wx.Brush(ImageData.colorvalue['black']['output']))
-        dc.FloodFill(0, 0, wx.Color(255,255,255))
+        dc.FloodFill(0, 0, wx.Colour(255,255,255))
         dc.SelectObject(wx.NullBitmap)
 
         dc = wx.ClientDC(self)
