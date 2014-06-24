@@ -97,6 +97,8 @@ PUB Start(buffer, screen)
     c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
     c_translate   := @c_parameters << 16 | (@translate   - @graphicsdriver) >> 2 | %001_1 << 12
 
+    SetClipRectangle(0, 0, 128, 64)                     ' trigger local update (temporary)
+
 PUB WaitToDraw
 
     repeat
@@ -186,7 +188,7 @@ PUB GetMapHeight
 
     return byte[map_levelmap][1]
 
-PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
+PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnttemp, x, y
 '' This function uses the Box command to draw an array of tiles to the screen.
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
@@ -196,22 +198,17 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt,
 '' * **width** -
 '' * **height** -
 ''
+    tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 
-    SetClipRectangle(box_x1<<3, box_y1<<3, box_x2<<3, box_y2<<3)
-
-    tilecnt := 0
-    tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y>>3)
-
-    repeat y from 0 to box_y2-box_y1
-        repeat x from 0 to box_x2-box_x1
-            tilecnt := tilecnttemp + (offset_x >> 3) + x
-            tile := (byte[map_levelmap][tilecnt] & TILEBYTE) - 1
-            if tile => 0
-                 Sprite(map_tilemap, (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7),tile)
+    offset_x := cx1 - offset_x & 7
+    offset_y := cy1 - offset_y & 7
+    
+    repeat y from offset_y to cy2 -1 step 8
+        repeat x from offset_x to cx2 -1 step 8
+            if tile := byte[tilecnttemp][(x - offset_x) >> 3] & TILEBYTE
+                 Sprite(map_tilemap, x, y, --tile)
 
         tilecnttemp += byte[map_levelmap]{0}
-
-    SetClipRectangle(0, 0, 128, 64)
 
 ' *********************************************************
 '  Text
@@ -253,9 +250,14 @@ PUB TextBox(stringvar, origin_x, origin_y, w, h) | char, x, y
             else
                 x += tilesize_x
 
+VAR
+  long  cx1, cy1, cx2, cy2
+  
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
 '' Defaults to 0, 0, 128, 64. Use only multiples of 8.
+
+    longmove(@cx1, @clipx1, 4)
 
     repeat
     while instruction
