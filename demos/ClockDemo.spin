@@ -3,9 +3,10 @@
 ''
 ''        Author: Marko Lukat
 '' Last modified: 2014/06/24
-''       Version: 0.1
+''       Version: 0.2
 ''
 '' 20140624: initial version, WIP
+''           use cached sprites
 ''
 CON
   _clkmode = XTAL1|PLL16X
@@ -19,9 +20,23 @@ VAR
   long  hours, minutes, seconds, change
   long  buffer[512], stack[32]
 
-  word  size, sx, sy, data[64]
+  word  size, sx, sy, data[64*11]
   
 PUB null : t
+
+  init
+
+  repeat
+    t := change
+    repeat
+    while t == change                                   ' wait until there is a change
+
+    display                                             ' show it
+  
+PRI init : n
+
+  hours   := 15
+  minutes := 50
 
   cognew(clock, @stack{0})                              ' clock handler
   gfx.start(@buffer{0}, lcd.start)                      ' setup screen and renderer
@@ -30,22 +45,26 @@ PUB null : t
     sx := 16
     sy := 32                                            ' temporary sprite
 
-  hours   := 14
-  minutes := 50
+  repeat n from 0 to 9
+    place(@data[64 * n], "0" + n)                       ' digits
 
-  repeat
-    t := change
-    repeat while t == change                            ' wait until there is a change
-    display                                             ' show it
+  place(@data[64 * 10], ":")                            ' delimiter
+
+PRI place(addr, c) | base, m, v
+
+  base := $8000 + (c >> 1) << 7
+  repeat m from base to base +127 step 4
+    v := $AAAAAAAA - (long[m] >> (c & 1)) & $55555555
+    bytemove(addr, @v, 4)
+    addr += 4
   
 PRI display
 
   gfx.ClearScreen                 
   gfx.Sprite(@background, 32, 0, 0)                     ' background sprite
   
-  place(@data{0}, ":")
-  gfx.Sprite(@data[-3], 37, 16, 0)                      ' |
-  gfx.Sprite(@data[-3], 77, 16, 0)                      ' delimiters
+  gfx.Sprite(@data[-3], 37, 16, 10)                     ' |
+  gfx.Sprite(@data[-3], 77, 16, 10)                     ' delimiters
 
   digits(hours,    8)                                   
   digits(minutes, 48)                                   
@@ -57,19 +76,9 @@ PRI display
   
 PRI digits(value, at)
 
-  place(@data{0}, "0"+(value /10))
-  gfx.Sprite(@data[-3], at, 16, 0)
-  place(@data{0}, "0"+(value//10))
-  gfx.Sprite(@data[-3], at+16, 16, 0)
+  gfx.Sprite(@data[-3], at,      16, value  / 10)
+  gfx.Sprite(@data[-3], at + 16, 16, value // 10)
 
-PRI place(addr, c) | base, m, v
-
-  base := $8000 + (c >> 1) << 7
-  repeat m from base to base +127 step 4
-    v := $AAAAAAAA - (long[m] >> (c & 1)) & $55555555
-    bytemove(addr, @v, 4)
-    addr += 4
-  
 PRI clock : t
 
   dira[24] := outa[24] := 1                             ' off initially
