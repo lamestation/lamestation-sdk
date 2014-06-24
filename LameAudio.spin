@@ -1,12 +1,12 @@
 {{
 LameAudio Synthesizer
-─────────────────────────────────────────────────
+-------------------------------------------------
 Version: 1.0
 Copyright (c) 2013-2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
-─────────────────────────────────────────────────
+-------------------------------------------------
 }}
 
 
@@ -543,22 +543,18 @@ if_c                    mov       voltemp, #0
 'PHASE ACCUMULATOR
                         'shift and truncate phase to 512 samples
                         shr     phase, #12
-                        and     phase, #$1FF
+'{deferred}             and     phase, #$1FF
 
 
 'WAVEFORM SELECTOR
-        'jumps the program counter to the appropriate
-        'waveform
-                        cmp     waveform, #1            wc, wz
-if_c                    jmp     #:rampwave
-if_nc_and_z             jmp     #:squarewave
-                        cmp     waveform, #3            wc, wz
-if_c                    jmp     #:triwave
-if_nc_and_z             jmp     #:sinewave
-                        cmp     waveform, #5            wc, wz
-if_c                    jmp     #:whitenoise
-if_nc_and_z             jmp     #:screechwave 
+        'jumps to the appropriate waveform handler
 
+                        add     $+2, waveform
+                        and     phase, #$1FF
+                        jmpret  $, $+1
+
+                        long    :rampwave, :squarewave, :triwave, :sinewave
+                        long    :whitenoise, :screechwave
  
 'RAMP WAVE
         'if ramp wave, fit the truncated phase accumulator into
@@ -768,26 +764,25 @@ rand2         long      0
 rand3         long      0
               fit 496
 
-
+DAT
 {{
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│                           TERMS OF USE: MIT License                                  │                                                            
-├──────────────────────────────────────────────────────────────────────────────────────┤
-│Permission is hereby granted, free of charge, to any person obtaining a copy of this  │
-│software and associated documentation files (the "Software"), to deal in the Software │ 
-│without restriction, including without limitation the rights to use, copy, modify,    │
-│merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    │
-│permit persons to whom the Software is furnished to do so, subject to the following   │
-│conditions:                                                                           │
-│                                                                                      │
-│The above copyright notice and this permission notice shall be included in all copies │
-│or substantial portions of the Software.                                              │
-│                                                                                      │
-│THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   │
-│INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         │
-│PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    │
-│HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION     │
-│OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        │
-│SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+
+ TERMS OF USE: MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ associated documentation files (the "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
+ following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or substantial
+ portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 }}
+DAT
