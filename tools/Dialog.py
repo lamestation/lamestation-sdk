@@ -7,9 +7,6 @@ def Quit():
             wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION)
     return dial.ShowModal()
 
-    if result == wx.ID_YES:
-        self.Destroy()
-
 
 def About():
 
@@ -45,3 +42,48 @@ if not, write to the Free Software Foundation, Inc., 59 Temple Place,
     info.AddDeveloper('Brett Weir')
 
     wx.AboutBox(info)
+
+
+
+class NewImage(wx.Dialog):
+    def __init__(self, *args, **kw):
+        super(NewImage, self).__init__(*args, **kw) 
+            
+        panel = wx.Panel(self)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        gs = wx.FlexGridSizer(2,2,5,5)
+
+        add_w_txt = wx.StaticText(panel,label='Width:')
+        add_h_txt = wx.StaticText(panel,label='Height:')
+        add_w = wx.TextCtrl(panel,value='32')
+        add_h = wx.TextCtrl(panel,value='32')
+
+        gs.AddMany([
+            (add_w_txt), (add_w,0,wx.ALL),
+            (add_h_txt), (add_h,0,wx.ALL)
+            ])
+
+        panel.SetSizer(gs)
+
+
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        okButton = wx.Button(self, label='Ok')
+        closeButton = wx.Button(self, label='Close')
+        hbox2.Add(okButton, border=5)
+        hbox2.Add(closeButton, flag=wx.LEFT, border=5)
+
+        
+        vbox.Add(panel)
+        vbox.Add(hbox2)
+        self.SetSizerAndFit(vbox)
+        
+        okButton.Bind(wx.EVT_BUTTON, self.OnClose)
+        closeButton.Bind(wx.EVT_BUTTON, self.OnClose)
+        self.SetTitle("New Image")
+        
+        
+    def OnClose(self, e):
+        self.Destroy()
+
+
