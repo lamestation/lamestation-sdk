@@ -24,14 +24,13 @@ class UndoDraw:
         self.RedoBitmap = CopyBitmap(bmp) # image after change
         self.UndoBitmap = oldbmp # image before change
 
-        print "SAVE", id(self.bmp), id(self.RedoBitmap), id(self.UndoBitmap)
+        logging.info("SAVE %s %s %s" % (id(self.bmp), id(self.RedoBitmap), id(self.UndoBitmap)))
     
     def undo( self ):
-#        self.RedoBitmap = self.bmp
         if not self.UndoBitmap == None:
                 self.bmp = self.UndoBitmap
 
-        print "UNDO", id(self.bmp), id(self.RedoBitmap), id(self.UndoBitmap)
+        logging.info("UNDO %s %s %s" % (id(self.bmp), id(self.RedoBitmap), id(self.UndoBitmap)))
         return self.bmp
 
     
@@ -39,7 +38,7 @@ class UndoDraw:
         if not self.RedoBitmap == None:
                 self.bmp = self.RedoBitmap
 
-        print "REDO", id(self.bmp), id(self.RedoBitmap), id(self.UndoBitmap)
+        logging.info("REDO %s %s %s" % (id(self.bmp), id(self.RedoBitmap), id(self.UndoBitmap)))
         return self.bmp
 
 
@@ -151,6 +150,9 @@ class DrawWindow(wx.Panel):
         wx.EVT_TOOL(self.toolbar, wx.ID_UNDO, self.OnUndo)
         wx.EVT_TOOL(self.toolbar, wx.ID_REDO, self.OnRedo)
 
+        wx.EVT_MENU(self.GetParent().GetParent(), wx.ID_UNDO, self.OnUndo)
+        wx.EVT_MENU(self.GetParent().GetParent(), wx.ID_REDO, self.OnRedo)
+
 
 
     def NewImage(self, w, h):
@@ -193,7 +195,7 @@ class DrawWindow(wx.Panel):
     def Draw(self, event):
         self.GetOldMouse()
         self.GetMouse(event)
-        self.Log("Draw")
+    #    self.Log("Draw")
         self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
 
 
@@ -210,13 +212,12 @@ class DrawWindow(wx.Panel):
 
     def SaveDraw(self, event):
 
-        if (self.toolbar.GetToolEnabled(wx.ID_UNDO) == False ):
-            self.toolbar.EnableTool(wx.ID_UNDO, True )
+        self.toolbar.EnableTool(wx.ID_UNDO, True )
         undo = UndoDraw(self.oldbmp, self.bmp)
         stockUndo.append( undo )
         if stockRedo:
             del stockRedo[:]
-            self.toolbar.EnableTool( wx.ID_UNDO, False )
+            self.toolbar.EnableTool( wx.ID_REDO, False )
 
     def Read(self, event):
         global COLOR
@@ -229,8 +230,7 @@ class DrawWindow(wx.Panel):
         dc.SelectObject(wx.NullBitmap)
 
     def OnLeftDown(self, event):
-        logging.info("OnLeftDown(): "+str(self.oldbmp)+", "+str(self.bmp))
-        print "DRAW",id(self.bmp)
+        logging.info("DRAW %s", id(self.bmp))
 
         self.oldbmp = CopyBitmap(self.bmp)
         self.Draw(event)
@@ -258,6 +258,7 @@ class DrawWindow(wx.Panel):
 
     def OnUndo( self, event ):
         if len( stockUndo ) == 0:
+            self.toolbar.EnableTool( wx.ID_UNDO, False )
             return
 
         a = stockUndo.pop()
@@ -274,6 +275,7 @@ class DrawWindow(wx.Panel):
 
     def OnRedo( self, event ):
         if len( stockRedo ) == 0:
+            self.toolbar.EnableTool( wx.ID_REDO, False )
             return
 
         a = stockRedo.pop()
@@ -284,8 +286,9 @@ class DrawWindow(wx.Panel):
 
         stockUndo.append( a )
         self.toolbar.EnableTool( wx.ID_UNDO, True )
-        
+
         self.OnPaint(None)
+
 
 
 
@@ -353,7 +356,8 @@ class LSPaint(wx.Frame):
         wx.Frame.__init__(self, parent, id, title)
 
         self.toolbar = self.ToolBar()
-        self.SetMenuBar(self.MenuBar())
+        self.menu = self.MenuBar()
+        self.SetMenuBar(self.menu)
 
         panel = wx.ScrolledWindow(self)
         panel.SetScrollbars(1,1,-1,-1)
@@ -373,37 +377,47 @@ class LSPaint(wx.Frame):
 
 
     def FileMenu(self):
-        fileMenu = wx.Menu()
-        fileMenu.Append(wx.ID_NEW, '&New', 'New Image')        
-        fileMenu.Append(wx.ID_OPEN, '&Open', 'Open Image')
-        fileMenu.Append(wx.ID_SAVE, '&Save', 'Save Image')
-        fileMenu.Append(wx.ID_SAVEAS, 'Save &As...', 'Save Image As...')
-        fileMenu.AppendSeparator()
-        exp = fileMenu.Append(wx.ID_ANY, '&Export', 'Export Image As Spin')
-        fileMenu.AppendSeparator()
-        fileMenu.Append(wx.ID_CLOSE, '&Close', 'Close image')
-        fileMenu.Append(wx.ID_EXIT, '&Quit\tCtrl+Q', 'Quit application')
+        menu = wx.Menu()
+        menu.Append(wx.ID_NEW, '&New', 'New Image')        
+        menu.Append(wx.ID_OPEN, '&Open', 'Open Image')
+        menu.Append(wx.ID_SAVE, '&Save', 'Save Image')
+        menu.Append(wx.ID_SAVEAS, 'Save &As...', 'Save Image As...')
+        menu.AppendSeparator()
+        exp = menu.Append(wx.ID_ANY, '&Export', 'Export Image As Spin')
+        menu.AppendSeparator()
+        menu.Append(wx.ID_CLOSE, '&Close', 'Close image')
+        menu.Append(wx.ID_EXIT, '&Quit\tCtrl+Q', 'Quit application')
 
         wx.EVT_MENU(self, wx.ID_NEW, self.OnNew)
         wx.EVT_MENU(self, wx.ID_EXIT, self.OnQuit)
 #        wx.EVT_MENU(self, wx.ID_OPEN, self.OnBrowse)
 #        self.Bind(wx.EVT_MENU, self.OnExport, exp)
 
-        return fileMenu
+        return menu
 
+    def EditMenu(self):
+        menu = wx.Menu()
+        menu.Append(wx.ID_UNDO, '&Undo\tCtrl+Z', 'New Image')        
+        menu.Append(wx.ID_REDO, '&Redo\tCtrl+Shift+Z', 'Open Image')
+        menu.AppendSeparator()
+        menu.Append(wx.ID_CUT, 'Cu&t', 'Cut To Clipoard')
+        menu.Append(wx.ID_COPY, '&Copy', 'Copy To Clipboard')
+        menu.Append(wx.ID_PASTE, 'Paste','Paste Into Image')
+
+        return menu
 
     def HelpMenu(self):
-        helpMenu = wx.Menu()
-        helpMenu.Append(wx.ID_ABOUT, 'About', 'About LSPaint')
+        menu = wx.Menu()
+        menu.Append(wx.ID_ABOUT, 'About', 'About LSPaint')
 #        wx.EVT_MENU(self, wx.ID_ABOUT, self.OnAbout)
 
-        return helpMenu
+        return menu
 
     def MenuBar(self):
         menubar = wx.MenuBar()
 
         menubar.Append(self.FileMenu(), '&File')
-#        menubar.Append(self.FileMenu(), '&Edit')
+        menubar.Append(self.EditMenu(), '&Edit')
         menubar.Append(self.HelpMenu(), '&Help')
 
         return menubar
