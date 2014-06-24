@@ -142,7 +142,7 @@ PUB GameLoop
     gfx.Blit(gfx_starmap.Addr)
     HandlePlayer                        
     ControlOffset
-    gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
+    gfx.DrawMap(xoffset, yoffset)
     DrawPlayer
     HandleBullets
     HandleEnemies
@@ -175,7 +175,7 @@ PUB ShowGameView
     gfx.Blit(gfx_starmap.Addr)
     HandlePlayer                        
     ControlOffset
-    gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
+    gfx.DrawMap(xoffset, yoffset)
     HandleBullets
     HandleEnemies
     HandleStatusBar
@@ -213,7 +213,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
          
         ControlOffset
         gfx.Blit(gfx_starmap.Addr)
-        gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
+        gfx.DrawMap(xoffset, yoffset)
         DrawPlayer
 
         
@@ -248,7 +248,7 @@ PUB ItsGameOver
     StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
     
     gfx.Blit(gfx_starmap.Addr)
-    gfx.DrawMap(xoffset, yoffset, 0,0, 16, 8)
+    gfx.DrawMap(xoffset, yoffset)
     DrawPlayer            
     gfx.PutString(string("Press A and "),18,24)
     gfx.PutString(string("try again..."),18,32)
@@ -1012,31 +1012,25 @@ byte    3,7,9,BAROFF
 
 byte    SONGOFF
 
-
-
-
-
-
-
+DAT
 {{
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│                           TERMS OF USE: MIT License                                  │                                                            
-├──────────────────────────────────────────────────────────────────────────────────────┤
-│Permission is hereby granted, free of charge, to any person obtaining a copy of this  │
-│software and associated documentation files (the "Software"), to deal in the Software │ 
-│without restriction, including without limitation the rights to use, copy, modify,    │
-│merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    │
-│permit persons to whom the Software is furnished to do so, subject to the following   │
-│conditions:                                                                           │
-│                                                                                      │                                             
-│The above copyright notice and this permission notice shall be included in all copies │
-│or substantial portions of the Software.                                              │
-│                                                                                      │
-│THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   │
-│INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         │
-│PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    │
-│HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION     │
-│OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        │
-│SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+
+ TERMS OF USE: MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ associated documentation files (the "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
+ following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or substantial
+ portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 }}
+DAT

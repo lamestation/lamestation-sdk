@@ -188,7 +188,7 @@ PUB GetMapHeight
 
     return byte[map_levelmap][1]
 
-PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnttemp, x, y
+PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y
 '' This function uses the Box command to draw an array of tiles to the screen.
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
