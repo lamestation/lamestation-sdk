@@ -2,8 +2,8 @@
 '' single buffer view (VGA)
 ''
 ''        Author: Marko Lukat
-'' Last modified: 2014/06/19
-''       Version: 0.4
+'' Last modified: 2014/06/20
+''       Version: 0.5
 ''
 '' 20140609: catch up with LameMultiView API
 ''
@@ -31,7 +31,8 @@ PUB init(primary) | n
 '' Initializes the viewer object and any underlying graphics driver.
 ''
 '' parameters
-''  primary: optional screen buffer (to be attached at index 0) or NULL (none)
+''  primary: optional screen buffer (to be attached at index 0) or
+''           NULL (internal screen buffer if available)
 ''
 '' result
 ''   Aborts when any part of the initialization fails, otherwise an address

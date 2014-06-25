@@ -67,8 +67,8 @@ VAR
 '' assembly.
 '' They must apppear in this order.
 '' ---------------------------------------------------
-    long    instruction
-    long    drawsurface
+    long    instruction                                 ' |
+    long    drawsurface                                 ' order/type locked
 '' ---------------------------------------------------
     word    copysurface
 
@@ -78,8 +78,12 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_blitscreen, c_sprite, c_setcliprect, c_translate
+    long    c_blitscreen, c_sprite, c_setcliprect, c_translate, c_drawtilemap
     long    c_parameters[4]
+
+VAR
+    long    map_tilemap                                 ' |
+    long    map_levelmap                                ' order/type locked
 
 PUB null
 '' This is not a top level object.
@@ -96,6 +100,7 @@ PUB Start(buffer, screen)
     c_sprite      := @c_parameters << 16 | (@drawsprite  - @graphicsdriver) >> 2 | %011_1 << 12
     c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
     c_translate   := @c_parameters << 16 | (@translate   - @graphicsdriver) >> 2 | %001_1 << 12
+    c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %011_1 << 12
 
 PUB WaitToDraw
 
@@ -151,10 +156,6 @@ PUB Sprite(source, x, y, frame)
 ' *********************************************************
 '  Maps
 ' *********************************************************
-VAR
-    word    map_tilemap
-    word    map_levelmap
-
 PUB LoadMap(source_tilemap, source_levelmap)
 
     map_tilemap  := source_tilemap
@@ -186,32 +187,17 @@ PUB GetMapHeight
 
     return byte[map_levelmap][1]
 
-PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnt, tilecnttemp, x, y
+PUB DrawMap(offset_x, offset_y)
 '' This function uses the Box command to draw an array of tiles to the screen.
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
-''
-'' * **offset_x** -
-'' * **offset_y** -
-'' * **width** -
-'' * **height** -
-''
 
-    SetClipRectangle(box_x1<<3, box_y1<<3, box_x2<<3, box_y2<<3)
+    repeat
+    while instruction
 
-    tilecnt := 0
-    tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y>>3)
-
-    repeat y from 0 to box_y2-box_y1
-        repeat x from 0 to box_x2-box_x1
-            tilecnt := tilecnttemp + (offset_x >> 3) + x
-            tile := (byte[map_levelmap][tilecnt] & TILEBYTE) - 1
-            if tile => 0
-                 Sprite(map_tilemap, (box_x1<<3) + (x << 3) - (offset_x & $7), (box_y1<<3) + (y<<3) - (offset_y & $7),tile)
-
-        tilecnttemp += byte[map_levelmap]{0}
-
-    SetClipRectangle(0, 0, 128, 64)
+    longmove(@c_parameters{0}, @offset_x,    2)
+    longmove(@c_parameters[2], @map_tilemap, 2)
+    instruction := c_drawtilemap
 
 ' *********************************************************
 '  Text
@@ -500,6 +486,93 @@ translate               mov     arg3, fullscreen        ' words per screen
 
                         jmp     %%0                     ' return
 
+' #### DRAW TILE MAP
+' ------------------------------------------------------
+' parameters: arg0: x offset
+'             arg1: y offset
+'             arg2: tile data (8x8)
+'             arg3: level map
+
+drawtilemap             mov     madr, arg3
+                        rdbyte  madv, madr              ' map (byte) width
+                        add     madr, #2                ' skip header
+
+                        mov     eins, arg0
+                        shr     eins, #3                ' offset_x >> 3
+                        add     madr, eins
+
+
+                        mov     eins, madv
+                        mov     zwei, arg1
+                        shr     zwei, #3                ' offset_y >> 3
+                        shl     zwei, #8 -1             ' align operand for 16x8bit
+                                                                                       
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc           ' 16x4bit, precision: 8        
+                                                                                       
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc           ' 16x4bit, precision: 8        
+                                                                                       
+                        add     madr, eins              ' apply offset                 
+
+                        
+                        and     arg0, #%111 wz
+                        mov     lp_x, _clipx1
+                        sumnz   lp_x, arg0              ' offset_x := cx1 - offset_x & 7
+
+                        cmps    lp_x, _clipx2 wc
+                if_nc   jmp     %%0                     ' early exit (invisible)
+                        
+                        and     arg1, #%111 wz
+                        mov     lp_y, _clipy1
+                        sumnz   lp_y, arg1              ' offset_y := cy1 - offset_y & 7
+
+                        cmps    lp_y, _clipy2 wc
+                if_nc   jmp     %%0                     ' early exit (invisible)
+
+                        mov     vier, arg2              ' tile copy
+
+:yloop                  mov     eins, lp_x              ' reload temporary
+                        mov     zwei, madr              ' map address
+
+:xloop                  rdbyte  drei, zwei              ' get tile info
+                        add     zwei, #1                ' advance
+                        and     drei, #TILEBYTE wz      ' tile index (0 is transparent)
+                if_z    jmp     #:xnext
+
+                        sub     drei, #1                ' adjust index
+
+                        mov     arg0, vier
+                        mov     arg1, eins
+                        mov     arg2, lp_y
+                        mov     arg3, drei
+                        jmpret  %%0, #drawsprite        ' call sprite function
+
+:xnext                  add     eins, #8
+                        cmps    eins, _clipx2 wc
+                if_c    jmp     #:xloop                 ' for all (tile) columns
+
+                        add     madr, madv              ' next row
+
+                        add     lp_y, #8
+                        cmps    lp_y, _clipy2 wc
+                if_c    jmp     #:yloop                 ' for all (tile) rows
+                
+                        movs    %%0, #1                 ' restore vector
+                        jmp     %%0                     ' return
+
 ' support code (fetch up to 4 arguments)
 
 args                    rdlong  arg0, addr              ' read 1st argument
@@ -571,6 +644,17 @@ srcT{ransfer}           res     1
 dstH{igh}               res     1
 dstL{ow}                res     1
 srcW{ord}               res     1
+
+
+lp_x                    res     1
+lp_y                    res     1
+madr                    res     1
+madv                    res     1
+
+eins                    res     1
+zwei                    res     1
+drei                    res     1
+vier                    res     1
 
 
 addr                    res     1

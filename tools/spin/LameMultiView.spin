@@ -2,8 +2,8 @@
 '' multi buffer view (VGA)
 ''
 ''        Author: Marko Lukat
-'' Last modified: 2014/06/16
-''       Version: 0.7
+'' Last modified: 2014/06/20
+''       Version: 0.8
 ''
 '' 20140605: initial version
 '' 20140609: documented init method
@@ -32,7 +32,8 @@ PUB init(primary) | n
 '' Initializes the viewer object and any underlying graphics driver.
 ''
 '' parameters
-''  primary: optional screen buffer (to be attached at index 0) or NULL (none)
+''  primary: optional screen buffer (to be attached at index 0) or
+''           NULL (internal screen buffer if available)
 ''
 '' result
 ''   Aborts when any part of the initialization fails, otherwise an address

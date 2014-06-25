@@ -56,7 +56,7 @@ PUB null : visible | tiles
       visible := 73                                     ' and reset visibility if any
 
     gfx.ClearScreen                                     ' clear screen (map may be transparent)
-    gfx.DrawMap(cur_x, cur_y, 0, 0, 16, 8)              ' draw map
+    gfx.DrawMap(cur_x, cur_y)                           ' draw map
 
     if visible                                          ' draw navi cross if visible (auto-hide)
       navi(cur_x - old_x, cur_y - old_y, cur_s)
@@ -77,7 +77,7 @@ PRI navi(dx, dy, spd)
 PRI demo(dx, dy, spd, frm)
 
   gfx.ClearScreen                                             
-  gfx.DrawMap(cur_x, cur_y, 0, 0, 16, 8)                      
+  gfx.DrawMap(cur_x, cur_y)                                   
 
   navi(dx, dy, spd)
 
