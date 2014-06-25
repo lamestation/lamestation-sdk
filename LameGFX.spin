@@ -563,13 +563,13 @@ drawtilemap             mov     madr, arg3
                         jmpret  %%0, #drawsprite        ' call sprite function
 
 :xnext                  add     eins, #8
-                        cmp     eins, _clipx2 wc
+                        cmps    eins, _clipx2 wc
                 if_c    jmp     #:xloop                 ' for all (tile) columns
 
                         add     madr, madv              ' next row
 
                         add     lp_y, #8
-                        cmp     lp_y, _clipy2 wc
+                        cmps    lp_y, _clipy2 wc
                 if_c    jmp     #:yloop                 ' for all (tile) rows
                 
                         movs    %%0, #1                 ' restore vector
