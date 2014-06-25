@@ -528,18 +528,16 @@ drawtilemap             mov     madr, arg3
                         add     madr, eins              ' apply offset                 
 
                         
-                        mov     lp_x, arg0
-                        and     lp_x, #%111
-                        neg     lp_x, lp_x
-                        add     lp_x, _clipx1           ' offset_x := cx1 - offset_x & 7
+                        and     arg0, #%111 wz
+                        mov     lp_x, _clipx1
+                        sumnz   lp_x, arg0              ' offset_x := cx1 - offset_x & 7
 
                         cmps    lp_x, _clipx2 wc
                 if_nc   jmp     %%0                     ' early exit (invisible)
                         
-                        mov     lp_y, arg1
-                        and     lp_y, #%111
-                        neg     lp_y, lp_y
-                        add     lp_y, _clipy1           ' offset_y := cy1 - offset_y & 7
+                        and     arg1, #%111 wz
+                        mov     lp_y, _clipy1
+                        sumnz   lp_y, arg1              ' offset_y := cy1 - offset_y & 7
 
                         cmps    lp_y, _clipy2 wc
                 if_nc   jmp     %%0                     ' early exit (invisible)
