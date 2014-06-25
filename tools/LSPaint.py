@@ -310,7 +310,7 @@ class LSPaint(wx.Frame):
     height = 32
 
     def __init__(self, parent, id, title):
-        wx.Frame.__init__(self, parent, id, title)
+        wx.Frame.__init__(self, parent, id, title, size=(600,600))
 
         self.toolbar = self.ToolBar()
         self.menu = self.MenuBar()
@@ -320,7 +320,7 @@ class LSPaint(wx.Frame):
         panel.SetScrollbars(1,1,-1,-1)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(DrawWindow(panel), 1, wx.EXPAND, 0)
-        panel.SetSizerAndFit(hbox)
+        panel.SetSizer(hbox)
 
         hboxm = wx.BoxSizer(wx.HORIZONTAL)
         hboxm.Add(SideBar(self),0,wx.EXPAND,10)
@@ -329,7 +329,7 @@ class LSPaint(wx.Frame):
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(hboxm,1, wx.EXPAND, 0)
 
-        self.SetSizerAndFit(vbox)
+        self.SetSizer(vbox)
         self.Show(True)
 
 
