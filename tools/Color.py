@@ -1,4 +1,5 @@
 
+from wx.lib.pubsub import setuparg1 
 from wx.lib.pubsub import pub
 import logging
 
