@@ -72,6 +72,7 @@ class DrawWindow(wx.Panel):
 
 
     def Log(self, name):
+        print Color.COLOR
         logging.info(name+"(): %3s %3s %3s %3s %s" % (self.x, self.y, self.ox, self.oy, Color.COLOR))
 
     def Draw(self, event):
@@ -97,7 +98,8 @@ class DrawWindow(wx.Panel):
 
         dc = wx.MemoryDC()
         dc.SelectObject(self.bmp)
-        Color.Change(dc.GetPixel(self.x,self.y))
+
+        Color.Change(dc.GetPixel(self.x,self.y).GetAsString(flags=wx.C2S_HTML_SYNTAX))
         dc.SelectObject(wx.NullBitmap)
 
     def OnLeftDown(self, event):

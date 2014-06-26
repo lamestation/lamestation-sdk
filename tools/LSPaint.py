@@ -8,37 +8,15 @@ from wx.lib.pubsub import Publisher as pub
 import DrawWindow
 import Bitmap
 
+import EventHandler
+
 BITMAP_MAXSIZE = 256
 STYLE = 'plain'
 
 RECT = 32
 
-BITMAP = None
-
 
 logging.basicConfig(level=logging.INFO)
-
-
-
-stockUndo = []
-stockRedo = []
-
-class UndoDraw:
-    def __init__( self, oldbmp, bmp):
-        self.bmp = bmp
-        self.RedoBitmap = Bitmap.Copy(bmp) # image after change
-        self.UndoBitmap = oldbmp # image before change
-    
-    def undo( self ):
-        if not self.UndoBitmap == None:
-                self.bmp = self.UndoBitmap
-        return self.bmp
-    
-    def redo( self ):
-        if not self.RedoBitmap == None:
-                self.bmp = self.RedoBitmap
-        return self.bmp
-
 
 class ImageTile(wx.Panel):
 
@@ -68,19 +46,13 @@ class ImageTile(wx.Panel):
 
 class ColorTile(wx.Panel):
 
-    def __init__(self, parent, size, color, style=None):
-        wx.Panel.__init__(self, parent, size=size, style=wx.TAB_TRAVERSAL|wx.NO_BORDER)
+    def __init__(self, parent, size, color, style=wx.TAB_TRAVERSAL|wx.NO_BORDER):
+        wx.Panel.__init__(self, parent, size=size, style=style)
 
         self.size = self.GetSize()
         self.color = color
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-        pub.subscribe(self.SetColor, "COLOR")
-
-    def SetColor(self, message):
-        self.color = Color.COLOR
-        print self.color
-        self.OnPaint(None)
 
     def OnPaint(self, event):
         dc = wx.PaintDC(self)
@@ -92,6 +64,17 @@ class ColorTile(wx.Panel):
     def OnLeftDown(self, event):
         Color.Change(self.color)
         pub.sendMessage("COLOR")
+
+class ChosenColor(ColorTile):
+
+    def __init__(self, parent, size, color, style=wx.TAB_TRAVERSAL|wx.NO_BORDER):
+        ColorTile.__init__(self, parent, size=size, color=color, style=style)
+
+        pub.subscribe(self.SetColor, "COLOR")
+
+    def SetColor(self, message):
+        self.color = Color.COLOR
+        self.OnPaint(None)
 
 
 class ColorPicker(wx.Panel):
@@ -129,7 +112,7 @@ class SideBar(wx.Panel):
         wx.Panel.__init__(self, parent)
 
         cp1 = ColorPicker(self)
-        cc = ColorTile(self,(50,50),'#77FF00')
+        cc = ChosenColor(self,(50,50),'#77FF00')
         tt = ImageTile(self,size=(100,100),scale=4)
 
 
@@ -154,7 +137,7 @@ class LSPaint(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, size=(600,600))
 
 
-        self.evt = EventHandler(self)
+        self.evt = EventHandler.EventHandler(self)
         self.toolbar = self.ToolBar()
         self.SetMenuBar(self.MenuBar())
         self.menu = self.GetMenuBar()
@@ -257,80 +240,6 @@ class LSPaint(wx.Frame):
         self.toolbar.Realize()
         
         return self.toolbar
-
-class EventHandler():
-
-    def __init__(self, parent):
-        self.parent = parent
-
-        pub.subscribe(self.OnDraw, "DRAW")
-        pub.subscribe(self.OnUndo, "UNDO")
-        pub.subscribe(self.OnRedo, "REDO")
-
-    def OnNew(self, event):
-        dialog = Dialog.NewImage(None)
-        dialog.ShowModal()
-        dialog.Destroy()  
-
-    def OnQuit(self, event):
-        self.parent.Destroy()
-
-
-    def OnDraw(self, message):
-        self.parent.toolbar.EnableTool(wx.ID_UNDO, True )
-        self.parent.toolbar.EnableTool(wx.ID_SAVE, True )
-        self.parent.menu.Enable( wx.ID_UNDO, True )
-        self.parent.menu.Enable( wx.ID_SAVE, True )
-        pub.sendMessage("UpdateBitmap",message.data[1])
-
-        undo = UndoDraw(message.data[0],message.data[1])
-        stockUndo.append( undo )
-        if stockRedo:
-            del stockRedo[:]
-            self.parent.toolbar.EnableTool( wx.ID_REDO, False )
-
-
-
-    def OnUndo( self, event ):
-        if len( stockUndo ) == 0:
-            self.parent.toolbar.EnableTool(wx.ID_UNDO, False )
-            self.parent.toolbar.EnableTool(wx.ID_SAVE, False )
-            self.parent.menu.Enable( wx.ID_UNDO, False )
-            self.parent.menu.Enable( wx.ID_SAVE, False )
-            return
-
-        a = stockUndo.pop()
-        if len( stockUndo ) == 0:
-            self.parent.toolbar.EnableTool( wx.ID_UNDO, False )
-            self.parent.toolbar.EnableTool( wx.ID_SAVE, False )
-            self.parent.menu.Enable( wx.ID_UNDO, False )
-            self.parent.menu.Enable( wx.ID_SAVE, False )
-
-        pub.sendMessage("UpdateBitmap",a.undo())
-
-        stockRedo.append( a )
-        self.parent.toolbar.EnableTool( wx.ID_REDO, True )
-
-
-
-    def OnRedo( self, event ):
-        if len( stockRedo ) == 0:
-            self.parent.toolbar.EnableTool( wx.ID_REDO, False )
-            return
-
-        a = stockRedo.pop()
-        if len( stockRedo ) == 0:
-            self.parent.toolbar.EnableTool( wx.ID_REDO, False )
-
-        pub.sendMessage("UpdateBitmap",a.redo())
-
-        stockUndo.append( a )
-        self.parent.toolbar.EnableTool( wx.ID_UNDO, True )
-        self.parent.toolbar.EnableTool( wx.ID_SAVE, True )
-        self.parent.menu.Enable( wx.ID_UNDO, True )
-        self.parent.menu.Enable( wx.ID_SAVE, True )
-
-
 
 
 app = wx.App()
