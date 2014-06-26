@@ -2,8 +2,8 @@
 '' simple clock demo
 ''
 ''        Author: Marko Lukat
-'' Last modified: 2014/06/26
-''       Version: 0.6
+'' Last modified: 2014/06/27
+''       Version: 0.7
 ''
 ''        A: NORM: enter EDIT mode
 ''           EDIT: confirm change (*), back to NORM
@@ -13,6 +13,7 @@
 '' 20140624: initial version, WIP
 ''           use cached sprites
 '' 20140626: added edit functionality
+'' 20140627: defer EDIT copy until first change
 ''
 CON
   _clkmode = XTAL1|PLL16X
@@ -84,7 +85,6 @@ PRI buttons : b
 
   if pressed
     ifnot edit                                          ' enter edit mode
-      time[1] := time{0}
       return edit := E_HRS
     if edit & E_CHG                                     ' confirm
       time[1] |= NEGX
@@ -118,7 +118,9 @@ PRI buttons : b
 
 PRI updown(idx, delta{+/-1}, limit)
 
-  edit |= E_CHG
+  ifnot edit & E_CHG
+    edit |= E_CHG
+    time[1] := time{0}                                  ' deferred until first change
 
   if (time.byte[idx] += delta) < 0
     return time.byte[idx] += limit
