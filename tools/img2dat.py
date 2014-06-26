@@ -43,14 +43,10 @@ class Example(wx.Frame):
 
     def FileMenu(self):
         fileMenu = wx.Menu()
-#        fileMenu.Append(wx.ID_NEW, '&New', 'New Image')        
         fileMenu.Append(wx.ID_OPEN, '&Open', 'Open Image')
-#        fileMenu.Append(wx.ID_SAVE, '&Save', 'Save Image')
-#        fileMenu.Append(wx.ID_SAVEAS, 'Save &As...', 'Save Image As...')
         fileMenu.AppendSeparator()
         exp = fileMenu.Append(wx.ID_ANY, '&Export\tCtrl+E', 'Export Image As Spin')
         fileMenu.AppendSeparator()
-#        fileMenu.Append(wx.ID_CLOSE, '&Close', 'Close image')
         fileMenu.Append(wx.ID_EXIT, '&Quit\tCtrl+Q', 'Quit application')
 
         wx.EVT_MENU(self, wx.ID_EXIT, self.OnQuit)
@@ -58,22 +54,6 @@ class Example(wx.Frame):
         self.Bind(wx.EVT_MENU, self.OnExport, exp)
 
         return fileMenu
-
-#    def ViewMenu(self):
-#        viewMenu = wx.Menu()
-#        self.shst = viewMenu.Append(wx.ID_ANY, 'Show statubar', 
-#                'Show Statusbar', kind=wx.ITEM_CHECK)
-#        self.shtl = viewMenu.Append(wx.ID_ANY, 'Show toolbar', 
-#                'Show Toolbar', kind=wx.ITEM_CHECK)
-#
-#        viewMenu.Check(self.shst.GetId(), True)
-#        viewMenu.Check(self.shtl.GetId(), True)
-#
-#
-#        self.Bind(wx.EVT_MENU, self.ToggleStatusBar, self.shst)
-#        self.Bind(wx.EVT_MENU, self.ToggleToolBar, self.shtl)
-#
-#        return viewMenu
 
     def HelpMenu(self):
         helpMenu = wx.Menu()
@@ -87,7 +67,6 @@ class Example(wx.Frame):
         menubar = wx.MenuBar()
 
         menubar.Append(self.FileMenu(), '&File')
-#        menubar.Append(self.ViewMenu(), '&View')
         menubar.Append(self.HelpMenu(), '&Help')
 
         return menubar
@@ -109,7 +88,6 @@ class Example(wx.Frame):
 
         self.toolbar.AddSeparator()
 
-#        self.fcb = wx.CheckBox(self.toolbar,label="Chop image")
         self.fcb = wx.ToggleButton(self.toolbar,label="Chop image")
         self.fx = wx.SpinCtrl(self.toolbar,size=(50,-1),value='8',min=MIN_SIZE, max=128)
         self.fy = wx.SpinCtrl(self.toolbar,size=(50,-1),value='8',min=MIN_SIZE, max=128)
@@ -132,14 +110,11 @@ class Example(wx.Frame):
 
         self.zoom.Bind(wx.EVT_COMBOBOX, self.OnZoom)
 
-
-
-
         self.toolbar.Realize()
 
 
     def __init__(self, parent, title):
-        super(Example, self).__init__(parent, title=title)#, style=wx.DEFAULT_FRAME_STYLE ^ wx.RESIZE_BORDER)
+        super(Example, self).__init__(parent, title=title)
 
         self.filename = ""
         self.scale = 4
@@ -185,23 +160,6 @@ class Example(wx.Frame):
             self.fy.Enable(False)
 
         self.OnUpdate(None)
-
-
-#    def ToggleStatusBar(self, e):
-#
-#        if self.shst.IsChecked():
-#            self.statusbar.Show()
-#        else:
-#            self.statusbar.Hide()
-#
-#
-#    def ToggleToolBar(self, e):
-#
-#        if self.shtl.IsChecked():
-#            self.toolbar.Show()
-#        else:
-#            self.toolbar.Hide()        
-#
 
     def OnAbout(self,e):
         Dialog.About()

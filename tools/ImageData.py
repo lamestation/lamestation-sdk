@@ -21,6 +21,8 @@ colorvalue['gray'] = {'unicode': u"\u2593", 'char': 3, 'output': (177,125,225)}
 colorvalue['black']= {'unicode': u"\u2588", 'char': 0, 'output': (145,64,254)}
 colorvalue['none'] = {'unicode': u" ", 'char': 2, 'output': (255,0,255)}
 
+lookup = ['black','white','none','gray']
+
 
 def getAverageColor(pixel):
     if type(pixel) is tuple:
