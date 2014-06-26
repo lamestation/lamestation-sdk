@@ -16,7 +16,7 @@ lookup = {
         }
 
 STYLE = 'white on blue'
-COLOR = color['plain'][0]
+COLOR = color[STYLE][lookup['white']]
 
 def Change(newcolor):
     global COLOR

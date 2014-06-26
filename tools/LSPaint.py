@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 
 class ImageTile(wx.Panel):
 
-    def __init__(self, parent, size, scale=1, style=None):
+    def __init__(self, parent, size=(200,200), scale=1, style=None):
         wx.Panel.__init__(self, parent, 
                 size=size, style=wx.TAB_TRAVERSAL|wx.NO_BORDER)
 
@@ -66,8 +66,8 @@ class ColorTile(wx.Panel):
 
 class ChosenColor(ColorTile):
 
-    def __init__(self, parent, size, color, style=wx.TAB_TRAVERSAL|wx.NO_BORDER):
-        ColorTile.__init__(self, parent, size=size, color=color, style=style)
+    def __init__(self, parent, size, style=wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER):
+        ColorTile.__init__(self, parent, size=size, color=Color.COLOR, style=style)
 
         pub.subscribe(self.SetColor, "COLOR")
 
@@ -124,20 +124,28 @@ class StylePicker(wx.ComboBox):
 class SideBar(wx.Panel):
 
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent, style=wx.SUNKEN_BORDER)
+        wx.Panel.__init__(self, parent)
 
         cp1 = ColorPicker(self)
-        cc = ChosenColor(self,(50,50),'#77FF00')
+        cc = ChosenColor(self,(50,50))
 
         ss = StylePicker(self)
-        tt = ImageTile(self,size=(200,200),scale=4)
+
+
+        panel = wx.Panel(self)
+        tt = ImageTile(panel,scale=4)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(tt, 1, wx.ALL|wx.ALIGN_CENTER, 0)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(hbox, 1, wx.ALL|wx.ALIGN_CENTER, 0)
+        panel.SetSizer(vbox)
 
 
         vbox = wx.FlexGridSizer(rows=4,cols=1, hgap=5, vgap=5)
         vbox.Add(cc, 0, wx.ALL|wx.ALIGN_CENTER)
         vbox.Add(cp1, 0, wx.ALL|wx.ALIGN_CENTER)
         vbox.Add(ss, 0, wx.ALL|wx.ALIGN_CENTER)
-        vbox.Add(tt, 0, wx.ALL|wx.ALIGN_CENTER)
+        vbox.Add(panel, 0, wx.ALL|wx.ALIGN_CENTER)
 
         hbox = wx.BoxSizer(wx.VERTICAL)
         hbox.Add(vbox, 0, wx.ALL|wx.ALIGN_CENTER, 0)
@@ -160,22 +168,28 @@ class LSPaint(wx.Frame):
         self.SetMenuBar(self.MenuBar())
         self.menu = self.GetMenuBar()
 
-        panel = wx.ScrolledWindow(self)
-        panel.SetScrollbars(1,1,-1,-1)
+
+        # SideBar
+        self.sidebar = wx.Panel(self, style=wx.RAISED_BORDER)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(SideBar(self),1,wx.EXPAND,0)
+        self.sidebar.SetSizer(vbox)
+
+
+        self.draw = wx.ScrolledWindow(self)
+        self.draw.SetScrollbars(1,1,-1,-1)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.draw = DrawWindow.DrawWindow(panel)
-        hbox.Add(self.draw, 1, wx.ALL|wx.ALIGN_CENTER, 0)
-
+        hbox.Add(DrawWindow.DrawWindow(self.draw), 1, wx.ALL|wx.ALIGN_CENTER, 0)
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(hbox, 1, wx.ALL|wx.ALIGN_CENTER, 0)
+        self.draw.SetSizer(vbox)
 
 
-        panel.SetSizer(vbox)
 
+        # Combine windows
         hboxm = wx.BoxSizer(wx.HORIZONTAL)
-        hboxm.Add(SideBar(self),0,wx.ALL,10)
-        hboxm.Add(panel,1,wx.EXPAND,0)
+        hboxm.Add(self.sidebar,0,wx.EXPAND,0)
+        hboxm.Add(self.draw,1,wx.EXPAND,0)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
         vbox.Add(hboxm,1, wx.EXPAND, 0)

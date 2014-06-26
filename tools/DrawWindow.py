@@ -56,15 +56,9 @@ class DrawWindow(wx.Panel):
         dc.DrawBitmap(Bitmap.Scale(self.bmp,BITMAP_NEWSIZE,BITMAP_NEWSIZE), 0, 0, True)
         
 
-
     def GetOldMouse(self):
         self.ox = self.x
         self.oy = self.y
-
-
-    def GetImage(self):
-        return self.bmp
-
 
     def GetMouse(self, event):
         self.GetOldMouse()
@@ -74,7 +68,6 @@ class DrawWindow(wx.Panel):
 
 
     def Log(self, name):
-        print Color.COLOR
         logging.info(name+"(): %3s %3s %3s %3s %s" % (self.x, self.y, self.ox, self.oy, Color.COLOR))
 
 
@@ -92,8 +85,7 @@ class DrawWindow(wx.Panel):
         dc.DrawLine(self.ox, self.oy, self.x, self.y)
         dc.SelectObject(wx.NullBitmap)
 
-        dc = wx.ClientDC(self)
-        dc.DrawBitmap(Bitmap.Scale(self.bmp,BITMAP_NEWSIZE,BITMAP_NEWSIZE), 0, 0, True)
+        self.OnPaint(None)
 
 
     def Read(self, event):
@@ -129,7 +121,6 @@ class DrawWindow(wx.Panel):
 
     def OnRightDown(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_BULLSEYE))
-#        pub.sendMessage("COLOR")
         self.Read(event)
 
 
