@@ -3,12 +3,12 @@
 ''
 ''        Author: Marko Lukat
 '' Last modified: 2014/06/26
-''       Version: 0.5
+''       Version: 0.6
 ''
 ''        A: NORM: enter EDIT mode
-''           EDIT: confirm change (*)
+''           EDIT: confirm change (*), back to NORM
 ''        B: EDIT: cancel
-'' joystick: select and modify digits
+'' joystick: EDIT: select and modify digits
 ''
 '' 20140624: initial version, WIP
 ''           use cached sprites
@@ -28,8 +28,6 @@ OBJ
    lcd: "LameLCD"
    gfx: "LameGFX"
   ctrl: "LameControl"
-
-   dbg: "FullDuplexSerial"
   
 VAR
   long  time[2], edit, pressed
