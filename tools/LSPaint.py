@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import wx
-import Color, Dialog
+import Color
 import logging
 from wx.lib.pubsub import Publisher as pub
 
@@ -11,7 +11,6 @@ import Bitmap
 import EventHandler
 
 BITMAP_MAXSIZE = 256
-STYLE = 'plain'
 
 RECT = 32
 
@@ -63,7 +62,6 @@ class ColorTile(wx.Panel):
 
     def OnLeftDown(self, event):
         Color.Change(self.color)
-        pub.sendMessage("COLOR")
 
 class ChosenColor(ColorTile):
 
@@ -81,18 +79,20 @@ class ColorPicker(wx.Panel):
 
     def __init__(self, parent):
         wx.Panel.__init__(self, parent, 
-                size=(RECT*2,RECT*len(Color.color[STYLE]) ), style=wx.SUNKEN_BORDER)
+                size=(RECT*2,RECT*Color.Count() ), style=wx.SUNKEN_BORDER)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
+
+        pub.subscribe(self.OnPaint,"STYLE")
 
     def OnPaint(self, event):
         dc = wx.PaintDC(self)
 
         inc = 0
         for c in range(0,4):
-            dc.SetBrush(wx.Brush(Color.color[STYLE][c]))
-            dc.SetPen(wx.Pen(Color.color[STYLE][c]))
+            dc.SetBrush(wx.Brush(Color.Number(c) ))
+            dc.SetPen(wx.Pen(Color.Number(c) ))
             dc.DrawRectangle(0, RECT*inc, RECT*2, RECT)
 
             inc += 1
@@ -101,24 +101,41 @@ class ColorPicker(wx.Panel):
         self.x, self.y = event.GetPosition()
         self.x = self.x/RECT
         self.y = self.y/RECT
-        Color.Change(Color.color[STYLE][self.y])
-        pub.sendMessage("COLOR")
-        logging.info("ColorPicker: clicked! %s %s %s %s" % (self.x, self.y, Color.color[STYLE][self.y], Color.COLOR))
+        Color.Change(Color.Number(self.y) )
+        logging.info("ColorPicker: clicked! %s %s %s %s" % (self.x, self.y, Color.Number(self.y), Color.COLOR))
+
+
+
+class StylePicker(wx.ComboBox):
+
+    def __init__(self, parent):
+        wx.ComboBox.__init__(self, parent, 
+                value=Color.GetStyles()[0],
+                choices=Color.GetStyles(), 
+                style=wx.CB_READONLY)
+
+        self.Bind(wx.EVT_COMBOBOX, self.OnSelect)
+
+    def OnSelect(self, event):
+        pub.sendMessage("Recolor",self.GetValue())
 
 
 class SideBar(wx.Panel):
 
     def __init__(self, parent):
-        wx.Panel.__init__(self, parent)
+        wx.Panel.__init__(self, parent, style=wx.SUNKEN_BORDER)
 
         cp1 = ColorPicker(self)
         cc = ChosenColor(self,(50,50),'#77FF00')
-        tt = ImageTile(self,size=(100,100),scale=4)
+
+        ss = StylePicker(self)
+        tt = ImageTile(self,size=(200,200),scale=4)
 
 
-        vbox = wx.FlexGridSizer(rows=3,cols=1, hgap=5, vgap=5)
+        vbox = wx.FlexGridSizer(rows=4,cols=1, hgap=5, vgap=5)
         vbox.Add(cc, 0, wx.ALL|wx.ALIGN_CENTER)
         vbox.Add(cp1, 0, wx.ALL|wx.ALIGN_CENTER)
+        vbox.Add(ss, 0, wx.ALL|wx.ALIGN_CENTER)
         vbox.Add(tt, 0, wx.ALL|wx.ALIGN_CENTER)
 
         hbox = wx.BoxSizer(wx.VERTICAL)
@@ -165,12 +182,13 @@ class LSPaint(wx.Frame):
 
         wx.EVT_TOOL(self.toolbar, wx.ID_UNDO, self.evt.OnUndo)
         wx.EVT_TOOL(self.toolbar, wx.ID_REDO, self.evt.OnRedo)
-        wx.EVT_MENU(self,   wx.ID_NEW, self.evt.OnNew)
-        wx.EVT_MENU(self,   wx.ID_EXIT, self.evt.OnQuit)
+        wx.EVT_MENU(self, wx.ID_UNDO, self.evt.OnUndo)
+        wx.EVT_MENU(self, wx.ID_REDO, self.evt.OnRedo)
+        wx.EVT_MENU(self, wx.ID_NEW, self.evt.OnNew)
+        wx.EVT_MENU(self, wx.ID_EXIT, self.evt.OnQuit)
 #        wx.EVT_MENU(self, wx.ID_OPEN, self.evt.OnBrowse)
 #        self.Bind(wx.EVT_MENU, self.evt.OnExport, exp)
 #        wx.EVT_MENU(self, wx.ID_ABOUT, self.evt.OnAbout)
-
 
         self.SetSizer(vbox)
         self.Show(True)
@@ -192,8 +210,8 @@ class LSPaint(wx.Frame):
 
     def EditMenu(self):
         menu = wx.Menu()
-        menu.Append(wx.ID_UNDO, '&Undo\tCtrl+Z', 'New Image')        
-        menu.Append(wx.ID_REDO, '&Redo\tCtrl+Shift+Z', 'Open Image')
+        menu.Append(wx.ID_UNDO, '&Undo\tCtrl+z', 'Undo')        
+        menu.Append(wx.ID_REDO, '&Redo\tCtrl+Shift+z', 'Redo')
         menu.AppendSeparator()
         menu.Append(wx.ID_CUT, 'Cu&t', 'Cut To Clipoard')
         menu.Append(wx.ID_COPY, '&Copy', 'Copy To Clipboard')

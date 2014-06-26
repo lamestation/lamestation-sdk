@@ -42,6 +42,7 @@ class DrawWindow(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
 
         pub.subscribe(self.UpdateBitmap,"UpdateBitmap")
+        pub.subscribe(self.OnRecolor,"Recolor")
 
 
     def UpdateBitmap(self, message):
@@ -75,6 +76,7 @@ class DrawWindow(wx.Panel):
         print Color.COLOR
         logging.info(name+"(): %3s %3s %3s %3s %s" % (self.x, self.y, self.ox, self.oy, Color.COLOR))
 
+
     def Draw(self, event):
         self.GetOldMouse()
         self.GetMouse(event)
@@ -92,6 +94,7 @@ class DrawWindow(wx.Panel):
         dc = wx.ClientDC(self)
         dc.DrawBitmap(Bitmap.Scale(self.bmp,BITMAP_NEWSIZE,BITMAP_NEWSIZE), 0, 0, True)
 
+
     def Read(self, event):
         self.GetMouse(event)
         self.Log("Read")
@@ -102,23 +105,36 @@ class DrawWindow(wx.Panel):
         Color.Change(dc.GetPixel(self.x,self.y).GetAsString(flags=wx.C2S_HTML_SYNTAX))
         dc.SelectObject(wx.NullBitmap)
 
+
     def OnLeftDown(self, event):
         logging.info("DRAW %s", id(self.bmp))
 
         self.oldbmp = Bitmap.Copy(self.bmp)
         self.Draw(event)
 
+
     def OnLeftUp(self, event):
         logging.info("OnLeftUp():")
         self.images = [self.oldbmp, self.bmp]
         pub.sendMessage("DRAW",self.images)
 
+
+    def OnRecolor(self, message):
+        self.oldbmp = Bitmap.Copy(self.bmp)
+        Bitmap.Recolor(self.bmp, message.data)
+        self.images = [self.oldbmp, self.bmp]
+        pub.sendMessage("DRAW",self.images)
+
+
     def OnRightDown(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_BULLSEYE))
+#        pub.sendMessage("COLOR")
         self.Read(event)
+
 
     def OnRightUp(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
+
 
     def OnMouseMove(self, event):
 
@@ -126,6 +142,7 @@ class DrawWindow(wx.Panel):
             if event.LeftIsDown():
                 self.Draw(event)
             if event.RightIsDown():
+                pub.sendMessage("COLOR")
                 self.Read(event)
         else:
             self.GetMouse(event)

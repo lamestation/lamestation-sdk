@@ -2,7 +2,7 @@
 import wx
 from wx.lib.pubsub import Publisher as pub
 
-import Bitmap
+import Bitmap, Dialog
 
 stockUndo = []
 stockRedo = []
