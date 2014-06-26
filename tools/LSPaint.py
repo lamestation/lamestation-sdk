@@ -5,11 +5,10 @@ import Color, Dialog
 import logging
 from wx.lib.pubsub import Publisher as pub
 
-BITMAP_SIZE = 32
-BITMAP_SCALE = 16
-BITMAP_NEWSIZE = BITMAP_SIZE*BITMAP_SCALE
+import DrawWindow
+import Bitmap
+
 BITMAP_MAXSIZE = 256
-COLOR = Color.color['plain'][0]
 STYLE = 'plain'
 
 RECT = 32
@@ -27,7 +26,7 @@ stockRedo = []
 class UndoDraw:
     def __init__( self, oldbmp, bmp):
         self.bmp = bmp
-        self.RedoBitmap = CopyBitmap(bmp) # image after change
+        self.RedoBitmap = Bitmap.Copy(bmp) # image after change
         self.UndoBitmap = oldbmp # image before change
     
     def undo( self ):
@@ -41,28 +40,6 @@ class UndoDraw:
         return self.bmp
 
 
-def CopyBitmap(bitmap):
-    return  wx.ImageFromBitmap(bitmap).Copy().ConvertToBitmap()
-
-def scale_bitmap(bitmap, width, height):
-    image = wx.ImageFromBitmap(bitmap)
-    image = image.Scale(width, height, wx.IMAGE_QUALITY_NORMAL)
-    result = wx.BitmapFromImage(image)
-    return result
-
-def NewBitmap(w, h):
-        bmp = wx.EmptyBitmap(w,h) 
-        dc = wx.MemoryDC()
-        dc.SelectObject(bmp)
-        dc.Clear()
-        dc.SetBrush(wx.Brush(Color.color[STYLE][Color.lookup['none']]))
-        dc.FloodFill(0, 0, wx.Colour(255,255,255))
-        dc.SelectObject(wx.NullBitmap)
-
-        return bmp
-    
-
-
 class ImageTile(wx.Panel):
 
     def __init__(self, parent, size, scale=1, style=None):
@@ -71,7 +48,7 @@ class ImageTile(wx.Panel):
 
         self.scale = scale
         self.size = size
-        self.bmp = NewBitmap(size[0],size[1])
+        self.bmp = Bitmap.New(size[0],size[1])
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         pub.subscribe(self.UpdateBitmap,"UpdateBitmap")
@@ -83,7 +60,7 @@ class ImageTile(wx.Panel):
 
     def OnPaint(self, event):
         dc = wx.ClientDC(self)
-        dc.DrawBitmap(scale_bitmap(self.bmp,self.bmp.GetWidth()*self.scale,self.bmp.GetHeight()*self.scale), 0, 0, True)
+        dc.DrawBitmap(Bitmap.Scale(self.bmp,self.bmp.GetWidth()*self.scale,self.bmp.GetHeight()*self.scale), 0, 0, True)
 
     def OnMouseMove(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
@@ -101,7 +78,7 @@ class ColorTile(wx.Panel):
         pub.subscribe(self.SetColor, "COLOR")
 
     def SetColor(self, message):
-        self.color = COLOR
+        self.color = Color.COLOR
         print self.color
         self.OnPaint(None)
 
@@ -113,131 +90,8 @@ class ColorTile(wx.Panel):
         dc.DrawRectangle(0, 0, self.size[0],self.size[1])
 
     def OnLeftDown(self, event):
-        global COLOR
-        COLOR = self.color
+        Color.Change(self.color)
         pub.sendMessage("COLOR")
-        logging.info("COLOR "+COLOR)
-
-
-class DrawWindow(wx.Panel):
-    x = 0
-    y = 0
-    ox = 0
-    oy = 0
-
-    def __init__(self, parent, image=None):
-        wx.Panel.__init__(self, parent, size=(BITMAP_NEWSIZE,BITMAP_NEWSIZE), style=wx.SUNKEN_BORDER)
-
-        if image == None:
-            self.bmp = NewBitmap(BITMAP_SIZE,BITMAP_SIZE)
-        else:
-            self.bmp = image
-
-
-        self.SetSize(size=(BITMAP_NEWSIZE,BITMAP_NEWSIZE))
-
-        self.oldbmp = self.bmp
-        self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
-
-        dc = wx.ClientDC(self)
-        dc.DrawBitmap(scale_bitmap(self.bmp,BITMAP_NEWSIZE,BITMAP_NEWSIZE), 0, 0, True)
-
-        self.Bind(wx.EVT_MOTION, self.OnMouseMove)
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
-        self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
-        self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
-        self.Bind(wx.EVT_PAINT, self.OnPaint)
-
-        pub.subscribe(self.UpdateBitmap,"UpdateBitmap")
-
-
-    def UpdateBitmap(self, message):
-        self.bmp = message.data
-        self.OnPaint(None)
-
-
-    def OnPaint(self, event):
-        dc = wx.ClientDC(self)
-        dc.DrawBitmap(scale_bitmap(self.bmp,BITMAP_NEWSIZE,BITMAP_NEWSIZE), 0, 0, True)
-        
-
-
-    def GetOldMouse(self):
-        self.ox = self.x
-        self.oy = self.y
-
-
-    def GetImage(self):
-        return self.bmp
-
-
-    def GetMouse(self, event):
-        self.GetOldMouse()
-        self.x, self.y = event.GetPosition()
-        self.x = self.x*BITMAP_SIZE/BITMAP_NEWSIZE
-        self.y = self.y*BITMAP_SIZE/BITMAP_NEWSIZE
-
-
-    def Log(self, name):
-        logging.info(name+"(): %3s %3s %3s %3s %s" % (self.x, self.y, self.ox, self.oy, COLOR))
-
-    def Draw(self, event):
-        self.GetOldMouse()
-        self.GetMouse(event)
-        self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
-
-
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.bmp)
-        dc.SetBrush(wx.Brush(COLOR))
-        dc.SetPen(wx.Pen(COLOR))
-        dc.DrawPoint(self.x,self.y)
-        dc.DrawLine(self.ox, self.oy, self.x, self.y)
-        dc.SelectObject(wx.NullBitmap)
-
-        dc = wx.ClientDC(self)
-        dc.DrawBitmap(scale_bitmap(self.bmp,BITMAP_NEWSIZE,BITMAP_NEWSIZE), 0, 0, True)
-
-    def Read(self, event):
-        global COLOR
-        self.GetMouse(event)
-        self.Log("Read")
-
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.bmp)
-        COLOR = dc.GetPixel(self.x,self.y)
-        dc.SelectObject(wx.NullBitmap)
-
-    def OnLeftDown(self, event):
-        logging.info("DRAW %s", id(self.bmp))
-
-        self.oldbmp = CopyBitmap(self.bmp)
-        self.Draw(event)
-
-    def OnLeftUp(self, event):
-        logging.info("OnLeftUp():")
-        self.images = [self.oldbmp, self.bmp]
-        pub.sendMessage("DRAW",self.images)
-
-    def OnRightDown(self, event):
-        self.SetCursor(wx.StockCursor(wx.CURSOR_BULLSEYE))
-        self.Read(event)
-
-    def OnRightUp(self, event):
-        self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
-
-    def OnMouseMove(self, event):
-
-        if event.Dragging():
-            if event.LeftIsDown():
-                self.Draw(event)
-            if event.RightIsDown():
-                self.Read(event)
-        else:
-            self.GetMouse(event)
-            self.GetOldMouse()
-            self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
 
 
 class ColorPicker(wx.Panel):
@@ -264,26 +118,9 @@ class ColorPicker(wx.Panel):
         self.x, self.y = event.GetPosition()
         self.x = self.x/RECT
         self.y = self.y/RECT
-        global COLOR
-        COLOR = Color.color[STYLE][self.y]
+        Color.Change(Color.color[STYLE][self.y])
         pub.sendMessage("COLOR")
-        logging.info("ColorPicker: clicked! %s %s %s %s" % (self.x, self.y, Color.color[STYLE][self.y], COLOR))
-
-
-class ChosenColor(wx.Panel):
-
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, 
-                size=(RECT*2,RECT*2 ), style=wx.SUNKEN_BORDER)
-
-        self.Bind(wx.EVT_PAINT, self.OnPaint)
-        pub.subscribe(self.OnPaint, "COLOR")
-
-    def OnPaint(self, event):
-        dc = wx.PaintDC(self)
-        dc.SetBrush(wx.Brush(COLOR))
-        dc.SetPen(wx.Pen(COLOR))
-        dc.DrawRectangle(0, 0, RECT*2, RECT*2)
+        logging.info("ColorPicker: clicked! %s %s %s %s" % (self.x, self.y, Color.color[STYLE][self.y], Color.COLOR))
 
 
 class SideBar(wx.Panel):
@@ -292,18 +129,17 @@ class SideBar(wx.Panel):
         wx.Panel.__init__(self, parent)
 
         cp1 = ColorPicker(self)
-#        cc = ChosenColor(self)
         cc = ColorTile(self,(50,50),'#77FF00')
-        
-        tt = ImageTile(self,size=(BITMAP_SIZE,BITMAP_SIZE),scale=2)
+        tt = ImageTile(self,size=(100,100),scale=4)
 
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(cc, 0, wx.ALL, 0)
-        vbox.Add(cp1, 0, wx.ALL, 0)
-        vbox.Add(tt, 0, wx.ALL, 0)
 
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(vbox, 0, wx.ALL, 0)
+        vbox = wx.FlexGridSizer(rows=3,cols=1, hgap=5, vgap=5)
+        vbox.Add(cc, 0, wx.ALL|wx.ALIGN_CENTER)
+        vbox.Add(cp1, 0, wx.ALL|wx.ALIGN_CENTER)
+        vbox.Add(tt, 0, wx.ALL|wx.ALIGN_CENTER)
+
+        hbox = wx.BoxSizer(wx.VERTICAL)
+        hbox.Add(vbox, 0, wx.ALL|wx.ALIGN_CENTER, 0)
 
         self.SetSizer(hbox)
 
@@ -327,7 +163,7 @@ class LSPaint(wx.Frame):
         panel.SetScrollbars(1,1,-1,-1)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.draw = DrawWindow(panel)
+        self.draw = DrawWindow.DrawWindow(panel)
         hbox.Add(self.draw, 1, wx.ALL|wx.ALIGN_CENTER, 0)
 
         vbox = wx.BoxSizer(wx.VERTICAL)
@@ -337,7 +173,7 @@ class LSPaint(wx.Frame):
         panel.SetSizer(vbox)
 
         hboxm = wx.BoxSizer(wx.HORIZONTAL)
-        hboxm.Add(SideBar(self),0,wx.EXPAND,10)
+        hboxm.Add(SideBar(self),0,wx.ALL,10)
         hboxm.Add(panel,1,wx.EXPAND,0)
 
         vbox = wx.BoxSizer(wx.VERTICAL)

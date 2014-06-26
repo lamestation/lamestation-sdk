@@ -1,3 +1,5 @@
+import logging
+
 color = {}
 color['plain'] = ["#000000","#8F8F8F","#FFFFFF","#FF00FF"]
 color['white on blue'] = ["#9140FE","#B17DE1","#CCCECB","#000000"]
@@ -9,3 +11,11 @@ lookup = {
         'white':2,
         'none':3
         }
+
+
+COLOR = color['plain'][0]
+
+def Change(newcolor):
+    global COLOR
+    COLOR = newcolor
+    logging.info("COLOR "+COLOR)
