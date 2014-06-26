@@ -2,41 +2,58 @@
 '' simple clock demo
 ''
 ''        Author: Marko Lukat
-'' Last modified: 2014/06/24
-''       Version: 0.2
+'' Last modified: 2014/06/26
+''       Version: 0.5
+''
+''        A: NORM: enter EDIT mode
+''           EDIT: confirm change (*)
+''        B: EDIT: cancel
+'' joystick: select and modify digits
 ''
 '' 20140624: initial version, WIP
 ''           use cached sprites
+'' 20140626: added edit functionality
 ''
 CON
   _clkmode = XTAL1|PLL16X
   _xinfreq = 5_000_000
 
+CON
+  E_HRS = %01000 << 16
+  E_MIN = %00100 << 16
+  E_SEC = %00010 << 16
+  E_CHG = %00001
+  
 OBJ
    lcd: "LameLCD"
    gfx: "LameGFX"
+  ctrl: "LameControl"
+
+   dbg: "FullDuplexSerial"
   
 VAR
-  long  hours, minutes, seconds, change
+  long  time[2], edit, pressed
   long  buffer[512], stack[32]
 
-  word  size, sx, sy, data[64*11]
+  word  size, sx, sy, data[12 << 6]
   
 PUB null : t
-
+  
   init
 
   repeat
-    t := change
+    t := time{0}
     repeat
-    while t == change                                   ' wait until there is a change
-
-    display                                             ' show it
+      repeat 1
+        lcd.WaitForVerticalSync
+      buttons
+      repeat                                            ' wait for potential change
+      while time[1] < 0                                 ' to be picked up
+    while t == time{0}                                  ' wait until there is a change
+    
+    display(time[edit])                                 ' show it
   
 PRI init : n
-
-  hours   := 15
-  minutes := 50
 
   cognew(clock, @stack{0})                              ' clock handler
   gfx.start(@buffer{0}, lcd.start)                      ' setup screen and renderer
@@ -46,9 +63,10 @@ PRI init : n
     sy := 32                                            ' temporary sprite
 
   repeat n from 0 to 9
-    place(@data[64 * n], "0" + n)                       ' digits
+    place(@data[n << 6], "0" + n)                       ' digits
 
-  place(@data[64 * 10], ":")                            ' delimiter
+  place(@data[10 << 6], ":")                            ' delimiter
+  place(@data[11 << 6], "*")                            ' dirty
 
 PRI place(addr, c) | base, m, v
 
@@ -58,17 +76,71 @@ PRI place(addr, c) | base, m, v
     bytemove(addr, @v, 4)
     addr += 4
   
-PRI display
+PRI buttons : b
 
-  gfx.ClearScreen                 
-  gfx.Sprite(@background, 32, 0, 0)                     ' background sprite
+  ctrl.Update
+
+  if (b := ctrl.A) and pressed
+    return
+  pressed := b
+
+  if pressed
+    ifnot edit                                          ' enter edit mode
+      time[1] := time{0}
+      return edit := E_HRS
+    if edit & E_CHG                                     ' confirm
+      time[1] |= NEGX
+    return edit := 0
+
+  if ctrl.B                                             ' cancel
+    return edit := 0
+
+' edit mode: deal with joystick navigation
+
+  if ctrl.Left                                          ' edit hours
+    return edit := E_HRS | (edit & !E_MIN)              
+
+  if ctrl.Right                                         ' edit minutes
+    return edit := E_MIN | (edit & !E_HRS)              
+
+  if time.byte[3] == (time.byte[3] := $FE & time.byte{0})
+    return
+
+  if ctrl.Up
+    if edit & E_HRS
+      return updown(6, +1, 24)
+    if edit & E_MIN
+      return updown(5, +1, 60)
+
+  if ctrl.Down
+    if edit & E_HRS
+      return updown(6, -1, 24)
+    if edit & E_MIN
+      return updown(5, -1, 60)
+
+PRI updown(idx, delta{+/-1}, limit)
+
+  edit |= E_CHG
+
+  if (time.byte[idx] += delta) < 0
+    return time.byte[idx] += limit
+
+  time.byte[idx] //= limit
   
-  gfx.Sprite(@data[-3], 37, 16, 10)                     ' |
-  gfx.Sprite(@data[-3], 77, 16, 10)                     ' delimiters
+PRI display(current)
 
-  digits(hours,    8)                                   
-  digits(minutes, 48)                                   
-  digits(seconds, 88)                                   
+  gfx.ClearScreen
+  gfx.Sprite(@background, 32, 0, 0)                     ' background sprite
+  gfx.Sprite(@data[-3], 56, 16, 10)                     ' delimiter
+
+  ifnot (edit & E_HRS) and (time{0} & 1)
+    digits(current.byte[2], 27)
+
+  ifnot (edit & E_MIN) and (time{0} & 1)
+    digits(current.byte[1], 67)
+
+  if edit & E_CHG
+    gfx.Sprite(@data[-3], 99, 16, 11)
 
   repeat 1                                                    
     lcd.WaitForVerticalSync       
@@ -79,28 +151,35 @@ PRI digits(value, at)
   gfx.Sprite(@data[-3], at,      16, value  / 10)
   gfx.Sprite(@data[-3], at + 16, 16, value // 10)
 
-PRI clock : t
+PRI clock : t | adv, rem
 
-  dira[24] := outa[24] := 1                             ' off initially
+  adv := clkfreq / 3
+  rem := clkfreq - adv * 2
+  
   t := cnt                                              ' get reference
   
   repeat
-    waitcnt(t += clkfreq - 1000000)
-    !outa[24]
+    waitcnt(t += adv)
+    update
+    waitcnt(t += adv)
+    update
+    waitcnt(t += rem)
+    update
 
-    ifnot seconds := (seconds + 1) // 60                ' advance clock
-      ifnot minutes := (minutes + 1) // 60
-        hours := (hours + 1) // 24
+    if time[1] < 0
+      time{0} := time[1] &= $00FFFF00                   ' update
 
-    waitcnt(t += 1000000)
-    change++                                            ' announce change
-    !outa[24]
-    
+PRI update
+
+  ifnot time.byte{0} := (time.byte{0} + 1) // 180       ' advance clock
+    ifnot time.byte[1] := (time.byte[1] + 1) // 60
+      time.byte[2] := (time.byte[2] + 1) // 24
+
 DAT
 
 background
 
-word    1024 ' frameboost
+word    1024   ' frame size
 word    64, 64 ' width, height
 ' frame 0
 word    $AAAA, $AAAA, $AAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA '
@@ -168,4 +247,25 @@ word    $AAAA, $AAAA, $FFEA, $FFFF, $FFFF, $ABFF, $AAAA, $AAAA '
 word    $AAAA, $AAAA, $FEAA, $FFFF, $FFFF, $AABF, $AAAA, $AAAA '
 word    $AAAA, $AAAA, $AAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA '
 
+DAT
+{{
+
+ TERMS OF USE: MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ associated documentation files (the "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
+ following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or substantial
+ portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+}}
 DAT
