@@ -3,7 +3,7 @@
 import wx
 import Color
 import logging
-from wx.lib.pubsub import Publisher as pub
+from wx.lib.pubsub import pub
 
 import DrawWindow
 import Bitmap

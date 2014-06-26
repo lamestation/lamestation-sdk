@@ -1,7 +1,7 @@
 
 import wx
 import logging
-from wx.lib.pubsub import Publisher as pub
+from wx.lib.pubsub import pub
 
 import Color
 import Bitmap

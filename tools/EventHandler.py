@@ -1,6 +1,6 @@
 
 import wx
-from wx.lib.pubsub import Publisher as pub
+from wx.lib.pubsub import pub
 
 import Bitmap, Dialog
 
