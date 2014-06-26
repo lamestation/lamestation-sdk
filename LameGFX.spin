@@ -161,23 +161,32 @@ PUB LoadMap(source_tilemap, source_levelmap)
     map_tilemap  := source_tilemap
     map_levelmap := source_levelmap
 
-PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tile, tilecnt, tilecnttemp, x, y
+PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, y
 '' Returns 1 if collision, 0 otherwise
 
-    objx #>= 0
+    objh  := (byte[map_levelmap][1] << 3) <# (objh += objy)
     objy #>= 0
+
+    if objh =< objy
+        return
+      
+    objw  := (byte[map_levelmap]{0} << 3) <# (objw += objx)
+    objx #>= 0
+
+    if objw =< objx
+        return
+
     objtilex := objx >> 3
     objtiley := objy >> 3
 
-    tilecnt := 0
-    tilecnttemp := 2 + byte[map_levelmap]{0} * objtiley
+    tilebase := 2 + byte[map_levelmap]{0} * objtiley + map_levelmap
 
-    repeat y from objtiley to objtiley + (objh>>3)
-        repeat x from objtilex to objtilex + (objw>>3)
-            tilecnt := tilecnttemp + x
-            if (byte[map_levelmap][tilecnt] & COLLIDEBIT)
+    repeat y from objtiley to (objh -1) >> 3
+        repeat x from objtilex to (objw -1) >> 3
+            if (byte[tilebase][x] & COLLIDEBIT)
                 return 1
-        tilecnttemp += byte[map_levelmap]{0}
+
+        tilebase += byte[map_levelmap]{0}
 
 PUB GetMapWidth
 
