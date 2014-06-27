@@ -1,5 +1,6 @@
 import wx, os
 import logging
+import Bitmap
 
 class File(object):
     def __init__(self):
@@ -28,12 +29,19 @@ class Image(File):
     def __init__(self):
         File.__init__(self)
 
+    def New(self, w, h):
+        self.bitmap = Bitmap.New(w, h)
+
     def Load(self, filename):
         File.Load(self, filename=filename)
         self.bitmap = wx.Bitmap(self.filename, wx.BITMAP_TYPE_ANY)
 
+    def Update(self, bitmap):
+        self.bitmap = bitmap
+
     def Save(self):
-        self.SaveAs(self.filename)
+        if not self.filename == '':
+            self.SaveAs(self.filename)
 
     def SaveAs(self, filename):
         self.bitmap.SaveFile(filename, wx.BITMAP_TYPE_PNG)
@@ -61,9 +69,11 @@ class FileManager(object):
     def CurrentFile(self):
         return self.filetypearray[self.filetype][self.index]
 
-    def New(self, filetype):
+    def New(self, filetype, w, h):
+        self.filetype = filetype
         self.filetypearray[self.filetype].append(Image())
-        logging.info("FileManager.%i.New('%s', '%s')" % (self.index, self.filetype))
+        logging.info("FileManager.%i.New('%s', %i, %i)" % 
+                (self.index, self.filetype, w, h))
 
 
     def Load(self, filetype, filename):
@@ -74,15 +84,18 @@ class FileManager(object):
         image = Image()
         image.Load(filename)
         self.filetypearray[self.filetype].append(image)
-        logging.info("FileManager.%i.Load('%s', '%s')" % (self.index, self.filetype, filename))
+        logging.info("FileManager.%i.Load('%s', '%s')" % 
+                (self.index, self.filetype, filename))
 
     def Save(self):
         self.CurrentFile().Save()
-        logging.info("FileManager.%i.Save()" % (self.index))
+        logging.info("FileManager.%i.Save()" % 
+                (self.index))
 
     def SaveAs(self, filename):
         self.CurrentFile().SaveAs(filename)
-        logging.info("FileManager.%i.SaveAs('%s')" % (self.index, filename))
+        logging.info("FileManager.%i.SaveAs('%s')" % 
+                (self.index, filename))
 
     def Close(self):
         del self.filetypearray[self.filetype][self.index]

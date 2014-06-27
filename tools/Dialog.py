@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import wx
+from FileManager import FileManager
 
 def Quit():
     dial = wx.MessageDialog(None, "Are you sure you want to quit?","Question",
@@ -56,12 +57,12 @@ class NewImage(wx.Dialog):
 
         add_w_txt = wx.StaticText(panel,label='Width:')
         add_h_txt = wx.StaticText(panel,label='Height:')
-        add_w = wx.TextCtrl(panel,value='32')
-        add_h = wx.TextCtrl(panel,value='32')
+        self.add_w = wx.SpinCtrl(panel,min=1,value='32')
+        self.add_h = wx.SpinCtrl(panel,min=1,value='32')
 
         gs.AddMany([
-            (add_w_txt), (add_w,0,wx.ALL),
-            (add_h_txt), (add_h,0,wx.ALL)
+            (add_w_txt), (self.add_w,0,wx.ALL),
+            (add_h_txt), (self.add_h,0,wx.ALL)
             ])
 
         panel.SetSizer(gs)
@@ -83,7 +84,12 @@ class NewImage(wx.Dialog):
         self.SetTitle("New Image")
         
         
-    def OnClose(self, e):
+    def OnClose(self, event):
+        fm = FileManager()
+        fm.New( 'image',
+                self.add_w.GetValue(), 
+                self.add_h.GetValue()
+                )
         self.Destroy()
 
 

@@ -37,24 +37,6 @@ class EventHandler():
     def OnNew(self, event):
         dialog = Dialog.NewImage(None)
         dialog.ShowModal()
-        dialog.Destroy()  
-
-    def OnExport(self, event):
-        wildcard = "Spin files (*.spin)|*.spin"
-        dialog = wx.FileDialog(None, "Choose a file",
-                defaultDir=os.path.dirname(self.parent.filename),
-                defaultFile=os.path.splitext(os.path.basename(self.parent.filename))[0]+".spin",
-                wildcard=wildcard,
-                style=wx.FD_SAVE|wx.OVERWRITE_PROMPT)
-        if dialog.ShowModal() == wx.ID_OK:
-            pass
-#            f = open(dialog.GetPath(),"w")
-#            f.write(self.spin.encode('utf8'))
-#            f.close()
-
-            self.statusbar.SetStatusText("Wrote to "+dialog.GetPath())
-        dialog.Destroy()
-
 
     def OnSave(self, event):
         fm = FileManager()
@@ -77,6 +59,24 @@ class EventHandler():
 
         fm = FileManager()
         fm.Load('image',self.filename)
+
+
+    def OnExport(self, event):
+        wildcard = "Spin files (*.spin)|*.spin"
+        dialog = wx.FileDialog(None, "Choose a file",
+                defaultDir=os.path.dirname(self.parent.filename),
+                defaultFile=os.path.splitext(os.path.basename(self.parent.filename))[0]+".spin",
+                wildcard=wildcard,
+                style=wx.FD_SAVE|wx.OVERWRITE_PROMPT)
+        if dialog.ShowModal() == wx.ID_OK:
+            pass
+#            f = open(dialog.GetPath(),"w")
+#            f.write(self.spin.encode('utf8'))
+#            f.close()
+
+            self.statusbar.SetStatusText("Wrote to "+dialog.GetPath())
+        dialog.Destroy()
+
 
     def OnClose(self, event):
         fm = FileManager()
