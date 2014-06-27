@@ -3,7 +3,7 @@
 ''
 ''        Author: Marko Lukat
 '' Last modified: 2014/06/27
-''       Version: 0.8
+''       Version: 0.9
 ''
 ''        A: NORM: enter EDIT mode
 ''           EDIT: confirm change (*), back to NORM
@@ -20,10 +20,9 @@ CON
   _xinfreq = 5_000_000
 
 CON
-  E_HRS = %01000 << 16
-  E_MIN = %00100 << 16
-  E_SEC = %00010 << 16
-  E_CHG = %00001
+  E_HRS = %10000000 << 16
+  E_MIN = %01000000 << 16
+  E_CHG = %00000001
 
 OBJ
    lcd: "LameLCD"
@@ -43,9 +42,7 @@ PUB null : t
   repeat
     t := time[2]
     repeat
-      repeat 1
-        lcd.WaitForVerticalSync
-      buttons
+      t |= buttons
       repeat                                            ' wait for potential change
       while time[1] < 0                                 ' to be picked up
     while t == time[2]                                  ' wait until there is a change
@@ -101,20 +98,22 @@ PRI buttons : b
   if ctrl.Right                                         ' edit minutes
     return edit := E_MIN | (edit & !E_HRS)              
 
-  if time.byte[3] == (time.byte[3] := $FE & time.byte{0})
+  if time.byte[3] == (time.byte[3] := time.byte{0})
     return
 
   if ctrl.Up
     if edit & E_HRS
-      return updown(6, +1, 24)
+      updown(6, +1, 24)
     if edit & E_MIN
-      return updown(5, +1, 60)
+      updown(5, +1, 60)
+    return edit
 
   if ctrl.Down
     if edit & E_HRS
-      return updown(6, -1, 24)
+      updown(6, -1, 24)
     if edit & E_MIN
-      return updown(5, -1, 60)
+      updown(5, -1, 60)
+    return edit
 
 PRI updown(idx, delta{+/-1}, limit)
 
@@ -127,16 +126,18 @@ PRI updown(idx, delta{+/-1}, limit)
 
   time.byte[idx] //= limit
   
-PRI display(current)
+PRI display(current) : idle
 
   gfx.ClearScreen
-  gfx.Sprite(@background, 32, 0, 0)                     ' background sprite
+  gfx.Sprite(@logo[-3], 32,  0,  0)                     ' background sprite
   gfx.Sprite(@data[-3], 56, 16, 10)                     ' delimiter
 
-  ifnot (edit & E_HRS) and (time{0} & 1)
+  idle := not (ctrl.Up or ctrl.Down)
+
+  ifnot (edit & E_HRS) and (time{0} & 1) and idle
     digits(current.byte[2], 27)
 
-  ifnot (edit & E_MIN) and (time{0} & 1)
+  ifnot (edit & E_MIN) and (time{0} & 1) and idle
     digits(current.byte[1], 67)
 
   if edit & E_CHG
@@ -178,75 +179,73 @@ PRI update
   
 DAT
 
-background
-
-word    1024   ' frame size
-word    64, 64 ' width, height
-' frame 0
-word    $AAAA, $AAAA, $AAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA '
-word    $AAAA, $AAAA, $FEAA, $ABFF, $FFFA, $AAAF, $AAAA, $AAAA '
-word    $AAAA, $AAAA, $BFEA, $AAAA, $AAAA, $ABFF, $AAAA, $AAAA '
-word    $AAAA, $AAAA, $AAFE, $AAAA, $AAAA, $BFEA, $AAAA, $AAAA '
-word    $AAAA, $EAAA, $AAAF, $AAAA, $AAAA, $FEAA, $AAAB, $AAAA '
-word    $AAAA, $FEAA, $AAAA, $AAAA, $AAAA, $EAAA, $AAAF, $AAAA '
-word    $AAAA, $BFAA, $AAAA, $AAAA, $AAAA, $AAAA, $AABE, $AAAA '
-word    $AAAA, $ABEA, $FAAA, $FFFF, $AAFF, $AAAA, $ABFA, $AAAA '
-word    $AAAA, $AAFA, $BAAA, $AAAA, $AAEA, $AAAA, $AFAA, $AAAA '
-word    $AAAA, $AABE, $BAAA, $AAAA, $AAEA, $AAAA, $BEAA, $AAAA '
-word    $AAAA, $AAAF, $BAAA, $AAAA, $AAEA, $AAAA, $FAAA, $AAAA '
-word    $EAAA, $AAAB, $BAAA, $AAAA, $AAEA, $AAAA, $EAAA, $AAAB '
-word    $FAAA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $EAAA, $AAAB '
-word    $BEAA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AAAF '
-word    $BEAA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AABE '
-word    $AFAA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AABA '
-word    $ABEA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AAFA '
-word    $ABEA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $ABEA '
-word    $AAFA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $ABEA '
-word    $AAFA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $ABAA '
-word    $AABA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AFAA '
-word    $AABE, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AEAA '
-word    $AABE, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $BEAA '
-word    $AAAE, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $BEAA '
-word    $AAAF, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $BEAA '
-word    $AAAF, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $BAAA '
-word    $AAAF, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $FAAA '
-word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $FAAA '
-word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $FAAA '
-word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $FAAA '
-word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $EAAA '
-word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $EAAA '
-word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
-word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
-word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
-word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
-word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
-word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
-word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $BFFF '
-word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $BFFF '
-word    $FFFE, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $BFFF '
-word    $FFFE, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $BFFF '
-word    $FFFE, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AFFF '
-word    $FFFA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AFFF '
-word    $FFFA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AFFF '
-word    $FFFA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $ABFF '
-word    $FFEA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $ABFF '
-word    $FFAA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AAFF '
-word    $FFAA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AAFF '
-word    $FEAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
-word    $FEAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
-word    $FAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
-word    $EAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
-word    $AAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
-word    $AAAA, $FFFE, $FFFF, $FFFF, $FFFF, $FFFF, $BFFF, $AAAA '
-word    $AAAA, $FFFA, $FFFF, $FFFF, $FFFF, $FFFF, $AFFF, $AAAA '
-word    $AAAA, $FFEA, $FFFF, $FFFF, $FFFF, $FFFF, $ABFF, $AAAA '
-word    $AAAA, $FFAA, $FFFF, $FFFF, $FFFF, $FFFF, $AAFF, $AAAA '
-word    $AAAA, $FEAA, $FFFF, $FFFF, $FFFF, $FFFF, $AAAF, $AAAA '
-word    $AAAA, $EAAA, $FFFF, $FFFF, $FFFF, $FFFF, $AAAB, $AAAA '
-word    $AAAA, $AAAA, $FFFE, $FFFF, $FFFF, $BFFF, $AAAA, $AAAA '
-word    $AAAA, $AAAA, $FFEA, $FFFF, $FFFF, $ABFF, $AAAA, $AAAA '
-word    $AAAA, $AAAA, $FEAA, $FFFF, $FFFF, $AABF, $AAAA, $AAAA '
-word    $AAAA, $AAAA, $AAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA '
+        word    1024   ' frame size                                     
+        word    64, 64 ' width, height                                  
+                                                                        
+logo    word    $AAAA, $AAAA, $AAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA '
+        word    $AAAA, $AAAA, $FEAA, $ABFF, $FFFA, $AAAF, $AAAA, $AAAA '
+        word    $AAAA, $AAAA, $BFEA, $AAAA, $AAAA, $ABFF, $AAAA, $AAAA '
+        word    $AAAA, $AAAA, $AAFE, $AAAA, $AAAA, $BFEA, $AAAA, $AAAA '
+        word    $AAAA, $EAAA, $AAAF, $AAAA, $AAAA, $FEAA, $AAAB, $AAAA '
+        word    $AAAA, $FEAA, $AAAA, $AAAA, $AAAA, $EAAA, $AAAF, $AAAA '
+        word    $AAAA, $BFAA, $AAAA, $AAAA, $AAAA, $AAAA, $AABE, $AAAA '
+        word    $AAAA, $ABEA, $FAAA, $FFFF, $AAFF, $AAAA, $ABFA, $AAAA '
+        word    $AAAA, $AAFA, $BAAA, $AAAA, $AAEA, $AAAA, $AFAA, $AAAA '
+        word    $AAAA, $AABE, $BAAA, $AAAA, $AAEA, $AAAA, $BEAA, $AAAA '
+        word    $AAAA, $AAAF, $BAAA, $AAAA, $AAEA, $AAAA, $FAAA, $AAAA '
+        word    $EAAA, $AAAB, $BAAA, $AAAA, $AAEA, $AAAA, $EAAA, $AAAB '
+        word    $FAAA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $EAAA, $AAAB '
+        word    $BEAA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AAAF '
+        word    $BEAA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AABE '
+        word    $AFAA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AABA '
+        word    $ABEA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AAFA '
+        word    $ABEA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $ABEA '
+        word    $AAFA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $ABEA '
+        word    $AAFA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $ABAA '
+        word    $AABA, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AFAA '
+        word    $AABE, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $AEAA '
+        word    $AABE, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $BEAA '
+        word    $AAAE, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $BEAA '
+        word    $AAAF, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $BEAA '
+        word    $AAAF, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $BAAA '
+        word    $AAAF, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $FAAA '
+        word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $FAAA '
+        word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $FAAA '
+        word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $FAAA '
+        word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $EAAA '
+        word    $AAAB, $AAAA, $BAAA, $AAAA, $AAEA, $AAAA, $AAAA, $EAAA '
+        word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
+        word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
+        word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
+        word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
+        word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
+        word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $FFFF '
+        word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $BFFF '
+        word    $FFFF, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $BFFF '
+        word    $FFFE, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $BFFF '
+        word    $FFFE, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $BFFF '
+        word    $FFFE, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AFFF '
+        word    $FFFA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AFFF '
+        word    $FFFA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AFFF '
+        word    $FFFA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $ABFF '
+        word    $FFEA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $ABFF '
+        word    $FFAA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AAFF '
+        word    $FFAA, $FFFF, $BFFF, $AAAA, $FFEA, $FFFF, $FFFF, $AAFF '
+        word    $FEAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
+        word    $FEAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
+        word    $FAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
+        word    $EAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
+        word    $AAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA, $AAAA, $AAAA '
+        word    $AAAA, $FFFE, $FFFF, $FFFF, $FFFF, $FFFF, $BFFF, $AAAA '
+        word    $AAAA, $FFFA, $FFFF, $FFFF, $FFFF, $FFFF, $AFFF, $AAAA '
+        word    $AAAA, $FFEA, $FFFF, $FFFF, $FFFF, $FFFF, $ABFF, $AAAA '
+        word    $AAAA, $FFAA, $FFFF, $FFFF, $FFFF, $FFFF, $AAFF, $AAAA '
+        word    $AAAA, $FEAA, $FFFF, $FFFF, $FFFF, $FFFF, $AAAF, $AAAA '
+        word    $AAAA, $EAAA, $FFFF, $FFFF, $FFFF, $FFFF, $AAAB, $AAAA '
+        word    $AAAA, $AAAA, $FFFE, $FFFF, $FFFF, $BFFF, $AAAA, $AAAA '
+        word    $AAAA, $AAAA, $FFEA, $FFFF, $FFFF, $ABFF, $AAAA, $AAAA '
+        word    $AAAA, $AAAA, $FEAA, $FFFF, $FFFF, $AABF, $AAAA, $AAAA '
+        word    $AAAA, $AAAA, $AAAA, $FFFF, $BFFF, $AAAA, $AAAA, $AAAA '
 
 DAT
 {{
