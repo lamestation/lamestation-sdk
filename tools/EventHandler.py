@@ -55,10 +55,10 @@ class EventHandler():
         if dialog.ShowModal() == wx.ID_OK:
             self.filename = dialog.GetPath()
             self.parent.statusbar.SetStatusText(self.filename)
+            fm = FileManager()
+            fm.Load('image',self.filename)
         dialog.Destroy()
 
-        fm = FileManager()
-        fm.Load('image',self.filename)
 
 
     def OnExport(self, event):

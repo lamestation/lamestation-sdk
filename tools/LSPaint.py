@@ -12,7 +12,6 @@ import Bitmap
 import EventHandler
 
 BITMAP_MAXSIZE = 256
-RECT = 32
 
 logging.basicConfig(level=logging.INFO)
 
@@ -56,7 +55,6 @@ class ColorTile(wx.Panel):
         dc = wx.PaintDC(self)
         dc.SetBrush(wx.Brush(self.color))
         dc.SetPen(wx.Pen(self.color))
-        print self.size
         dc.DrawRectangle(0, 0, self.size[0],self.size[1])
 
     def OnLeftDown(self, event):
@@ -74,60 +72,15 @@ class ChosenColor(ColorTile):
         self.OnPaint(None)
 
 
-class ColorPicker(wx.Panel):
-
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, 
-                size=(RECT*2,RECT*Color.Count() ), style=wx.SUNKEN_BORDER)
-
-        self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
-
-        pub.subscribe(self.OnPaint,"STYLE")
-
-    def OnPaint(self, event):
-        dc = wx.PaintDC(self)
-
-        inc = 0
-        for c in range(0,4):
-            dc.SetBrush(wx.Brush(Color.Number(c) ))
-            dc.SetPen(wx.Pen(Color.Number(c) ))
-            dc.DrawRectangle(0, RECT*inc, RECT*2, RECT)
-
-            inc += 1
-
-    def OnLeftDown(self, event):
-        self.x, self.y = event.GetPosition()
-        self.x = self.x/RECT
-        self.y = self.y/RECT
-        Color.Change(Color.Number(self.y) )
-        logging.info("ColorPicker: clicked! %s %s %s %s" % (self.x, self.y, Color.Number(self.y), Color.COLOR))
-
-
-
-class StylePicker(wx.ComboBox):
-
-    def __init__(self, parent):
-        wx.ComboBox.__init__(self, parent, 
-                value=Color.GetStyles()[0],
-                choices=Color.GetStyles(), 
-                style=wx.CB_READONLY)
-
-        self.Bind(wx.EVT_COMBOBOX, self.OnSelect)
-
-    def OnSelect(self, event):
-        pub.sendMessage("Recolor",self.GetValue())
-
-
 class SideBar(wx.Panel):
 
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
 
-        cp1 = ColorPicker(self)
+        cp1 = Color.ColorPicker(self)
         cc = ChosenColor(self,(50,50))
 
-        ss = StylePicker(self)
+        ss = Color.StylePicker(self)
 
 
         panel = wx.Panel(self)
