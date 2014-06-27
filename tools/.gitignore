@@ -1,5 +1,5 @@
 bin/*
-freqtable/
 *.dat
 *.pack
 *.$$$
+build/
