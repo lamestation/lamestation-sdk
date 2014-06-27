@@ -3,7 +3,7 @@
 ''
 ''        Author: Marko Lukat
 '' Last modified: 2014/06/27
-''       Version: 0.7
+''       Version: 0.8
 ''
 ''        A: NORM: enter EDIT mode
 ''           EDIT: confirm change (*), back to NORM
@@ -24,14 +24,14 @@ CON
   E_MIN = %00100 << 16
   E_SEC = %00010 << 16
   E_CHG = %00001
-  
+
 OBJ
    lcd: "LameLCD"
    gfx: "LameGFX"
   ctrl: "LameControl"
   
 VAR
-  long  time[2], edit, pressed
+  long  time[3], edit, pressed
   long  buffer[512], stack[32]
 
   word  size, sx, sy, data[12 << 6]
@@ -41,14 +41,14 @@ PUB null : t
   init
 
   repeat
-    t := time{0}
+    t := time[2]
     repeat
       repeat 1
         lcd.WaitForVerticalSync
       buttons
       repeat                                            ' wait for potential change
       while time[1] < 0                                 ' to be picked up
-    while t == time{0}                                  ' wait until there is a change
+    while t == time[2]                                  ' wait until there is a change
     
     display(time[edit])                                 ' show it
   
@@ -120,7 +120,7 @@ PRI updown(idx, delta{+/-1}, limit)
 
   ifnot edit & E_CHG
     edit |= E_CHG
-    time[1] := time{0}                                  ' deferred until first change
+    time[1] := time[2]                                  ' deferred until first change
 
   if (time.byte[idx] += delta) < 0
     return time.byte[idx] += limit
@@ -159,15 +159,11 @@ PRI clock : t | adv, rem
   t := cnt                                              ' get reference
   
   repeat
-    waitcnt(t += adv)
-    update
-    waitcnt(t += adv)
-    update
+    repeat 2
+      waitcnt(t += adv)
+      update
     waitcnt(t += rem)
     update
-
-    if time[1] < 0
-      time{0} := time[1] &= $00FFFF00                   ' update
 
 PRI update
 
@@ -175,6 +171,11 @@ PRI update
     ifnot time.byte[1] := (time.byte[1] + 1) // 60
       time.byte[2] := (time.byte[2] + 1) // 24
 
+  if time[1] < 0
+    time{0} := time[1] &= $00FFFF00                     ' update
+
+  time[2] := time{0}                                    ' final value
+  
 DAT
 
 background
