@@ -12,9 +12,7 @@ import Bitmap
 import EventHandler
 
 BITMAP_MAXSIZE = 256
-
 RECT = 32
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -163,10 +161,13 @@ class LSPaint(wx.Frame):
         wx.Frame.__init__(self, parent, id, title, size=(600,600))
 
 
+        self.filename = ""
         self.evt = EventHandler.EventHandler(self)
         self.toolbar = self.ToolBar()
-        self.SetMenuBar(self.MenuBar())
-        self.menu = self.GetMenuBar()
+        self.MenuBar()
+        self.SetMenuBar(self.menu)
+        self.statusbar = self.CreateStatusBar()
+        self.statusbar.SetStatusText('Ready')
 
 
         # SideBar
@@ -199,55 +200,51 @@ class LSPaint(wx.Frame):
         wx.EVT_TOOL(self.toolbar, wx.ID_REDO, self.evt.OnRedo)
         wx.EVT_MENU(self, wx.ID_UNDO, self.evt.OnUndo)
         wx.EVT_MENU(self, wx.ID_REDO, self.evt.OnRedo)
+
         wx.EVT_MENU(self, wx.ID_NEW, self.evt.OnNew)
+        wx.EVT_MENU(self, wx.ID_OPEN, self.evt.OnLoad)
+        wx.EVT_MENU(self, wx.ID_SAVE, self.evt.OnSave)
+        wx.EVT_MENU(self, wx.ID_SAVEAS, self.evt.OnSaveAs)
+        wx.EVT_MENU(self, wx.ID_CLOSE, self.evt.OnClose)
         wx.EVT_MENU(self, wx.ID_EXIT, self.evt.OnQuit)
-#        wx.EVT_MENU(self, wx.ID_OPEN, self.evt.OnBrowse)
-#        self.Bind(wx.EVT_MENU, self.evt.OnExport, exp)
+        self.Bind(wx.EVT_MENU, self.evt.OnExport, self.exp)
 #        wx.EVT_MENU(self, wx.ID_ABOUT, self.evt.OnAbout)
 
         self.SetSizer(vbox)
         self.Show(True)
 
 
-    def FileMenu(self):
-        menu = wx.Menu()
-        menu.Append(wx.ID_NEW, '&New', 'New Image')        
-        menu.Append(wx.ID_OPEN, '&Open', 'Open Image')
-        menu.Append(wx.ID_SAVE, '&Save', 'Save Image')
-        menu.Append(wx.ID_SAVEAS, 'Save &As...', 'Save Image As...')
-        menu.AppendSeparator()
-        exp = menu.Append(wx.ID_ANY, '&Export', 'Export Image As Spin')
-        menu.AppendSeparator()
-        menu.Append(wx.ID_CLOSE, '&Close', 'Close image')
-        menu.Append(wx.ID_EXIT, '&Quit\tCtrl+Q', 'Quit application')
-
-        return menu
-
-    def EditMenu(self):
-        menu = wx.Menu()
-        menu.Append(wx.ID_UNDO, '&Undo\tCtrl+z', 'Undo')        
-        menu.Append(wx.ID_REDO, '&Redo\tCtrl+Shift+z', 'Redo')
-        menu.AppendSeparator()
-        menu.Append(wx.ID_CUT, 'Cu&t', 'Cut To Clipoard')
-        menu.Append(wx.ID_COPY, '&Copy', 'Copy To Clipboard')
-        menu.Append(wx.ID_PASTE, 'Paste','Paste Into Image')
-
-        return menu
-
-    def HelpMenu(self):
-        menu = wx.Menu()
-        menu.Append(wx.ID_ABOUT, 'About', 'About LSPaint')
-
-        return menu
-
     def MenuBar(self):
-        menubar = wx.MenuBar()
+        menufile = wx.Menu()
+        menufile.Append(wx.ID_NEW, '&New', 'New Image')        
+        menufile.Append(wx.ID_OPEN, '&Open', 'Open Image')
+        menufile.Append(wx.ID_SAVE, '&Save', 'Save Image')
+        menufile.Append(wx.ID_SAVEAS, 'Save &As...', 'Save Image As...')
+        menufile.AppendSeparator()
+        self.exp = menufile.Append(wx.ID_ANY, '&Export', 'Export Image As Spin')
+        menufile.AppendSeparator()
+        menufile.Append(wx.ID_CLOSE, '&Close', 'Close image')
+        menufile.Append(wx.ID_EXIT, '&Quit\tCtrl+Q', 'Quit application')
 
-        menubar.Append(self.FileMenu(), '&File')
-        menubar.Append(self.EditMenu(), '&Edit')
-        menubar.Append(self.HelpMenu(), '&Help')
+        menuedit = wx.Menu()
+        menuedit.Append(wx.ID_UNDO, '&Undo\tCtrl+z', 'Undo')        
+        menuedit.Append(wx.ID_REDO, '&Redo\tCtrl+Shift+z', 'Redo')
+        menuedit.AppendSeparator()
+        menuedit.Append(wx.ID_CUT, 'Cu&t', 'Cut To Clipoard')
+        menuedit.Append(wx.ID_COPY, '&Copy', 'Copy To Clipboard')
+        menuedit.Append(wx.ID_PASTE, 'Paste','Paste Into Image')
 
-        return menubar
+
+        menuhelp = wx.Menu()
+        menuhelp.Append(wx.ID_ABOUT, 'About', 'About LSPaint')
+
+        self.menu = wx.MenuBar()
+
+        self.menu.Append(menufile, '&File')
+        self.menu.Append(menuedit, '&Edit')
+        self.menu.Append(menuhelp, '&Help')
+
+        return self.menu
 
     def ToolBar(self):
         self.toolbar = self.CreateToolBar()

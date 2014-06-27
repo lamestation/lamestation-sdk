@@ -1,9 +1,10 @@
 
-import wx
+import wx, os
 from wx.lib.pubsub import setuparg1 
 from wx.lib.pubsub import pub
 
 import Bitmap, Dialog
+from FileManager import FileManager
 
 stockUndo = []
 stockRedo = []
@@ -37,6 +38,50 @@ class EventHandler():
         dialog = Dialog.NewImage(None)
         dialog.ShowModal()
         dialog.Destroy()  
+
+    def OnExport(self, event):
+        wildcard = "Spin files (*.spin)|*.spin"
+        dialog = wx.FileDialog(None, "Choose a file",
+                defaultDir=os.path.dirname(self.parent.filename),
+                defaultFile=os.path.splitext(os.path.basename(self.parent.filename))[0]+".spin",
+                wildcard=wildcard,
+                style=wx.FD_SAVE|wx.OVERWRITE_PROMPT)
+        if dialog.ShowModal() == wx.ID_OK:
+            pass
+#            f = open(dialog.GetPath(),"w")
+#            f.write(self.spin.encode('utf8'))
+#            f.close()
+
+            self.statusbar.SetStatusText("Wrote to "+dialog.GetPath())
+        dialog.Destroy()
+
+
+    def OnSave(self, event):
+        fm = FileManager()
+        fm.Save()
+
+    def OnSaveAs(self, event):
+        fm = FileManager()
+        fm.SaveAs(self.filename)
+
+
+    def OnLoad(self, event):
+        wildcard = "All files (*)|*|PNG files (*.png)|*.png|GIF files (*.gif)|*.gif|Bitmap files (*.bmp)|*.bmp|GIF files (*.gif)|*.gif|JPEG files (*.jpg)|*.jpg"
+        dialog = wx.FileDialog(None, "Choose a file",
+                wildcard=wildcard,
+                style=wx.FD_OPEN|wx.FD_CHANGE_DIR|wx.FD_PREVIEW)
+        if dialog.ShowModal() == wx.ID_OK:
+            self.filename = dialog.GetPath()
+            self.parent.statusbar.SetStatusText(self.filename)
+        dialog.Destroy()
+
+        fm = FileManager()
+        fm.Load('image',self.filename)
+
+    def OnClose(self, event):
+        fm = FileManager()
+        fm.Close()
+        self.parent.statusbar.SetStatusText("CLOSED")
 
     def OnQuit(self, event):
         self.parent.Destroy()
