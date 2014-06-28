@@ -19,6 +19,7 @@ class ImageTile(wx.Panel):
 
     def __init__(self, parent, size=(200,200), scale=1, style=None):
         wx.Panel.__init__(self, parent, 
+
                 size=size, style=wx.TAB_TRAVERSAL|wx.NO_BORDER)
 
         self.scale = scale
@@ -129,16 +130,7 @@ class LSPaint(wx.Frame):
         vbox.Add(SideBar(self),1,wx.EXPAND,0)
         self.sidebar.SetSizer(vbox)
 
-
-        self.draw = wx.ScrolledWindow(self)
-        self.draw.SetScrollbars(1,1,-1,-1)
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(DrawWindow.DrawWindow(self.draw), 1, wx.ALL|wx.ALIGN_CENTER, 0)
-        vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(hbox, 1, wx.ALL|wx.ALIGN_CENTER, 0)
-        self.draw.SetSizer(vbox)
-
-
+        self.draw = DrawWindow.DrawWindow(self)
 
         # Combine windows
         hboxm = wx.BoxSizer(wx.HORIZONTAL)

@@ -1,4 +1,6 @@
 import wx, os
+from wx.lib.pubsub import setuparg1 
+from wx.lib.pubsub import pub
 import logging
 import Bitmap
 
@@ -71,10 +73,11 @@ class FileManager(object):
 
     def New(self, filetype, w, h):
         self.filetype = filetype
-        self.filetypearray[self.filetype].append(Image())
+        im = Image()
+        im.New(w, h)
+        self.filetypearray[self.filetype].append(im)
         logging.info("FileManager.%i.New('%s', %i, %i)" % 
                 (self.index, self.filetype, w, h))
-
 
     def Load(self, filetype, filename):
         if not os.path.isfile(filename):
@@ -83,7 +86,10 @@ class FileManager(object):
 
         image = Image()
         image.Load(filename)
-        self.filetypearray[self.filetype].append(image)
+        #self.filetypearray[self.filetype].append(image)
+        self.filetypearray[self.filetype][0] = image
+        pub.sendMessage("UpdateBitmap",image.bitmap)
+
         logging.info("FileManager.%i.Load('%s', '%s')" % 
                 (self.index, self.filetype, filename))
 
