@@ -6,17 +6,20 @@ import Bitmap
 
 class File(object):
 
-    stackUndo = []
-    stackRedo = []
-
-    undo = False
-    redo = False
-
     def __init__(self):
+        File.New(self)
+
+    def New(self):
         self.data = None
+
         self.filename = ""
         self.shortname = ""
         self.ext = ""
+
+        self.stackUndo = []
+        self.stackRedo = []
+        self.undo = False
+        self.redo = False
 
     def Load(self, filename):
         self.filename = filename
@@ -74,9 +77,8 @@ class Image(File):
         File.__init__(self)
 
     def New(self, w, h):
+        File.New(self)
         self.data = Bitmap.New(w, h)
-        self.undo = False
-        self.redo = False
 
     def Load(self, filename):
         File.Load(self, filename=filename)

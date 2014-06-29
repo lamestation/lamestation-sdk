@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 class ImageTile(wx.Panel):
 
-    def __init__(self, parent, size=(200,200), scale=1, style=None):
+    def __init__(self, parent, size=(128,128), scale=1, style=None):
         wx.Panel.__init__(self, parent, 
 
                 size=size, style=wx.TAB_TRAVERSAL|wx.NO_BORDER)
@@ -84,7 +84,7 @@ class SideBar(wx.Panel):
 
 
         panel = wx.Panel(self)
-        tt = ImageTile(panel,scale=4)
+        tt = ImageTile(panel,scale=2)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(tt, 1, wx.ALL|wx.ALIGN_CENTER, 0)
         vbox = wx.BoxSizer(wx.VERTICAL)

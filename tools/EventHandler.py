@@ -117,9 +117,9 @@ class EventHandler():
     def SetUndoRedo(self):
         f = FileManager().CurrentFile()
         self.parent.toolbar.EnableTool( wx.ID_UNDO, f.undo)
-        self.parent.toolbar.EnableTool( wx.ID_SAVE, f.undo)
+#        self.parent.toolbar.EnableTool( wx.ID_SAVE, f.undo)
         self.parent.menu.Enable( wx.ID_UNDO, f.undo)
-        self.parent.menu.Enable( wx.ID_SAVE, f.undo)
+#        self.parent.menu.Enable( wx.ID_SAVE, f.undo)
 
         self.parent.toolbar.EnableTool( wx.ID_REDO, f.redo)
         self.parent.menu.Enable( wx.ID_REDO, f.redo)

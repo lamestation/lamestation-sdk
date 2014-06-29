@@ -65,7 +65,8 @@ class StylePicker(wx.ComboBox):
         wx.ComboBox.__init__(self, parent, 
                 value=STYLE,
                 choices=GetStyles(), 
-                style=wx.CB_READONLY)
+                style=wx.CB_READONLY,
+                size=(150,-1))
 
         self.Bind(wx.EVT_COMBOBOX, self.OnSelect)
 
