@@ -125,7 +125,6 @@ class EventHandler():
         self.parent.menu.Enable( wx.ID_REDO, f.redo)
 
         f = FileManager().CurrentFile()
-        print f.data
         pub.sendMessage("UpdateBitmap")
         
     def OnZoom(self, event):

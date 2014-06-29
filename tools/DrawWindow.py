@@ -91,7 +91,7 @@ class DrawPanel(wx.Panel):
         dc.DrawLine(self.ox, self.oy, self.x, self.y)
         dc.SelectObject(wx.NullBitmap)
 
-        self.Refresh()
+        pub.sendMessage("UpdateBitmap")
 
 
     def Read(self, event):
@@ -117,12 +117,16 @@ class DrawPanel(wx.Panel):
 
     def OnLeftUp(self, event):
         logging.info("OnLeftUp():")
+
         bmp = FileManager().CurrentFile().data
+        self.oldbmp = Bitmap.Copy(bmp)
         self.images = [self.oldbmp, bmp]
         pub.sendMessage("DRAW",self.images)
 
 
     def OnRecolor(self, message):
+        logging.info("OnRecolor():")
+
         bmp = FileManager().CurrentFile().data
         self.oldbmp = Bitmap.Copy(bmp)
         Bitmap.Recolor(bmp, message.data)
