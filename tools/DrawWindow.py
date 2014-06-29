@@ -92,8 +92,9 @@ class DrawPanel(wx.Panel):
         dc.DrawPoint(self.x,self.y)
         dc.DrawLine(self.ox, self.oy, self.x, self.y)
         dc.SelectObject(wx.NullBitmap)
+        logging.info("DRAW %s", id(d))
 
-        self.Refresh()
+        pub.sendMessage("UpdateBitmap")
 
 
     def Read(self, event):
@@ -111,7 +112,6 @@ class DrawPanel(wx.Panel):
     def OnLeftDown(self, event):
         f = FileManager().CurrentFile()
         f.UpdateOld()
-        logging.info("DRAW %s", id(f.data))
 
         self.Draw(event)
 
