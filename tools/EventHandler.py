@@ -78,19 +78,21 @@ class EventHandler():
     def OnQuit(self, event):
         self.parent.Destroy()
 
-
     def OnDraw(self, message):
         self.SetUndoRedo()
+        pub.sendMessage("UpdateBitmap")
 
     def OnUndo( self, event ):
         f = FileManager().CurrentFile()
         f.PopUndo()
         self.SetUndoRedo()
+        pub.sendMessage("SizeBitmap")
 
     def OnRedo( self, event ):
         f = FileManager().CurrentFile()
         f.PopRedo()
         self.SetUndoRedo()
+        pub.sendMessage("SizeBitmap")
 
     def SetUndoRedo(self):
         f = FileManager().CurrentFile()
@@ -102,13 +104,10 @@ class EventHandler():
 
         self.parent.toolbar.EnableTool( wx.ID_REDO, f.redo)
         self.parent.menu.Enable( wx.ID_REDO, f.redo)
-
-        pub.sendMessage("UpdateBitmap")
-
         
     def OnZoom(self, event):
         self.parent.draw.draw.scale = int(self.parent.zoom.GetValue().split('x')[0])
-        pub.sendMessage("UpdateBitmap")
+        pub.sendMessage("SizeBitmap")
 
 
 

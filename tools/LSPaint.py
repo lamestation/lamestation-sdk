@@ -33,9 +33,8 @@ class ImageTile(wx.Panel):
         self.Refresh()
 
     def OnPaint(self, event):
-        f = FileManager().CurrentFile()
-        dc = wx.ClientDC(self)
-        dc.DrawBitmap(Bitmap.Scale(f.data,f.data.GetWidth()*self.scale,f.data.GetHeight()*self.scale), 0, 0, True)
+        d = FileManager().CurrentFile().data
+        dc = wx.BufferedPaintDC(self,Bitmap.Scale(d,self.scale))
 
     def OnMouseMove(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))

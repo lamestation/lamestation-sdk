@@ -34,7 +34,7 @@ class DrawPanel(wx.Panel):
         fm = FileManager()
         fm.New('image',BITMAP_SIZE,BITMAP_SIZE)
 
-        self.UpdateBitmap(self)
+        self.OnSize(self)
         self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
 
         self.Bind(wx.EVT_MOTION, self.OnMouseMove)
@@ -43,27 +43,33 @@ class DrawPanel(wx.Panel):
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_RIGHT_UP, self.OnRightUp)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.OnEraseBackground)
 
+        pub.subscribe(self.OnSize,"SizeBitmap")
         pub.subscribe(self.UpdateBitmap,"UpdateBitmap")
         pub.subscribe(self.OnRecolor,"Recolor")
 
+    def OnEraseBackground(self, event):
+        # This is here to reduce flicker
+        pass
 
-    def UpdateBitmap(self, message):
-        logging.info("DrawPanel.UpdateBitmap()")
+    def OnSize(self, message):
         d = FileManager().CurrentFile().data
         w = d.GetWidth()
         h = d.GetHeight()
         self.SetSize(size=(w*self.scale,h*self.scale))
         self.parent.SetScrollbars(1,1,w*self.scale,h*self.scale)
+        logging.info("DrawPanel.OnZoom()")
+	self.Refresh()
+
+    def UpdateBitmap(self, message):
+        logging.info("DrawPanel.UpdateBitmap()")
         self.Refresh()
 
     def OnPaint(self, event):
         logging.info("DrawPanel.OnPaint()")
         d = FileManager().CurrentFile().data
-        w = d.GetWidth()
-        h = d.GetHeight()
-        dc = wx.ClientDC(self)
-        dc.DrawBitmap(Bitmap.Scale(d,w*self.scale,h*self.scale), 0, 0, True)
+        dc = wx.BufferedPaintDC(self,Bitmap.Scale(d,self.scale))
         
 
     def GetOldMouse(self):
@@ -129,6 +135,7 @@ class DrawPanel(wx.Panel):
 
         bmp = FileManager().CurrentFile().data
         Bitmap.Recolor(bmp, message.data)
+	self.Refresh()
         pub.sendMessage("UpdateBitmap")
 
 
