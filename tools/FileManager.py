@@ -165,7 +165,7 @@ class FileManager(object):
         im.Load(filename)
         #self.filetypearray[self.filetype].append(im)
         self.filetypearray[self.filetype][0] = im
-        pub.sendMessage("UpdateBitmap",im.data)
+        pub.sendMessage("SizeBitmap")
 
         logging.info("FileManager.%i.Load('%s', '%s')" % 
                 (self.index, self.filetype, filename))
