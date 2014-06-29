@@ -56,8 +56,7 @@ class DrawPanel(wx.Panel):
         self.oldbmp = self.bmp
         self.SetSize(size=(self.w*self.scale,self.h*self.scale))
         self.parent.SetScrollbars(1,1,self.w*self.scale,self.h*self.scale)
-        self.OnPaint(None)
-
+        self.Refresh()
 
     def OnPaint(self, event):
         dc = wx.ClientDC(self)
@@ -91,7 +90,7 @@ class DrawPanel(wx.Panel):
         dc.DrawLine(self.ox, self.oy, self.x, self.y)
         dc.SelectObject(wx.NullBitmap)
 
-        self.OnPaint(None)
+        self.Refresh()
 
 
     def Read(self, event):

@@ -83,7 +83,10 @@ class ColorPicker(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
 
-        pub.subscribe(self.OnPaint,"STYLE")
+        pub.subscribe(self.OnUpdate,"STYLE")
+
+    def OnUpdate(self, event):
+        self.Refresh()
 
     def OnPaint(self, event):
         dc = wx.PaintDC(self)

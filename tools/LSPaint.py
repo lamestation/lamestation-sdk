@@ -30,7 +30,7 @@ class ImageTile(wx.Panel):
     def UpdateBitmap(self, message):
         f = FileManager().CurrentFile()
         self.SetSize((f.data.GetWidth()*self.scale,f.data.GetWidth()*self.scale))
-        self.OnPaint(None)
+        self.Refresh()
 
     def OnPaint(self, event):
         f = FileManager().CurrentFile()
@@ -69,7 +69,7 @@ class ChosenColor(ColorTile):
 
     def SetColor(self, message):
         self.color = Color.COLOR
-        self.OnPaint(None)
+        self.Refresh()
 
 
 class SideBar(wx.Panel):
@@ -124,9 +124,9 @@ class LSPaint(wx.Frame):
 
 
         # SideBar
-        self.sidebar = wx.Panel(self, style=wx.RAISED_BORDER)
+        self.sidebar = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
-        vbox.Add(SideBar(self),1,wx.EXPAND,0)
+        vbox.Add(SideBar(self.sidebar),1,wx.EXPAND,0)
         self.sidebar.SetSizer(vbox)
 
         self.draw = DrawWindow.DrawWindow(self)
