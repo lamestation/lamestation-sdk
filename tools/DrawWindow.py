@@ -49,18 +49,19 @@ class DrawPanel(wx.Panel):
 
 
     def UpdateBitmap(self, message):
-        fm = FileManager()
-        self.bmp = fm.CurrentFile().data
-        self.w = self.bmp.GetWidth()
-        self.h = self.bmp.GetHeight()
-        self.oldbmp = self.bmp
-        self.SetSize(size=(self.w*self.scale,self.h*self.scale))
-        self.parent.SetScrollbars(1,1,self.w*self.scale,self.h*self.scale)
+        d = FileManager().CurrentFile().data
+        w = d.GetWidth()
+        h = d.GetHeight()
+        self.SetSize(size=(w*self.scale,h*self.scale))
+        self.parent.SetScrollbars(1,1,w*self.scale,h*self.scale)
         self.Refresh()
 
     def OnPaint(self, event):
+        d = FileManager().CurrentFile().data
+        w = d.GetWidth()
+        h = d.GetHeight()
         dc = wx.ClientDC(self)
-        dc.DrawBitmap(Bitmap.Scale(self.bmp,self.w*self.scale,self.h*self.scale), 0, 0, True)
+        dc.DrawBitmap(Bitmap.Scale(d,w*self.scale,h*self.scale), 0, 0, True)
         
 
     def GetOldMouse(self):
@@ -81,9 +82,9 @@ class DrawPanel(wx.Panel):
         self.GetMouse(event)
         self.SetCursor(wx.StockCursor(wx.CURSOR_PENCIL))
 
-        fm = FileManager()
+        d = FileManager().CurrentFile().data
         dc = wx.MemoryDC()
-        dc.SelectObject(fm.CurrentFile().data)
+        dc.SelectObject(d)
         dc.SetBrush(wx.Brush(Color.COLOR))
         dc.SetPen(wx.Pen(Color.COLOR))
         dc.DrawPoint(self.x,self.y)
@@ -97,9 +98,9 @@ class DrawPanel(wx.Panel):
         self.GetMouse(event)
         self.Log("Read")
 
-        fm = FileManager()
+        fm = FileManager().Currentfile().data
         dc = wx.MemoryDC()
-        dc.SelectObject(fm.CurrentFile().data)
+        dc.SelectObject(d)
 
         Color.Change(dc.GetPixel(self.x,self.y).GetAsString(flags=wx.C2S_HTML_SYNTAX))
         dc.SelectObject(wx.NullBitmap)
@@ -116,15 +117,13 @@ class DrawPanel(wx.Panel):
 
     def OnLeftUp(self, event):
         logging.info("OnLeftUp():")
-        fm = FileManager()
-        bmp = fm.CurrentFile().data
+        bmp = FileManager().CurrentFile().data
         self.images = [self.oldbmp, bmp]
         pub.sendMessage("DRAW",self.images)
 
 
     def OnRecolor(self, message):
-        fm = FileManager()
-        bmp = fm.CurrentFile().data
+        bmp = FileManager().CurrentFile().data
         self.oldbmp = Bitmap.Copy(bmp)
         Bitmap.Recolor(bmp, message.data)
         self.images = [self.oldbmp, bmp]
