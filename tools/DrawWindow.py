@@ -49,6 +49,7 @@ class DrawPanel(wx.Panel):
 
 
     def UpdateBitmap(self, message):
+        logging.info("DrawPanel.UpdateBitmap()")
         d = FileManager().CurrentFile().data
         w = d.GetWidth()
         h = d.GetHeight()
@@ -57,6 +58,7 @@ class DrawPanel(wx.Panel):
         self.Refresh()
 
     def OnPaint(self, event):
+        logging.info("DrawPanel.OnPaint()")
         d = FileManager().CurrentFile().data
         w = d.GetWidth()
         h = d.GetHeight()
@@ -91,14 +93,14 @@ class DrawPanel(wx.Panel):
         dc.DrawLine(self.ox, self.oy, self.x, self.y)
         dc.SelectObject(wx.NullBitmap)
 
-        pub.sendMessage("UpdateBitmap")
+        self.Refresh()
 
 
     def Read(self, event):
         self.GetMouse(event)
         self.Log("Read")
 
-        fm = FileManager().Currentfile().data
+        d = FileManager().CurrentFile().data
         dc = wx.MemoryDC()
         dc.SelectObject(d)
 
@@ -107,31 +109,27 @@ class DrawPanel(wx.Panel):
 
 
     def OnLeftDown(self, event):
-        fm = FileManager()
-        bmp = fm.CurrentFile().data
-        logging.info("DRAW %s", id(bmp))
+        f = FileManager().CurrentFile()
+        f.UpdateOld()
+        logging.info("DRAW %s", id(f.data))
 
-        self.oldbmp = Bitmap.Copy(bmp)
         self.Draw(event)
 
 
     def OnLeftUp(self, event):
         logging.info("OnLeftUp():")
 
-        bmp = FileManager().CurrentFile().data
-        self.oldbmp = Bitmap.Copy(bmp)
-        self.images = [self.oldbmp, bmp]
-        pub.sendMessage("DRAW",self.images)
+        f = FileManager().CurrentFile()
+        f.PushUndo()
+        pub.sendMessage("DRAW")
 
 
     def OnRecolor(self, message):
         logging.info("OnRecolor():")
 
         bmp = FileManager().CurrentFile().data
-        self.oldbmp = Bitmap.Copy(bmp)
         Bitmap.Recolor(bmp, message.data)
-        self.images = [self.oldbmp, bmp]
-        pub.sendMessage("DRAW",self.images)
+        pub.sendMessage("UpdateBitmap")
 
 
     def OnRightDown(self, event):

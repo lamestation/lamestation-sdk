@@ -3,33 +3,14 @@ import wx, os
 from wx.lib.pubsub import setuparg1 
 from wx.lib.pubsub import pub
 
-import Bitmap, Dialog
+import Dialog
 from FileManager import FileManager
-
-class UndoDraw:
-    def __init__( self, oldbmp, bmp):
-        self.bmp = bmp
-        self.RedoBitmap = Bitmap.Copy(bmp) # image after change
-        self.UndoBitmap = oldbmp # image before change
-    
-    def undo( self ):
-        if not self.UndoBitmap == None:
-                self.bmp = self.UndoBitmap
-        return self.bmp
-    
-    def redo( self ):
-        if not self.RedoBitmap == None:
-                self.bmp = self.RedoBitmap
-        return self.bmp
-
 
 class EventHandler():
     def __init__(self, parent):
         self.parent = parent
 
         pub.subscribe(self.OnDraw, "DRAW")
-        pub.subscribe(self.OnUndo, "UNDO")
-        pub.subscribe(self.OnRedo, "REDO")
 
     def OnNew(self, event):
         dialog = Dialog.NewImage(None)
@@ -67,7 +48,7 @@ class EventHandler():
             self.parent.statusbar.SetStatusText("Loaded "+self.filename)
             fm = FileManager()
             fm.Load('image',self.filename)
-            pub.sendMessage("UpdateBitmap")
+#            pub.sendMessage("UpdateBitmap")
         dialog.Destroy()
 
 
@@ -99,9 +80,6 @@ class EventHandler():
 
 
     def OnDraw(self, message):
-        f = FileManager().CurrentFile()
-        f.PushUndo(UndoDraw(
-            message.data[0],message.data[1]))
         self.SetUndoRedo()
 
     def OnUndo( self, event ):
@@ -117,18 +95,18 @@ class EventHandler():
     def SetUndoRedo(self):
         f = FileManager().CurrentFile()
         self.parent.toolbar.EnableTool( wx.ID_UNDO, f.undo)
-#        self.parent.toolbar.EnableTool( wx.ID_SAVE, f.undo)
         self.parent.menu.Enable( wx.ID_UNDO, f.undo)
+
+#        self.parent.toolbar.EnableTool( wx.ID_SAVE, f.undo)
 #        self.parent.menu.Enable( wx.ID_SAVE, f.undo)
 
         self.parent.toolbar.EnableTool( wx.ID_REDO, f.redo)
         self.parent.menu.Enable( wx.ID_REDO, f.redo)
 
-        f = FileManager().CurrentFile()
         pub.sendMessage("UpdateBitmap")
+
         
     def OnZoom(self, event):
-        print self.parent.zoom.GetValue().split('x')[0]
         self.parent.draw.draw.scale = int(self.parent.zoom.GetValue().split('x')[0])
         pub.sendMessage("UpdateBitmap")
 

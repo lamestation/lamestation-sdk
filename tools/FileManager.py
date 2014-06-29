@@ -4,6 +4,25 @@ from wx.lib.pubsub import pub
 import logging
 import Bitmap
 
+
+class UndoDraw:
+    def __init__( self, oldbmp, bmp):
+        self.bmp = bmp
+        self.RedoBitmap = Bitmap.Copy(bmp) # image after change
+        self.UndoBitmap = oldbmp # image before change
+    
+    def undo( self ):
+        if not self.UndoBitmap == None:
+                self.bmp = self.UndoBitmap
+        return self.bmp
+    
+    def redo( self ):
+        if not self.RedoBitmap == None:
+                self.bmp = self.RedoBitmap
+        return self.bmp
+
+
+
 class File(object):
 
     def __init__(self):
@@ -11,6 +30,7 @@ class File(object):
 
     def New(self):
         self.data = None
+        self.olddata = None
 
         self.filename = ""
         self.shortname = ""
@@ -26,8 +46,10 @@ class File(object):
         self.shortname = os.path.splitext(os.path.basename(self.filename))[0]
         self.ext = self.filename.split('.')[-1].lower()
 
+
     def Update(self, data):
         self.data = data
+
 
     def Print(self):
         print self.filename
@@ -39,6 +61,8 @@ class File(object):
 
 
     def PushUndo(self, operation):
+        logging.info("PushUndo(%i, %i)" % 
+                (len(self.stackRedo),len(self.stackUndo)))
         self.undo = True
         self.stackUndo.append( operation )
         if self.stackRedo:
@@ -46,6 +70,8 @@ class File(object):
             self.redo = False
 
     def PopUndo(self):
+        logging.info("PopUndo(%i, %i)" % 
+                (len(self.stackRedo),len(self.stackUndo)))
         if len(self.stackUndo) == 0:
             self.undo = False
             return
@@ -59,6 +85,8 @@ class File(object):
         self.redo = True
 
     def PopRedo(self):
+        logging.info("PopRedo(%i, %i)" % 
+                (len(self.stackRedo),len(self.stackUndo)))
         if len(self.stackRedo) == 0:
             self.redo = False
             return
@@ -86,6 +114,14 @@ class Image(File):
 
     def Save(self, filename):
         self.data.SaveFile(filename, wx.BITMAP_TYPE_PNG)
+
+    def PushUndo(self):
+        File.PushUndo(self, 
+                UndoDraw(self.olddata,self.data))
+
+    def UpdateOld(self):
+        self.olddata = Bitmap.Copy(self.data)
+
 
 
 
