@@ -5,7 +5,15 @@ import logging
 import Bitmap
 
 class File(object):
+
+    stackUndo = []
+    stackRedo = []
+
+    undo = False
+    redo = False
+
     def __init__(self):
+        self.data = None
         self.filename = ""
         self.shortname = ""
         self.ext = ""
@@ -15,16 +23,50 @@ class File(object):
         self.shortname = os.path.splitext(os.path.basename(self.filename))[0]
         self.ext = self.filename.split('.')[-1].lower()
 
+    def Update(self, data):
+        self.data = data
+
     def Print(self):
         print self.filename
         print self.shortname
         print self.ext
 
     def Save(self):
-        self.SaveAs(self.filename)
+        print "BLAH"
 
-    def SaveAs(self, filename):
-        print
+
+    def PushUndo(self, operation):
+        self.undo = True
+        self.stackUndo.append( operation )
+        if self.stackRedo:
+            del self.stackRedo[:]
+            self.redo = False
+
+    def PopUndo(self):
+        if len(self.stackUndo) == 0:
+            self.undo = False
+            return
+
+        a = self.stackUndo.pop()
+        if len(self.stackUndo) == 0:
+            self.undo = False
+
+        self.data = a.undo()
+        self.stackRedo.append(a)
+        self.redo = True
+
+    def PopRedo(self):
+        if len(self.stackRedo) == 0:
+            self.redo = False
+            return
+
+        a = self.stackRedo.pop()
+        if len(self.stackRedo) == 0:
+            self.redo = False
+
+        self.data = a.redo()
+        self.stackUndo.append(a)
+        self.undo = True
 
 
 class Image(File):
@@ -32,27 +74,23 @@ class Image(File):
         File.__init__(self)
 
     def New(self, w, h):
-        self.bitmap = Bitmap.New(w, h)
+        self.data = Bitmap.New(w, h)
+        self.undo = False
+        self.redo = False
 
     def Load(self, filename):
         File.Load(self, filename=filename)
-        self.bitmap = wx.Bitmap(self.filename, wx.BITMAP_TYPE_ANY)
+        self.data = wx.Bitmap(self.filename, wx.BITMAP_TYPE_ANY)
 
-    def Update(self, bitmap):
-        self.bitmap = bitmap
+    def Save(self, filename):
+        self.data.SaveFile(filename, wx.BITMAP_TYPE_PNG)
 
-    def Save(self):
-        if not self.filename == '':
-            self.SaveAs(self.filename)
 
-    def SaveAs(self, filename):
-        self.bitmap.SaveFile(filename, wx.BITMAP_TYPE_PNG)
-        
 
 class FileManager(object):
     index = 0
     filetype = ''
-    filetypearray = {'image':[],'map':[]}
+    filetypearray = {'image':[''],'map':[]}
     typetable = {'image':{'png':wx.BITMAP_TYPE_PNG,'bmp':wx.BITMAP_TYPE_BMP}}
 
     _instance = None
@@ -75,7 +113,8 @@ class FileManager(object):
         self.filetype = filetype
         im = Image()
         im.New(w, h)
-        self.filetypearray[self.filetype].append(im)
+        #self.filetypearray[self.filetype].append(im)
+        self.filetypearray[self.filetype][0] = im
         logging.info("FileManager.%i.New('%s', %i, %i)" % 
                 (self.index, self.filetype, w, h))
 
@@ -84,22 +123,23 @@ class FileManager(object):
             raise
         self.filetype = filetype
 
-        image = Image()
-        image.Load(filename)
-        #self.filetypearray[self.filetype].append(image)
-        self.filetypearray[self.filetype][0] = image
-        pub.sendMessage("UpdateBitmap",image.bitmap)
+        im = Image()
+        im.Load(filename)
+        #self.filetypearray[self.filetype].append(im)
+        self.filetypearray[self.filetype][0] = im
+        pub.sendMessage("UpdateBitmap",im.data)
 
         logging.info("FileManager.%i.Load('%s', '%s')" % 
                 (self.index, self.filetype, filename))
 
     def Save(self):
-        self.CurrentFile().Save()
-        logging.info("FileManager.%i.Save()" % 
-                (self.index))
+        if not self.CurrentFile().filename == '':
+            self.CurrentFile().Save()
+            logging.info("FileManager.%i.Save()" % 
+                    (self.index))
 
     def SaveAs(self, filename):
-        self.CurrentFile().SaveAs(filename)
+        self.CurrentFile().Save(filename)
         logging.info("FileManager.%i.SaveAs('%s')" % 
                 (self.index, filename))
 

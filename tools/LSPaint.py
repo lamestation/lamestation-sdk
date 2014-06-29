@@ -8,6 +8,7 @@ from wx.lib.pubsub import pub
 
 import DrawWindow
 import Bitmap
+from FileManager import FileManager
 
 import EventHandler
 
@@ -21,22 +22,20 @@ class ImageTile(wx.Panel):
         wx.Panel.__init__(self, parent, 
 
                 size=size, style=wx.TAB_TRAVERSAL|wx.NO_BORDER)
-
         self.scale = scale
-        self.size = size
-        self.bmp = Bitmap.New(size[0],size[1])
 
         self.Bind(wx.EVT_PAINT, self.OnPaint)
         pub.subscribe(self.UpdateBitmap,"UpdateBitmap")
 
     def UpdateBitmap(self, message):
-        self.bmp = message.data
-        self.SetSize((self.bmp.GetWidth()*self.scale,self.bmp.GetWidth()*self.scale))
+        f = FileManager().CurrentFile()
+        self.SetSize((f.data.GetWidth()*self.scale,f.data.GetWidth()*self.scale))
         self.OnPaint(None)
 
     def OnPaint(self, event):
+        f = FileManager().CurrentFile()
         dc = wx.ClientDC(self)
-        dc.DrawBitmap(Bitmap.Scale(self.bmp,self.bmp.GetWidth()*self.scale,self.bmp.GetHeight()*self.scale), 0, 0, True)
+        dc.DrawBitmap(Bitmap.Scale(f.data,f.data.GetWidth()*self.scale,f.data.GetHeight()*self.scale), 0, 0, True)
 
     def OnMouseMove(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
@@ -154,6 +153,7 @@ class LSPaint(wx.Frame):
         wx.EVT_MENU(self, wx.ID_EXIT, self.evt.OnQuit)
         self.Bind(wx.EVT_MENU, self.evt.OnExport, self.exp)
 #        wx.EVT_MENU(self, wx.ID_ABOUT, self.evt.OnAbout)
+        self.zoom.Bind(wx.EVT_COMBOBOX, self.evt.OnZoom)
 
         self.SetSizer(vbox)
         self.Show(True)

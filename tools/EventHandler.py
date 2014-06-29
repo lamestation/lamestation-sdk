@@ -6,9 +6,6 @@ from wx.lib.pubsub import pub
 import Bitmap, Dialog
 from FileManager import FileManager
 
-stockUndo = []
-stockRedo = []
-
 class UndoDraw:
     def __init__( self, oldbmp, bmp):
         self.bmp = bmp
@@ -39,12 +36,25 @@ class EventHandler():
         dialog.ShowModal()
 
     def OnSave(self, event):
-        fm = FileManager()
-        fm.Save()
+        pass
+#        if not self.CurrentFile().filename == '':
+#            fm = FileManager()
+#            fm.Save()
+#        else:
+
 
     def OnSaveAs(self, event):
-        fm = FileManager()
-        fm.SaveAs(self.filename)
+        wildcard = "PNG files (*.png)|*.png"
+        dialog = wx.FileDialog(None, "Choose a file",
+                defaultDir=os.path.dirname(self.parent.filename),
+                defaultFile=os.path.splitext(os.path.basename(self.parent.filename))[0]+".png",
+                wildcard=wildcard,
+                style=wx.FD_SAVE|wx.OVERWRITE_PROMPT)
+        if dialog.ShowModal() == wx.ID_OK:
+            self.filename = dialog.GetPath()
+            self.parent.statusbar.SetStatusText("Saved "+self.filename)
+            fm = FileManager()
+            fm.SaveAs(self.filename)
 
 
     def OnLoad(self, event):
@@ -54,9 +64,10 @@ class EventHandler():
                 style=wx.FD_OPEN|wx.FD_CHANGE_DIR|wx.FD_PREVIEW)
         if dialog.ShowModal() == wx.ID_OK:
             self.filename = dialog.GetPath()
-            self.parent.statusbar.SetStatusText(self.filename)
+            self.parent.statusbar.SetStatusText("Loaded "+self.filename)
             fm = FileManager()
             fm.Load('image',self.filename)
+            pub.sendMessage("UpdateBitmap")
         dialog.Destroy()
 
 
@@ -88,58 +99,40 @@ class EventHandler():
 
 
     def OnDraw(self, message):
-        self.parent.toolbar.EnableTool(wx.ID_UNDO, True )
-        self.parent.toolbar.EnableTool(wx.ID_SAVE, True )
-        self.parent.menu.Enable( wx.ID_UNDO, True )
-        self.parent.menu.Enable( wx.ID_SAVE, True )
-        pub.sendMessage("UpdateBitmap",message.data[1])
-
-        undo = UndoDraw(message.data[0],message.data[1])
-        stockUndo.append( undo )
-        if stockRedo:
-            del stockRedo[:]
-            self.parent.toolbar.EnableTool( wx.ID_REDO, False )
-
-
+        f = FileManager().CurrentFile()
+        f.PushUndo(UndoDraw(
+            message.data[0],message.data[1]))
+        self.SetUndoRedo()
 
     def OnUndo( self, event ):
-        if len( stockUndo ) == 0:
-            self.parent.toolbar.EnableTool(wx.ID_UNDO, False )
-            self.parent.toolbar.EnableTool(wx.ID_SAVE, False )
-            self.parent.menu.Enable( wx.ID_UNDO, False )
-            self.parent.menu.Enable( wx.ID_SAVE, False )
-            return
-
-        a = stockUndo.pop()
-        if len( stockUndo ) == 0:
-            self.parent.toolbar.EnableTool( wx.ID_UNDO, False )
-            self.parent.toolbar.EnableTool( wx.ID_SAVE, False )
-            self.parent.menu.Enable( wx.ID_UNDO, False )
-            self.parent.menu.Enable( wx.ID_SAVE, False )
-
-        pub.sendMessage("UpdateBitmap",a.undo())
-
-        stockRedo.append( a )
-        self.parent.toolbar.EnableTool( wx.ID_REDO, True )
-
-
+        f = FileManager().CurrentFile()
+        f.PopUndo()
+        self.SetUndoRedo()
 
     def OnRedo( self, event ):
-        if len( stockRedo ) == 0:
-            self.parent.toolbar.EnableTool( wx.ID_REDO, False )
-            return
+        f = FileManager().CurrentFile()
+        f.PopRedo()
+        self.SetUndoRedo()
 
-        a = stockRedo.pop()
-        if len( stockRedo ) == 0:
-            self.parent.toolbar.EnableTool( wx.ID_REDO, False )
+    def SetUndoRedo(self):
+        f = FileManager().CurrentFile()
+        self.parent.toolbar.EnableTool( wx.ID_UNDO, f.undo)
+        self.parent.toolbar.EnableTool( wx.ID_SAVE, f.undo)
+        self.parent.menu.Enable( wx.ID_UNDO, f.undo)
+        self.parent.menu.Enable( wx.ID_SAVE, f.undo)
 
-        pub.sendMessage("UpdateBitmap",a.redo())
+        self.parent.toolbar.EnableTool( wx.ID_REDO, f.redo)
+        self.parent.menu.Enable( wx.ID_REDO, f.redo)
 
-        stockUndo.append( a )
-        self.parent.toolbar.EnableTool( wx.ID_UNDO, True )
-        self.parent.toolbar.EnableTool( wx.ID_SAVE, True )
-        self.parent.menu.Enable( wx.ID_UNDO, True )
-        self.parent.menu.Enable( wx.ID_SAVE, True )
+        f = FileManager().CurrentFile()
+        print f.data
+        pub.sendMessage("UpdateBitmap")
+        
+    def OnZoom(self, event):
+        print self.parent.zoom.GetValue().split('x')[0]
+        self.parent.draw.draw.scale = int(self.parent.zoom.GetValue().split('x')[0])
+        pub.sendMessage("UpdateBitmap")
+
 
 
 
