@@ -33,11 +33,9 @@ VAR
   long  nav_x, nav_y                                    ' navigation cross
   long  map_w, map_h                                    ' map limits
 
-  long  buffer[512]
-
 PUB null : visible | tiles
 
-  gfx.Start(@buffer, lcd.start)                         ' setup screen and renderer
+  gfx.Start(lcd.start)                                  ' setup screen and renderer
   gfx.LoadMap(tiles := @gfx_data, @map_data)            ' prepare map
 
   map_w := gfx.GetMapWidth  * word[tiles][SX] - lcd#SCREEN_W
