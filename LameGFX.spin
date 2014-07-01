@@ -88,10 +88,11 @@ VAR
 PUB null
 '' This is not a top level object.
 
-PUB Start(buffer, screen)
+PUB Start(screen)
 
-    drawsurface := buffer
+    drawsurface := @graphicsdriver
     copysurface := screen
+    instruction := NEGX
     cognew(@graphicsdriver, @instruction)
 '                                                 function has(1) no(0) argument(s) ----+
 '                                                            number of arguments -1 --+ |
@@ -101,6 +102,9 @@ PUB Start(buffer, screen)
     c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
     c_translate   := @c_parameters << 16 | (@translate   - @graphicsdriver) >> 2 | %001_1 << 12
     c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %011_1 << 12
+
+    repeat
+    while instruction
 
 PUB WaitToDraw
 
@@ -632,6 +636,8 @@ setup                   add     destscrn, par           ' default render buffer 
                         movi    ctrb, #%0_11111_000     ' general magic support
                         jmp     %%0                     ' return
 
+EOD{ata}                fit
+
 ' uninitialised data and/or temporaries
 
                         org     setup
@@ -675,6 +681,8 @@ arg2                    res     1
 arg3                    res     1
 
 tail                    fit
+
+{screen padding}        long    -1[0 #> (512 - (@EOD - @graphicsdriver) / 4)]
 
 CON
   zero = $1F0                                           ' par (dst only)
