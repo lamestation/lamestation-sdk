@@ -78,14 +78,12 @@ OBJ
 
 
 VAR
-    word    buffer[1024]
-                    
     byte    gamestate
     byte    clicked
 
 PUB Main
 
-    gfx.Start(@buffer, lcd.Start) 
+    gfx.Start(lcd.Start)          
     gfx.LoadFont(font_chars_cropped.Addr, " ", 8, 8)
 
     audio.Start
