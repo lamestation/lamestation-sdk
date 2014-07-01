@@ -34,8 +34,7 @@ OBJ
 
 VAR
   long  time[3], link[4], edit
-  long  buffer[512], stack[32]
-  long  pressed, block
+  long  stack[32], pressed, block
 
   word  size, sx, sy, data[12 << 6]
 
@@ -62,7 +61,7 @@ PRI init : n
   frm.init(@time{0})                                    ' frame handler
   
   cognew(clock, @stack{0})                              ' clock handler
-  gfx.start(@buffer{0}, lcd.start)                      ' setup screen and renderer
+  gfx.start(lcd.start)                                  ' setup screen and renderer
 
   size := 128
     sx := 16
