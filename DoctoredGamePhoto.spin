@@ -1,12 +1,12 @@
 {{
 KS0108 Sprite And Tile Graphics Library Demo
-─────────────────────────────────────────────────
+-------------------------------------------------
 Version: 1.0
 Copyright (c) 2013 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
-─────────────────────────────────────────────────
+-------------------------------------------------
 }}
 
 
@@ -22,8 +22,6 @@ OBJ
 
 
 VAR
-
-    word    buffer[1024]
     word    screen
 
     byte    slide
@@ -33,7 +31,7 @@ VAR
 
 PUB GraphicsDemo | x
 
-    gfx.Start(@buffer, lcd.Start)
+    gfx.Start(lcd.Start)
     gfx.LoadMap(@gfx_tiles_2b_tuxor,@map_gradient)
 
     slide := 0
@@ -52,7 +50,7 @@ PUB GraphicsDemo | x
   '          1: gfx.Sprite(@gfx_krakken,0,0,0)
    '         2: gfx.Blit(@gfx_test_checker)
     '        3: gfx.DrawMap(0,0,1,1,14,6)
-        gfx.DrawMap(positionx,0,0,0,16,8)
+        gfx.DrawMap(positionx,0)
 
         if ctrl.A or ctrl.B
           if not clicked
@@ -190,29 +188,25 @@ byte      3,  4,  5,  4,  3,  2,  1,  2,  3,  4,  5,  4,  3,  2,  1,  2
 byte      2,  3,  4,  5,  4,  3,  2,  1,  2,  3,  4,  5,  4,  3,  2,  1
 byte      1,  2,  3,  4,  5,  4,  3,  2,  1,  2,  3,  4,  5,  4,  3,  2
 
-
-
-
-
+DAT
 {{
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│                           TERMS OF USE: MIT License                                  │                                                            
-├──────────────────────────────────────────────────────────────────────────────────────┤
-│Permission is hereby granted, free of charge, to any person obtaining a copy of this  │
-│software and associated documentation files (the "Software"), to deal in the Software │ 
-│without restriction, including without limitation the rights to use, copy, modify,    │
-│merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    │
-│permit persons to whom the Software is furnished to do so, subject to the following   │
-│conditions:                                                                           │
-│                                                                                      │                                             
-│The above copyright notice and this permission notice shall be included in all copies │
-│or substantial portions of the Software.                                              │
-│                                                                                      │
-│THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   │
-│INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         │
-│PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    │
-│HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION     │
-│OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        │
-│SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+
+ TERMS OF USE: MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ associated documentation files (the "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
+ following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or substantial
+ portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 }}
+DAT
