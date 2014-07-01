@@ -61,7 +61,6 @@ OBJ
 
 VAR
 
-    word    buffer[1024]
     word    screen
 
 
@@ -107,7 +106,7 @@ PUB Main
 
     dira~
     screen := lcd.Start
-    gfx.Start(@buffer, screen)
+    gfx.Start(screen)
     pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
