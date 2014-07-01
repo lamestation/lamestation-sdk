@@ -106,6 +106,8 @@ PUB Start(screen)
     repeat
     while instruction
 
+    return drawsurface
+    
 PUB WaitToDraw
 
     repeat
