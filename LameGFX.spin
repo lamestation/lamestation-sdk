@@ -305,25 +305,36 @@ graphicsdriver          jmpret  $, #setup               ' run setup once, then u
 
 drawsprite              rdword  scrn, destscrn          ' render buffer
 
+' Extract pixel position for shift in destination value, then create bit offset.
+
                         mov     iter_x, arg1            ' this value rotates the word for the blender
+                        and     iter_x, #%111           ' x % 8
                         shl     iter_x, #1              ' x << 1
-                        and     iter_x, #$F             ' x % 8
 
                         mov     iter_y, arg2            ' row index
+
+' Calculate start and end address of the first (unclipped) line.
 
                         shl     arg2, #5                ' y * 32
                         add     scrn, arg2              ' line start (inclusive)
                         mov     send, #32
                         add     send, scrn              ' line end (exclusive)
 
+' Apply x offset which is first transformed into a word index then into its byte index.
+
                         sar     arg1, #3                ' x /= 8, n pixels = 2n bits
                         shl     arg1, #1                ' back to byte offset
                         add     arg1, scrn              ' address ready, 2n
+
+' Same for lhs clipping value, which is then applied to the line start address.
 
                         mov     arg2, _clipx1
                         shr     arg2, #3                ' word offset
                         shl     arg2, #1                ' back to byte offset
                         add     scrn, arg2              ' apply clipping, 2n
+
+' And again for rhs clipping value which is applied to the line end address. These two
+' addresses hold the possible drawing target for the sprite (left/right limits).
 
                         mov     arg2, #128
                         sub     arg2, _clipx2
@@ -331,6 +342,7 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
                         shl     arg2, #1                ' back to byte offset
                         sub     send, arg2              ' apply clipping, 2n
 
+' Get sprite header info, i.e. frame size (in bytes), width and height.
                         
                         rdword  arg2, arg0
                         add     arg0, #2                ' get frame size
@@ -340,10 +352,16 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
                         rdword  hs, arg0
                         add     arg0, #2                ' get image width and height
 
+' Calculate the byte width of the sprite (for line advancement).
+
                         mov     wb, ws
                         shr     wb, #2                  ' byte length (4 px/byte)
 
+' X loop runs in words, calculate length.
+
                         shr     ws, #3                  ' 8 px/word
+
+' Lazy multiply if a sprite index <>0 is requested.
 
                         cmp     arg3, #0 wz             ' frame index
                 if_nz   add     arg0, arg2              ' a proper multiply may be beneficial here
@@ -361,10 +379,10 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
                         cmps    iter_y, _clipy2 wc
                 if_nc   jmp     %%0                     ' if greater equal _clipy2 just exit
 
-                        mov     index_x, ws
+                        mov     index_x, ws             ' temporary copy, we run several lines
 
-                        mov     dstT, arg1
-                        mov     srcT, arg0
+                        mov     dstT, arg1              ' |
+                        mov     srcT, arg0              ' temporary target address copies
 ' ----- X LOOP -----------------------------------------
                         rdword  dstL, dstT
 :xloop                  add     dstT, #2
@@ -373,34 +391,68 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
                         or      dstL, dstH              ' extract 16 dst pixel
 
                         rdword  srcW, srcT              ' extract 8 src pixel
-                        add     srcT, #2
+                        add     srcT, #2                ' advance
                         or      srcW, hAAAA0000         ' high word is always transparent
                         rol     srcW, iter_x            ' align with dst
+
+' dstL now holds the long "below" the source word srcW. Any unused pixel in the latter is
+' marked transparent. A bit pattern of %10 marks the transparent colour which is now extracted
+' for all 16 pixels (transparent will result in %01, filled in %00).
 
                         mov     frqb, srcW              ' %10 is transparent
                         shr     frqb, #1
                         andn    frqb, srcW
                         and     frqb, h55555555         ' extract transparent pixel
 
+' Multiply the resulting mask by 3, e.g. %010001 becomes %110011 or %%303. This used the fact
+' that phsx of a counter has frqx added twice before it can be read in the next insn.
+
                         mov     phsb, frqb
                         mov     frqb, phsb              ' frqb *= 3
+
+' We now have a valid clipping mask based on the colour information. Next we apply the left/right
+' clipping masks which may modify the existing mask or leave it as is. dstT points to the high word
+' of the destination long.
+
+'      |scrn|.............|send|
+'      |dstT|
+' |dstL|dstH|                                           mask for high word required
 
                         cmp     dstT, scrn wz
                 if_e    or      frqb, mskLH
 
+'      |scrn|.............|send
+'                         |dstT|
+'                    |dstL|dstH|                        mask for high word required
+
                         cmp     dstT, send wz
                 if_e    or      frqb, mskRH
+
+'      |scrn|.............|send|
+'                    |dstT| +2
+'               |dstL|dstH|                             mask for low word required
 
                         add     dstT, #2
                         cmp     dstT, send wz
                 if_e    or      frqb, mskRL
+
+' dstT now points to the low word location (+2 -4)
+'
+'      |scrn|.............|send|
+'      |dstT|
+'      |dstL|dstH|                                      mask for low word required
+
                         sub     dstT, #4                ' rewind
                         cmp     dstT, scrn wz
                 if_e    or      frqb, mskLL
+
+' Mask is complete, filter the relevant info from src/dst and combine all pixels in the dst long.
                 
                         andn    srcW, frqb              ' clear transparent pixels
                         and     dstL, frqb              ' make space for src      
                         or      dstL, srcW              ' combine dst/src         
+
+' Write back low/high words based on clipping info.
 
                         cmp     dstT, scrn wc
                 if_c    jmp     #$+3
