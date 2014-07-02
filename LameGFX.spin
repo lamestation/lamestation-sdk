@@ -78,7 +78,7 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_blitscreen, c_sprite, c_setcliprect, c_translate, c_drawtilemap
+    long    c_blitscreen, c_sprite, c_setcliprect, c_translate, c_drawtilemap, c_fillbuffer
     long    c_parameters[4]
 
 VAR
@@ -102,6 +102,7 @@ PUB Start(screen)
     c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
     c_translate   := @c_parameters << 16 | (@translate   - @graphicsdriver) >> 2 | %001_1 << 12
     c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %011_1 << 12
+    c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %000_1 << 12
 
     repeat
     while instruction
@@ -118,7 +119,16 @@ PUB ClearScreen
 '' display is sparse and not likely to be overdrawn every frame (like
 '' in a tile-based game).
 
-    Blit(0)
+    FillBuffer(0)
+    
+PUB FillScreen(colour)
+'' Fill the composition buffer with the given colour.
+
+    repeat
+    while instruction
+
+    c_parameters{0} := colour
+    instruction := c_fillbuffer
 
 PUB Blit(source)
 '' This command blits a 128x64 size image to the screen. This command is
@@ -526,13 +536,14 @@ setcliprect             mov     _clipx1, arg0           ' copy ...
 
                         jmp     %%0                     ' return
 
-' #### CLEAR SCREEN
+' #### FILL BUFFER
 ' ------------------------------------------------------
-' parameters: none
+' parameters: arg0: colour
 
-clear                   mov     arg3, fullscreen
+fillbuffer              rdword  arg1, destscrn
+                        mov     arg3, fullscreen
 
-:loop                   wrword  zero, arg1              ' override dst buffer with 0
+:loop                   wrword  arg0, arg1              ' override dst buffer with 0
                         add     arg1, #2
                         djnz    arg3, #:loop
 
@@ -544,7 +555,6 @@ clear                   mov     arg3, fullscreen
 '             arg1: destination buffer  (word aligned)
 
 blitscreen              rdword  arg1, destscrn          ' override destination
-                        tjz     arg0, #clear            ' no source, clear screen
                         add     arg0, #6                ' skip sprite header
 
 translate               mov     arg3, fullscreen        ' words per screen
