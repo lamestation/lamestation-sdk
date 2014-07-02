@@ -434,9 +434,9 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 '             arg2: x2
 '             arg3: y2
 
-setcliprect             mov     _clipx1, arg0           ' copy and sanity check
-                        mins    _clipx1, #0             ' |
-                        maxs    _clipx1, #res_x         ' confine coordinate to screen
+setcliprect             mov     _clipx1, arg0           ' copy ...
+                        mins    _clipx1, #0             ' 
+                        maxs    _clipx1, #res_x         ' ... and sanity check
 
                         mov     _clipy1, arg1
                         mins    _clipy1, #0
@@ -529,14 +529,15 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecntt
         tilecnttemp += byte[map_levelmap]{0}
 }
 drawtilemap             mov     madr, arg3
-                        rdbyte  madv, madr              ' map (byte) width
-                        add     madr, #2                ' skip header
 
-' Above we grabbed the byte width of the map and skipped the header of the level map.
+' Grab the map width and skip the header of the level map.
 '   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 '                  =                                                             ==============
 '
-' Now we add the x offset (which is currently hardwired as 8n).
+                        rdbyte  madv, madr              ' map (byte) width
+                        add     madr, #2                ' skip header
+
+' Now we add the x offset (which is currently hardwired to 8n).
 '   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 '                  =                                           ================================
 
