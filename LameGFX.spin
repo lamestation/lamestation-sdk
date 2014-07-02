@@ -435,8 +435,8 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 '             arg3: y2
 
 setcliprect             mov     _clipx1, arg0           ' copy and sanity check
-                        mins    _clipx1, #0
-                        maxs    _clipx1, #res_x
+                        mins    _clipx1, #0             ' |
+                        maxs    _clipx1, #res_x         ' confine coordinate to screen
 
                         mov     _clipy1, arg1
                         mins    _clipy1, #0
@@ -452,7 +452,11 @@ setcliprect             mov     _clipx1, arg0           ' copy and sanity check
 
                         test    $, #1 wc                ' set carry
 
-                        mov     arg0, _clipx1           ' clipping masks
+' Calculate two sets of clipping masks which are used for pixel exact clipping.
+' This is based on how far the clipping x coordinates reach into their respective
+' double word of pixels. Note, this is specific to the current sprite renderer.
+
+                        mov     arg0, _clipx1
                         and     arg0, #%111
                         mov     mskLL, #0
                         rcl     mskLL, arg0
@@ -476,7 +480,7 @@ setcliprect             mov     _clipx1, arg0           ' copy and sanity check
 
 clear                   mov     arg3, fullscreen
 
-:loop                   wrword  zero, arg1
+:loop                   wrword  zero, arg1              ' override dst buffer with 0
                         add     arg1, #2
                         djnz    arg3, #:loop
 
@@ -493,6 +497,8 @@ blitscreen              rdword  arg1, destscrn          ' override destination
 
 translate               mov     arg3, fullscreen        ' words per screen
 
+' Do word-aligned copy (no 4n guarantee) from src to dst.
+
 :loop                   rdword  arg2, arg0
                         add     arg0, #2
                         wrword  arg2, arg1
@@ -507,15 +513,40 @@ translate               mov     arg3, fullscreen        ' words per screen
 '             arg1: y offset
 '             arg2: tile data (8x8)
 '             arg3: level map
+{
+PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnttemp, x, y
 
+    tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+
+    offset_x := cx1 - offset_x & 7
+    offset_y := cy1 - offset_y & 7
+    
+    repeat y from offset_y to cy2 -1 step 8
+        repeat x from offset_x to cx2 -1 step 8
+            if tile := byte[tilecnttemp][(x - offset_x) >> 3] & TILEBYTE
+                 Sprite(map_tilemap, x, y, --tile)
+
+        tilecnttemp += byte[map_levelmap]{0}
+}
 drawtilemap             mov     madr, arg3
                         rdbyte  madv, madr              ' map (byte) width
                         add     madr, #2                ' skip header
+
+' Above we grabbed the byte width of the map and skipped the header of the level map.
+'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'                  =                                                             ==============
+'
+' Now we add the x offset (which is currently hardwired as 8n).
+'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'                  =                                           ================================
 
                         mov     eins, arg0
                         shr     eins, #3                ' offset_x >> 3
                         add     madr, eins
 
+' Then we do the same for the y offset but have to multiply it by the map width.
+'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'                  ============================================================================
 
                         mov     eins, madv
                         mov     zwei, arg1
@@ -542,6 +573,7 @@ drawtilemap             mov     madr, arg3
                                                                                        
                         add     madr, eins              ' apply offset                 
 
+' Calculate the start values for each loop.
                         
                         and     arg0, #%111 wz
                         mov     lp_x, _clipx1
@@ -559,6 +591,8 @@ drawtilemap             mov     madr, arg3
 
                         mov     vier, arg2              ' tile copy
 
+' Run the nested loop.
+
 :yloop                  mov     eins, lp_x              ' reload temporary
                         mov     zwei, madr              ' map address
 
@@ -569,10 +603,10 @@ drawtilemap             mov     madr, arg3
 
                         sub     drei, #1                ' adjust index
 
-                        mov     arg0, vier
-                        mov     arg1, eins
-                        mov     arg2, lp_y
-                        mov     arg3, drei
+                        mov     arg0, vier              ' |
+                        mov     arg1, eins              ' |
+                        mov     arg2, lp_y              ' transfer parameters
+                        mov     arg3, drei              ' |
                         jmpret  %%0, #drawsprite        ' call sprite function
 
 :xnext                  add     eins, #8
