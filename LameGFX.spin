@@ -543,7 +543,7 @@ setcliprect             mov     _clipx1, arg0           ' copy ...
 fillbuffer              rdword  arg1, destscrn
                         mov     arg3, fullscreen
 
-:loop                   wrword  arg0, arg1              ' override dst buffer with 0
+:loop                   wrword  arg0, arg1              ' override dst buffer with arg0
                         add     arg1, #2
                         djnz    arg3, #:loop
 
