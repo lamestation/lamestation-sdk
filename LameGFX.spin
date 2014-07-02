@@ -404,7 +404,7 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
                         andn    frqb, srcW
                         and     frqb, h55555555         ' extract transparent pixel
 
-' Multiply the resulting mask by 3, e.g. %010001 becomes %110011 or %%303. This used the fact
+' Multiply the resulting mask by 3, e.g. %010001 becomes %110011 or %%303. This uses the fact
 ' that phsx of a counter has frqx added twice before it can be read in the next insn.
 
                         mov     phsb, frqb
