@@ -119,7 +119,7 @@ PUB ClearScreen
 '' display is sparse and not likely to be overdrawn every frame (like
 '' in a tile-based game).
 
-    FillBuffer(0)
+    FillScreen(0)
     
 PUB FillScreen(colour)
 '' Fill the composition buffer with the given colour.
