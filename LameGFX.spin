@@ -283,12 +283,12 @@ PUB DrawScreen
 
 DAT                     org     0
 
-graphicsdriver          jmpret  $, #setup
-
-{done}                  wrlong  zero, par
-{idle}                  rdlong  code, par wz
+graphicsdriver          jmpret  $, #setup               ' run setup once, then used
+                                                        ' as return vector
+{done}                  wrlong  zero, par               ' command finished
+{idle}                  rdlong  code, par wz            ' fetch next command
                         test    code, argn wc           ' check for arguments
-                if_z    jmp     #$-2
+                if_z    jmp     #$-2                    ' try again
 
                         mov     addr, code              ' args:n:[!Z]:cmd = 16:4:3:9
                         ror     addr, #16               ' extract argument location
@@ -610,22 +610,22 @@ args_ret                ret
 
 ' initialised data and/or presets
 
-destscrn                long    4
+destscrn                long    4                       ' address of composition buffer
 
 fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
 
-h55555555               long    $55555555
-hAAAA0000               long    $AAAA0000
+h55555555               long    $55555555               ' transparent colour extraction mask
+hAAAA0000               long    $AAAA0000               ' transparent colour filler
 
-_clipx1                 long    0
-_clipy1                 long    0
-_clipx2                 long    128
-_clipy2                 long    64
+_clipx1                 long    0                       ' |
+_clipy1                 long    0                       ' |
+_clipx2                 long    128                     ' |
+_clipy2                 long    64                      ' clipping rectangle
 
-mskLH                   long    0
-mskLL                   long    0
-mskRH                   long    0
-mskRL                   long    0
+mskLH                   long    0                       ' |
+mskLL                   long    0                       ' |
+mskRH                   long    0                       ' clipping masks for pixel exactness
+mskRL                   long    0                       ' (this is required by the current implementation)
 
 delta                   long    %001_0 << 28 | $FFFC    ' %10 deal with movi setup
                                                         ' -(-4) address increment
@@ -635,7 +635,7 @@ argn                    long    |< 12                   ' function does have arg
 
 setup                   add     destscrn, par           ' default render buffer location
 
-                        movi    ctrb, #%0_11111_000     ' general magic support
+                        movi    ctrb, #%0_11111_000     ' LOGIC.always counter for math support
                         jmp     %%0                     ' return
 
 EOD{ata}                fit
@@ -644,43 +644,43 @@ EOD{ata}                fit
 
                         org     setup
 
-index_x                 res     1
-iter_x                  res     1
-iter_y                  res     1
+index_x                 res     1                       ' column counter
+iter_x                  res     1                       ' destination pixel offset
+iter_y                  res     1                       ' sprite y loop index (for clipping)
 
-scrn                    res     1
-send                    res     1
+scrn                    res     1                       ' screen start | (visible line)
+send                    res     1                       ' screen end   |
 
-ws                      res     1
-hs                      res     1
-wb                      res     1
+ws                      res     1                       ' sprite width
+hs                      res     1                       ' sprite height
+wb                      res     1                       ' sprite byte width
 
-dstT{ransfer}           res     1
-srcT{ransfer}           res     1
+dstT{ransfer}           res     1                       ' current screen address
+srcT{ransfer}           res     1                       ' current sprite address
 
-dstH{igh}               res     1
-dstL{ow}                res     1
-srcW{ord}               res     1
-
-
-lp_x                    res     1
-lp_y                    res     1
-madr                    res     1
-madv                    res     1
-
-eins                    res     1
-zwei                    res     1
-drei                    res     1
-vier                    res     1
+dstH{igh}               res     1                       ' |
+dstL{ow}                res     1                       ' current screen long
+srcW{ord}               res     1                       ' current sprite word
 
 
-addr                    res     1
-code                    res     1
+lp_x                    res     1                       ' |
+lp_y                    res     1                       ' map loop indices
+madr                    res     1                       ' current map address
+madv                    res     1                       ' map advance (byte width)
 
-arg0                    res     1
-arg1                    res     1
-arg2                    res     1
-arg3                    res     1
+eins                    res     1                       ' |
+zwei                    res     1                       ' |
+drei                    res     1                       ' |
+vier                    res     1                       ' temporary registers (1..4)
+
+
+addr                    res     1                       ' parameter location
+code                    res     1                       ' command entry
+
+arg0                    res     1                       ' |
+arg1                    res     1                       ' |
+arg2                    res     1                       ' |
+arg3                    res     1                       ' command arguments
 
 tail                    fit
 
