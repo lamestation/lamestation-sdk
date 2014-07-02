@@ -26,13 +26,11 @@ OBJ
 
 VAR
   long  pos_x, pos_y, cx1, cy1, cx2, cy2                ' sprite position and clip area
-  long  buffer[512]                                     ' render buffer
-
   word  size, sx, sy, data[4096]                        ' noise sprite
 
 PUB null : n
 
-  gfx.Start(@buffer, lcd.start)                         ' setup screen and renderer
+  gfx.Start(lcd.start)                                  ' setup screen and renderer
 
   size := 8192
     sx := 256

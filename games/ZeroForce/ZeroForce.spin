@@ -1,12 +1,12 @@
 {{
 Zero Force - Action Shoot-Em-Up Game!
-─────────────────────────────────────────────────
+-------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation.
 See end of file for terms of use.
 
 Authors: Brett Weir
-─────────────────────────────────────────────────
+-------------------------------------------------
 }}
 
 
@@ -39,8 +39,8 @@ OBJ
     ctrl    :               "LameControl"
 
 VAR
-    word    buffer[1024]
     word    screen
+    word    buffer
     
     byte    choice
     byte    menuchoice
@@ -61,12 +61,12 @@ PUB Main
 
     dira~
     screen := lcd.Start
-    gfx.Start(@buffer, screen)
+    buffer := gfx.Start(screen)
 
     audio.Start
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(@buffer, screen)
+    gfx.TranslateBuffer(buffer, screen)
 
     clicked := 0
     StaticScreen
@@ -84,7 +84,7 @@ PUB Static | ran, x
     
     ran := cnt
     repeat x from 0 to constant(gfx#SCREENSIZE_BYTES/2-1) step 1
-         word[@buffer][x] := ran?
+         word[buffer][x] := ran?
 
 
 PUB StaticScreen | x
@@ -95,7 +95,7 @@ PUB StaticScreen | x
     audio.LoopSong
     
     repeat x from 0 to 50
-        gfx.TranslateBuffer(@buffer, screen)
+        gfx.TranslateBuffer(buffer, screen)
         Static
         
     audio.StopSong
@@ -104,13 +104,13 @@ PUB StaticScreen | x
 PUB LogoScreen | x
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(@buffer, screen)
+    gfx.TranslateBuffer(buffer, screen)
     
     repeat x from 0 to 100000
     
     gfx.ClearScreen 
     gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
-    gfx.TranslateBuffer(@buffer, screen)
+    gfx.TranslateBuffer(buffer, screen)
 
     audio.SetWaveform(3)
     audio.SetADSR(127, 10, 0, 10)
@@ -131,7 +131,7 @@ PUB TitleScreen
 
     choice := 1
     repeat until choice == 0  
-        gfx.TranslateBuffer(@buffer, screen)
+        gfx.TranslateBuffer(buffer, screen)
 
         gfx.Blit(@gfx_zeroforcelogo)
         ctrl.Update
@@ -362,7 +362,7 @@ PUB LevelStage
     
     choice := 1
     repeat until not choice
-        gfx.TranslateBuffer(@buffer, screen)    
+        gfx.TranslateBuffer(buffer, screen)     
         gfx.ClearScreen
        
 
@@ -430,7 +430,7 @@ PUB BossStage
     
     repeat until not choice
 
-        gfx.TranslateBuffer(@buffer, screen)
+        gfx.TranslateBuffer(buffer, screen)
         
         gfx.ClearScreen
         
@@ -865,32 +865,25 @@ byte    0,2,BAROFF
 byte    1,3,BAROFF
 byte    SONGOFF
 
-
-
-
-
-
-
-
+DAT
 {{
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│                           TERMS OF USE: MIT License                                  │                                                            
-├──────────────────────────────────────────────────────────────────────────────────────┤
-│Permission is hereby granted, free of charge, to any person obtaining a copy of this  │
-│software and associated documentation files (the "Software"), to deal in the Software │ 
-│without restriction, including without limitation the rights to use, copy, modify,    │
-│merge, publish, distribute, sublicense, and/or sell copies of the Software, and to    │
-│permit persons to whom the Software is furnished to do so, subject to the following   │
-│conditions:                                                                           │
-│                                                                                      │
-│The above copyright notice and this permission notice shall be included in all copies │
-│or substantial portions of the Software.                                              │
-│                                                                                      │
-│THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,   │
-│INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A         │
-│PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT    │
-│HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION     │
-│OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE        │
-│SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                                │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+
+ TERMS OF USE: MIT License
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ associated documentation files (the "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
+ following conditions:
+
+ The above copyright notice and this permission notice shall be included in all copies or substantial
+ portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 }}
+DAT
