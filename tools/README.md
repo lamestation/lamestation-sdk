@@ -1,32 +1,14 @@
+# Setup
 
+The LameStation toolkit requires these dependencies to build.
 
-# Building The Binary Release
-
-## Linux
-
-### Debian
-
-```
-sudo apt-get install python-imaging cx-freeze python-wxgtk2.8
-```
-
-Then browse to the `tools/` directory and type `make`.
-
-```
-make
-```
-
-## Windows
-
-PIL wxWidgets Python PIP cxfreeze
-
+ * [**Python 2.7**](https://www.python.org/)
  * [**Python Imaging Library**](http://www.pythonware.com/products/pil/)
  * [**wxPython**](http://www.wxpython.org/download.php)
+ * [**cxfreeze**](http://cx-freeze.sourceforge.net/)
 
-Then the build is straight-forward 
+Then the build is straight-forward:
 
 ```
-\Python27\Scripts\cxfreeze.py --base-name=Win32GUI img2dat.py
+python setup.py build
 ```
-
-This will generate the dist folder, which can then be packaged as a zip file.

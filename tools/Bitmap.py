@@ -5,9 +5,11 @@ import Color
 def Copy(bitmap):
     return  wx.ImageFromBitmap(bitmap).Copy().ConvertToBitmap()
 
-def Scale(bitmap, width, height):
+def Scale(bitmap, scale):
     image = wx.ImageFromBitmap(bitmap)
-    image = image.Scale(width, height, wx.IMAGE_QUALITY_NORMAL)
+    image = image.Scale(bitmap.GetWidth()*scale,
+                        bitmap.GetHeight()*scale,
+                        wx.IMAGE_QUALITY_NORMAL)
     result = wx.BitmapFromImage(image)
     return result
 

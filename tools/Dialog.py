@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
 import wx
+from FileManager import FileManager
+from wx.lib.pubsub import setuparg1 
+from wx.lib.pubsub import pub
 
 def Quit():
     dial = wx.MessageDialog(None, "Are you sure you want to quit?","Question",
@@ -52,16 +55,16 @@ class NewImage(wx.Dialog):
         panel = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
 
-        gs = wx.FlexGridSizer(2,2,5,5)
+        gs = wx.FlexGridSizer(2,2,10,10)
 
         add_w_txt = wx.StaticText(panel,label='Width:')
         add_h_txt = wx.StaticText(panel,label='Height:')
-        add_w = wx.TextCtrl(panel,value='32')
-        add_h = wx.TextCtrl(panel,value='32')
+        self.add_w = wx.SpinCtrl(panel,min=1,value='32',max=256)
+        self.add_h = wx.SpinCtrl(panel,min=1,value='32',max=256)
 
         gs.AddMany([
-            (add_w_txt), (add_w,0,wx.ALL),
-            (add_h_txt), (add_h,0,wx.ALL)
+            (add_w_txt), (self.add_w,0,wx.ALL),
+            (add_h_txt), (self.add_h,0,wx.ALL)
             ])
 
         panel.SetSizer(gs)
@@ -78,12 +81,19 @@ class NewImage(wx.Dialog):
         vbox.Add(hbox2)
         self.SetSizerAndFit(vbox)
         
-        okButton.Bind(wx.EVT_BUTTON, self.OnClose)
+        okButton.Bind(wx.EVT_BUTTON, self.OnOK)
         closeButton.Bind(wx.EVT_BUTTON, self.OnClose)
         self.SetTitle("New Image")
         
-        
-    def OnClose(self, e):
+    def OnOK(self, event):
+        fm = FileManager()
+        fm.New( 'image',
+                self.add_w.GetValue(), 
+                self.add_h.GetValue()
+                )
+        pub.sendMessage("UpdateBitmap")
         self.Destroy()
 
+    def OnClose(self, event):
+        self.Destroy()
 
