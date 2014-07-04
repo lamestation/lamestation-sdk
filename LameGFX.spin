@@ -90,9 +90,9 @@ PUB null
 
 PUB Start(screen)
 
-    drawsurface := @graphicsdriver
-    copysurface := screen
-    instruction := NEGX
+    drawsurface := @graphicsdriver                      ' reuse DAT section
+    copysurface := screen                               ' visible screen (usually from LameLCD)
+    instruction := NEGX                                 ' lock (see below)
     cognew(@graphicsdriver, @instruction)
 '                                                 function has(1) no(0) argument(s) ----+
 '                                                            number of arguments -1 --+ |
@@ -103,6 +103,11 @@ PUB Start(screen)
     c_translate   := @c_parameters << 16 | (@translate   - @graphicsdriver) >> 2 | %001_1 << 12
     c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %011_1 << 12
     c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %000_1 << 12
+
+' Since we reuse the DAT section holding the driver we have to make sure that the cog is up
+' and running before we make it public (and someone e.g. clears it). As part of the command
+' loop the instruction field is cleared. This also happens at startup, IOW we can simply
+' monitor said location becoming zero again (NEGX == $80000000).
 
     repeat
     while instruction
@@ -543,7 +548,7 @@ setcliprect             mov     _clipx1, arg0           ' copy ...
 fillbuffer              rdword  arg1, destscrn
                         mov     arg3, fullscreen
 
-:loop                   wrword  arg0, arg1              ' override dst buffer with 0
+:loop                   wrword  arg0, arg1              ' override dst buffer with arg0
                         add     arg1, #2
                         djnz    arg3, #:loop
 
