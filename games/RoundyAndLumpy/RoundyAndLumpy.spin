@@ -38,6 +38,8 @@ PUB Main
         ctrl.Update
         gfx.FillSCreen($5555)
 
+        gfx.DrawMap(xoffset,0)
+
         HandlePlayer
     
         xoffset := playerx + (word[lumpy.Addr][1]>>1) - (lcd#SCREEN_W>>1)
@@ -46,7 +48,7 @@ PUB Main
         elseif xoffset > gfx.GetMapWidth << 3 - lcd#SCREEN_W
             xoffset := gfx.GetMapWidth << 3 - lcd#SCREEN_W
 
-        gfx.DrawMap(xoffset,0)
+
 
         gfx.DrawScreen
         fn.Sleep(40)
