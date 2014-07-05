@@ -31,6 +31,6 @@ def writeFile(text,filename):
 #            return
 
     f = open(filename,"w")
-    f.write(text)
+    f.write(text.encode('utf-8'))
     f.close()
 

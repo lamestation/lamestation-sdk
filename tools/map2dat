@@ -190,7 +190,7 @@ class LevelData:
         tilex = (value) % tilemap.inc
         tiley = value / tilemap.inc
         
-        if value > 0:
+        if value >= 0:
             if not sum(self.collision_data.getpixel((tilex*tilemap.tilew,tiley*tilemap.tileh)))/3 > 0:
                 value += 1 << 7
     
