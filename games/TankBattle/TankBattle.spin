@@ -61,10 +61,6 @@ OBJ
 
 VAR
 
-    word    screen
-
-
-
     long    x
     long    y    
     long    tile
@@ -105,15 +101,16 @@ VAR
 PUB Main
 
     dira~
-    screen := lcd.Start
-    gfx.Start(screen)
+    lcd.Start(gfx.Start)
+    gfx.ClearScreen
+    lcd.SetFrameLimit(40)
     pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
     ctrl.Start
 
     gfx.ClearScreen
-    gfx.DrawScreen
+    lcd.DrawScreen
 
     gfx.LoadFont(font.Addr, " ", 8, 8)
     InitData
@@ -140,10 +137,10 @@ PUB Main
 PUB LogoScreen
 
     gfx.ClearScreen
-    gfx.DrawScreen
+    lcd.DrawScreen
     gfx.ClearScreen
     gfx.Sprite(gfx_logo_teamlame.Addr, -2, 24, 0)
-    gfx.DrawScreen
+    lcd.DrawScreen
 
     audio.SetWaveform(3)
     audio.SetADSR(127, 10, 0, 10)
@@ -166,7 +163,7 @@ PUB TitleScreen
     choice := 1
     repeat until not choice
         ctrl.Update
-        gfx.DrawScreen
+        lcd.DrawScreen
 
         gfx.Blit(gfx_logo_tankbattle.Addr)
 
@@ -200,7 +197,7 @@ PUB TankSelect
     repeat until not choice
 
         ctrl.Update
-        gfx.DrawScreen       
+        lcd.DrawScreen       
         gfx.ClearScreen
 
         if ctrl.Up or ctrl.Down
@@ -270,7 +267,7 @@ PUB LevelSelect
     repeat until not choice
 
         ctrl.Update
-        gfx.DrawScreen
+        lcd.DrawScreen
         gfx.ClearScreen         
 
 
@@ -334,7 +331,7 @@ PUB TankFaceOff
     repeat until not choice
 
         ctrl.Update 
-        gfx.DrawScreen        
+        lcd.DrawScreen        
         gfx.ClearScreen
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
@@ -373,7 +370,7 @@ PUB GameLoop : menureturn
     repeat while not choice
 
         ctrl.Update
-        gfx.DrawScreen
+        lcd.DrawScreen
         gfx.ClearScreen
 
         if tankon[yourtank]
@@ -507,7 +504,7 @@ PUB PauseMenu : menureturn
     repeat while not choice
            
         ctrl.Update 
-        gfx.DrawScreen         
+        lcd.DrawScreen         
         gfx.ClearScreen
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
@@ -616,8 +613,8 @@ PUB InitLevel
 
 
 
-    levelw := byte[leveldata[currentlevel]][0] 
-    levelh := byte[leveldata[currentlevel]][1]
+    levelw := word[leveldata[currentlevel]][0] 
+    levelh := word[leveldata[currentlevel]][1]
 
     'INITIALIZE START LOCATIONS         
     repeat tankindex from 0 to TANKSMASK

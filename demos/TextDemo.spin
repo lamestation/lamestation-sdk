@@ -26,7 +26,7 @@ OBJ
         
 PUB TextDemo | x, ran, y
 
-    gfx.Start(lcd.Start)            
+    lcd.Start(gfx.Start)
 
     audio.Start
 
@@ -63,7 +63,7 @@ PUB TextDemo | x, ran, y
 PUB LSLogo
     gfx.ClearScreen
     gfx.Sprite(@gfx_ls_seal_0032,48,16,0)
-    gfx.DrawScreen
+    lcd.DrawScreen
         
     fn.Sleep(1000)
 
@@ -108,7 +108,7 @@ PUB Derrtroid | count
         count++
         fn.Sleep(80)
 
-        gfx.DrawScreen
+        lcd.DrawScreen
     while count < 160
     
 
@@ -119,14 +119,14 @@ PUB ThisIsATest
     gfx.LoadFont(font_8x8.Addr, " ", 8, 8)
     gfx.ClearScreen
     gfx.PutString(string("THIS IS A TEST"),4,28)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(1000)
 
 
     gfx.ClearScreen
     gfx.PutString(string("DO NOT ADJUST"),10,24)
     gfx.PutString(string("YOUR BRAIN"),15,32)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(1000)    
 
 
@@ -135,22 +135,22 @@ PUB Lame
     gfx.ClearScreen
     'gfx.PutString(string("LAME"), 48, 28)
     gfx.Blit(@gfx_lame)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(1000)
     gfx.ClearScreen
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(1000)
     
 PUB Image
     gfx.LoadFont(font_6x8.Addr, " ", 6, 8)
     gfx.ClearScreen
     gfx.PutString(string("Yes, the LameStation"),3,28)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(3000)
 
     gfx.ClearScreen
     gfx.Sprite(@gfx_ls_front_s, 16,0,0)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(10000)
 
 PUB HouseOfLeaves
@@ -165,21 +165,21 @@ PUB HouseOfLeaves
     gfx.PutString(@allcharacters, 0, 5)        
         
     gfx.TextBox(string("Lorem ipsum dolor chicken bacon inspector cats and more"), 52, 32, 5, 32)                 
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(2000)
     
     gfx.ClearScreen        
     gfx.TextBox(string("I recently added LoadFont, PutChar and PutString functions to LameGFX.spin. I used to use the TextBox command, which used the format you described to draw to the screen, but now that LameGFX uses a linear framebuffer, that approach doesn't make sense anymore. PutChar and PutString work by simply using the Box command. I'm working on supporting arbitrary font sizes, variable-width fonts, and a one-bit color mode so that fonts don't waste space."),1,1,120,56)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(2000) 
         
     gfx.LoadFont(font_8x8.Addr, " ", 8, 8)
     gfx.PutString(string("A LOT OF TEXT"), 6, 32)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(2000) 
         
     gfx.ClearScreen
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(1000) 
 
 
@@ -208,7 +208,7 @@ PUB ZoomToCenter | x, y, ax, ay, vx, vy, m, ran, count, count2, centerx, centery
            
             gfx.PutString(string("BUY ME!!"), x-16, y-4)
             gfx.PutString(string("SUBLIMINAL"), 12, 32)
-            gfx.DrawScreen   
+            lcd.DrawScreen   
     
         
 PUB RandomEverywhere | x, y, char, ran, count
@@ -220,7 +220,7 @@ PUB RandomEverywhere | x, y, char, ran, count
         y := ran? & $3F
         char := ran? & %11111
         gfx.PutChar("A" + char, x-8, y-8)
-        gfx.DrawScreen
+        lcd.DrawScreen
         fn.Sleep(2)
 
 PUB StarWarsReel(text,reeltime) | x
@@ -230,7 +230,7 @@ PUB StarWarsReel(text,reeltime) | x
         gfx.ClearScreen
         gfx.TextBox(text, 16, 64-x, 96, 64) 
     
-        gfx.DrawScreen
+        lcd.DrawScreen
         fn.Sleep(20)
 
 

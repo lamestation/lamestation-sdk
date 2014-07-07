@@ -17,7 +17,8 @@ OBJ
 CON
     #0, LEFT, RIGHT
 
-    WALKSPEED = 4
+    WALKSPEED = 10
+    GRAVITY = 18
 
 VAR
     long    xoffset
@@ -26,12 +27,16 @@ VAR
     long    playery
     long    oldx
     long    oldy
-    long    speed
+    long    speedx
+    long    speedy
     byte    count, frame, dir, jumping
 
 PUB Main
 
-    gfx.Start(lcd.Start)
+    lcd.Start(gfx.Start)
+    gfx.ClearScreen
+    lcd.DrawScreen
+    lcd.SetFrameLimit(40)
     gfx.LoadMap(tilemap.Addr, map.Addr)
 
     repeat
@@ -50,51 +55,66 @@ PUB Main
 
 
 
-        gfx.DrawScreen
-        fn.Sleep(40)
+        lcd.DrawScreen
 
 
 
-PUB HandlePlayer
+PUB HandlePlayer | adjust
     oldx := playerx
     oldy := playery    
             
     if ctrl.Left or ctrl.Right
     
             if ctrl.Left
-                playerx -= WALKSPEED
+                if ||speedx < WALKSPEED
+                    speedx--
+
                 dir := LEFT
             if ctrl.Right
-                playerx += WALKSPEED
+                if speedx =< WALKSPEED
+                    speedx++
+
                 dir := RIGHT
-    
+
             count++
             if count & $1 == 0
                 case (count >> 2) & $1
                     0:  frame := 1
                     1:  frame := 2
     else
-            frame := 0
-            count := 0            
+        if speedx > 0
+            speedx--
+        elseif speedx < 0
+            speedx++
+    
+        frame := 0
+        count := 0            
          
-    if gfx.TestMapCollision(playerx, playery, word[lumpy.Addr][1], word[lumpy.Addr][2])
-        playerx := oldx
+    playerx += (speedx ~> 2)
+
+    adjust := gfx.TestMapMoveX(oldx, playerx, playery, word[lumpy.Addr][1], word[lumpy.Addr][2])
+    if adjust
+        playerx += adjust
+        speedx := 0
 
     if ctrl.A
         if not jumping               
-            speed := -9
+            speedy := -30
             jumping := 1                 
-                
-    speed += 1
-    playery += speed
+            
+    if speedy < GRAVITY    
+        speedy += 3
 
-    if gfx.TestMapCollision(playerx, playery, word[lumpy.Addr][1], word[lumpy.Addr][2])
-        if  speed > 0
+    playery += (speedy ~> 2)
+
+    adjust := gfx.TestMapMoveY(playerx, oldy, playery, word[lumpy.Addr][1], word[lumpy.Addr][2])
+    if adjust
+        playery += adjust
+        if  speedy > 0
             jumping := 0
-        playery := oldy
-        speed := 0
+        speedy := 0
     
-    if speed > 0
+    if speedy > 0
         jumping := 1
 
 
