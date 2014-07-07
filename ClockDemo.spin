@@ -152,8 +152,6 @@ PRI display(current) : idle
   if edit & E_CHG
     gfx.Sprite(@data[-3], 99, 16, 11)
 
-  repeat 1
-    lcd.WaitForVerticalSync
   lcd.DrawScreen                                        ' update when ready
 
 PRI index : n

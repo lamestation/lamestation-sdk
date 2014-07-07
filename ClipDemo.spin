@@ -50,8 +50,6 @@ PUB null : n
     gfx.SetClipRectangle(cx1, cy1, cx2, cy2)            ' limit area for next draw
     gfx.Sprite(@data[-3], pos_x, pos_y, 0)              ' draw noise sprite on top
 
-    repeat 1                                                  
-      lcd.WaitForVerticalSync
     lcd.DrawScreen                                      ' update when ready
 
 PRI process : button
