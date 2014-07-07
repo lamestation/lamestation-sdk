@@ -35,7 +35,7 @@ VAR
 
 PUB null : visible | tiles
 
-  gfx.Start(lcd.start)                                  ' setup screen and renderer
+  lcd.Start(gfx.Start)                                  ' setup screen and renderer
   gfx.LoadMap(tiles := @gfx_data, @map_data)            ' prepare map
 
   map_w := gfx.GetMapWidth  * word[tiles][SX] - lcd#SCREEN_W
@@ -62,7 +62,7 @@ PUB null : visible | tiles
                        
     repeat 1                                                  
       lcd.WaitForVerticalSync
-    gfx.DrawScreen                                      ' update when ready
+    lcd.DrawScreen                                      ' update when ready
 
 PRI navi(dx, dy, spd)
 
@@ -81,7 +81,7 @@ PRI demo(dx, dy, spd, frm)
 
   repeat frm                                                  
     lcd.WaitForVerticalSync
-  gfx.DrawScreen                                              
+  lcd.DrawScreen                                              
 
 PRI process : d
 
