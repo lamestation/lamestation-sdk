@@ -202,7 +202,7 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, 
     repeat y from objtiley to (objh -1) >> 3
         repeat x from objtilex to (objw -1) >> 3
             if (byte[tilebase][x] & COLLIDEBIT)
-                return ((x+1) & $FFFF)+((y+1) << 16)
+                return (x+1)+((y+1) << 16)
 
         tilebase += byte[map_levelmap]{0}
 
