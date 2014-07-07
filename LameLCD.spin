@@ -55,6 +55,11 @@ CON
   SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
   TOTALBUFFER_BYTES = SCREENSIZE_BYTES
 
+CON
+  CMD_SETSCREEN    = $01D
+  CMD_SETFRAMERATE = $021
+  CMD_DRAWSCREEN   = $026
+  
 PUB null
 '' This is not a top level object.
 
@@ -68,48 +73,49 @@ PUB Start(buffer{4n})
 ''   Aborts when any part of the initialization fails, otherwise returns
 ''   the address of the screen buffer.
 
-  draw := buffer
-  ifnot cognew(@screen, @insn) +1
-    abort
+    draw := buffer
+    ifnot cognew(@screen, @insn) +1
+      abort
 
-  SetScreen(0, 0)                                       ' make sure cog is running
-  longfill(@screen{0}, 0, 512)                          ' clear screen
-  SetScreen(@screen{0}, 0)                              ' activate screen
+    Exec(CMD_SETSCREEN, 0)                              ' make sure cog is running
+    longfill(@screen{0}, 0, 512)                        ' clear screen
+    Exec(CMD_SETSCREEN, @screen{0})                     ' activate screen
 
-  return @screen{0}
+    return @screen{0}
 
-PRI SetScreen(address, sidx)
-'  Add or remove a screen buffer from display.
-'
-'  parameters
-'   address: ... of 128x64 px buffer or NULL (remove)
-'      sidx: screen index (must be 0)
+PRI Exec(command, parameters)
 
-  ifnot sidx
-    sidx.word[1] := address
-    insn := sidx|%100
-
+    command.word[1] := parameters
+    insn := command
     repeat
     while insn
-
+  
 PUB WaitForVerticalSync
 '' Block execution until vertical sync pulse starts.
 
-  repeat
-  until sync
-  repeat
-  while sync                                            ' 1/0 transition
+    ifnot rate
+        repeat
+        until sync
+        repeat
+        while sync                                      ' 1/0 transition
   
 PUB DrawScreen
 '' Copy render buffer to screen buffer.
 
-  longmove(@screen{0}, draw, 512)
+    Exec(CMD_DRAWSCREEN, draw)
 
+PUB SetFrameRate(frequency)
+'' Set user-defined frame rate (0: off)
+
+    rate := clkfreq / frequency                         ' division by 0 is 0 in SPIN
+    Exec(CMD_SETFRAMERATE, @rate)
+    
 DAT                                                     ' DAT mailbox
 
-draw                    long    0                       ' screen[-3]
-insn                    long    0                       ' screen[-2]
-sync                    long    0                       ' screen[-1]
+insn                    long    0                       ' screen[-4]
+sync                    long    0                       ' screen[-3]
+draw                    long    0                       ' screen[-2]
+rate                    long    0                       ' screen[-1]
 
 DAT                     org     0                       ' single screen LCD driver
 
@@ -150,14 +156,51 @@ read            if_nz   mov     eins, line              ' read data or black (de
                         xor     idnt, #1                ' toggle frame identifier
                         wrlong  idnt, blnk              ' and announce it
 
-                        waitcnt LCD_time, LCD_frameperiod
+                        rdlong  eins, par wz            ' fetch command
+                if_nz   jmp     eins
 
-                        rdlong  eins, par wz            ' |
-                if_nz   shr     eins, #16               ' |
-                if_nz   mov     scrn, eins              ' update display buffer
-                if_nz   wrlong  zero, par               ' acknowledge command
+reentry                 waitcnt LCD_time, LCD_frameperiod
 
                         jmp     #main                   ' next frame
+
+
+cmd_scrn                shr     eins, #16               ' |
+                        mov     scrn, eins              ' update display buffer
+
+                        wrlong  zero, par               ' acknowledge command
+                        jmp     #reentry
+
+
+cmd_rate                shr     eins, #16
+                        rdlong  frqx, eins              ' get limit
+                        mov     phsb, #0                ' reset counter
+
+                        wrlong  zero, par               ' acknowledge command
+                        jmp     #reentry
+
+
+cmd_draw                cmp     frqx, #0 wz             ' frame rate switched off?
+
+                if_nz   cmp     frqx, phsb wz,wc
+                if_a    jmp     #reentry                ' too early, block
+
+                        cmp     idnt, #1 wz
+                if_e    jmp     #reentry                ' only during 1/0 transitions
+
+                        mov     phsb, #0                ' reset counter
+
+                        shr     eins, #16               ' source buffer
+                        mov     zwei, scrn              ' destination
+                        mov     drei, dst1              ' 512 longs
+
+                        rdlong  vier, eins
+                        add     eins, #4
+                        wrlong  vier, zwei
+                        add     zwei, #4
+                        djnz    drei, #$-4              ' buffer copy
+
+                        wrlong  zero, par               ' acknowledge command
+                        jmp     #reentry
 
 ' min enable pulse width: 450ns
 ' min address setup time: 140ns (before enable high)
@@ -295,6 +338,7 @@ LCD_Enable              long    1 << EN
 
 mask                    long    |< (LCDend +1) - |< LCDstart
 
+frqx                    long    0                       ' frame rate limiter
 scrn                    long    0                       ' active screen buffer
 idnt                    long    0                       ' frame ID (even/odd)
 dst1                    long    |< 9                    ' dst +/-= 1
@@ -313,6 +357,9 @@ setup                   mov     dira, mask              ' drive outputs
                         add     blnk, par               ' @long[par][1]
                         add     LCD_time, cnt           ' finalize 1st frame target
 
+                        movi    ctrb, #%0_11111_000     ' |
+                        mov     frqb, #1                ' frame rate control
+                        
                         mov     eins, CMD_DisplayOn     ' chip select embedded
                         call    #sendLCDcommand         ' turn on LCD
 
@@ -346,6 +393,8 @@ tail                    fit
 
 eins                    res     1
 zwei                    res     1
+drei                    res     1
+vier                    res     1
 
                         fit     tail
                         
