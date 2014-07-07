@@ -58,13 +58,17 @@ CON
 PUB null
 '' This is not a top level object.
 
-PUB Start
+PUB Start(buffer{4n})
 '' Initializes the LCD object.
+''
+'' parameters
+''   buffer: DrawScreen source buffer (usually provided by LameGFX)
 ''
 '' result
 ''   Aborts when any part of the initialization fails, otherwise returns
 ''   the address of the screen buffer.
 
+  draw := buffer
   ifnot cognew(@screen, @insn) +1
     abort
 
@@ -74,12 +78,12 @@ PUB Start
 
   return @screen{0}
 
-PUB SetScreen(address, sidx)
-'' Add or remove a screen buffer from display.
-''
-'' parameters
-''  address: ... of 128x64 px buffer or NULL (remove)
-''     sidx: screen index (must be 0)
+PRI SetScreen(address, sidx)
+'  Add or remove a screen buffer from display.
+'
+'  parameters
+'   address: ... of 128x64 px buffer or NULL (remove)
+'      sidx: screen index (must be 0)
 
   ifnot sidx
     sidx.word[1] := address
@@ -96,8 +100,14 @@ PUB WaitForVerticalSync
   repeat
   while sync                                            ' 1/0 transition
   
+PUB DrawScreen
+'' Copy render buffer to screen buffer.
+
+  longmove(@screen{0}, draw, 512)
+
 DAT                                                     ' DAT mailbox
 
+draw                    long    0                       ' screen[-3]
 insn                    long    0                       ' screen[-2]
 sync                    long    0                       ' screen[-1]
 

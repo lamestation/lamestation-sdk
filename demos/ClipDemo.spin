@@ -30,7 +30,7 @@ VAR
 
 PUB null : n
 
-  gfx.Start(lcd.start)                                  ' setup screen and renderer
+  lcd.Start(gfx.Start)                                  ' setup screen and renderer
 
   size := 8192
     sx := 256
@@ -52,7 +52,7 @@ PUB null : n
 
     repeat 1                                                  
       lcd.WaitForVerticalSync
-    gfx.DrawScreen                                      ' update when ready
+    lcd.DrawScreen                                      ' update when ready
 
 PRI process : button
 

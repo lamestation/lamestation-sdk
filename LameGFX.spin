@@ -70,8 +70,6 @@ VAR
     long    instruction                                 ' |
     long    drawsurface                                 ' order/type locked
 '' ---------------------------------------------------
-    word    copysurface
-
     word    font
     byte    startingchar
     byte    tilesize_x
@@ -88,10 +86,9 @@ VAR
 PUB null
 '' This is not a top level object.
 
-PUB Start(screen)
+PUB Start
 
     drawsurface := @graphicsdriver                      ' reuse DAT section
-    copysurface := screen                               ' visible screen (usually from LameLCD)
     instruction := NEGX                                 ' lock (see below)
     cognew(@graphicsdriver, @instruction)
 '                                                 function has(1) no(0) argument(s) ----+
@@ -290,11 +287,6 @@ PUB TranslateBuffer(sourcebuffer, destbuffer)
 
     longmove(@c_parameters{0}, @sourcebuffer, 2)
     instruction := c_translate
-
-PUB DrawScreen
-'' Copy render buffer to screen buffer.
-
-    TranslateBuffer(drawsurface, copysurface)
 
 DAT                     org     0
 

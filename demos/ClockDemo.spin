@@ -61,7 +61,7 @@ PRI init : n
   frm.init(@time{0})                                    ' frame handler
   
   cognew(clock, @stack{0})                              ' clock handler
-  gfx.start(lcd.start)                                  ' setup screen and renderer
+  lcd.Start(gfx.Start)                                  ' setup screen and renderer
 
   size := 128
     sx := 16
@@ -154,7 +154,7 @@ PRI display(current) : idle
 
   repeat 1
     lcd.WaitForVerticalSync
-  gfx.DrawScreen                                        ' update when ready
+  lcd.DrawScreen                                        ' update when ready
 
 PRI index : n
                                                         '    0: 0
