@@ -43,7 +43,7 @@ PUB null : visible | tiles
 
   cur_y := map_h                                        ' game start location (piXel)
 
-  demo( 0, -1, 0, 15)
+  demo( 0, -1, 0,  1)
   demo( 1,  0, 1, 15)
   demo( 0,  1, 3, 15)
   demo(-1,  0, 2, 15)
@@ -59,7 +59,9 @@ PUB null : visible | tiles
     if visible                                          ' draw navi cross if visible (auto-hide)
       navi(cur_x - old_x, cur_y - old_y, cur_s)
       visible--
-                       
+
+    repeat 1
+      lcd.WaitForVerticalSync
     lcd.DrawScreen                                      ' update when ready
 
 PRI navi(dx, dy, spd)
@@ -78,7 +80,8 @@ PRI demo(dx, dy, spd, frm)
   navi(dx, dy, spd)
 
   repeat frm                                                  
-    lcd.DrawScreen                                            
+    lcd.WaitForVerticalSync
+  lcd.DrawScreen                                              
 
 PRI process : d
 

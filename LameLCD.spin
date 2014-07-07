@@ -101,6 +101,15 @@ PUB SetFrameLimit(frequency)
     rate := clkfreq / frequency                         ' division by 0 is 0 in SPIN
     Exec(CMD_SETFRAMELIMIT, @rate)
     
+PUB WaitForVerticalSync
+'' Block execution until vertical sync pulse starts.
+
+    ifnot rate
+        repeat
+        until sync
+        repeat
+        while sync                                      ' 1/0 transition
+  
 DAT                                                     ' DAT mailbox
 
 insn                    long    0                       ' screen[-4]
@@ -171,8 +180,9 @@ cmd_rate                shr     eins, #16
 
 
 cmd_draw                cmp     frqx, #0 wz             ' frame rate switched off?
-
-                if_nz   cmp     frqx, phsb wz,wc
+                if_e    jmp     #:copy
+                
+                        cmp     frqx, phsb wz,wc
                 if_a    jmp     #reentry                ' too early, block
 
                         cmp     idnt, #1 wz
@@ -180,7 +190,7 @@ cmd_draw                cmp     frqx, #0 wz             ' frame rate switched of
 
                         mov     phsb, #0                ' reset counter
 
-                        shr     eins, #16               ' source buffer
+:copy                   shr     eins, #16               ' source buffer
                         mov     zwei, scrn              ' destination
                         mov     drei, dst1              ' 512 longs
 
