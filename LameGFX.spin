@@ -596,7 +596,7 @@ translate               mov     arg3, fullscreen        ' words per screen
 {
 PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnttemp, x, y
 
-    tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+    tilecnttemp := 4 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 
     offset_x := cx1 - offset_x & 7
     offset_y := cy1 - offset_y & 7
@@ -611,14 +611,14 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecntt
 drawtilemap             mov     madr, arg3
 
 ' Grab the map width and skip the header of the level map.
-'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'   tilecnttemp := 4 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 '                  =                                                             ==============
 '
                         rdword  madv, madr              ' map (byte) width
                         add     madr, #4                ' skip header
 
 ' Now we add the x offset (which is currently hardwired to 8n).
-'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'   tilecnttemp := 4 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 '                  =                                           ================================
 
                         mov     eins, arg0
@@ -626,7 +626,7 @@ drawtilemap             mov     madr, arg3
                         add     madr, eins
 
 ' Then we do the same for the y offset but have to multiply it by the map width.
-'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'   tilecnttemp := 4 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 '                  ============================================================================
 
                         mov     eins, madv
