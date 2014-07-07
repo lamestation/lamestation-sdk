@@ -23,7 +23,7 @@ VAR
     long    paddle2_y
     
 PUB Main
-    gfx.Start(lcd.Start)
+    lcd.Start(gfx.Start)
     ctrl.Start
     
     repeat
@@ -44,7 +44,7 @@ PUB Main
         gfx.Sprite(paddle.Addr, 116, paddle2_y, 0)
                 
         gfx.Sprite(ball.Addr, x, y, 0)
-        gfx.DrawScreen
+        lcd.DrawScreen
 
 DAT
 {{
