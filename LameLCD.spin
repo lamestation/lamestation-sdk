@@ -11,6 +11,7 @@
 '' 20140610: view API on hold, move code back to LCD
 ''           announce frame ID change immediately after work is done
 '' 20140611: relaxed interface timing
+'' 20140707: moved mailbox into DAT space to link it with the screen area
 ''
 CON
 '' These indicate which pins connect to what. If developing your own prototype,
@@ -54,10 +55,6 @@ CON
   SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
   TOTALBUFFER_BYTES = SCREENSIZE_BYTES
 
-VAR
-  long  insn
-  long  sync
-        
 PUB null
 '' This is not a top level object.
 
@@ -99,6 +96,11 @@ PUB WaitForVerticalSync
   repeat
   while sync                                            ' 1/0 transition
   
+DAT                                                     ' DAT mailbox
+
+insn                    long    0                       ' screen[-2]
+sync                    long    0                       ' screen[-1]
+
 DAT                     org     0                       ' single screen LCD driver
 
 screen                  jmpret  $, #setup               ' once
