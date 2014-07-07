@@ -76,7 +76,7 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_blitscreen, c_sprite, c_setcliprect, c_translate, c_drawtilemap, c_fillbuffer
+    long    c_blitscreen, c_sprite, c_setcliprect, c_drawtilemap, c_fillbuffer
     long    c_parameters[4]
 
 VAR
@@ -97,7 +97,6 @@ PUB Start
     c_blitscreen  := @c_parameters << 16 | (@blitscreen  - @graphicsdriver) >> 2 | %000_1 << 12
     c_sprite      := @c_parameters << 16 | (@drawsprite  - @graphicsdriver) >> 2 | %011_1 << 12
     c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
-    c_translate   := @c_parameters << 16 | (@translate   - @graphicsdriver) >> 2 | %001_1 << 12
     c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %011_1 << 12
     c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %000_1 << 12
 
@@ -275,18 +274,6 @@ PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 
     longmove(@c_parameters{0}, @clipx1, 4)
     instruction := c_setcliprect
-
-PUB TranslateBuffer(sourcebuffer, destbuffer)
-'' This command used to convert a linear framebuffer to one formatted
-'' for the KS0108 LCD memory map. After the transformation had been
-'' moved to the LCD driver this call simply does a linear copy from
-'' source buffer to destination buffer.
-
-    repeat
-    while instruction
-
-    longmove(@c_parameters{0}, @sourcebuffer, 2)
-    instruction := c_translate
 
 DAT                     org     0
 
