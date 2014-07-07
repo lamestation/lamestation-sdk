@@ -60,13 +60,13 @@ VAR
 PUB Main
 
     dira~
-    screen := lcd.Start
-    buffer := gfx.Start(screen)
+    buffer := gfx.Start
+    lcd.Start(buffer)
 
     audio.Start
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(buffer, screen)
+    lcd.DrawScreen
 
     clicked := 0
     StaticScreen
@@ -95,7 +95,7 @@ PUB StaticScreen | x
     audio.LoopSong
     
     repeat x from 0 to 50
-        gfx.TranslateBuffer(buffer, screen)
+        lcd.DrawScreen
         Static
         
     audio.StopSong
@@ -104,13 +104,13 @@ PUB StaticScreen | x
 PUB LogoScreen | x
 
     gfx.ClearScreen
-    gfx.TranslateBuffer(buffer, screen)
+    lcd.DrawScreen
     
     repeat x from 0 to 100000
     
     gfx.ClearScreen 
     gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
-    gfx.TranslateBuffer(buffer, screen)
+    lcd.DrawScreen
 
     audio.SetWaveform(3)
     audio.SetADSR(127, 10, 0, 10)
@@ -131,7 +131,7 @@ PUB TitleScreen
 
     choice := 1
     repeat until choice == 0  
-        gfx.TranslateBuffer(buffer, screen)
+        lcd.DrawScreen
 
         gfx.Blit(@gfx_zeroforcelogo)
         ctrl.Update
@@ -362,7 +362,7 @@ PUB LevelStage
     
     choice := 1
     repeat until not choice
-        gfx.TranslateBuffer(buffer, screen)     
+        lcd.DrawScreen     
         gfx.ClearScreen
        
 
@@ -430,18 +430,13 @@ PUB BossStage
     
     repeat until not choice
 
-        gfx.TranslateBuffer(buffer, screen)
+        lcd.DrawScreen
         
         gfx.ClearScreen
         
         gfx.Sprite(@gfx_planet, 20,48, 0)
-        
-        
+              
         HandleBoss
-     
-
-
-  
         HandlePlayer   
         HandleBullets
         
