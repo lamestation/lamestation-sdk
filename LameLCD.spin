@@ -56,9 +56,9 @@ CON
   TOTALBUFFER_BYTES = SCREENSIZE_BYTES
 
 CON
-  CMD_SETSCREEN    = $01D
-  CMD_SETFRAMERATE = $021
-  CMD_DRAWSCREEN   = $026
+  CMD_SETSCREEN     = $01D
+  CMD_SETFRAMELIMIT = $021
+  CMD_DRAWSCREEN    = $026
   
 PUB null
 '' This is not a top level object.
@@ -90,25 +90,16 @@ PRI Exec(command, parameters)
     repeat
     while insn
   
-PUB WaitForVerticalSync
-'' Block execution until vertical sync pulse starts.
-
-    ifnot rate
-        repeat
-        until sync
-        repeat
-        while sync                                      ' 1/0 transition
-  
 PUB DrawScreen
 '' Copy render buffer to screen buffer.
 
     Exec(CMD_DRAWSCREEN, draw)
 
-PUB SetFrameRate(frequency)
-'' Set user-defined frame rate (0: off)
+PUB SetFrameLimit(frequency)
+'' Set user-defined frame limit (0: off)
 
     rate := clkfreq / frequency                         ' division by 0 is 0 in SPIN
-    Exec(CMD_SETFRAMERATE, @rate)
+    Exec(CMD_SETFRAMELIMIT, @rate)
     
 DAT                                                     ' DAT mailbox
 
