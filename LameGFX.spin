@@ -632,7 +632,16 @@ drawtilemap             mov     madr, arg3
                         mov     eins, madv
                         mov     zwei, arg1
                         shr     zwei, #3                ' offset_y >> 3
-                        shl     zwei, #8 -1             ' align operand for 16x8bit
+                        shl     zwei, #16 -1            ' align operand for 16x16bit
+                                                                                       
+                        shr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc           ' 16x4bit, precision: 16       
                                                                                        
                         rcr     eins, #1 wc                                            
                 if_c    add     eins, zwei wc                                          
@@ -641,8 +650,8 @@ drawtilemap             mov     madr, arg3
                         rcr     eins, #1 wc                                            
                 if_c    add     eins, zwei wc                                          
                         rcr     eins, #1 wc                                            
-                if_c    add     eins, zwei wc           ' 16x4bit, precision: 8        
-                                                                                       
+                if_c    add     eins, zwei wc           ' 16x4bit, precision: 16       
+
                         rcr     eins, #1 wc                                            
                 if_c    add     eins, zwei wc                                          
                         rcr     eins, #1 wc                                            
@@ -650,7 +659,16 @@ drawtilemap             mov     madr, arg3
                         rcr     eins, #1 wc                                            
                 if_c    add     eins, zwei wc                                          
                         rcr     eins, #1 wc                                            
-                if_c    add     eins, zwei wc           ' 16x4bit, precision: 8        
+                if_c    add     eins, zwei wc           ' 16x4bit, precision: 16       
+
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc                                          
+                        rcr     eins, #1 wc                                            
+                if_c    add     eins, zwei wc           ' 16x4bit, precision: 16       
                                                                                        
                         add     madr, eins              ' apply offset                 
 
