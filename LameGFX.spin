@@ -180,14 +180,15 @@ PUB LoadMap(source_tilemap, source_levelmap)
 
 PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, y
 '' Returns 1 if collision, 0 otherwise
+'' returned tiles start numbering at 1,1.
 
-    objh  := (byte[map_levelmap][1] << 3) <# (objh += objy)
+    objh  := (word[map_levelmap][1] << 3) <# (objh += objy)
     objy #>= 0
 
     if objh =< objy
         return
       
-    objw  := (byte[map_levelmap]{0} << 3) <# (objw += objx)
+    objw  := (word[map_levelmap]{0} << 3) <# (objw += objx)
     objx #>= 0
 
     if objw =< objx
@@ -196,22 +197,55 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, 
     objtilex := objx >> 3
     objtiley := objy >> 3
 
-    tilebase := 2 + byte[map_levelmap]{0} * objtiley + map_levelmap
+    tilebase := 4 + word[map_levelmap]{0} * objtiley + map_levelmap
 
     repeat y from objtiley to (objh -1) >> 3
         repeat x from objtilex to (objw -1) >> 3
             if (byte[tilebase][x] & COLLIDEBIT)
-                return 1
+                return (x+1)+((y+1) << 16)
 
         tilebase += byte[map_levelmap]{0}
 
+PUB TestMapMoveY(objx, oldy, newy, objw, objh) | tmp
+    if newy == oldy
+        return
+
+    tmp := TestMapCollision(objx, newy, objw, objh)
+    if not tmp
+        return
+
+    tmp := ((tmp >> 16)-1)<<3
+    
+    if newy > oldy
+        return tmp - (newy+objh)
+    elseif newy < oldy
+        return (tmp+8) - newy
+
+
+PUB TestMapMoveX(oldx, newx, objy, objw, objh) | tmp
+    if newx == oldx
+        return
+
+    tmp := TestMapCollision(newx, objy, objw, objh)
+    if not tmp
+        return
+
+    tmp := ((tmp & $FFFF)-1)<<3
+    
+    if newx > oldx
+        return tmp - (newx+objw)
+    elseif newx < oldx
+        return (tmp+8) - newx
+    
+
+
 PUB GetMapWidth
 
-    return byte[map_levelmap]{0}
+    return word[map_levelmap]{0}
 
 PUB GetMapHeight
 
-    return byte[map_levelmap][1]
+    return word[map_levelmap][1]
 
 PUB DrawMap(offset_x, offset_y)
 '' This function uses the Box command to draw an array of tiles to the screen.
@@ -562,7 +596,7 @@ translate               mov     arg3, fullscreen        ' words per screen
 {
 PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecnttemp, x, y
 
-    tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+    tilecnttemp := 4 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 
     offset_x := cx1 - offset_x & 7
     offset_y := cy1 - offset_y & 7
@@ -577,14 +611,14 @@ PUB DrawMap(offset_x, offset_y, box_x1, box_y1, box_x2, box_y2) | tile, tilecntt
 drawtilemap             mov     madr, arg3
 
 ' Grab the map width and skip the header of the level map.
-'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'   tilecnttemp := 4 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 '                  =                                                             ==============
 '
-                        rdbyte  madv, madr              ' map (byte) width
-                        add     madr, #2                ' skip header
+                        rdword  madv, madr              ' map (byte) width
+                        add     madr, #4                ' skip header
 
 ' Now we add the x offset (which is currently hardwired to 8n).
-'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'   tilecnttemp := 4 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 '                  =                                           ================================
 
                         mov     eins, arg0
@@ -592,7 +626,7 @@ drawtilemap             mov     madr, arg3
                         add     madr, eins
 
 ' Then we do the same for the y offset but have to multiply it by the map width.
-'   tilecnttemp := 2 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+'   tilecnttemp := 4 + byte[map_levelmap]{0} * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
 '                  ============================================================================
 
                         mov     eins, madv

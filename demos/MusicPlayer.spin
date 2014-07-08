@@ -54,7 +54,7 @@ VAR
 PUB MusicPlayer
 
     ' Initialize the video system
-    gfx.Start(lcd.Start)
+    lcd.Start(gfx.Start)
     
     gfx.LoadFont(font.Addr, " ", 4, 6)
     
@@ -83,7 +83,7 @@ PUB MusicPlayer
     repeat
         
         'To update the screen, you simply call switchFrame.
-        gfx.DrawScreen
+        lcd.DrawScreen
 
         'Make sure to call update before attempting to check values
         ctrl.Update

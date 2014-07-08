@@ -83,7 +83,8 @@ VAR
 
 PUB Main
 
-    gfx.Start(lcd.Start)          
+    lcd.Start(gfx.Start)
+    lcd.SetFrameLimit(lcd#FULLSPEED)
     gfx.LoadFont(font_chars_cropped.Addr, " ", 8, 8)
 
     audio.Start
@@ -133,7 +134,7 @@ PUB TitleScreen
             clicked := 1
         else
             clicked := 0
-    gfx.DrawScreen
+    lcd.DrawScreen
 
 PUB GameLoop
     ctrl.Update
@@ -146,7 +147,7 @@ PUB GameLoop
     HandleEnemies
     HandleEffects
     HandleStatusBar
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(10)
             
 PUB Victory
@@ -159,7 +160,7 @@ PUB Victory
     
     ShowGameView
     gfx.TextBox(string("YOU WIN"), 40, 30, 100, 60)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(2000)
     
     audio.StopAllSound
@@ -189,7 +190,7 @@ PUB PlayerDied
     
     ShowGameView
     gfx.TextBox(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(2000)
 
 PUB StarWarsReel(text,reeltime) | x, choice
@@ -217,7 +218,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
         
         gfx.TextBox(text, 16, 64-x, 108, 64) 
     
-        gfx.DrawScreen
+        lcd.DrawScreen
         fn.Sleep(70)
         x++
 
@@ -230,7 +231,7 @@ PUB ItsGameOver
     
     ShowGameView
     gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
-    gfx.DrawScreen
+    lcd.DrawScreen
     fn.Sleep(2000)
     
     jumping := 0
@@ -250,7 +251,7 @@ PUB ItsGameOver
     DrawPlayer            
     gfx.PutString(string("Press A and "),18,24)
     gfx.PutString(string("try again..."),18,32)
-    gfx.DrawScreen
+    lcd.DrawScreen
     
     repeat until ctrl.A
         ctrl.Update
@@ -339,7 +340,7 @@ PUB InitPlayer
     playerhealth := STARTING_HEALTH
     playerhealth_timeout := 0
 
-PUB HandlePlayer
+PUB HandlePlayer | adjust
     pos_oldx := playerx
     pos_oldy := playery    
             
@@ -378,8 +379,9 @@ PUB HandlePlayer
     if jumping
         pos_frame := 3
 
-    if gfx.TestMapCollision(playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
-        playerx := pos_oldx
+    adjust := gfx.TestMapMoveX(pos_oldx, playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
+    if adjust
+        playerx += adjust
 
     if ctrl.A
         if not jumping               
@@ -408,10 +410,11 @@ PUB HandlePlayer
     pos_speed += 1
     playery += pos_speed
 
-    if gfx.TestMapCollision(playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
+    adjust := gfx.TestMapMoveY(playerx, pos_oldy, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
+    if adjust
         if  pos_speed > 0
             jumping := 0
-        playery := pos_oldy
+        playery += adjust
         pos_speed := 0
     
     if pos_speed > 0

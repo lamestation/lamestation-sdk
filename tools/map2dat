@@ -112,7 +112,7 @@ class LevelData:
         output = ""
         #output += "\n"+self.shortname+"\n"
         output += SF.addrBox("map_")
-        output += "\nbyte\t%3i,%3i  'width, height\n\n" % (self.width, self.height)
+        output += "\nword\t%3i,%3i  'width, height\n\n" % (self.width, self.height)
         return output
 
     def assembleSpinHeader(self):

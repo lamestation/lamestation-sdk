@@ -16,7 +16,6 @@ VAR
     byte    gfx_map[16*16]
     long    gfx_maze[2*32]
     word    buffer
-    long    screen
 
     long    gameframe
     long    sptr,cptr
@@ -36,8 +35,10 @@ VAR
     word    rexframe,rexcount,rexspeed,gameover
 
 PUB Game | x,y,t
-    screen := lcd.Start
-    buffer := gfx.Start(screen)
+    buffer := gfx.Start
+    lcd.Start(buffer)
+    lcd.SetFrameLimit(10)
+    gfx.ClearScreen
 
     longfill(@gfx_maze,0,64)
     repeat y from 0 to 31
@@ -52,7 +53,7 @@ PUB Game | x,y,t
         repeat x from 0 to 1
           long[buffer][(y*8)+(x+4)]:=gfx_maze[y*2+x]
       gfx.Sprite(@gfx_clown1,0,0,0)
-      gfx.TranslateBuffer(buffer, screen)
+      lcd.DrawScreen
       gfx.ClearScreen
 
       old1:=new1
@@ -60,26 +61,26 @@ PUB Game | x,y,t
       new1:=ctrl.A
       new2:=ctrl.B
       if (new1) and (!old1)
-        repeat 50*3
+        repeat 10
           repeat y from 0 to 31
             repeat x from 0 to 1
               long[buffer][(y*8)+(x+4)]:=gfx_maze[y*2+x]
           gfx.Sprite(@gfx_clown1,0,0,1)
-          gfx.TranslateBuffer(buffer, screen)
+          lcd.DrawScreen
           gfx.ClearScreen
 
         PlayGame
 
 PUB ShowEaten
-    repeat 50*3
+    repeat 5
       longfill(buffer,0,512)
       gfx.Sprite(@gfx_clown1,0,0,3)
-      gfx.TranslateBuffer(buffer, screen)
+      lcd.DrawScreen
       gfx.ClearScreen
-    repeat 50*10
+    repeat 14
       longfill(buffer,0,512)
       gfx.Sprite(@gfx_clown1,0,0,2)
-      gfx.TranslateBuffer(buffer, screen)
+      lcd.DrawScreen
       gfx.ClearScreen
     gameover:=1
 
@@ -100,7 +101,7 @@ PUB PlayGame | x,y,t,done
     gameover:=0
     done:=0
     repeat while !done
-      waitcnt(clkfreq/1000 + cnt)
+      'waitcnt(clkfreq/1000 + cnt)
       ctrl.Update
 
       dir&=3
@@ -228,7 +229,7 @@ PUB PlayGame | x,y,t,done
         plot(rexx+rexxstp+48,rexy+rexystp+48-t,3)
 
       gameframe++
-      gfx.TranslateBuffer(buffer, screen)
+      lcd.DrawScreen
       gfx.ClearScreen
 
       rexcount++
