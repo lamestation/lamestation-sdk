@@ -379,7 +379,7 @@ PUB HandlePlayer | adjust
     if jumping
         pos_frame := 3
 
-    adjust := gfx.TestMapMoveX(pos_oldx, playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
+    adjust := gfx.TestMapMoveX(pos_oldx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playerx)
     if adjust
         playerx += adjust
 
@@ -410,7 +410,7 @@ PUB HandlePlayer | adjust
     pos_speed += 1
     playery += pos_speed
 
-    adjust := gfx.TestMapMoveY(playerx, pos_oldy, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
+    adjust := gfx.TestMapMoveY(playerx, pos_oldy, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playery)
     if adjust
         if  pos_speed > 0
             jumping := 0
