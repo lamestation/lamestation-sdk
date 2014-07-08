@@ -51,10 +51,10 @@ CON
 ''
 '' The color constant definitions here correspond to this.
 ''
-    BLACK = 0
-    WHITE = 1
-    TRANSPARENT = 2
-    GRAY = 3
+    BLACK = $0000
+    WHITE = $5555
+    TRANSPARENT = $AAAA
+    GRAY = $FFFF
 
 
     ' draw map function
@@ -206,35 +206,35 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, 
 
         tilebase += byte[map_levelmap]{0}
 
-PUB TestMapMoveY(objx, oldy, newy, objw, objh) | tmp
-    if newy == oldy
+PUB TestMapMoveY(x, y, w, h, newy) | tmp
+    if newy == y
         return
 
-    tmp := TestMapCollision(objx, newy, objw, objh)
+    tmp := TestMapCollision(x, newy, w, h)
     if not tmp
         return
 
     tmp := ((tmp >> 16)-1)<<3
     
-    if newy > oldy
-        return tmp - (newy+objh)
-    elseif newy < oldy
+    if newy > y
+        return tmp - (newy+h)
+    if newy < y
         return (tmp+8) - newy
 
 
-PUB TestMapMoveX(oldx, newx, objy, objw, objh) | tmp
-    if newx == oldx
+PUB TestMapMoveX(x, y, w, h, newx) | tmp
+    if newx == x
         return
 
-    tmp := TestMapCollision(newx, objy, objw, objh)
+    tmp := TestMapCollision(newx, y, w, h)
     if not tmp
         return
 
     tmp := ((tmp & $FFFF)-1)<<3
     
-    if newx > oldx
-        return tmp - (newx+objw)
-    elseif newx < oldx
+    if newx > x
+        return tmp - (newx+w)
+    if newx < x
         return (tmp+8) - newx
     
 

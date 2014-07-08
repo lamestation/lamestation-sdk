@@ -85,7 +85,7 @@ PUB HandlePlayer  | adjust
             playerx++
             dir := RIGHT
 
-        adjust := gfx.TestMapMoveX(oldx, playerx, playery, word[player.Addr][1], word[player.Addr][2])
+        adjust := gfx.TestMapMoveX(oldx, playery, word[player.Addr][1], word[player.Addr][2], playerx)
         if adjust
             playerx += adjust
 
@@ -96,7 +96,7 @@ PUB HandlePlayer  | adjust
             playery++
             dir := DOWN
 
-        adjust := gfx.TestMapMoveY(playerx, oldy, playery, word[player.Addr][1], word[player.Addr][2])
+        adjust := gfx.TestMapMoveY(playerx, oldy, word[player.Addr][1], word[player.Addr][2],  playery)
         if adjust
             playery += adjust
     

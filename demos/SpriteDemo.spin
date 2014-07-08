@@ -44,7 +44,6 @@ VAR
 PUB SpriteDemo | s, ran
 
     lcd.Start(gfx.Start)
-    'lcd.SetFrameLimit(10)
     gfx.LoadFont(font.Addr, " ", 6, 8)
     
     gfx.ClearScreen
