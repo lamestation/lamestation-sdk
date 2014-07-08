@@ -92,7 +92,7 @@ PUB HandlePlayer | adjust
          
     playerx += (speedx ~> 2)
 
-    adjust := gfx.TestMapMoveX(oldx, playerx, playery, word[lumpy.Addr][1], word[lumpy.Addr][2])
+    adjust := gfx.TestMapMoveX(oldx, playery, word[lumpy.Addr][1], word[lumpy.Addr][2], playerx)
     if adjust
         playerx += adjust
         speedx := 0
@@ -107,7 +107,7 @@ PUB HandlePlayer | adjust
 
     playery += (speedy ~> 2)
 
-    adjust := gfx.TestMapMoveY(playerx, oldy, playery, word[lumpy.Addr][1], word[lumpy.Addr][2])
+    adjust := gfx.TestMapMoveY(playerx, oldy, word[lumpy.Addr][1], word[lumpy.Addr][2], playery)
     if adjust
         playery += adjust
         if  speedy > 0
