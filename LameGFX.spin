@@ -51,10 +51,10 @@ CON
 ''
 '' The color constant definitions here correspond to this.
 ''
-    BLACK = 0
-    WHITE = 1
-    TRANSPARENT = 2
-    GRAY = 3
+    BLACK = $0000
+    WHITE = $5555
+    TRANSPARENT = $AAAA
+    GRAY = $FFFF
 
 
     ' draw map function
