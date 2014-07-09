@@ -181,7 +181,7 @@ PUB LoadMap(source_tilemap, source_levelmap)
     map_tilemap  := source_tilemap
     map_levelmap := source_levelmap
 
-PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, y, tx, ty
+PUB TestMapCollision(objx, objy, objw, objh) | tilebase, x, y, tx, ty
 '' Returns 1 if collision, 0 otherwise
 '' returned tiles start numbering at 1,1.
 
@@ -190,7 +190,7 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, 
     objh  := (word[map_levelmap][MY] * ty) <# (objh += objy)
     objy #>= 0
 
-    if objh =< objy
+    if objh-- =< objy
         return
 
     tx := word[map_tilemap][SX]
@@ -198,18 +198,18 @@ PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, 
     objw  := (word[map_levelmap][MX] * tx) <# (objw += objx)
     objx #>= 0
 
-    if objw =< objx
+    if objw-- =< objx
         return
 
-    objtilex := objx / tx
-    objtiley := objy / ty
-        objw := (objw -1) / tx
-        objh := (objh -1) / ty
+    objx /= tx
+    objy /= ty
+    objw /= tx
+    objh /= ty
 
-    tilebase := 4 + word[map_levelmap][MX] * objtiley + map_levelmap
+    tilebase := 4 + word[map_levelmap][MX] * objy + map_levelmap
 
-    repeat y from objtiley to objh
-        repeat x from objtilex to objw
+    repeat y from objy to objh
+        repeat x from objx to objw
             if (byte[tilebase][x] & COLLIDEBIT)
                 return (x+1)+((y+1) << 16)
 
