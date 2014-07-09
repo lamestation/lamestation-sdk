@@ -57,6 +57,7 @@ for filename in filenames:
             sys.exit(1)
 
     oldim = imgdata.im
+    imgdata.setLogicalFrameSize()
 
     imgdata.padFrames()
     spritedata = imgdata.renderSpriteData()

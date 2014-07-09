@@ -30,7 +30,7 @@ OBJ
         audio   :               "LameAudio"
         ctrl    :               "LameControl"
 
-        font    :               "Font4x6"
+        font    :               "font4x6"
 
         juke    :               "gfx_jukebox"
 

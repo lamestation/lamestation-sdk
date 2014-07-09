@@ -18,9 +18,9 @@ OBJ
         fn      :               "LameFunctions"
         audio   :               "LameAudio"
         
-        font_8x8    :           "Font8x8"
-        font_6x8    :           "Font6x8"
-        font_4x4    :           "Font4x4"
+        font_8x8    :           "font8x8"
+        font_6x8    :           "font6x8"
+        font_4x4    :           "font4x4"
 
         famus   :               "spacegirl"
         
