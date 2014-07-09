@@ -249,31 +249,7 @@ PUB GetMapHeight
 
     return word[map_levelmap][MY]
 
-VAR
-  long  cx1, cy1, cx2, cy2
-  
-PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
-
-    ifnot cx2
-      cx2 := 128
-      cy2 := 64
-
-    tx := word[map_tilemap][SX]
-    ty := word[map_tilemap][SY]
-      
-    tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
-
-    offset_x := cx1 - offset_x // tx
-    offset_y := cy1 - offset_y // ty
-    
-    repeat y from offset_y to cy2 -1 step ty
-        repeat x from offset_x to cx2 -1 step tx
-            if tile := byte[tilecnttemp][(x - offset_x) >> 3] & TILEBYTE
-                 Sprite(map_tilemap, x, y, --tile)
-
-        tilecnttemp += word[map_levelmap][MX]
-
-PUB DrawMap2(offset_x, offset_y)
+PUB DrawMap(offset_x, offset_y)
 '' This function uses the Box command to draw an array of tiles to the screen.
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
@@ -621,48 +597,84 @@ translate               mov     arg3, fullscreen        ' words per screen
 ' ------------------------------------------------------
 ' parameters: arg0: x offset
 '             arg1: y offset
-'             arg2: tile data (8x8)
+'             arg2: tile data
 '             arg3: level map
 {
-PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y
+PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 
-    tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
+    tx := word[map_tilemap][SX]
+    ty := word[map_tilemap][SY]
+      
+    tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
 
-    offset_x := cx1 - offset_x & 7
-    offset_y := cy1 - offset_y & 7
+    offset_x := cx1 - offset_x // tx
+    offset_y := cy1 - offset_y // ty
     
-    repeat y from offset_y to cy2 -1 step 8
-        repeat x from offset_x to cx2 -1 step 8
-            if tile := byte[tilecnttemp][(x - offset_x) >> 3] & TILEBYTE
+    repeat y from offset_y to cy2 -1 step ty
+        repeat x from offset_x to cx2 -1 step tx
+            if tile := byte[tilecnttemp][(x - offset_x) / tx] & TILEBYTE
                  Sprite(map_tilemap, x, y, --tile)
 
         tilecnttemp += word[map_levelmap][MX]
 }
-drawtilemap             mov     madr, arg3
+drawtilemap             mov     vier, arg2              ' tile map copy
+
+' Get logical tile size (previously 8n by 8m).
+
+                        add     vier, #2
+                        rdword  tm_x, vier              ' word[map_tilemap][SX]
+                        add     vier, #2
+                        rdword  tm_y, vier              ' word[map_tilemap][SY]
 
 ' Grab the map width and skip the header of the level map.
-'   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
-'                  =                                                             ==============
-'
+'   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
+'                  =                                                              ==============
+
+                        mov     madr, arg3
                         rdword  madv, madr              ' map (byte) width
                         add     madr, #4                ' skip header
 
-' Now we add the x offset (which is currently hardwired to 8n).
-'   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
-'                  =                                           ================================
+' Now we add the x offset (divided by tile width).
+'   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
+'                  =                                            ================================
 
                         mov     eins, arg0
-                        shr     eins, #3                ' offset_x >> 3
-                        add     madr, eins
+                        mov     zwei, tm_x
+                        call    #divide                 ' offset_x / tx
+                        add     madr, eins              ' high word (remainder) ignored
+
+' Calculate X loop start value (while we have the remainder available).
+
+                        shr     eins, #16 wz            ' offset_x // tx
+                        mov     lp_x, _clipx1
+                        sumnz   lp_x, eins              ' offset_x := cx1 - offset_x // tx
+
+                        cmps    lp_x, _clipx2 wc
+                if_nc   jmp     %%0                     ' early exit (invisible)
 
 ' Then we do the same for the y offset but have to multiply it by the map width.
-'   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y >> 3) + (offset_x >> 3) + map_levelmap
-'                  ============================================================================
+'   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
+'                  =============================================================================
+
+                        mov     eins, arg1
+                        mov     zwei, tm_y
+                        call    #divide                 ' offset_y / ty
+                        mov     zwei, eins              ' preserve value
+
+' Calculate Y loop start value (while we have the remainder available).
+
+                        shr     eins, #16 wz            ' offset_y // ty
+                        mov     lp_y, _clipy1
+                        sumnz   lp_y, eins              ' offset_y := cy1 - offset_y // ty
+
+                        cmps    lp_y, _clipy2 wc
+                if_nc   jmp     %%0                     ' early exit (invisible)
+
+' No do the final multiply.
 
                         mov     eins, madv
-                        mov     zwei, arg1
-                        shr     zwei, #3                ' offset_y >> 3
-                        shl     zwei, #16 -1            ' align operand for 16x16bit
+                        shl     zwei, #16               ' offset_y / ty
+                        shr     zwei, #1                ' align operand for 16x16bit
                                                                                        
                         shr     eins, #1 wc                                            
                 if_c    add     eins, zwei wc                                          
@@ -701,26 +713,9 @@ drawtilemap             mov     madr, arg3
                 if_c    add     eins, zwei wc           ' 16x4bit, precision: 16       
                                                                                        
                         add     madr, eins              ' apply offset                 
-
-' Calculate the start values for each loop.
-                        
-                        and     arg0, #%111 wz
-                        mov     lp_x, _clipx1
-                        sumnz   lp_x, arg0              ' offset_x := cx1 - offset_x & 7
-
-                        cmps    lp_x, _clipx2 wc
-                if_nc   jmp     %%0                     ' early exit (invisible)
-                        
-                        and     arg1, #%111 wz
-                        mov     lp_y, _clipy1
-                        sumnz   lp_y, arg1              ' offset_y := cy1 - offset_y & 7
-
-                        cmps    lp_y, _clipy2 wc
-                if_nc   jmp     %%0                     ' early exit (invisible)
-
                         mov     vier, arg2              ' tile copy
 
-' Run the nested loop.
+' Run the nested loop(s).
 
 :yloop                  mov     eins, lp_x              ' reload temporary
                         mov     zwei, madr              ' map address
@@ -738,18 +733,29 @@ drawtilemap             mov     madr, arg3
                         mov     arg3, drei              ' |
                         jmpret  %%0, #drawsprite        ' call sprite function
 
-:xnext                  add     eins, #8
+:xnext                  add     eins, tm_x
                         cmps    eins, _clipx2 wc
                 if_c    jmp     #:xloop                 ' for all (tile) columns
 
                         add     madr, madv              ' next row
 
-                        add     lp_y, #8
+                        add     lp_y, tm_y
                         cmps    lp_y, _clipy2 wc
                 if_c    jmp     #:yloop                 ' for all (tile) rows
                 
                         movs    %%0, #1                 ' restore vector
                         jmp     %%0                     ' return
+
+' Propeller Manual v1.2
+' Divide x[31..0] by y[15..0] (y[16] must be 0)
+' on exit, quotient is in x[15..0] and remainder is in x[31..16]
+'
+divide                  shl     zwei, #15               ' get divisor into y[30..15]
+                        mov     drei, #16               ' ready for 16 quotient bits
+                        cmpsub  eins, zwei wc           ' y =< x? Subtract it, quotient bit in c
+                        rcl     eins, #1                ' rotate c into quotient, shift dividend
+                        djnz    drei, #$-2              ' loop until done
+divide_ret              ret                             ' div in x[15..0], rem in x[31..16]
 
 ' support code (fetch up to 4 arguments)
 
@@ -830,6 +836,8 @@ lp_x                    res     1                       ' |
 lp_y                    res     1                       ' map loop indices
 madr                    res     1                       ' current map address
 madv                    res     1                       ' map advance (byte width)
+tm_x                    res     1                       ' |
+tm_y                    res     1                       ' logical tile size
 
 eins                    res     1                       ' |
 zwei                    res     1                       ' |
