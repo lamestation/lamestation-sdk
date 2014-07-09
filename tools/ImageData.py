@@ -61,6 +61,7 @@ class ImageData:
         self.filename = filename
         self.fullfilename = files.getFullFilename(self.prefix, self.filename, 'spin')
         self.setFrameSize(self.im.size)
+        self.setLogicalFrameSize()
 
 
     def ceilMultiple(self, x, multiple):
@@ -71,7 +72,7 @@ class ImageData:
 
 
     def padFrameSize(self, framesize, size):
-        return tuple([self.ceilMultiple(framesize[0], size),self.ceilMultiple(framesize[1], size)])
+        return tuple([self.ceilMultiple(framesize[0], size),framesize[1]])
 
 
 
@@ -94,6 +95,9 @@ class ImageData:
 
         self.im = newimage
         self.setFrameSize(newframesize)
+
+    def setLogicalFrameSize(self):
+        self.logicalframesize = self.framesize
 
     def setFrameSize(self,framesize):
         self.framesize = framesize
@@ -145,7 +149,7 @@ class ImageData:
     def assembleWordHeader(self,image):
         output = ""
         output += "word    "+str(self.frameboost)+" ' frameboost\n"
-        output += "word    "+str(len(image[0]))+", "+str(len(image))+" ' width, height\n"
+        output += "word    "+str(self.logicalframesize[0])+", "+str(self.logicalframesize[1])+" ' width, height\n"
         return output
 
 
@@ -224,6 +228,6 @@ class ImageData:
         print "'  Bit depth:",self.bitdepth
         print "' Image Type:",self.mode
         print "' Image size:",self.im.size
-        print "' Frame size:",self.framesize
+        print "' Frame size:",self.logicalframesize
         print "'     Frames:",self.frames_x,",",self.frames_y
 
