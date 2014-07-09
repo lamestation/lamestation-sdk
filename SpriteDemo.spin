@@ -23,7 +23,7 @@ OBJ
         ctrl    :               "LameControl"
         
         sprite  :               "happyface.full"
-        font    :               "Font6x8"
+        font    :               "font6x8"
 
 
 VAR
