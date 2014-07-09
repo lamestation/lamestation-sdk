@@ -181,35 +181,41 @@ PUB LoadMap(source_tilemap, source_levelmap)
     map_tilemap  := source_tilemap
     map_levelmap := source_levelmap
 
-PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, y
+PUB TestMapCollision(objx, objy, objw, objh) | objtilex, objtiley, tilebase, x, y, tx, ty
 '' Returns 1 if collision, 0 otherwise
 '' returned tiles start numbering at 1,1.
 
-    objh  := (word[map_levelmap][MY] << 3) <# (objh += objy)
+    ty := word[map_tilemap][SY]
+
+    objh  := (word[map_levelmap][MY] * ty) <# (objh += objy)
     objy #>= 0
 
     if objh =< objy
         return
+
+    tx := word[map_tilemap][SX]
       
-    objw  := (word[map_levelmap][MX] << 3) <# (objw += objx)
+    objw  := (word[map_levelmap][MX] * tx) <# (objw += objx)
     objx #>= 0
 
     if objw =< objx
         return
 
-    objtilex := objx >> 3
-    objtiley := objy >> 3
+    objtilex := objx / tx
+    objtiley := objy / ty
+        objw := (objw -1) / tx
+        objh := (objh -1) / ty
 
     tilebase := 4 + word[map_levelmap][MX] * objtiley + map_levelmap
 
-    repeat y from objtiley to (objh -1) >> 3
-        repeat x from objtilex to (objw -1) >> 3
+    repeat y from objtiley to objh
+        repeat x from objtilex to objw
             if (byte[tilebase][x] & COLLIDEBIT)
                 return (x+1)+((y+1) << 16)
 
         tilebase += word[map_levelmap][MX]
 
-PUB TestMapMoveY(x, y, w, h, newy) | tmp
+PUB TestMapMoveY(x, y, w, h, newy) | tmp, ty
 
     if newy == y
         return
@@ -218,14 +224,15 @@ PUB TestMapMoveY(x, y, w, h, newy) | tmp
     if not tmp
         return
 
-    tmp := ((tmp >> 16)-1)<<3
+    ty  := word[map_tilemap][SY]
+    tmp := ((tmp >> 16)-1) * ty
     
     if newy > y
         return tmp - (newy+h)
     if newy < y
-        return (tmp+8) - newy
+        return (tmp+ty) - newy
 
-PUB TestMapMoveX(x, y, w, h, newx) | tmp
+PUB TestMapMoveX(x, y, w, h, newx) | tmp, tx
 
     if newx == x
         return
@@ -234,12 +241,13 @@ PUB TestMapMoveX(x, y, w, h, newx) | tmp
     if not tmp
         return
 
-    tmp := ((tmp & $FFFF)-1)<<3
+    tx  := word[map_tilemap][SY]
+    tmp := ((tmp & $FFFF)-1) * tx
     
     if newx > x
         return tmp - (newx+w)
     if newx < x
-        return (tmp+8) - newx
+        return (tmp+tx) - newx
 
 PUB GetMapWidth
 
@@ -670,7 +678,7 @@ drawtilemap             mov     vier, arg2              ' tile map copy
                         cmps    lp_y, _clipy2 wc
                 if_nc   jmp     %%0                     ' early exit (invisible)
 
-' No do the final multiply.
+' No do the multiply with the map width.
 
                         mov     eins, madv
                         shl     zwei, #16               ' offset_y / ty
