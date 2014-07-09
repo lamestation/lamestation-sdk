@@ -72,7 +72,7 @@ OBJ
     gfx_starmap     : "gfx_starmap"
     gfx_pixmain     : "gfx_pixmain"
     
-    font_chars_cropped : "gfx_chars_cropped"
+    font : "font8x8"
     
     gfx_tiles_pixel : "gfx_tiles_pixel"
 
@@ -85,7 +85,7 @@ PUB Main
 
     lcd.Start(gfx.Start)
     lcd.SetFrameLimit(lcd#FULLSPEED)
-    gfx.LoadFont(font_chars_cropped.Addr, " ", 8, 8)
+    gfx.LoadFont(font.Addr, " ", 8, 8)
 
     audio.Start
     ctrl.Start
