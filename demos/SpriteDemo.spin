@@ -46,7 +46,7 @@ PUB SpriteDemo | s, ran
     lcd.Start(gfx.Start)
     gfx.LoadFont(font.Addr, " ", 6, 8)
     
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     gfx.TextBox(string("Sprite Demo!",10,"A/B changes the",10,"number of sprites"), 0, 0, 128, 64)
     gfx.Sprite(sprite.Addr, 56, 28, 1)
     gfx.TextBox(string("Press A to begin"), 0, 56, 128, 64)
@@ -68,7 +68,7 @@ PUB SpriteDemo | s, ran
         dir[s] := (ran? & $FF) // 4
     
     repeat
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
         
         ctrl.Update
         

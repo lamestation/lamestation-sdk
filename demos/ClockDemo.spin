@@ -137,7 +137,7 @@ PRI updown(idx, delta{+/-1}, limit)
 
 PRI display(current) : idle
 
-  gfx.ClearScreen
+  gfx.ClearScreen(0)
   gfx.Sprite(link[index], 32, 0, 0)                     ' background sprite
   gfx.Sprite(@data[-3], 56, 16, 10)                     ' delimiter
 

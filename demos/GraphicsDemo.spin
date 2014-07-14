@@ -31,7 +31,7 @@ VAR
 
 PUB GraphicsDemo | x
 
-    gfx.Start(lcd.Start)
+    lcd.Start(gfx.Start)
     gfx.LoadMap(@gfx_tiles_2b_tuxor,@map_gradient)
 
     slide := 0
@@ -40,10 +40,10 @@ PUB GraphicsDemo | x
         'The LCD and graphics libraries enforce flipping between
         'two pages in memory to prevent screen flicker, but this
         'functionality is hidden from the user.
-        gfx.DrawScreen
+        lcd.DrawScreen
         
         ctrl.Update
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
         
 '        case slide
  '           0: gfx.ClearScreen
