@@ -80,7 +80,7 @@ VAR
 
 VAR
     long    c_blitscreen, c_sprite, c_setcliprect, c_drawtilemap, c_fillbuffer
-    long    c_parameters[4]
+    long    c_parameters[8]
 
 VAR
     long    map_tilemap                                 ' |
@@ -100,7 +100,7 @@ PUB Start
     c_blitscreen  := @c_parameters << 16 | (@blitscreen  - @graphicsdriver) >> 2 | %000_1 << 12
     c_sprite      := @c_parameters << 16 | (@drawsprite  - @graphicsdriver) >> 2 | %011_1 << 12
     c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
-    c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %011_1 << 12
+    c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %111_1 << 12
     c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %000_1 << 12
 
 ' Since we reuse the DAT section holding the driver we have to make sure that the cog is up
@@ -242,15 +242,20 @@ PUB GetMapHeight
     return word[map_levelmap][MY]
 
 PUB DrawMap(offset_x, offset_y)
-'' This function uses the Box command to draw an array of tiles to the screen.
+'' This function uses the Sprite command to draw an array of tiles to the screen.
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
+
+  DrawMapRectangle(offset_x, offset_y, 0, 0, 128, 64)
+
+PUB DrawMapRectangle(offset_x, offset_y, x1, y1, x2, y2)
+'' Same functionality as DrawMap but lets you specify the clipping region.
 
     repeat
     while instruction
 
-    longmove(@c_parameters{0}, @offset_x,    2)
-    longmove(@c_parameters[2], @map_tilemap, 2)
+    longmove(@c_parameters{0}, @offset_x,    6)
+    longmove(@c_parameters[6], @map_tilemap, 2)
     instruction := c_drawtilemap
 
 ' *********************************************************
@@ -589,8 +594,12 @@ translate               mov     arg3, fullscreen        ' words per screen
 ' ------------------------------------------------------
 ' parameters: arg0: x offset
 '             arg1: y offset
-'             arg2: tile data
-'             arg3: level map
+'             arg2: cx1
+'             arg3: cy1
+'             arg4: cx2
+'             arg5: cy2
+'             arg6: tile data
+'             arg7: level map
 {
 PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 
@@ -609,7 +618,7 @@ PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 
         tilecnttemp += word[map_levelmap][MX]
 }
-drawtilemap             mov     vier, arg2              ' tile map copy
+drawtilemap             mov     vier, arg6              ' tile map copy
 
 ' Get logical tile size (previously 8n by 8m).
 
@@ -622,7 +631,7 @@ drawtilemap             mov     vier, arg2              ' tile map copy
 '   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
 '                  =                                                              ==============
 
-                        mov     madr, arg3
+                        mov     madr, arg7
                         rdword  madv, madr              ' map (byte) width
                         add     madr, #4                ' skip header
 
@@ -705,7 +714,7 @@ drawtilemap             mov     vier, arg2              ' tile map copy
                 if_c    add     eins, zwei wc           ' 16x4bit, precision: 16       
                                                                                        
                         add     madr, eins              ' apply offset                 
-                        mov     vier, arg2              ' tile copy
+                        mov     vier, arg6              ' tile copy
 
 ' Run the nested loop(s).
 
@@ -753,19 +762,35 @@ divide_ret              ret                             ' div in x[15..0], rem i
 
 args                    rdlong  arg0, addr              ' read 1st argument
                         cmpsub  addr, delta wc          ' [increment address and] check exit
-                if_nc   jmpret  zero, args_ret nr,wc    ' cond: early return
+                if_nc   jmpret  zero, args_ret wc,nr    ' cond: early return
 
                         rdlong  arg1, addr              ' read 2nd argument
                         cmpsub  addr, delta wc
-                if_nc   jmpret  zero, args_ret nr,wc
+                if_nc   jmpret  zero, args_ret wc,nr
 
                         rdlong  arg2, addr              ' read 3rd argument
                         cmpsub  addr, delta wc
-                if_nc   jmpret  zero, args_ret nr,wc
+                if_nc   jmpret  zero, args_ret wc,nr
 
                         rdlong  arg3, addr              ' read 4th argument
+                        cmpsub  addr, delta wc
+                if_nc   jmpret  zero, args_ret wc,nr
+
+                        rdlong  arg4, addr              ' read 5th argument
+                        cmpsub  addr, delta wc
+                if_nc   jmpret  zero, args_ret wc,nr
+
+                        rdlong  arg5, addr              ' read 6th argument
+                        cmpsub  addr, delta wc
+                if_nc   jmpret  zero, args_ret wc,nr
+
+                        rdlong  arg6, addr              ' read 7th argument
+                        cmpsub  addr, delta wc
+                if_nc   jmpret  zero, args_ret wc,nr
+
+                        rdlong  arg7, addr              ' read 8th argument
 '                       cmpsub  addr, delta wc
-'               if_nc   jmpret  zero, args_ret nr,wc
+'               if_nc   jmpret  zero, args_ret wc,nr
 
 args_ret                ret
 
@@ -843,7 +868,11 @@ code                    res     1                       ' command entry
 arg0                    res     1                       ' |
 arg1                    res     1                       ' |
 arg2                    res     1                       ' |
-arg3                    res     1                       ' command arguments
+arg3                    res     1                       ' |
+arg4                    res     1                       ' |
+arg5                    res     1                       ' |
+arg6                    res     1                       ' |
+arg7                    res     1                       ' command arguments
 
 tail                    fit
 
