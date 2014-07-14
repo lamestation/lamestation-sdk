@@ -48,7 +48,7 @@ PUB Main
     ctrl.Start
 
 
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     gfx.Sprite(title.Addr, 20, 0, 0)
     gfx.Sprite(ghost.Addr, 15, 25, 0)
     lcd.DrawScreen
@@ -61,7 +61,7 @@ PUB Main
     gfx.LoadMap(tilemap.Addr, world.Addr)
     repeat
         ctrl.Update
-        gfx.ClearSCreen
+        gfx.ClearScreen(0)
 
         HandlePlayer
         ControlOffset
