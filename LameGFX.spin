@@ -249,7 +249,7 @@ PUB DrawMap(offset_x, offset_y)
   DrawMapRectangle(offset_x, offset_y, 0, 0, 128, 64)
 
 PUB DrawMapRectangle(offset_x, offset_y, x1, y1, x2, y2)
-'' Same functionality as DrawMap but lets you specify the clipping region.
+'' Underlying method to DrawMap which lets you specify the clipping region.
 
     repeat
     while instruction
@@ -656,7 +656,7 @@ drawtilemap             call    #push_CR                ' preserve current clipp
                         rdword  tm_x, arg6              ' word[map_tilemap][SX]
                         add     arg6, #2
                         rdword  tm_y, arg6              ' word[map_tilemap][SY]
-                        sub     arg6, #4                ' restore
+                        sub     arg6, #4                ' rewind
                         
 ' Grab the map width and skip the header of the level map.
 '   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
