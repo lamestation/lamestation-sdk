@@ -518,18 +518,19 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 '             arg3: y2
 
 setcliprect             mov     _clipx1, arg0           ' copy ...
-                        mins    _clipx1, #0             ' 
-                        maxs    _clipx1, #res_x         ' ... and sanity check
-
                         mov     _clipy1, arg1
+                        mov     _clipx2, arg2
+                        mov     _clipy2, arg3
+
+validate_CR             mins    _clipx1, #0             ' ... and sanity check
+                        maxs    _clipx1, #res_x
+
                         mins    _clipy1, #0
                         maxs    _clipy1, #res_y
 
-                        mov     _clipx2, arg2
                         mins    _clipx2, #0
                         maxs    _clipx2, #res_x
 
-                        mov     _clipy2, arg3
                         mins    _clipy2, #0
                         maxs    _clipy2, #res_y
 
@@ -539,23 +540,45 @@ setcliprect             mov     _clipx1, arg0           ' copy ...
 ' This is based on how far the clipping x coordinates reach into their respective
 ' double word of pixels. Note, this is specific to the current sprite renderer.
 
-                        mov     arg0, _clipx1
-                        and     arg0, #%111
+                        mov     mskLH, _clipx1
+                        and     mskLH, #%111
                         mov     mskLL, #0
-                        rcl     mskLL, arg0
-                        rcl     mskLL, arg0             ' %%00000000_0???????
+                        rcl     mskLL, mskLH
+                        rcl     mskLL, mskLH            ' %%00000000_0???????
                         mov     mskLH, mskLL
                         rcl     mskLH, #16              ' %%0???????_????????
 
-                        neg     arg2, _clipx2
-                        and     arg2, #%111
+                        neg     mskRH, _clipx2
+                        and     mskRH, #%111
                         mov     mskRL, #0
-                        rcr     mskRL, arg2
-                        rcr     mskRL, arg2             ' %%???????0_00000000
+                        rcr     mskRL, mskRH
+                        rcr     mskRL, mskRH            ' %%???????0_00000000
                         mov     mskRH, mskRL
                         rcr     mskRH, #16              ' %%????????_???????0
 
                         jmp     %%0                     ' return
+
+
+push_CR                 mov     backup+0, clip+0        ' preserve clipping rectangle
+                        mov     backup+1, clip+1
+                        mov     backup+2, clip+2
+                        mov     backup+3, clip+3
+                        mov     backup+4, clip+4
+                        mov     backup+5, clip+5
+                        mov     backup+6, clip+6
+                        mov     backup+7, clip+7
+push_CR_ret             ret
+
+
+pop_CR                  mov     clip+0, backup+0        ' restore clipping rectangle
+                        mov     clip+1, backup+1
+                        mov     clip+2, backup+2
+                        mov     clip+3, backup+3
+                        mov     clip+4, backup+4
+                        mov     clip+5, backup+5
+                        mov     clip+6, backup+6
+                        mov     clip+7, backup+7
+pop_CR_ret              ret
 
 ' #### FILL BUFFER
 ' ------------------------------------------------------
@@ -620,6 +643,15 @@ PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 }
 drawtilemap             mov     vier, arg6              ' tile map copy
 
+                        call    #push_CR                ' preserve current clipping rectangle
+
+                        mov     _clipx1, arg2           ' copy local settings
+                        mov     _clipy1, arg3
+                        mov     _clipx2, arg4
+                        mov     _clipy2, arg5
+
+                        jmpret  %%0, #validate_CR       ' validate local settings
+                       
 ' Get logical tile size (previously 8n by 8m).
 
                         add     vier, #2
@@ -651,7 +683,7 @@ drawtilemap             mov     vier, arg6              ' tile map copy
                         sumnz   lp_x, eins              ' offset_x := cx1 - offset_x // tx
 
                         cmps    lp_x, _clipx2 wc
-                if_nc   jmp     %%0                     ' early exit (invisible)
+                if_nc   jmp     #:restore               ' early exit (invisible)
 
 ' Then we do the same for the y offset but have to multiply it by the map width.
 '   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
@@ -669,7 +701,7 @@ drawtilemap             mov     vier, arg6              ' tile map copy
                         sumnz   lp_y, eins              ' offset_y := cy1 - offset_y // ty
 
                         cmps    lp_y, _clipy2 wc
-                if_nc   jmp     %%0                     ' early exit (invisible)
+                if_nc   jmp     #:restore               ' early exit (invisible)
 
 ' No do the multiply with the map width.
 
@@ -743,7 +775,8 @@ drawtilemap             mov     vier, arg6              ' tile map copy
                         add     lp_y, tm_y
                         cmps    lp_y, _clipy2 wc
                 if_c    jmp     #:yloop                 ' for all (tile) rows
-                
+
+:restore                call    #pop_CR                 ' restore clipping rectangle
                         movs    %%0, #1                 ' restore vector
                         jmp     %%0                     ' return
 
@@ -803,6 +836,8 @@ fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVI
 h55555555               long    $55555555               ' transparent colour extraction mask
 hAAAA0000               long    $AAAA0000               ' transparent colour filler
 
+clip                    long                            ' covers clipping rectangle (8 longs)
+
 _clipx1                 long    0                       ' |
 _clipy1                 long    0                       ' |
 _clipx2                 long    128                     ' |
@@ -860,6 +895,8 @@ eins                    res     1                       ' |
 zwei                    res     1                       ' |
 drei                    res     1                       ' |
 vier                    res     1                       ' temporary registers (1..4)
+
+backup                  res     8                       ' clipping rectangle backup area
 
 
 addr                    res     1                       ' parameter location
