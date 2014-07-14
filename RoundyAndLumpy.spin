@@ -34,14 +34,14 @@ VAR
 PUB Main
 
     lcd.Start(gfx.Start)
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     lcd.DrawScreen
     lcd.SetFrameLimit(40)
     gfx.LoadMap(tilemap.Addr, map.Addr)
 
     repeat
         ctrl.Update
-        gfx.FillSCreen($5555)
+        gfx.ClearScreen($5555)
 
         gfx.DrawMap(xoffset,0)
 
