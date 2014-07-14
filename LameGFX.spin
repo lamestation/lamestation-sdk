@@ -641,9 +641,7 @@ PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 
         tilecnttemp += word[map_levelmap][MX]
 }
-drawtilemap             mov     vier, arg6              ' tile map copy
-
-                        call    #push_CR                ' preserve current clipping rectangle
+drawtilemap             call    #push_CR                ' preserve current clipping rectangle
 
                         mov     _clipx1, arg2           ' copy local settings
                         mov     _clipy1, arg3
@@ -654,18 +652,18 @@ drawtilemap             mov     vier, arg6              ' tile map copy
                        
 ' Get logical tile size (previously 8n by 8m).
 
-                        add     vier, #2
-                        rdword  tm_x, vier              ' word[map_tilemap][SX]
-                        add     vier, #2
-                        rdword  tm_y, vier              ' word[map_tilemap][SY]
-
+                        add     arg6, #2
+                        rdword  tm_x, arg6              ' word[map_tilemap][SX]
+                        add     arg6, #2
+                        rdword  tm_y, arg6              ' word[map_tilemap][SY]
+                        sub     arg6, #4                ' restore
+                        
 ' Grab the map width and skip the header of the level map.
 '   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
 '                  =                                                              ==============
 
-                        mov     madr, arg7
-                        rdword  madv, madr              ' map (byte) width
-                        add     madr, #4                ' skip header
+                        rdword  madv, arg7              ' map (byte) width
+                        add     arg7, #4                ' skip header
 
 ' Now we add the x offset (divided by tile width).
 '   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
@@ -674,7 +672,7 @@ drawtilemap             mov     vier, arg6              ' tile map copy
                         mov     eins, arg0
                         mov     zwei, tm_x
                         call    #divide                 ' offset_x / tx
-                        add     madr, eins              ' high word (remainder) ignored
+                        add     arg7, eins              ' high word (remainder) ignored
 
 ' Calculate X loop start value (while we have the remainder available).
 
@@ -745,13 +743,12 @@ drawtilemap             mov     vier, arg6              ' tile map copy
                         rcr     eins, #1 wc                                            
                 if_c    add     eins, zwei wc           ' 16x4bit, precision: 16       
                                                                                        
-                        add     madr, eins              ' apply offset                 
-                        mov     vier, arg6              ' tile copy
+                        add     arg7, eins              ' apply offset                 
 
 ' Run the nested loop(s).
 
 :yloop                  mov     eins, lp_x              ' reload temporary
-                        mov     zwei, madr              ' map address
+                        mov     zwei, arg7              ' map address
 
 :xloop                  rdbyte  drei, zwei              ' get tile info
                         add     zwei, #1                ' advance
@@ -760,7 +757,7 @@ drawtilemap             mov     vier, arg6              ' tile map copy
 
                         sub     drei, #1                ' adjust index
 
-                        mov     arg0, vier              ' |
+                        mov     arg0, arg6              ' |
                         mov     arg1, eins              ' |
                         mov     arg2, lp_y              ' transfer parameters
                         mov     arg3, drei              ' |
@@ -770,7 +767,7 @@ drawtilemap             mov     vier, arg6              ' tile map copy
                         cmps    eins, _clipx2 wc
                 if_c    jmp     #:xloop                 ' for all (tile) columns
 
-                        add     madr, madv              ' next row
+                        add     arg7, madv              ' next row
 
                         add     lp_y, tm_y
                         cmps    lp_y, _clipy2 wc
@@ -886,15 +883,13 @@ srcW{ord}               res     1                       ' current sprite word
 
 lp_x                    res     1                       ' |
 lp_y                    res     1                       ' map loop indices
-madr                    res     1                       ' current map address
 madv                    res     1                       ' map advance (byte width)
 tm_x                    res     1                       ' |
 tm_y                    res     1                       ' logical tile size
 
 eins                    res     1                       ' |
 zwei                    res     1                       ' |
-drei                    res     1                       ' |
-vier                    res     1                       ' temporary registers (1..4)
+drei                    res     1                       ' temporary registers (1..3)
 
 backup                  res     8                       ' clipping rectangle backup area
 
