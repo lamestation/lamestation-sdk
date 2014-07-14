@@ -28,7 +28,7 @@ PUB Main
     
     repeat
         ctrl.Update
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
 
         
         if ctrl.Right
