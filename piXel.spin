@@ -122,7 +122,7 @@ PUB Main
 
 PUB TitleScreen
     ctrl.Update
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
 
     gfx.PutString(string("p  i      e  l"), 8, 30)
     gfx.Sprite(gfx_pixmain.Addr, 40, 8, 0)        
