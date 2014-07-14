@@ -118,14 +118,7 @@ PUB WaitToDraw
     repeat
     while instruction
 
-PUB ClearScreen
-'' This command clears the screen to black. Recommended if your game
-'' display is sparse and not likely to be overdrawn every frame (like
-'' in a tile-based game).
-
-    FillScreen(0)
-    
-PUB FillScreen(colour)
+PUB ClearScreen(colour)
 '' Fill the composition buffer with the given colour.
 
     repeat
@@ -144,15 +137,6 @@ PUB Blit(source)
 
     c_parameters{0} := source
     instruction := c_blitscreen
-
-PUB Box(source, x, y)
-'' This function displays an 8x8 tile from an address. This address could
-'' be a single image or it could be full tileset; the user is responsible
-'' for structuring their data. However, take a look at some of the tile
-'' functions to see how Box can be used to build larger functionality
-'' like tile mapping.
-
-    Sprite(source, x, y, 0)
 
 PUB Sprite(source, x, y, frame)
 '' * **source** - Memory address of the source image
