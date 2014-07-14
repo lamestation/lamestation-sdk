@@ -62,7 +62,7 @@ VAR
 PUB Main
 
     lcd.Start(gfx.Start)
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     lcd.DrawScreen
     lcd.SetFrameLimit(40)
     gfx.LoadFont(font.Addr, "0", 4, 6)
@@ -83,7 +83,7 @@ PUB TitleScreen | flightstate
 
         xoffset++
 
-        gfx.FillScreen(gfx#WHITE)
+        gfx.ClearScreen(gfx#WHITE)
 
         PutTileParallax(0,48,16,UNDER)
         PutTileParallax(xoffset,56,16,FLOOR)
@@ -120,7 +120,7 @@ PUB GameLoop
 
     repeat while not died
         ctrl.Update
-        gfx.FillScreen(gfx#WHITE)
+        gfx.ClearScreen(gfx#WHITE)
 
         xoffset++
 
