@@ -102,14 +102,14 @@ PUB Main
 
     dira~
     lcd.Start(gfx.Start)
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     lcd.SetFrameLimit(40)
     pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
     ctrl.Start
 
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     lcd.DrawScreen
 
     gfx.LoadFont(font.Addr, " ", 8, 8)
@@ -136,9 +136,9 @@ PUB Main
 ' *********************************************************   
 PUB LogoScreen
 
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     lcd.DrawScreen
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     gfx.Sprite(gfx_logo_teamlame.Addr, -2, 24, 0)
     lcd.DrawScreen
 
@@ -198,7 +198,7 @@ PUB TankSelect
 
         ctrl.Update
         lcd.DrawScreen       
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
 
         if ctrl.Up or ctrl.Down
            if joyclicked == 0
@@ -268,7 +268,7 @@ PUB LevelSelect
 
         ctrl.Update
         lcd.DrawScreen
-        gfx.ClearScreen         
+        gfx.ClearScreen(0)      
 
 
         if ctrl.Up or ctrl.Down
@@ -332,7 +332,7 @@ PUB TankFaceOff
 
         ctrl.Update 
         lcd.DrawScreen        
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
         gfx.PutString(string("Prepare for battle..."),0,24)
@@ -371,7 +371,7 @@ PUB GameLoop : menureturn
 
         ctrl.Update
         lcd.DrawScreen
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
 
         if tankon[yourtank]
             ControlTank 
@@ -505,7 +505,7 @@ PUB PauseMenu : menureturn
            
         ctrl.Update 
         lcd.DrawScreen         
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
         gfx.PutString(string(" PAUSE!"),40,16)

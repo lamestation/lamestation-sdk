@@ -65,7 +65,7 @@ PUB Main
 
     audio.Start
 
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     lcd.DrawScreen
 
     clicked := 0
@@ -103,12 +103,12 @@ PUB StaticScreen | x
 
 PUB LogoScreen | x
 
-    gfx.ClearScreen
+    gfx.ClearScreen(0)
     lcd.DrawScreen
     
     repeat x from 0 to 100000
     
-    gfx.ClearScreen 
+    gfx.ClearScreen(0)
     gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
     lcd.DrawScreen
 
@@ -363,7 +363,7 @@ PUB LevelStage
     choice := 1
     repeat until not choice
         lcd.DrawScreen     
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
        
 
         HandlePlayer                        
@@ -432,7 +432,7 @@ PUB BossStage
 
         lcd.DrawScreen
         
-        gfx.ClearScreen
+        gfx.ClearScreen(0)
         
         gfx.Sprite(@gfx_planet, 20,48, 0)
               
