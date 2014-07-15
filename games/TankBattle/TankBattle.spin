@@ -321,9 +321,7 @@ PUB LevelSelect
         gfx.PutString(levelname[currentlevel],40,16)
         
         gfx.LoadMap(tilemap,leveldata[currentlevel])
-        gfx.SetClipRectangle(0, 24, 128, 64)
-        gfx.DrawMap(xoffset,yoffset)
-        gfx.SetClipRectangle(0,  0, 128, 64)
+        gfx.DrawMapRectangle(xoffset, yoffset, 0, 24, 128, 64)
 
 PUB TankFaceOff
          
