@@ -144,9 +144,6 @@ VAR
 
     long    LoopingPlayStack[20]
 
-PUB null
-'' This is not a top-level object.
-
 PUB Start
       
     parameter := @freqTable

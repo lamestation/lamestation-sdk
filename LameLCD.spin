@@ -64,9 +64,6 @@ CON
   CMD_SETSCREEN     = $01D
   CMD_SETFRAMELIMIT = $021
   CMD_DRAWSCREEN    = $026
-  
-PUB null
-'' This is not a top level object.
 
 PUB Start(buffer{4n})
 '' Initializes the LCD object.
