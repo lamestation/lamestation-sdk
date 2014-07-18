@@ -86,9 +86,6 @@ VAR
     long    map_tilemap                                 ' |
     long    map_levelmap                                ' order/type locked
 
-PUB null
-'' This is not a top level object.
-
 PUB Start
 
     drawsurface := @graphicsdriver                      ' reuse DAT section

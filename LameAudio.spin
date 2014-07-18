@@ -10,10 +10,7 @@ Authors: Brett Weir
 }}
 
 
-CON     
-    _clkmode = xtal1 + pll16x
-    _xinfreq = 5_000_000
-
+CON
     PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
     FS      = 40000
     SAMPLES = 512
@@ -143,9 +140,6 @@ VAR
     byte    linecursor
 
     long    LoopingPlayStack[20]
-
-PUB null
-'' This is not a top-level object.
 
 PUB Start
       
