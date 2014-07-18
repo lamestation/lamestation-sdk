@@ -108,6 +108,8 @@ PUB Start
     repeat
     while instruction
 
+    ClearScreen(0)
+
     return drawsurface
     
 PUB WaitToDraw
