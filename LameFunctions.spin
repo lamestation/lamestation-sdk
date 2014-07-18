@@ -13,7 +13,15 @@ PUB TestBoxCollision(obj1x, obj1y, obj1w, obj1h, obj2x, obj2y, obj2w, obj2h)
     return 1
 
 PUB SetClock
-
+{ based on:
+    Object File: Clock.spin
+    Version:     1.2
+    Date:        2006 - July 16, 2012
+    Author:      Jeff Martin
+    Company:     Parallax Semiconductor
+    Email:       jmartin@parallaxsemiconductor.com
+    Licensing:   MIT License - see end of file for terms of use.
+}
     if not (clkmode & $18) and (clockMode & $18)
         clkset(clkmode & $07 | clockMode & $78, clkfreq)
         waitcnt(oscDelay[clkmode & $7 <# 2] * |<(clkmode & $7 - 3 #> 0) + cnt)
