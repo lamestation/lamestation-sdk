@@ -118,13 +118,13 @@ PUB WaitToDraw
     repeat
     while instruction
 
-PUB ClearScreen(colour)
-'' Fill the composition buffer with the given colour.
+PUB ClearScreen(color)
+'' Fill the composition buffer with the given color.
 
     repeat
     while instruction
 
-    c_parameters{0} := colour
+    c_parameters{0} := color
     instruction := c_fillbuffer
 
 PUB Blit(source)
@@ -427,7 +427,7 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
                         rol     srcW, iter_x            ' align with dst
 
 ' dstL now holds the long "below" the source word srcW. Any unused pixel in the latter is
-' marked transparent. A bit pattern of %10 marks the transparent colour which is now extracted
+' marked transparent. A bit pattern of %10 marks the transparent color which is now extracted
 ' for all 16 pixels (transparent will result in %01, filled in %00).
 
                         mov     frqb, srcW              ' %10 is transparent
@@ -441,7 +441,7 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
                         mov     phsb, frqb
                         mov     frqb, phsb              ' frqb *= 3
 
-' We now have a valid clipping mask based on the colour information. Next we apply the left/right
+' We now have a valid clipping mask based on the color information. Next we apply the left/right
 ' clipping masks which may modify the existing mask or leave it as is. dstT points to the high word
 ' of the destination long.
 
@@ -582,7 +582,7 @@ pop_CR_ret              ret
 
 ' #### FILL BUFFER
 ' ------------------------------------------------------
-' parameters: arg0: colour
+' parameters: arg0: color
 
 fillbuffer              rdword  arg1, destscrn
                         mov     arg3, fullscreen
@@ -830,8 +830,8 @@ destscrn                long    4                       ' address of composition
 
 fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
 
-h55555555               long    $55555555               ' transparent colour extraction mask
-hAAAA0000               long    $AAAA0000               ' transparent colour filler
+h55555555               long    $55555555               ' transparent color extraction mask
+hAAAA0000               long    $AAAA0000               ' transparent color filler
 
 clip                    long                            ' covers clipping rectangle (8 longs)
 
