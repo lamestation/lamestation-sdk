@@ -10,10 +10,7 @@ Authors: Brett Weir
 }}
 
 
-CON     
-    _clkmode = xtal1 + pll16x
-    _xinfreq = 5_000_000
-
+CON
     PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
     FS      = 40000
     SAMPLES = 512
