@@ -61,9 +61,10 @@ CON
 
 
 CON
-  CMD_SETSCREEN     = $01D
-  CMD_SETFRAMELIMIT = $021
+  CMD_SETSCREEN     = $01F
+  CMD_SETFRAMELIMIT = $022
   CMD_DRAWSCREEN    = $026
+  CMD_INVERTSCREEN  = $036
 
 PUB Start(buffer{4n})
 '' Initializes the LCD object.
@@ -103,14 +104,19 @@ PUB SetFrameLimit(frequency)
     rate := clkfreq / frequency                         ' division by 0 is 0 in SPIN
     Exec(CMD_SETFRAMELIMIT, @rate)
     
+PUB InvertScreen(enabled{boolean})
+'' Invert black/white but leave gray untouched.
+
+    Exec(CMD_INVERTSCREEN, enabled)
+    
 PUB WaitForVerticalSync
 '' Block execution until vertical sync pulse starts.
 
     ifnot rate
         repeat
-        until sync
+        until sync.byte{0}
         repeat
-        while sync                                      ' 1/0 transition
+        while sync.byte{0}                              ' 1/0 transition
   
 DAT                                                     ' DAT mailbox
 
@@ -139,8 +145,10 @@ read            if_nz   mov     eins, line              ' read data or black (de
                         mov     zwei, eins
                         shr     zwei, #8
 
-                        test    idnt, #1 wc             ' even or odd frame?
-                if_nc   andn    eins, zwei              ' apply gray value
+                        test    idnt, #%0_00000001 wc   ' even or odd frame?
+                if_nc   and     eins, zwei              ' apply gray value
+                        test    idnt, #%1_00000000 wc   ' inverse
+                if_c    xor     eins, zwei
                         and     eins, dmsk              ' limit to valid pins
               
                         or      eins, CMD_WriteByte     ' chip select embedded
@@ -155,8 +163,8 @@ read            if_nz   mov     eins, line              ' read data or black (de
                         cmp     rcnt, rmsk wz           ' check recently drawn page
                 if_ne   jmp     #main                   ' for all pages
 
-                        xor     idnt, #1                ' toggle frame identifier
-                        wrlong  idnt, blnk              ' and announce it
+                        xor     idnt, #%0_00000001      ' toggle frame identifier
+                        wrbyte  idnt, blnk              ' and announce it
 
                         rdlong  eins, par wz            ' fetch command
                 if_nz   jmp     eins
@@ -169,16 +177,14 @@ reentry                 waitcnt LCD_time, LCD_frameperiod
 cmd_scrn                shr     eins, #16               ' |
                         mov     scrn, eins              ' update display buffer
 
-                        wrlong  zero, par               ' acknowledge command
-                        jmp     #reentry
+                        jmp     #done                   ' acknowledge command
 
 
 cmd_rate                shr     eins, #16
                         rdlong  frqx, eins              ' get limit
                         mov     phsb, #0                ' reset counter
 
-                        wrlong  zero, par               ' acknowledge command
-                        jmp     #reentry
+                        jmp     #done                   ' acknowledge command
 
 
 cmd_draw                cmp     frqx, #0 wz             ' frame rate switched off?
@@ -187,8 +193,8 @@ cmd_draw                cmp     frqx, #0 wz             ' frame rate switched of
                         cmp     frqx, phsb wz,wc
                 if_a    jmp     #reentry                ' too early, block
 
-                        cmp     idnt, #1 wz
-                if_e    jmp     #reentry                ' only during 1/0 transitions
+                        test    idnt, #%0_00000001 wz
+                if_nz   jmp     #reentry                ' only during 1/0 transitions
 
                         mov     phsb, #0                ' reset counter
 
@@ -202,9 +208,15 @@ cmd_draw                cmp     frqx, #0 wz             ' frame rate switched of
                         add     zwei, #4
                         djnz    drei, #$-4              ' buffer copy
 
-                        wrlong  zero, par               ' acknowledge command
-                        jmp     #reentry
+                        jmp     #done                   ' acknowledge command
 
+
+cmd_invert              shr     eins, #16 wz            ' extract boolean payload
+                        muxnz   idnt, #%1_00000000      ' update flags
+
+done                    wrlong  zero, par               ' acknowledge command
+                        jmp     #reentry
+                                
 ' min enable pulse width: 450ns
 ' min address setup time: 140ns (before enable high)
 '     min data hold time:  10ns
@@ -311,6 +323,8 @@ translateLCD            add     rcnt, radv              ' 8 blocks of 8 rows
                         shr     xsrc+7, #1 wc
                         rcr     trgt, #17 -DB
 
+                        xor     trgt, nmsk              ' invert odd columns
+
 :set                    mov     line, trgt              ' store one pixel column
                         add     :set, dst1              ' advance destination
 
@@ -343,10 +357,11 @@ mask                    long    |< (LCDend +1) - |< LCDstart
 
 frqx                    long    0                       ' frame rate limiter
 scrn                    long    0                       ' active screen buffer
-idnt                    long    0                       ' frame ID (even/odd)
+idnt                    long    0                       ' frame ID (even/odd) and misc flags
 dst1                    long    |< 9                    ' dst +/-= 1
 
-dmsk                    long    $FF << DB
+dmsk                    long    $00FF << DB
+nmsk                    long    $FF00 << DB
 
 rmsk                    long    $07 << DB
 radv                    long    $01 << DB
