@@ -108,7 +108,7 @@ PUB Start
     repeat
     while instruction
 
-    ClearScreen(0)
+    longfill(drawsurface, 0, 512)                       ' clear screen
 
     return drawsurface
     
