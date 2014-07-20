@@ -11,6 +11,9 @@ Authors: Brett Weir
 
 
 CON                       
+    _clkmode        = xtal1 + pll16x
+    _xinfreq        = 5_000_000
+
     DIR_L = 0
     DIR_R = 1
     DIR_U = 2
