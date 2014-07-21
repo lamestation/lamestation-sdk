@@ -107,7 +107,7 @@ PUB SetFrameLimit(frequency)
 PUB InvertScreen(enabled{boolean})
 '' Invert black/white but leave gray untouched.
 
-    Exec(CMD_INVERTSCREEN, enabled)
+    Exec(CMD_INVERTSCREEN, enabled <> 0)
     
 PUB WaitForVerticalSync
 '' Block execution until vertical sync pulse starts.

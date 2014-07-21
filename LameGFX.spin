@@ -79,7 +79,7 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_blitscreen, c_sprite, c_setcliprect, c_drawtilemap, c_fillbuffer
+    long    c_blitscreen, c_sprite, c_setcliprect, c_drawtilemap, c_fillbuffer, c_invertcolor
     long    c_parameters[8]
 
 VAR
@@ -99,6 +99,7 @@ PUB Start
     c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
     c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %111_1 << 12
     c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %000_1 << 12
+    c_invertcolor := @c_parameters << 16 | (@invcolor    - @graphicsdriver) >> 2 | %000_1 << 12
 
 ' Since we reuse the DAT section holding the driver we have to make sure that the cog is up
 ' and running before we make it public (and someone e.g. clears it). As part of the command
@@ -155,6 +156,15 @@ PUB Sprite(source, x, y, frame)
 
     longmove(@c_parameters{0}, @source, 4)
     instruction := c_sprite
+
+PUB InvertColor(enabled{boolean})
+'' When enabled colors black and white are plotted inverted (gray is left unchanged).
+
+    repeat
+    while instruction
+
+    c_parameters{0} := enabled
+    instruction := c_invertcolor
 
 ' *********************************************************
 '  Maps
@@ -431,8 +441,11 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 
                         mov     frqb, srcW              ' %10 is transparent
                         shr     frqb, #1
-                        andn    frqb, srcW
-                        and     frqb, h55555555         ' extract transparent pixel
+                        and     frqb, h55555555         ' extract transparent pixel marker
+                        mov     vier, frqb              ' copy high bit pattern
+                        andn    frqb, srcW              ' only keep transparent pixels
+
+                        xor     vier, h55555555         ' invert
 
 ' Multiply the resulting mask by 3, e.g. %010001 becomes %110011 or %%303. This uses the fact
 ' that phsx of a counter has frqx added twice before it can be read in the next insn.
@@ -478,6 +491,8 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 
 ' Mask is complete, filter the relevant info from src/dst and combine all pixels in the dst long.
                 
+                        test    mode, #%01 wc           ' if enabled ...
+                if_c    xor     srcW, vier              ' invert black/white
                         andn    srcW, frqb              ' clear transparent pixels
                         and     dstL, frqb              ' make space for src      
                         or      dstL, srcW              ' combine dst/src         
@@ -787,6 +802,15 @@ divide                  shl     zwei, #15               ' get divisor into y[30.
                         djnz    drei, #$-2              ' loop until done
 divide_ret              ret                             ' div in x[15..0], rem in x[31..16]
 
+' #### INVERT COLOR
+' ------------------------------------------------------
+' parameters: arg0: on/off (boolean, NZ/Z)
+
+invcolor                cmp     arg0, #0 wz
+                        muxnz   mode, #%01              ' re/set inversion
+
+                        jmp     %%0                     ' return
+
 ' support code (fetch up to 4 arguments)
 
 args                    rdlong  arg0, addr              ' read 1st argument
@@ -827,7 +851,7 @@ args_ret                ret
 
 destscrn                long    4                       ' address of composition buffer
 
-fullscreen              long    SCREENSIZE_BYTES/2  'EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
+fullscreen              long    SCREENSIZE_BYTES/2      ' EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
 
 h55555555               long    $55555555               ' transparent color extraction mask
 hAAAA0000               long    $AAAA0000               ' transparent color filler
@@ -847,6 +871,7 @@ mskRL                   long    0                       ' (this is required by t
 delta                   long    %001_0 << 28 | $FFFC    ' %10 deal with movi setup
                                                         ' -(-4) address increment
 argn                    long    |< 12                   ' function does have arguments
+mode                    long    0                       ' inversion state
 
 ' Stuff below is re-purposed for temporary storage.
 
@@ -888,7 +913,8 @@ tm_y                    res     1                       ' logical tile size
 
 eins                    res     1                       ' |
 zwei                    res     1                       ' |
-drei                    res     1                       ' temporary registers (1..3)
+drei                    res     1                       ' temporary registers (1..4)
+vier                    res     1                       ' |
 
 backup                  res     8                       ' clipping rectangle backup area
 
