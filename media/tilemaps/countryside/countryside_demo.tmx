@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="32" height="32" tilewidth="8" tileheight="8">
+ <tileset firstgid="1" source="countryside.tsx"/>
+ <layer name="Tile Layer 1" width="32" height="32">
+  <data encoding="base64" compression="zlib">
+   eJzFl81PFEEQxTs7BsTIQRb8wATW7wSWGCHBPax6gIPiAQ6isOABhNnlpLji32910i++eVYzQ2LC4Zed3Zmu96q6e7q2HUJoXyOLieVr0t8z9o2F/+BjifKpAzonxpH4UA+5uMtyv2O0jC8pXg7O94Q4knuLEnfKuGV8Mm7Tcx3SjOO/SVwF+e5l7u0nvciEcTNdzxl3jXvGfXomah+n8afGd+NH4nONF+/+KcWeMWbT9SPjsfHEeOpo69iWePHAffbBNVig+q8YL9PnSvqNa71rnFPdJql2kQfGvPHQOCAOkw/2wHl06fqGMZ3J7zxU69am2kWeGc+NF8aQ2BYPX8lnHNcT/ZbDgHLpkv461eCVsWqskfa8A/sskibDemAnxRslv7yP4eGN8dZ4R/qrDuxT84R+STE2jLGxmfTxLHuI8/DB2DI+0tgtB/bJdYV+jh2aS10HqAHiDTNsi8+Sfj+g/H9SzsPMHHk1KEVvM/gesI5+E2OKHb+fOfHYi7cX1Lc3Hh56UtM7EvdC/KkHrUGcA7wToAs/7Cnnh+s/oHn2chg1nIdJ8tTEC2pbkqdYow0ZMwr+WsB5BS2csagNe6nzMCZ+SR2wD/Gs9z5uBb/fwF7RtcJ7XXMbUB3gh3V4H7KP146+PsfzwnFZv0za8T73Ajg/ZiQ+zoW6norf30xB193kMWr3Q7UXwPmh+sivSb83K7qsjfjIuR+qZzHmPVdn9XVZDVQbe5B7kH6o9gF18b1+M1eDgnSx7+I65x6k3zBv0MSj6mOfYb1BfzfpTzTQZX3ud3O1UP33GZrmw/rePmVif98R/Vj3aak99+9N5nRJ5vPQGQtt3nPQ1/7zqh7WQ7V3wjnH8xG10X8W4e97Ds96/zWu4iF3znHP0wv/rr3hJfrsoW4t5M5bPkOKjL7uPe9/TJ3+HzsNx4s=
+  </data>
+ </layer>
+</map>

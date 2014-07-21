@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="41" height="35" tilewidth="8" tileheight="8">
+ <tileset firstgid="1" source="pikeman.tsx"/>
+ <layer name="Tile Layer 1" width="41" height="35">
+  <data encoding="base64" compression="zlib">
+   eJzVlutOxCAQhVkbr4kSXY0m2hjvWbeu7qrx/d9MGiElRwaYTiH64wsWaTl7mBlmrpSaA6eGl0yWhplBW3Lf44D6JBq7f6BxFvj/FpOSGp3OmhqbBCs7Ov9wpDTsGvaAA6HGlsC9H9KnIxrPDOfAhUBjS7wTi0f3TGm8M2wM94YH+/djJY1OZ0xjn/drq8vxbvio7GMfb/sWP84cVHzX9HFtvdlYf46Z1PBx7FjTx7FjzXjk1uycGn4T4Fbg41JIaI/YXTJFXnPPvaRGKq+5cRnaQ3v4653OlEYNYHzh9w7VcE8fefMxH0P6dMLfBr7dKToe8XuXarinr7z5mI/bHjvMcwmNod/gzz+p4R5cZPqINUda51Ajzn+qn3h9Nnxl+ogaKT9iZz3FPcPxkZP3DXP/sXmd8nGl8nzEZ8zf1PmMiUesPSkf8RnzN1UvJD6+qt935VuGj5i/JX3s566Bk4iPrnZj/k7tI0cj9tel+56+38G+mNLI7a8lfTj2EGPrI+Vran1OPKJG7n0diseOsT4nHlGjNJ6k/XiORmkfLe3HuT0uRRuZdz7G1nD2KqHR+fiXNZbw8RusE3Cf
+  </data>
+ </layer>
+</map>
