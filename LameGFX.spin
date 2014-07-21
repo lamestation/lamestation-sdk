@@ -439,9 +439,9 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 
                         mov     frqb, srcW              ' %10 is transparent
                         shr     frqb, #1
-                        and     frqb, h55555555         ' extract transparent pixel
+                        and     frqb, h55555555         ' extract transparent pixel marker
                         mov     vier, frqb              ' copy high bit pattern
-                        andn    frqb, srcW
+                        andn    frqb, srcW              ' only keep transparent pixels
 
                         xor     vier, h55555555         ' invert
 
