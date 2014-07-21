@@ -22,25 +22,20 @@ PUB SetClock
     Email:       jmartin@parallaxsemiconductor.com
     Licensing:   MIT License - see end of file for terms of use.
 }
-    if not (clkmode & $18) and (clockMode & $18)
-        clkset(clkmode & $07 | clockMode & $78, clkfreq)
+    ifnot clkmode & $18
+        clkset(clkmode & $07 | $68, clkfreq)
         waitcnt(oscDelay[clkmode & $7 <# 2] * |<(clkmode & $7 - 3 #> 0) + cnt)
                            
-    clkset(clockMode, ircFreq[clockMode <# 2] * |<(clockMode & $7 - 3 #> 0))                                                                                                                                                            
+    clkset($6F, 80_000_000)                                                                                                                                                                                                             
 
 CON
     WMIN = 381                                          'WAITCNT-expression overhead minimum
                                                         'ie: freeze protection
-    clockMode    = %0_1_1_01_111
-    xinFrequency = 5_000_000
     
 DAT
-    ircFreq   long      12_000_000                      'Ideal RCFAST frequency                                                                     
-              long      20_000                          'Ideal RCSLOW frequency                                                                     
-    xinFreq   long      xinFrequency                    'External source (XIN) frequency (updated by .Init); MUST reside immediately after ircFreq  
     oscDelay  long      20_000_000 / 100                'Sys Counter offset for 10 ms oscillator startup delay based on worst-case RCFAST frequency 
               long      33_000 / 100 #> WMIN            '<same as above> but based on worst-case RCSLOW frequency; limited to WMIN to prevent freeze                         
-              long      xinFrequency / 100 #> WMIN      '<same as above> but based on external source (XIN) frequency; updated by .Init             
+              long      5_000_000 / 100 #> WMIN         '<same as above> but based on external source (XIN) frequency                               
 
 DAT
 {{
