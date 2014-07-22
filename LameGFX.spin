@@ -109,6 +109,8 @@ PUB Start
     repeat
     while instruction
 
+    longfill(drawsurface, 0, 512)                       ' clear screen
+
     return drawsurface
     
 PUB WaitToDraw

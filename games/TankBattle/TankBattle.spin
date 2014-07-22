@@ -10,13 +10,10 @@ Authors: Brett Weir
 }}
 
 
-CON
+CON                       
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
-                     
-    SCREEN_W = 128
-    SCREEN_H = 64
-            
+
     DIR_L = 0
     DIR_R = 1
     DIR_U = 2
@@ -57,7 +54,6 @@ OBJ
     pst     :               "LameSerial"
     ctrl    :               "LameControl"
     fn      :               "LameFunctions"
-   
 
 VAR
 
@@ -470,8 +466,8 @@ PUB GhostMode
             xoffset := 0 
     if ctrl.Right
         xoffset++
-        if xoffset > levelw<<3-SCREEN_W
-            xoffset := levelw<<3-SCREEN_W
+        if xoffset > levelw<<3-lcd#SCREEN_W
+            xoffset := levelw<<3-lcd#SCREEN_W
 
 
     
@@ -482,8 +478,8 @@ PUB GhostMode
             yoffset := 0  
     if ctrl.Down
         yoffset++
-        if yoffset > levelh<<3-SCREEN_H
-            yoffset := levelh<<3-SCREEN_H  
+        if yoffset > levelh<<3-lcd#SCREEN_H
+            yoffset := levelh<<3-lcd#SCREEN_H  
 
      
     if ctrl.A or ctrl.B
@@ -633,16 +629,16 @@ PUB InitLevel
 
 PUB ControlOffset(tankindexvar) | bound_x, bound_y
 
-    bound_x := levelw<<3 - SCREEN_W
-    bound_y := levelh<<3 - SCREEN_H
+    bound_x := levelw<<3 - lcd#SCREEN_W
+    bound_y := levelh<<3 - lcd#SCREEN_H
     
-    xoffset := tankx[tankindexvar] + (tankw[tankindexvar]>>1) - (SCREEN_W>>1)
+    xoffset := tankx[tankindexvar] + (tankw[tankindexvar]>>1) - (lcd#SCREEN_W>>1)
     if xoffset < 0
         xoffset := 0      
     elseif xoffset > bound_x
         xoffset := bound_x
                   
-    yoffset := tanky[tankindexvar] + (tankh[tankindexvar]>>1) - (SCREEN_H>>1)
+    yoffset := tanky[tankindexvar] + (tankh[tankindexvar]>>1) - (lcd#SCREEN_H>>1)
     if yoffset < 0
         yoffset := 0      
     elseif yoffset > bound_y
@@ -722,7 +718,7 @@ PUB DrawTanks
             tankwtemp := tankw[tankindex]
             tankhtemp := tankh[tankindex]        
                                                                                  
-            if (tankxtemp => 0) and (tankxtemp =< SCREEN_W-tankw[tankindex]) and (tankytemp => 0) and (tankytemp =< SCREEN_H - tankh[tankindex])
+            if (tankxtemp => 0) and (tankxtemp =< lcd#SCREEN_W-tankw[tankindex]) and (tankytemp => 0) and (tankytemp =< lcd#SCREEN_H - tankh[tankindex])
 
                 if tankdir[tankindex] == DIR_D
                     gfx.Sprite(tankgfx[tankindex], tankxtemp, tankytemp, 0)
@@ -892,7 +888,7 @@ PUB HandleBullets
           bulletxtemp := bulletx[bulletindex] - xoffset
           bulletytemp := bullety[bulletindex] - yoffset
 
-          if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)
+          if (bulletxtemp => 0) and (bulletxtemp =< lcd#SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< lcd#SCREEN_H - 1)
           
              gfx.Sprite(gfx_bullet.Addr, bulletxtemp , bulletytemp, 0)
 
