@@ -79,7 +79,7 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_blitscreen, c_sprite, c_setcliprect, c_drawtilemap, c_fillbuffer, c_invertcolor
+    long    c_fillbuffer, c_blitscreen, c_invertcolor, c_setcliprect, c_sprite, c_drawtilemap
     long    c_parameters[8]
 
 VAR
@@ -91,15 +91,16 @@ PUB Start
     drawsurface := @graphicsdriver                      ' reuse DAT section
     instruction := NEGX                                 ' lock (see below)
     cognew(@graphicsdriver, @instruction)
-'                                                 function has(1) no(0) argument(s) ----+
-'                                                            number of arguments -1 --+ |
-'                                                                                     | |
-    c_blitscreen  := @c_parameters << 16 | (@blitscreen  - @graphicsdriver) >> 2 | %000_1 << 12
-    c_sprite      := @c_parameters << 16 | (@drawsprite  - @graphicsdriver) >> 2 | %011_1 << 12
-    c_setcliprect := @c_parameters << 16 | (@setcliprect - @graphicsdriver) >> 2 | %011_1 << 12
-    c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %111_1 << 12
-    c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %000_1 << 12
-    c_invertcolor := @c_parameters << 16 | (@invcolor    - @graphicsdriver) >> 2 | %000_1 << 12
+'                                                 function has(1) no(0) argument(s) -----+
+'                                                            number of arguments -1 ---+ |
+'                                                                                      | |
+    c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %0001_1 << 11
+    c_blitscreen  := @c_parameters << 16 | (@blitscreen  - @graphicsdriver) >> 2 | %0001_1 << 11
+    c_invertcolor := @c_parameters << 16 | (@invcolor    - @graphicsdriver) >> 2 | %0000_1 << 11
+    c_setcliprect := @c_parameters << 16 | (@clip_set    - @graphicsdriver) >> 2 | %0011_1 << 11
+    
+    c_sprite      := @c_parameters << 16 | (@drawsprite  - @graphicsdriver) >> 2 | %0011_1 << 11
+    c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %0111_1 << 11
 
 ' Since we reuse the DAT section holding the driver we have to make sure that the cog is up
 ' and running before we make it public (and someone e.g. clears it). As part of the command
@@ -124,7 +125,7 @@ PUB ClearScreen(color)
     repeat
     while instruction
 
-    c_parameters{0} := color
+    longmove(@c_parameters{0}, @result, 2)
     instruction := c_fillbuffer
 
 PUB Blit(source)
@@ -135,7 +136,7 @@ PUB Blit(source)
     repeat
     while instruction
 
-    c_parameters{0} := source
+    longmove(@c_parameters{0}, @result, 2)
     instruction := c_blitscreen
 
 PUB Sprite(source, x, y, frame)
@@ -323,11 +324,126 @@ graphicsdriver          jmpret  $, #setup               ' run setup once, then u
                         test    code, argn wc           ' check for arguments
                 if_z    jmp     #$-2                    ' try again
 
-                        mov     addr, code              ' args:n:[!Z]:cmd = 16:4:3:9
+                        mov     addr, code              ' args:n:[!Z]:cmd = 16:5:2:9
                         ror     addr, #16               ' extract argument location
                 if_c    call    #args                   ' fetch arguments
 '{n/a}          if_c    addx    addr, #3                ' advance beyond last argument
                         jmp     code                    ' execute function
+
+' #### FILL BUFFER
+' ------------------------------------------------------
+' parameters: arg0: dst buffer (word aligned) or NULL
+'             arg1: fill value
+
+fillbuffer              cmp     arg0, #0 wz
+                if_e    rdword  arg0, surface           ' draw surface
+                        mov     arg3, wcnt              ' words per buffer
+                                                        
+:loop                   wrword  arg1, arg0              
+                        add     arg0, #2                
+                        djnz    arg3, #:loop            
+                                                        
+                        jmp     %%0                     ' return
+
+' #### BLIT SCREEN
+' ------------------------------------------------------
+' parameters: arg0: dst buffer (word aligned) or NULL
+'             arg1: src buffer (word aligned)
+
+blitscreen              cmp     arg0, #0 wz
+                if_e    rdword  arg0, surface           ' draw surface
+                        add     arg1, #6                ' skip sprite header
+
+                        mov     arg3, wcnt              ' words per screen
+
+' Do word-aligned copy (no 4n guarantee) from src to dst.
+
+:loop                   rdword  arg2, arg1
+                        add     arg1, #2
+                        wrword  arg2, arg0
+                        add     arg0, #2
+                        djnz    arg3, #:loop
+
+                        jmp     %%0                     ' return
+
+' #### INVERT COLOR
+' ------------------------------------------------------
+' parameters: arg0: on/off (boolean, NZ/Z)
+
+invcolor                cmp     arg0, #0 wz
+                        muxnz   mode, #%01              ' re/set inversion
+
+                        jmp     %%0                     ' return
+
+' #### SET CLIP RECTANGLE
+' ------------------------------------------------------
+' parameters: arg0: x1
+'             arg1: y1
+'             arg2: x2
+'             arg3: y2
+
+clip_set                mov     _clipx1, arg0           ' copy ...
+                        mov     _clipy1, arg1
+                        mov     _clipx2, arg2
+                        mov     _clipy2, arg3
+
+clip_validate           mins    _clipx1, #0             ' ... and sanity check
+                        maxs    _clipx1, #res_x
+
+                        mins    _clipy1, #0
+                        maxs    _clipy1, #res_y
+
+                        mins    _clipx2, #0
+                        maxs    _clipx2, #res_x
+
+                        mins    _clipy2, #0
+                        maxs    _clipy2, #res_y
+
+                        test    $, #1 wc                ' set carry
+
+' Calculate two sets of clipping masks which are used for pixel exact clipping.
+' This is based on how far the clipping x coordinates reach into their respective
+' double word of pixels. Note, this is specific to the current sprite renderer.
+
+                        mov     mskLH, _clipx1
+                        and     mskLH, #%111
+                        mov     mskLL, #0
+                        rcl     mskLL, mskLH
+                        rcl     mskLL, mskLH            ' %%00000000_0???????
+                        mov     mskLH, mskLL
+                        rcl     mskLH, #16              ' %%0???????_????????
+
+                        neg     mskRH, _clipx2
+                        and     mskRH, #%111
+                        mov     mskRL, #0
+                        rcr     mskRL, mskRH
+                        rcr     mskRL, mskRH            ' %%???????0_00000000
+                        mov     mskRH, mskRL
+                        rcr     mskRH, #16              ' %%????????_???????0
+
+                        jmp     %%0                     ' return
+
+
+clip_push               mov     backup+0, clip+0        ' preserve clipping rectangle
+                        mov     backup+1, clip+1
+                        mov     backup+2, clip+2
+                        mov     backup+3, clip+3
+                        mov     backup+4, clip+4
+                        mov     backup+5, clip+5
+                        mov     backup+6, clip+6
+                        mov     backup+7, clip+7
+clip_push_ret           ret
+
+
+clip_pop                mov     clip+0, backup+0        ' restore clipping rectangle
+                        mov     clip+1, backup+1
+                        mov     clip+2, backup+2
+                        mov     clip+3, backup+3
+                        mov     clip+4, backup+4
+                        mov     clip+5, backup+5
+                        mov     clip+6, backup+6
+                        mov     clip+7, backup+7
+clip_pop_ret            ret
 
 ' #### DRAW SPRITE
 ' ------------------------------------------------------
@@ -336,7 +452,7 @@ graphicsdriver          jmpret  $, #setup               ' run setup once, then u
 '             arg2: y
 '             arg3: frame
 
-drawsprite              rdword  scrn, destscrn          ' render buffer
+drawsprite              rdword  scrn, surface           ' render buffer
 
 ' Extract pixel position for shift in destination value, then create bit offset.
 
@@ -427,7 +543,7 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 
                         rdword  srcW, srcT              ' extract 8 src pixel
                         add     srcT, #2                ' advance
-                        or      srcW, hAAAA0000         ' high word is always transparent
+                        or      srcW, trns              ' high word is always transparent
                         rol     srcW, iter_x            ' align with dst
 
 ' dstL now holds the long "below" the source word srcW. Any unused pixel in the latter is
@@ -436,11 +552,11 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 
                         mov     frqb, srcW              ' %10 is transparent
                         shr     frqb, #1
-                        and     frqb, h55555555         ' extract transparent pixel marker
+                        and     frqb, grid              ' extract transparent pixel marker
                         mov     vier, frqb              ' copy high bit pattern
                         andn    frqb, srcW              ' only keep transparent pixels
 
-                        xor     vier, h55555555         ' invert
+                        xor     vier, grid              ' invert
 
 ' Multiply the resulting mask by 3, e.g. %010001 becomes %110011 or %%303. This uses the fact
 ' that phsx of a counter has frqx added twice before it can be read in the next insn.
@@ -519,109 +635,6 @@ drawsprite              rdword  scrn, destscrn          ' render buffer
 ' ----- Y LOOP END -------------------------------------
                         jmp     %%0                     ' return
 
-' #### SET CLIP RECTANGLE
-' ------------------------------------------------------
-' parameters: arg0: x1
-'             arg1: y1
-'             arg2: x2
-'             arg3: y2
-
-setcliprect             mov     _clipx1, arg0           ' copy ...
-                        mov     _clipy1, arg1
-                        mov     _clipx2, arg2
-                        mov     _clipy2, arg3
-
-validate_CR             mins    _clipx1, #0             ' ... and sanity check
-                        maxs    _clipx1, #res_x
-
-                        mins    _clipy1, #0
-                        maxs    _clipy1, #res_y
-
-                        mins    _clipx2, #0
-                        maxs    _clipx2, #res_x
-
-                        mins    _clipy2, #0
-                        maxs    _clipy2, #res_y
-
-                        test    $, #1 wc                ' set carry
-
-' Calculate two sets of clipping masks which are used for pixel exact clipping.
-' This is based on how far the clipping x coordinates reach into their respective
-' double word of pixels. Note, this is specific to the current sprite renderer.
-
-                        mov     mskLH, _clipx1
-                        and     mskLH, #%111
-                        mov     mskLL, #0
-                        rcl     mskLL, mskLH
-                        rcl     mskLL, mskLH            ' %%00000000_0???????
-                        mov     mskLH, mskLL
-                        rcl     mskLH, #16              ' %%0???????_????????
-
-                        neg     mskRH, _clipx2
-                        and     mskRH, #%111
-                        mov     mskRL, #0
-                        rcr     mskRL, mskRH
-                        rcr     mskRL, mskRH            ' %%???????0_00000000
-                        mov     mskRH, mskRL
-                        rcr     mskRH, #16              ' %%????????_???????0
-
-                        jmp     %%0                     ' return
-
-
-push_CR                 mov     backup+0, clip+0        ' preserve clipping rectangle
-                        mov     backup+1, clip+1
-                        mov     backup+2, clip+2
-                        mov     backup+3, clip+3
-                        mov     backup+4, clip+4
-                        mov     backup+5, clip+5
-                        mov     backup+6, clip+6
-                        mov     backup+7, clip+7
-push_CR_ret             ret
-
-
-pop_CR                  mov     clip+0, backup+0        ' restore clipping rectangle
-                        mov     clip+1, backup+1
-                        mov     clip+2, backup+2
-                        mov     clip+3, backup+3
-                        mov     clip+4, backup+4
-                        mov     clip+5, backup+5
-                        mov     clip+6, backup+6
-                        mov     clip+7, backup+7
-pop_CR_ret              ret
-
-' #### FILL BUFFER
-' ------------------------------------------------------
-' parameters: arg0: color
-
-fillbuffer              rdword  arg1, destscrn
-                        mov     arg3, fullscreen
-
-:loop                   wrword  arg0, arg1              ' override dst buffer with arg0
-                        add     arg1, #2
-                        djnz    arg3, #:loop
-
-                        jmp     %%0                     ' return
-
-' #### BLIT SCREEN
-' ------------------------------------------------------
-' parameters: arg0: source buffer       (word aligned)
-'             arg1: destination buffer  (word aligned)
-
-blitscreen              rdword  arg1, destscrn          ' override destination
-                        add     arg0, #6                ' skip sprite header
-
-translate               mov     arg3, fullscreen        ' words per screen
-
-' Do word-aligned copy (no 4n guarantee) from src to dst.
-
-:loop                   rdword  arg2, arg0
-                        add     arg0, #2
-                        wrword  arg2, arg1
-                        add     arg1, #2
-                        djnz    arg3, #:loop
-
-                        jmp     %%0                     ' return
-
 ' #### DRAW TILE MAP
 ' ------------------------------------------------------
 ' parameters: arg0: x offset
@@ -650,14 +663,14 @@ PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 
         tilecnttemp += word[map_levelmap][MX]
 }
-drawtilemap             call    #push_CR                ' preserve current clipping rectangle
+drawtilemap             call    #clip_push              ' preserve current clipping rectangle
 
                         mov     _clipx1, arg2           ' copy local settings
                         mov     _clipy1, arg3
                         mov     _clipx2, arg4
                         mov     _clipy2, arg5
 
-                        jmpret  %%0, #validate_CR       ' validate local settings
+                        jmpret  %%0, #clip_validate     ' validate local settings
                        
 ' Get logical tile size (previously 8n by 8m).
 
@@ -782,7 +795,7 @@ drawtilemap             call    #push_CR                ' preserve current clipp
                         cmps    lp_y, _clipy2 wc
                 if_c    jmp     #:yloop                 ' for all (tile) rows
 
-:restore                call    #pop_CR                 ' restore clipping rectangle
+:restore                call    #clip_pop               ' restore clipping rectangle
                         movs    %%0, #1                 ' restore vector
                         jmp     %%0                     ' return
 
@@ -797,16 +810,7 @@ divide                  shl     zwei, #15               ' get divisor into y[30.
                         djnz    drei, #$-2              ' loop until done
 divide_ret              ret                             ' div in x[15..0], rem in x[31..16]
 
-' #### INVERT COLOR
-' ------------------------------------------------------
-' parameters: arg0: on/off (boolean, NZ/Z)
-
-invcolor                cmp     arg0, #0 wz
-                        muxnz   mode, #%01              ' re/set inversion
-
-                        jmp     %%0                     ' return
-
-' support code (fetch up to 4 arguments)
+' support code (fetch up to 9 arguments)
 
 args                    rdlong  arg0, addr              ' read 1st argument
                         cmpsub  addr, delta wc          ' [increment address and] check exit
@@ -837,6 +841,10 @@ args                    rdlong  arg0, addr              ' read 1st argument
                 if_nc   jmpret  zero, args_ret wc,nr
 
                         rdlong  arg7, addr              ' read 8th argument
+                        cmpsub  addr, delta wc
+                if_nc   jmpret  zero, args_ret wc,nr
+
+                        rdlong  arg8, addr              ' read 9th argument
 '                       cmpsub  addr, delta wc
 '               if_nc   jmpret  zero, args_ret wc,nr
 
@@ -844,13 +852,10 @@ args_ret                ret
 
 ' initialised data and/or presets
 
-destscrn                long    4                       ' address of composition buffer
+surface                 long    4                       ' address of composition buffer
 
-fullscreen              long    SCREENSIZE_BYTES/2      ' EXTREMELY IMPORTANT TO DIVIDE BY 2; CONSTANT IS WORD-ALIGNED, NOT BYTE-ALIGNED
-
-h55555555               long    $55555555               ' transparent color extraction mask
-hAAAA0000               long    $AAAA0000               ' transparent color filler
-
+wcnt                    long    res_x * res_y / 4 / 2   ' 4 pixels / byte     
+                                                        ' 2 bytes / word      
 clip                    long                            ' covers clipping rectangle (8 longs)
 
 _clipx1                 long    0                       ' |
@@ -863,14 +868,17 @@ mskLL                   long    0                       ' |
 mskRH                   long    0                       ' clipping masks for pixel exactness
 mskRL                   long    0                       ' (this is required by the current implementation)
 
-delta                   long    %001_0 << 28 | $FFFC    ' %10 deal with movi setup
+delta                   long    %001_0 << 27 | $FFFC    ' %10 deal with movi setup
                                                         ' -(-4) address increment
-argn                    long    |< 12                   ' function does have arguments
-mode                    long    0                       ' inversion state
+argn                    long    |< 11                   ' function does have arguments
+mode                    long    0                       ' miscellaneous flags
+
+trns                    long    $AAAA0000               ' transparent color filler
+grid                    long    $55555555               ' transparent color extraction mask
 
 ' Stuff below is re-purposed for temporary storage.
 
-setup                   add     destscrn, par           ' default render buffer location
+setup                   add     surface, par            ' default render buffer location
 
                         movi    ctrb, #%0_11111_000     ' LOGIC.always counter for math support
                         jmp     %%0                     ' return
@@ -899,7 +907,6 @@ dstH{igh}               res     1                       ' |
 dstL{ow}                res     1                       ' current screen long
 srcW{ord}               res     1                       ' current sprite word
 
-
 lp_x                    res     1                       ' |
 lp_y                    res     1                       ' map loop indices
 madv                    res     1                       ' map advance (byte width)
@@ -924,7 +931,8 @@ arg3                    res     1                       ' |
 arg4                    res     1                       ' |
 arg5                    res     1                       ' |
 arg6                    res     1                       ' |
-arg7                    res     1                       ' command arguments
+arg7                    res     1                       ' |
+arg8                    res     1                       ' command arguments
 
 tail                    fit
 
