@@ -128,9 +128,9 @@ PUB ClearScreen(color)
     instruction := c_fillbuffer
 
 PUB Blit(source)
-'' This command blits a 128x64 size image to the screen. This command is
-'' primarily influenced for reference on drawing to the screen, not for
-'' its game utility so much.
+'' This command blits a 128x64 size image to the screen. It is
+'' primarily influenced for reference on drawing to the screen,
+'' not for its game utility so much.
 
     repeat
     while instruction
@@ -139,11 +139,6 @@ PUB Blit(source)
     instruction := c_blitscreen
 
 PUB Sprite(source, x, y, frame)
-'' * **source** - Memory address of the source image
-'' * **x** - Horizontal destination position (0-15)
-'' * **y** - Vertical destination position (0-7)
-'' * **frame** - If the image has multiple frames, this integer will select which to use.
-''
 '' This function allows the user to blit an arbitrarily-sized image
 '' from a memory address. It is designed to accept the sprite output from img2dat,
 '' and can handle multi-frame sprites, 3-color sprites, and sprites with transparency.
@@ -255,7 +250,7 @@ PUB DrawMap(offset_x, offset_y)
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
 
-  DrawMapRectangle(offset_x, offset_y, 0, 0, 128, 64)
+  DrawMapRectangle(offset_x, offset_y, 0, 0, res_x, res_y)
 
 PUB DrawMapRectangle(offset_x, offset_y, x1, y1, x2, y2)
 '' Underlying method to DrawMap which lets you specify the clipping region.
@@ -311,7 +306,7 @@ PUB TextBox(stringvar, origin_x, origin_y, w, h) | char, x, y
 
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
-'' Defaults to 0, 0, 128, 64. Use only multiples of 8.
+'' Defaults to 0, 0, 128, 64.
 
     repeat
     while instruction
@@ -860,8 +855,8 @@ clip                    long                            ' covers clipping rectan
 
 _clipx1                 long    0                       ' |
 _clipy1                 long    0                       ' |
-_clipx2                 long    128                     ' |
-_clipy2                 long    64                      ' clipping rectangle
+_clipx2                 long    res_x                   ' |
+_clipy2                 long    res_y                   ' clipping rectangle
 
 mskLH                   long    0                       ' |
 mskLL                   long    0                       ' |
