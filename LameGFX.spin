@@ -64,6 +64,8 @@ CON
 CON
     #0, MX, MY                                          ' level map header indices
     #1, SX, SY                                          '  tile map header indices
+
+    F_INVERTCOLOR = %00000001                           ' color inversion (black/white)
     
 VAR
 '' These longs make up the interface between Spin and
@@ -79,7 +81,7 @@ VAR
     byte    tilesize_y
 
 VAR
-    long    c_fillbuffer, c_blitscreen, c_invertcolor, c_setcliprect, c_sprite, c_drawtilemap
+    long    c_fillbuffer, c_blitscreen, c_setmode, c_setcliprect, c_sprite, c_drawtilemap
     long    c_parameters[8]
 
 VAR
@@ -96,7 +98,7 @@ PUB Start
 '                                                                                      | |
     c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %0001_1 << 11
     c_blitscreen  := @c_parameters << 16 | (@blitscreen  - @graphicsdriver) >> 2 | %0001_1 << 11
-    c_invertcolor := @c_parameters << 16 | (@invcolor    - @graphicsdriver) >> 2 | %0000_1 << 11
+    c_setmode     := @c_parameters << 16 | (@setmode     - @graphicsdriver) >> 2 | %0001_1 << 11
     c_setcliprect := @c_parameters << 16 | (@clip_set    - @graphicsdriver) >> 2 | %0011_1 << 11
     
     c_sprite      := @c_parameters << 16 | (@drawsprite  - @graphicsdriver) >> 2 | %0011_1 << 11
@@ -160,7 +162,8 @@ PUB InvertColor(enabled{boolean})
     while instruction
 
     c_parameters{0} := enabled
-    instruction := c_invertcolor
+    c_parameters[1] := F_INVERTCOLOR
+    instruction := c_setmode
 
 ' *********************************************************
 '  Maps
@@ -366,12 +369,13 @@ blitscreen              cmp     arg0, #0 wz
 
                         jmp     %%0                     ' return
 
-' #### INVERT COLOR
+' #### SET MODE
 ' ------------------------------------------------------
 ' parameters: arg0: on/off (boolean, NZ/Z)
+'             arg1: flag mask
 
-invcolor                cmp     arg0, #0 wz
-                        muxnz   mode, #%01              ' re/set inversion
+setmode                 cmp     arg0, #0 wz
+                        muxnz   mode, arg1              ' re/set flag
 
                         jmp     %%0                     ' return
 
@@ -602,7 +606,7 @@ drawsprite              rdword  scrn, surface           ' render buffer
 
 ' Mask is complete, filter the relevant info from src/dst and combine all pixels in the dst long.
                 
-                        test    mode, #%01 wc           ' if enabled ...
+                        test    mode, #F_INVERTCOLOR wc ' if enabled ...
                 if_c    xor     srcW, vier              ' invert black/white
                         andn    srcW, frqb              ' clear transparent pixels
                         and     dstL, frqb              ' make space for src      
