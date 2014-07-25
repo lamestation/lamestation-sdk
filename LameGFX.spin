@@ -385,22 +385,22 @@ setmode                 cmp     arg0, #0 wz
 '             arg2: x2
 '             arg3: y2
 
-setclip                 mov     _clipx1, arg0           ' copy ...
-                        mov     _clipy1, arg1
-                        mov     _clipx2, arg2
-                        mov     _clipy2, arg3
+setclip                 mov     c_x1, arg0              ' copy ...
+                        mov     c_y1, arg1
+                        mov     c_x2, arg2
+                        mov     c_y2, arg3
 
-validateCR              mins    _clipx1, #0             ' ... and sanity check
-                        maxs    _clipx1, #res_x
+validateCR              mins    c_x1, #0                ' ... and sanity check
+                        maxs    c_x1, #res_x
 
-                        mins    _clipy1, #0
-                        maxs    _clipy1, #res_y
+                        mins    c_y1, #0
+                        maxs    c_y1, #res_y
 
-                        mins    _clipx2, #0
-                        maxs    _clipx2, #res_x
+                        mins    c_x2, #0
+                        maxs    c_x2, #res_x
 
-                        mins    _clipy2, #0
-                        maxs    _clipy2, #res_y
+                        mins    c_y2, #0
+                        maxs    c_y2, #res_y
 
                         test    $, #1 wc                ' set carry
 
@@ -408,7 +408,7 @@ validateCR              mins    _clipx1, #0             ' ... and sanity check
 ' This is based on how far the clipping x coordinates reach into their respective
 ' double word of pixels. Note, this is specific to the current sprite renderer.
 
-                        mov     mskLH, _clipx1
+                        mov     mskLH, c_x1
                         and     mskLH, #%111
                         mov     mskLL, #0
                         rcl     mskLL, mskLH
@@ -416,7 +416,7 @@ validateCR              mins    _clipx1, #0             ' ... and sanity check
                         mov     mskLH, mskLL
                         rcl     mskLH, #16              ' %%0???????_????????
 
-                        neg     mskRH, _clipx2
+                        neg     mskRH, c_x2
                         and     mskRH, #%111
                         mov     mskRL, #0
                         rcr     mskRL, mskRH
@@ -479,10 +479,10 @@ PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 }
 drawtilemap             call    #pushCR                 ' preserve current clipping rectangle
 
-                        mov     _clipx1, arg3           ' copy local settings
-                        mov     _clipy1, arg4
-                        mov     _clipx2, arg5
-                        mov     _clipy2, arg6
+                        mov     c_x1, arg3              ' copy local settings
+                        mov     c_y1, arg4
+                        mov     c_x2, arg5
+                        mov     c_y2, arg6
 
                         jmpret  %%0, #validateCR        ' validate local settings
 
@@ -519,10 +519,10 @@ drawtilemap             call    #pushCR                 ' preserve current clipp
 ' Calculate X loop start value (while we have the remainder available).
 
                         shr     eins, #16 wz            ' offset_x // tx
-                        mov     lp_x, _clipx1
+                        mov     lp_x, c_x1
                         sumnz   lp_x, eins              ' offset_x := cx1 - offset_x // tx
 
-                        cmps    lp_x, _clipx2 wc
+                        cmps    lp_x, c_x2 wc
                 if_nc   jmp     #:restore               ' early exit (invisible)
 
 ' Then we do the same for the y offset but have to multiply it by the map width.
@@ -537,10 +537,10 @@ drawtilemap             call    #pushCR                 ' preserve current clipp
 ' Calculate Y loop start value (while we have the remainder available).
 
                         shr     eins, #16 wz            ' offset_y // ty
-                        mov     lp_y, _clipy1
+                        mov     lp_y, c_y1
                         sumnz   lp_y, eins              ' offset_y := cy1 - offset_y // ty
 
-                        cmps    lp_y, _clipy2 wc
+                        cmps    lp_y, c_y2 wc
                 if_nc   jmp     #:restore               ' early exit (invisible)
 
 ' Now do the multiply with the map width.
@@ -607,13 +607,13 @@ drawtilemap             call    #pushCR                 ' preserve current clipp
                         jmpret  %%0, #drawsprite        ' call sprite function
 
 :xnext                  add     eins, tm_x
-                        cmps    eins, _clipx2 wc
+                        cmps    eins, c_x2 wc
                 if_c    jmp     #:xloop                 ' for all (tile) columns
 
                         add     madr, madv              ' next row
 
                         add     lp_y, tm_y
-                        cmps    lp_y, _clipy2 wc
+                        cmps    lp_y, c_y2 wc
                 if_c    jmp     #:yloop                 ' for all (tile) rows
 
 :restore                call    #popCR                  ' restore clipping rectangle
@@ -665,7 +665,7 @@ drawsprite              mov     scrn, arg0 wz
 
 ' Same for lhs clipping value, which is then applied to the line start address.
 
-                        mov     arg3, _clipx1
+                        mov     arg3, c_x1
                         shr     arg3, #3                ' word offset
                         shl     arg3, #1                ' back to byte offset
                         add     scrn, arg3              ' apply clipping, 2n
@@ -674,7 +674,7 @@ drawsprite              mov     scrn, arg0 wz
 ' addresses hold the possible drawing target for the sprite (left/right limits).
 
                         mov     arg3, #128
-                        sub     arg3, _clipx2
+                        sub     arg3, c_x2
                         shr     arg3, #3                ' word offset
                         shl     arg3, #1                ' back to byte offset
                         sub     send, arg3              ' apply clipping, 2n
@@ -713,9 +713,9 @@ drawsprite              mov     scrn, arg0 wz
 '   wb: source width in byte (row advance)
 
 ' ----- Y LOOP -----------------------------------------
-:yloop                  cmps    iter_y, _clipy1 wc      ' ToDo: clipping belongs outside any loop
+:yloop                  cmps    iter_y, c_y1 wc         ' ToDo: clipping belongs outside any loop
                 if_c    jmp     #:skipall
-                        cmps    iter_y, _clipy2 wc
+                        cmps    iter_y, c_y2 wc
                 if_nc   jmp     %%0                     ' if greater equal _clipy2 just exit
 
                         mov     index_x, ws             ' temporary copy, we run several lines
@@ -871,10 +871,10 @@ wcnt                    long    res_x * res_y / 4 / 2   ' 4 pixels / byte
                                                         ' 2 bytes / word
 clip                    long                            ' covers clipping rectangle (8 longs)
 
-_clipx1                 long    0                       ' |
-_clipy1                 long    0                       ' |
-_clipx2                 long    res_x                   ' |
-_clipy2                 long    res_y                   ' clipping rectangle
+c_x1                    long    0                       ' |
+c_y1                    long    0                       ' |
+c_x2                    long    res_x                   ' |
+c_y2                    long    res_y                   ' clipping rectangle
 
 mskLH                   long    0                       ' |
 mskLL                   long    0                       ' |
