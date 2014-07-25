@@ -146,16 +146,6 @@ PUB Start
     parameter := @freqTable
     channelparam := (INITVAL << 8)
     channelADSR := LONG[@instruments][0]
-    play := 0
-    
-    
-    repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
-        oscRegister[oscindexer] := 0
-        oscRegister[oscindexer+1] := 0
-        oscRegister[oscindexer+2] := 0
-        oscRegister[oscindexer+3] := 0
-    oscindexer := 0
-    oscindexcounter := 0
     
     cognew(@oscmodule, @parameter)    'start assembly cog
     cognew(LoopingSongParser, @LoopingPlayStack)
