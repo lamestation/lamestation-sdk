@@ -140,6 +140,20 @@ PUB Blit(source)
     longmove(@c_parameters{0}, @result, 2)
     instruction := c_blitscreen
 
+PUB Sprite2(dst, src, x, y, frame)
+'' This function allows the user to blit an arbitrarily-sized image
+'' from a memory address. It is designed to accept the sprite output from img2dat,
+'' and can handle multi-frame sprites, 3-color sprites, and sprites with transparency.
+''
+'' Read more on img2dat to see how you can generate source images to use with this
+'' drawing command.
+
+    repeat
+    while instruction
+
+    longmove(@c_parameters{0}, @dst, 5)
+    instruction := c_sprite
+
 PUB Sprite(source, x, y, frame)
 '' This function allows the user to blit an arbitrarily-sized image
 '' from a memory address. It is designed to accept the sprite output from img2dat,
