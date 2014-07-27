@@ -271,7 +271,8 @@ for filename in args.filenames:
     collisionmap_name = collisionmap_name + '_collision' + os.path.splitext(fullpath_tilemap_name)[1]
 
     if not os.path.isfile(collisionmap_name):
-        raise Exception("Collision map "+collisionmap_name+" not found!")
+        #raise Exception("Collision map "+collisionmap_name+" not found!")
+        print "Collision map "+collisionmap_name+" not found!"
 
     leveldata.collisionmap =  collisionmap_name
 
