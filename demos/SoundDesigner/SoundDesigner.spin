@@ -14,34 +14,46 @@ CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
 
-    #0, _ADSR
-    #0, _ATK, _DEC, _SUS, _REL, _VOL, _WAV
-    #0, _SQR, _SAW, _TRI, _SIN, _NOISE, _SAMPLE
+    #0, _ATK, _DEC, _SUS, _REL, _VOL, _WAV, _NOTE
+    #0, _SQR, _SAW, _TRI, _SIN, _NOI, _SAMP
+
+    MIDIPIN = 16
+    ROWS    = 5
 
 OBJ
-    audio   :               "LameAudio"
-    gfx     :               "LameGFX"
-    lcd     :               "LameLCD"
-    ctrl    :               "LameControl"
-    fn      :               "LameFunctions"
+    audio   :   "LameAudio"
+    gfx     :   "LameGFX"
+    lcd     :   "LameLCD"
+    ctrl    :   "LameControl"
+    fn      :   "LameFunctions"
+    pst     :   "LameSerial"
+    pst2    :   "LameSerial" 
+
 
     font    :               "font4x6"
 
 
 VAR
-    byte    waveform, volume
     byte    control[10]
     word    controlname[10]
     word    wavename[10]
     word    wavegfx[10]
-    byte    ctrlindex[3]
-    byte    note, channel
+    byte    ctrlindex
+    byte    channel
     byte    selected, clicked
     byte    newnote
 
-PRI PlayNote
-    audio.PlaySound(channel,note)
+    byte    apress
 
+    byte    newbyte
+    byte    statusbyte
+    byte    statusnibble
+    byte    statuschannel
+
+    byte    databyte1
+    byte    databyte2
+
+    long    Stack_MIDIController[50]
 
 
 OBJ
@@ -55,6 +67,7 @@ OBJ
     blip  : "blipbar"
 
 PRI ValueBar(value,x,y) | ox,oy
+
     ox := x+2
     oy := y+2
     
@@ -67,6 +80,7 @@ PRI ValueBar(value,x,y) | ox,oy
     gfx.SetClipRectangle(0,0,128,64)
 
 PRI ControlBox(str,value,x,y,active)
+
     gfx.InvertColor(active)
     gfx.Sprite(box18.Addr,x,y,0)
     gfx.PutString(str,x+3,y+2)
@@ -74,18 +88,50 @@ PRI ControlBox(str,value,x,y,active)
     ValueBar(value,x+19,y)
     gfx.InvertColor(False)
 
-CON
-    ROWS = 5
+PRI Control_Slider(index)
+    if ctrl.Left
+        if control[index] > 0
+            control[index]--
+            return 1
+    
+    if ctrl.Right
+        if control[index] < 127
+            control[index]++
+            return 1
+
+PRI Control_Rotary(index,minchoice,maxchoice)
+    if ctrl.Left
+        if control[index] > minchoice
+            control[index]--
+            return 1
+        
+    if ctrl.Right
+        if control[index] < maxchoice
+            control[index]++
+            return 1
+
+
+PRI Control_Navigation(minchoice, maxchoice)
+                    
+    if ctrl.Up
+        if ctrlindex > minchoice
+            ctrlindex--
+
+    if ctrl.Down
+        if ctrlindex < maxchoice
+            ctrlindex++
 
 PRI GUI_ADSR(x,y) | i
+
     repeat i from _ATK to _VOL
-        if i == ctrlindex[_ADSR]
+        if i == ctrlindex
             ControlBox(controlname[i],control[i],x+(i/ROWS)*44,y+(i//ROWS)<<3,1)
         else
             ControlBox(controlname[i],control[i],x+(i/ROWS)*44,y+(i//ROWS)<<3,0)
 
 PRI GUI_Waveform(x,y)
-    if _WAV == ctrlindex[_ADSR]
+
+    if _WAV == ctrlindex
         gfx.InvertColor(True)
 
     gfx.Sprite(box24.Addr,x,y,0)
@@ -93,26 +139,21 @@ PRI GUI_Waveform(x,y)
     gfx.Sprite(wavegfx[control[_WAV]],x,y+10,0)
     gfx.InvertColor(False)
 
-
-PRI HelpMenu
-    gfx.ClearScreen(0)
-    gfx.TextBox(string("Sound Designer",10,10,"A selects",10,"Up/down/left/right navigates"),0,0, 128, 64)
-
-
 PRI GUI_Keyboard(x,y) | i, k, keys, oldx, keyoffset, keymin, keymax
+
     keys := 64
-    keyoffset := (note - 32) #> 0
+    keyoffset := (control[_NOTE] - 32) #> 0
     keymin := keyoffset
     keymax := keymin+keys <# 127
 
     x -= keyoffset~>1
     oldx := x
     
-    gfx.Sprite(blip.Addr,x+note,y-2,0)
+    gfx.Sprite(blip.Addr, x + control[_NOTE],y-2,0)
 
     repeat i from keymin to keymax
         k := i // 12
-        if i == note
+        if i == control[_NOTE]
             gfx.InvertColor(True)
         else
             gfx.InvertColor(False)
@@ -124,7 +165,7 @@ PRI GUI_Keyboard(x,y) | i, k, keys, oldx, keyoffset, keymin, keymax
             other:        x += 1
     x := oldx
     repeat i from keymin to keymax
-        if i == note
+        if i == control[_NOTE]
             gfx.InvertColor(True)
         else
             gfx.InvertColor(False)
@@ -135,9 +176,8 @@ PRI GUI_Keyboard(x,y) | i, k, keys, oldx, keyoffset, keymin, keymax
             4, 11:        x += 4
             other:        x += 3
 
-
-
 PRI DrawGUI | x,y
+
     gfx.ClearScreen(0)
     gfx.PutString(string("SoundDesigner v0.2"),46,1)
 
@@ -145,16 +185,101 @@ PRI DrawGUI | x,y
     GUI_Waveform(45,17)
     GUI_Keyboard(0,48)
 
+PUB AudioDemo
+    lcd.Start(gfx.Start)
+    lcd.SetFrameLimit(lcd#FULLSPEED)
 
+    pst.StartRxTx(MIDIPIN, MIDIPIN+1, 0, 31250)
+    pst2.StartRxTx(31, 30, 0, 115200)
+    pst2.Clear
+
+    audio.Start
+
+    cognew(MIDIController, @Stack_MIDIController)
+
+    control[_ATK]  := 127
+    control[_DEC]  := 8
+    control[_SUS]  := 80
+    control[_REL]  := 0
+    control[_VOL]  := 127
+    control[_NOTE] := 50
+
+    SetChannel
+
+    LoadAssets
+
+    gfx.LoadFont(font.Addr," ",0,0)
+
+    repeat
+        ctrl.Update
+
+
+
+        if ctrl.Left or ctrl.Right or ctrl.Up or ctrl.Down
+            case ctrlindex
+                _ATK.._VOL: selected := Control_Slider(ctrlindex)
+                _NOTE:      selected := Control_Slider(ctrlindex)
+               
+            if not clicked
+                clicked := 1
+                case ctrlindex
+                    _WAV:   selected := Control_Rotary(ctrlindex,0,5)
+
+                Control_Navigation(0,_NOTE)
+
+            if selected
+                SetChannel                        
+                selected := 0
+
+        else
+            clicked := 0
+
+        DrawGUI
+
+        if ctrl.A
+            if not apress
+                audio.PlaySound(channel,control[_NOTE])
+            apress := 1
+        else
+            if apress
+                audio.StopSound(channel)
+            apress := 0
+
+        lcd.DrawScreen
+
+
+
+PRI LoadAssets
+    wavename[_SQR] := @wSQR
+    wavename[_TRI] := @wTRI
+    wavename[_SAW] := @wSAW
+    wavename[_SIN] := @wSIN
+    wavename[_NOI] := @wNOI
+    wavename[_SAMP] := @wSAMP
+
+    wavegfx[_SQR] := gsqr.Addr    
+    wavegfx[_SAW] := gsaw.Addr
+    wavegfx[_TRI] := gtri.Addr
+    wavegfx[_SIN] := gsin.Addr
+    wavegfx[_NOI] := gnoi.Addr
+    wavegfx[_SAMP] := gsamp.Addr
+
+    controlname[_ATK] := @nATK
+    controlname[_DEC] := @nDEC
+    controlname[_SUS] := @nSUS
+    controlname[_REL] := @nREL
+    controlname[_WAV] := @nWAV
+    controlname[_VOL] := @nVOL
 
 
 OBJ
-    gsin : "wsin"
-    gtri : "wtri"
-    gsaw : "wsaw"
-    gsqr : "wsqr"
 
-
+    gsin  : "wsin"
+    gtri  : "wtri"
+    gsaw  : "wsaw"
+    gsqr  : "wsqr"
+    gnoi  : "wnoi"
+    gsamp : "wsamp"
 
 DAT
 
@@ -165,104 +290,65 @@ nREL    byte    "REL",0
 nWAV    byte    "WAV",0
 nVOL    byte    "VOL",0
 
-
-DAT
-
 wSQR    byte    "Sqr",0
 wTRI    byte    "Tri",0
 wSAW    byte    "Saw",0
 wSIN    byte    "Sine",0
-wNOISE  byte    "Noise",0
-wSAMPLE byte    "Smp",0
+wNOI    byte    "Noise",0
+wSAMP   byte    "Samp",0
 
 
-PUB AudioDemo
-    lcd.Start(gfx.Start)
-    lcd.SetFrameLimit(lcd#FULLSPEED)
-    audio.Start
-
-    control[_ATK] := 127
-    control[_DEC] := 60
-    control[_SUS] := 80
-    control[_REL] := 70
-    control[_VOL] := 127
-
-    wavename[_SQR] := @wSQR
-    wavename[_TRI] := @wTRI
-    wavename[_SAW] := @wSAW
-    wavename[_SIN] := @wSIN
-    wavename[_NOISE] := @wNOISE
-    wavename[_SAMPLE] := @wSAMPLE
-
-    wavegfx[_SQR] := gsqr.Addr    
-    wavegfx[_SAW] := gsaw.Addr
-    wavegfx[_TRI] := gtri.Addr
-    wavegfx[_SIN] := gsin.Addr
 
 
-    controlname[_ATK] := @nATK
-    controlname[_DEC] := @nDEC
-    controlname[_SUS] := @nSUS
-    controlname[_REL] := @nREL
-    controlname[_WAV] := @nWAV
-    controlname[_VOL] := @nVOL
+PRI SetChannel
+    audio.SetADSR(control[_ATK],control[_DEC],control[_SUS],control[_REL])
+    audio.SetWaveform(control[_WAV] // 5)
+    audio.SetVolume(control[_VOL])
 
-    gfx.LoadFont(font.Addr," ",0,0)
+PRI ControlNote
 
-    DrawGUI
+    databyte1 := newbyte
+    databyte2 := pst.CharIn
+    
+    pst2.Dec(databyte1)
+    pst2.Char(" ")
+    pst2.Dec(databyte2)
+    pst2.Char(" ")
+    
+    if statusnibble == $90
+        audio.PlayNewNote(databyte1)
+    if statusnibble == $80 or databyte2 == 0
+        audio.StopNote(databyte1)
 
-    note := 50
+PRI ControlPitchBend
+
+    databyte1 := newbyte
+    databyte2 := pst.CharIn
+    
+    pst2.Dec(databyte1)
+    pst2.Char(" ")
+    pst2.Dec(databyte2)
+    pst2.Char(" ")
+    
+    pst2.Char(pst#NL)
+
+PRI MIDIController
 
     repeat
-        ctrl.Update
 
+        newbyte := pst.CharIn
 
-
-        if ctrl.Left or ctrl.Right or ctrl.Up or ctrl.Down
-            if ctrl.Left
-                if control[ctrlindex[_ADSR]] > 0
-                    control[ctrlindex[_ADSR]]--
-                    selected := 1
-
-            if ctrl.Right
-                if control[ctrlindex[_ADSR]] < 127
-                    control[ctrlindex[_ADSR]]++
-                    selected := 1
-
-
-            if not clicked
-              clicked := 1
-                if ctrl.Up
-                    if ctrlindex[_ADSR] > 0
-                        ctrlindex[_ADSR]--
-
-                if ctrl.Down
-                    if ctrlindex[_ADSR] < _WAV
-                        ctrlindex[_ADSR]++
-
-
-            if selected
-                audio.SetADSR(control[_ATK],control[_DEC],control[_SUS],control[_REL])
-                audio.SetWaveform(control[_WAV] // 5)
-                audio.SetVolume(control[_VOL])
-                'PlayNote
-                selected := 0
+        if newbyte & $80
+            statusbyte := newbyte
+            statusnibble := statusbyte & $F0
+            statuschannel := statusbyte & $0F
+            pst2.Char(10)
+            pst2.Char(13)
+            pst2.Hex(statusbyte, 2)
+            pst2.Char(" ")
 
         else
-            clicked := 0
-
-        DrawGUI
-
-        if ctrl.A and ctrl.B
-            HelpMenu
-
-        elseif ctrl.A
-            if not newnote
-                PlayNote
-                newnote := 1
-        else
-            newnote := 0
-            audio.StopNote(note)
-            audio.StopAllSound
-
-        lcd.DrawScreen
+            case statusnibble
+                $E0:        ControlPitchBend
+                $90, $80:   ControlNote
+                other:
