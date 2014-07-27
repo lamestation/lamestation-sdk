@@ -14,11 +14,12 @@ CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
 
-    #0, _ATK, _DEC, _SUS, _REL, _VOL, _WAV, _NOTE
+    #0, _SND, _PAT, _SNG
+    #0, _NAV, _ATK, _DEC, _SUS, _REL, _VOL, _WAV, _NOTE
     #0, _SQR, _SAW, _TRI, _SIN, _NOI, _SAMP
 
     MIDIPIN = 16
-    ROWS    = 5
+    ROWS    = 4
 
 OBJ
     audio   :   "LameAudio"
@@ -30,7 +31,7 @@ OBJ
     pst2    :   "LameSerial" 
 
 
-    font    :               "font4x6"
+    font    :   "font4x6"
 
 
 VAR
@@ -38,12 +39,13 @@ VAR
     word    controlname[10]
     word    wavename[10]
     word    wavegfx[10]
-    byte    ctrlindex
+    byte    ctrlindex[3]
     byte    channel
     byte    selected, clicked
     byte    newnote
 
     byte    apress
+    byte    bpress
 
     byte    newbyte
     byte    statusbyte
@@ -55,6 +57,81 @@ VAR
 
     long    Stack_MIDIController[50]
 
+' **********************************************************
+' * Controls
+' **********************************************************
+
+PRI Control_Slider(index)
+    if ctrl.Left
+        if control[index] > 0
+            control[index]--
+            return 1
+    
+    if ctrl.Right
+        if control[index] < 127
+            control[index]++
+            return 1
+
+PRI Control_Rotary(index,minchoice,maxchoice)
+    if ctrl.Left
+        if control[index] > minchoice
+            control[index]--
+            return 1
+        
+    if ctrl.Right
+        if control[index] < maxchoice
+            control[index]++
+            return 1
+
+PRI Control_Navigation(minchoice, maxchoice)
+                    
+    if ctrl.Up
+        if ctrlindex > minchoice
+            ctrlindex--
+
+    if ctrl.Down
+        if ctrlindex < maxchoice
+            ctrlindex++
+
+
+PRI Control_SND
+
+    if ctrl.Left or ctrl.Right or ctrl.Up or ctrl.Down
+
+        case ctrlindex[_SND]
+            _ATK.._VOL: selected := Control_Slider(ctrlindex[_SND])
+            _NOTE:      selected := Control_Slider(ctrlindex[_SND])
+           
+        if not clicked
+            clicked := 1
+            case ctrlindex[_SND]
+                _WAV:   selected := Control_Rotary(ctrlindex[_SND],0,5)
+
+            Control_Navigation(0,_NOTE)
+
+        if selected
+            SetChannel                        
+            selected := 0
+
+    else
+        clicked := 0
+
+    if ctrl.A
+        if not apress
+            audio.PlaySound(channel,control[_NOTE])
+        apress := 1
+    else
+        if apress
+            audio.StopSound(channel)
+        apress := 0
+
+
+PRI Control_PAT
+
+
+' **********************************************************
+' * Widgets
+' **********************************************************
 
 OBJ
     box18 : "box_18x9"
@@ -88,46 +165,13 @@ PRI ControlBox(str,value,x,y,active)
     ValueBar(value,x+19,y)
     gfx.InvertColor(False)
 
-PRI Control_Slider(index)
-    if ctrl.Left
-        if control[index] > 0
-            control[index]--
-            return 1
-    
-    if ctrl.Right
-        if control[index] < 127
-            control[index]++
-            return 1
-
-PRI Control_Rotary(index,minchoice,maxchoice)
-    if ctrl.Left
-        if control[index] > minchoice
-            control[index]--
-            return 1
-        
-    if ctrl.Right
-        if control[index] < maxchoice
-            control[index]++
-            return 1
-
-
-PRI Control_Navigation(minchoice, maxchoice)
-                    
-    if ctrl.Up
-        if ctrlindex > minchoice
-            ctrlindex--
-
-    if ctrl.Down
-        if ctrlindex < maxchoice
-            ctrlindex++
-
 PRI GUI_ADSR(x,y) | i
 
     repeat i from _ATK to _VOL
         if i == ctrlindex
-            ControlBox(controlname[i],control[i],x+(i/ROWS)*44,y+(i//ROWS)<<3,1)
+            ControlBox(controlname[i],control[i],x+((i-_ATK)/ROWS)*44,y+((i-_ATK)//ROWS)<<3,1)
         else
-            ControlBox(controlname[i],control[i],x+(i/ROWS)*44,y+(i//ROWS)<<3,0)
+            ControlBox(controlname[i],control[i],x+((i-_ATK)/ROWS)*44,y+((i-_ATK)//ROWS)<<3,0)
 
 PRI GUI_Waveform(x,y)
 
@@ -175,15 +219,25 @@ PRI GUI_Keyboard(x,y) | i, k, keys, oldx, keyoffset, keymin, keymax
                           x += 1
             4, 11:        x += 4
             other:        x += 3
+PRI GUI_Tab(text,x,y,inv)
 
-PRI DrawGUI | x,y
+    if inv == control[_NAV]
+        gfx.InvertColor(True)
 
-    gfx.ClearScreen(0)
-    gfx.PutString(string("SoundDesigner v0.2"),46,1)
+    gfx.Sprite(box18.Addr,x,y,0)
+    gfx.PutString(text,x+3,y+2)
 
-    GUI_ADSR(1,1)
-    GUI_Waveform(45,17)
-    GUI_Keyboard(0,48)
+    gfx.InvertColor(False)
+
+PRI GUI_TabBrowser(x,y)
+
+    GUI_Tab(string("SND"),x,y,_SND)
+    GUI_Tab(string("PAT"),x+18,y,_PAT)
+    GUI_Tab(string("SNG"),x+33,y,_SNG)
+
+' **********************************************************
+' * Main
+' **********************************************************
 
 PUB AudioDemo
     lcd.Start(gfx.Start)
@@ -197,12 +251,14 @@ PUB AudioDemo
 
     cognew(MIDIController, @Stack_MIDIController)
 
+    control[_NAV]  := _SND
     control[_ATK]  := 127
     control[_DEC]  := 8
     control[_SUS]  := 80
     control[_REL]  := 0
     control[_VOL]  := 127
     control[_NOTE] := 50
+    control[_WAV] := _SAMP
 
     SetChannel
 
@@ -213,41 +269,29 @@ PUB AudioDemo
     repeat
         ctrl.Update
 
+        gfx.ClearScreen(0)
+        gfx.PutString(string("SoundDesigner v0.2"),1,1)
+        GUI_TabBrowser(77,0)
+
+        case control[_NAV]
+            _SND:   Control_SND
+                    GUI_ADSR(1,10)
+                    GUI_Waveform(45,20)
 
 
-        if ctrl.Left or ctrl.Right or ctrl.Up or ctrl.Down
-            case ctrlindex
-                _ATK.._VOL: selected := Control_Slider(ctrlindex)
-                _NOTE:      selected := Control_Slider(ctrlindex)
-               
-            if not clicked
-                clicked := 1
-                case ctrlindex
-                    _WAV:   selected := Control_Rotary(ctrlindex,0,5)
+        GUI_Keyboard(0,48)
 
-                Control_Navigation(0,_NOTE)
-
-            if selected
-                SetChannel                        
-                selected := 0
-
-        else
-            clicked := 0
-
-        DrawGUI
-
-        if ctrl.A
-            if not apress
-                audio.PlaySound(channel,control[_NOTE])
-            apress := 1
-        else
-            if apress
-                audio.StopSound(channel)
-            apress := 0
+        if ctrl.B
+            if control[_NAV] < _SNG
+                control[_NAV]++
+            else
+                control[_NAV] := 0
 
         lcd.DrawScreen
 
-
+' **********************************************************
+' * Graphics
+' **********************************************************
 
 PRI LoadAssets
     wavename[_SQR] := @wSQR
@@ -297,13 +341,30 @@ wSIN    byte    "Sine",0
 wNOI    byte    "Noise",0
 wSAMP   byte    "Samp",0
 
+OBJ
 
+    organ   :   "pipeorgan"
 
+' **********************************************************
+' * MIDI Controller
+' **********************************************************
 
 PRI SetChannel
     audio.SetADSR(control[_ATK],control[_DEC],control[_SUS],control[_REL])
-    audio.SetWaveform(control[_WAV] // 5)
+    audio.SetWaveform(control[_WAV] // 6)
     audio.SetVolume(control[_VOL])
+    audio.SetSample(organ.Addr)
+
+PRI ControlKnob
+
+    databyte1 := newbyte
+    databyte2 := pst.CharIn
+    
+    case databyte1
+        $40:    if databyte2 <> 0
+                    audio.PressPedal
+                else
+                    audio.ReleasePedal
 
 PRI ControlNote
 
@@ -350,5 +411,6 @@ PRI MIDIController
         else
             case statusnibble
                 $E0:        ControlPitchBend
+                $B0:        ControlKnob
                 $90, $80:   ControlNote
                 other:

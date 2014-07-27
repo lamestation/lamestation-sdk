@@ -140,12 +140,13 @@ VAR
     byte    linecursor
 
     long    LoopingPlayStack[20]
+    word    sample
 
 PUB Start
       
-    parameter := @freqTable
+    parameter := @freqTable + (@sample<<16)
     channelparam := (INITVAL << 8)
-    channelADSR := LONG[@instruments][0]
+    'channelADSR := LONG[@instruments][0]
     
     cognew(@oscmodule, @parameter)    'start assembly cog
     cognew(LoopingSongParser, @LoopingPlayStack)
@@ -175,6 +176,8 @@ PUB SetADSR(attackvar, decayvar, sustainvar, releasevar)
     SetSustain(sustainvar)
     SetRelease(releasevar)
 
+PUB SetSample(samplevar)
+    sample := samplevar
 
 PUB PressPedal
     channelADSR |= SUSPEDALBIT
@@ -186,9 +189,9 @@ PUB ReleasePedal
             oscRegister[oscoffindexer] &= !KEYONBIT        '9th bit
 
 
-PUB LoadInstr(instrnum)
+'PUB LoadInstr(instrnum)
 
-    channelADSR := LONG[@instruments][instrnum]
+'    channelADSR := LONG[@instruments][instrnum]
 
 PUB FindFreeOscillator
     oscindexcounter := 0
@@ -329,28 +332,6 @@ PRI LoopingSongParser | repeattime
 
 
 DAT
-
-    instruments
-    'tubular bells
-    long    (127 + (4 << D_OFFSET) + (80 << S_OFFSET) + (0 << R_OFFSET) + (3 << W_OFFSET))
-       
-    'jarn harpsichord
-    long    (127 + (41 << D_OFFSET) + (60 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
-
-    'super square
-    long    (10 + (127 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (1 << W_OFFSET))
-
-    'attack but no release....
-    long    (127 + (12 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
-
-    'POWER
-    long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
-
-    'accordion
-    long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (64 << R_OFFSET) + (5 << W_OFFSET))
-
-
-
     freqTable
     long    1071, 1135, 1202, 1274, 1350, 1430, 1515, 1605
     long    1700, 1802, 1909, 2022, 2143, 2270, 2405, 2548
@@ -387,10 +368,10 @@ oscmodule               mov       dira, diraval       'set APIN to output
                         'get address of frequency table
                         mov       Addr, par
                         rdlong    freqAddr, Addr
+                        mov       sampleAddr, freqAddr
 
-                        mov       organAddr, freqAddr
-                        add       organAddr, fivetwelve
-
+                        and       freqAddr, halfmask
+                        shr       sampleAddr, #16
                         
 
                         'get address to write out to
@@ -416,8 +397,7 @@ mainloop                waitcnt   time, period        'wait until next period
                         'UPDATE CHANNEL PARAMETERS BEFORE ANYTHING ELSE 
 
 
-                        rdlong    adsrtemp, adsrAddr
-              
+                        rdlong    adsrtemp, adsrAddr              
               
                         'attack
                         mov       attack, adsrtemp
@@ -595,8 +575,8 @@ if_nc                   neg     osctemp, osctemp
 
 
 'ORGAN GENERATION
-:screechwave            mov     Addrtemp, phase
-                        add     Addrtemp, organAddr
+:screechwave            rdword  Addrtemp, sampleAddr
+                        add     Addrtemp, phase
                         rdbyte  osctemp, Addrtemp
                         subs    osctemp, #128
 
@@ -675,6 +655,7 @@ time          long      0
 waveform      long      3     '0 = ramp    1 = square    2 = triangle    3 = sine    4 = pseudo-random noise    5 = sine perversion
 volume        long      127
 
+halfmask        long    $FFFF
 multarg       long      3
 multtemp      long      2
 
@@ -710,9 +691,6 @@ smask         long      !S_MASK
 rmask         long      !R_MASK
 wmask         long      !W_MASK
 
-
-fivetwelve    long      512
-
 'variables for oscillator controller
 oscPtr        long      0
 oscIndex      long      0
@@ -738,7 +716,7 @@ Addrtemp      long      0
 freqAddr      long      0
 outputAddr    long      0
 sineAddr      long      $E000
-organAddr     long      0
+sampleAddr     long      0
 
 paramAddr     long      0
 adsrAddr      long      0
