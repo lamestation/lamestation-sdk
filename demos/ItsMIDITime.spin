@@ -128,7 +128,8 @@ PRI MIDIController
             statusbyte := newbyte
             statusnibble := statusbyte & $F0
             statuschannel := statusbyte & $0F
-            pst2.Char(pst#NL)
+            pst2.Char(10)
+            pst2.Char(13)
             pst2.Hex(statusbyte, 2)
             pst2.Char(" ")
 
