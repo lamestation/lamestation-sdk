@@ -21,19 +21,6 @@ CON
     MIDIPIN = 16
     ROWS    = 4
 
-OBJ
-    audio   :   "LameAudio"
-    gfx     :   "LameGFX"
-    lcd     :   "LameLCD"
-    ctrl    :   "LameControl"
-    fn      :   "LameFunctions"
-    pst     :   "LameSerial"
-    pst2    :   "LameSerial" 
-
-
-    font    :   "font4x6"
-
-
 VAR
     byte    control[10]
     word    controlname[10]
@@ -56,6 +43,77 @@ VAR
     byte    databyte2
 
     long    Stack_MIDIController[50]
+
+
+' **********************************************************
+' * Main
+' **********************************************************
+OBJ
+    audio   :   "LameAudio"
+    gfx     :   "LameGFX"
+    lcd     :   "LameLCD"
+    ctrl    :   "LameControl"
+    fn      :   "LameFunctions"
+    pst     :   "LameSerial"
+    pst2    :   "LameSerial" 
+    font    :   "font4x6"
+
+PUB AudioDemo
+    lcd.Start(gfx.Start)
+    lcd.SetFrameLimit(lcd#FULLSPEED)
+
+    pst.StartRxTx(MIDIPIN, MIDIPIN+1, 0, 31250)
+    pst2.StartRxTx(31, 30, 0, 115200)
+    pst2.Clear
+
+    audio.Start
+
+    cognew(MIDIController, @Stack_MIDIController)
+
+    control[_NAV]  := _SND
+    control[_ATK]  := 127
+    control[_DEC]  := 8
+    control[_SUS]  := 80
+    control[_REL]  := 0
+    control[_VOL]  := 127
+    control[_NOTE] := 50
+    control[_WAV] := _SAMP
+
+    SetChannel
+
+    LoadAssets
+
+    gfx.LoadFont(font.Addr," ",0,0)
+
+    repeat
+        ctrl.Update
+
+        gfx.ClearScreen(0)
+        gfx.PutString(string("SoundDesigner v0.2"),1,1)
+        GUI_TabBrowser(77,0)
+
+        case control[_NAV]
+            _SND:   Control_SND
+            _PAT:   Control_PAT
+
+
+        GUI_Keyboard(0,48)
+
+        if ctrl.B
+            if not bpress
+                bpress := 1
+                if control[_NAV] < _SNG
+                    control[_NAV]++
+                else
+                    control[_NAV] := 0
+
+        else
+            bpress := 0
+
+        lcd.DrawScreen
+
+
+
 
 ' **********************************************************
 ' * Controls
@@ -125,9 +183,12 @@ PRI Control_SND
             audio.StopSound(channel)
         apress := 0
 
+    GUI_ADSR(1,10)
+    GUI_Waveform(45,20)
 
 PRI Control_PAT
 
+   ' DrawMap
 
 ' **********************************************************
 ' * Widgets
@@ -236,60 +297,6 @@ PRI GUI_TabBrowser(x,y)
     GUI_Tab(string("SNG"),x+33,y,_SNG)
 
 ' **********************************************************
-' * Main
-' **********************************************************
-
-PUB AudioDemo
-    lcd.Start(gfx.Start)
-    lcd.SetFrameLimit(lcd#FULLSPEED)
-
-    pst.StartRxTx(MIDIPIN, MIDIPIN+1, 0, 31250)
-    pst2.StartRxTx(31, 30, 0, 115200)
-    pst2.Clear
-
-    audio.Start
-
-    cognew(MIDIController, @Stack_MIDIController)
-
-    control[_NAV]  := _SND
-    control[_ATK]  := 127
-    control[_DEC]  := 8
-    control[_SUS]  := 80
-    control[_REL]  := 0
-    control[_VOL]  := 127
-    control[_NOTE] := 50
-    control[_WAV] := _SAMP
-
-    SetChannel
-
-    LoadAssets
-
-    gfx.LoadFont(font.Addr," ",0,0)
-
-    repeat
-        ctrl.Update
-
-        gfx.ClearScreen(0)
-        gfx.PutString(string("SoundDesigner v0.2"),1,1)
-        GUI_TabBrowser(77,0)
-
-        case control[_NAV]
-            _SND:   Control_SND
-                    GUI_ADSR(1,10)
-                    GUI_Waveform(45,20)
-
-
-        GUI_Keyboard(0,48)
-
-        if ctrl.B
-            if control[_NAV] < _SNG
-                control[_NAV]++
-            else
-                control[_NAV] := 0
-
-        lcd.DrawScreen
-
-' **********************************************************
 ' * Graphics
 ' **********************************************************
 
@@ -343,7 +350,7 @@ wSAMP   byte    "Samp",0
 
 OBJ
 
-    organ   :   "pipeorgan"
+    organ   :   "ins_strings2"
 
 ' **********************************************************
 ' * MIDI Controller
