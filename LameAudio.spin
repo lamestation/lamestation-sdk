@@ -659,13 +659,11 @@ attackmask    long      ATTACKBIT
 bigsusmask    long      $1FC00
 
 
-aoffset       long      A_OFFSET
 doffset       long      D_OFFSET
 soffset       long      S_OFFSET
 roffset       long      R_OFFSET
 woffset       long      W_OFFSET
 
-amask         long      !A_MASK
 dmask         long      !D_MASK
 smask         long      !S_MASK
 rmask         long      !R_MASK
