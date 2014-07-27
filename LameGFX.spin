@@ -216,12 +216,12 @@ PUB TestMapMoveY(x, y, w, h, newy) | tmp, ty
         return
 
     ty  := word[map_tilemap][SY]
-    tmp := ((tmp >> 16)-1) * ty
+    tmp := ((tmp >> 16)-1) * ty - newy
 
     if newy > y
-        return tmp - (newy+h)
+        return tmp - h
     if newy < y
-        return (tmp+ty) - newy
+        return tmp + ty
 
 PUB TestMapMoveX(x, y, w, h, newx) | tmp, tx
 
@@ -233,12 +233,12 @@ PUB TestMapMoveX(x, y, w, h, newx) | tmp, tx
         return
 
     tx  := word[map_tilemap][SY]
-    tmp := ((tmp & $FFFF)-1) * tx
+    tmp := ((tmp & $FFFF)-1) * tx - newx
 
     if newx > x
-        return tmp - (newx+w)
+        return tmp - w
     if newx < x
-        return (tmp+tx) - newx
+        return tmp + tx
 
 PUB GetMapWidth
 
