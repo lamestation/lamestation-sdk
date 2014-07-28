@@ -43,6 +43,7 @@ VAR
     byte    databyte2
 
     long    Stack_MIDIController[50]
+    long    Stack_PatternPlayer[40]
 
 
 ' **********************************************************
@@ -55,7 +56,6 @@ OBJ
     ctrl    :   "LameControl"
     fn      :   "LameFunctions"
     pst     :   "LameSerial"
-    pst2    :   "LameSerial" 
     font    :   "font4x6"
 
 PUB AudioDemo
@@ -63,14 +63,13 @@ PUB AudioDemo
     lcd.SetFrameLimit(lcd#FULLSPEED)
 
     pst.StartRxTx(MIDIPIN, MIDIPIN+1, 0, 31250)
-    pst2.StartRxTx(31, 30, 0, 115200)
-    pst2.Clear
 
     audio.Start
 
     cognew(MIDIController, @Stack_MIDIController)
+    cognew(PatternPlayer, @Stack_PatternPlayer)
 
-    control[_NAV]  := _SND
+    control[_NAV]  := _PAT
     control[_ATK]  := 127
     control[_DEC]  := 8
     control[_SUS]  := 80
@@ -78,6 +77,8 @@ PUB AudioDemo
     control[_VOL]  := 127
     control[_NOTE] := 50
     control[_WAV] := _SAMP
+
+    patindex_max := 16
 
     SetChannel
 
@@ -95,9 +96,7 @@ PUB AudioDemo
         case control[_NAV]
             _SND:   Control_SND
             _PAT:   Control_PAT
-
-
-        GUI_Keyboard(0,48)
+                    
 
         if ctrl.B
             if not bpress
@@ -185,10 +184,107 @@ PRI Control_SND
 
     GUI_ADSR(1,10)
     GUI_Waveform(45,20)
+    GUI_Keyboard(0,48)
 
-PRI Control_PAT
+OBJ
+    patview : "pattern"
+    pat : "pat_piano"
+    key : "pat_key"
+    cur : "cursor"
+    led : "led"
 
-   ' DrawMap
+VAR
+    byte    patindex
+    byte    patindex_max
+    byte    pattern[16]
+    byte    cursor_x
+    byte    cursor_y
+    long    patoffset
+    byte    play
+
+CON
+    VIEW_Y1 = 10
+    VIEW_Y2 = 56
+    VIEW_H = VIEW_Y2-VIEW_Y1
+
+    SONGOFF = 255
+    BAROFF = 254
+    SNOP = 253
+    SOFF = 252 
+
+PRI PatternPlayer | repeattime
+
+    repeat patindex from 0 to patindex-1
+        pattern[patindex] := SNOP
+
+    repeat
+        repeattime := cnt
+            
+        if play
+            patindex := 0
+            repeat while patindex < patindex_max 'and play                        
+                        if pattern[patindex] == SNOP
+
+                        elseif pattern[patindex] == SOFF
+                            audio.StopSound( 0 )                                   
+                        else
+                            audio.PlaySound( 0, pattern[patindex] )
+                        patindex++
+                    waitcnt(repeattime += 100000000)
+            play := 0
+
+
+
+PRI GUI_Pattern(x,y,h,active)
+
+       gfx.DrawMapRectangle(0,patoffset,x,y,x+8,y+h+1)
+       gfx.Sprite(led.Addr, x, y+h, active)
+
+PRI Control_PAT | i
+
+    if ctrl.Left
+        if cursor_x > 0
+            cursor_x--
+
+    if ctrl.Right
+        if cursor_x < patindex_max-1
+            cursor_x++
+    
+    if ctrl.Down
+        if cursor_y < 96
+            cursor_y++
+        if cursor_y > patoffset+VIEW_H
+            patoffset := cursor_y-VIEW_H
+
+    if ctrl.Up
+        if cursor_y > 0
+            cursor_y--
+        if cursor_y < patoffset
+            patoffset := cursor_y
+
+    if ctrl.A
+        if not apress
+            audio.PlaySound(channel,cursor_y)
+            pattern[cursor_x] := cursor_y
+        apress := 1
+    else
+        if apress
+            audio.StopSound(channel)
+        apress := 0
+
+    play := 1
+    gfx.LoadMap(pat.Addr, patview.Addr)
+
+    repeat i from 0 to patindex_max-1
+        if patindex == i
+            GUI_Pattern(i<<3,VIEW_Y1,VIEW_H,1)
+        else
+            GUI_Pattern(i<<3,VIEW_Y1,VIEW_H,0)
+
+        if pattern[i] <> 0
+            gfx.Sprite(key.Addr, i<<3, pattern[i]+VIEW_Y1-patoffset,0)   
+
+    gfx.Sprite(cur.Addr, cursor_x<<3, cursor_y-1+VIEW_Y1-patoffset,0)
 
 ' **********************************************************
 ' * Widgets
@@ -350,7 +446,7 @@ wSAMP   byte    "Samp",0
 
 OBJ
 
-    organ   :   "ins_strings2"
+    organ   :   "ins_bass"
 
 ' **********************************************************
 ' * MIDI Controller
@@ -378,11 +474,6 @@ PRI ControlNote
     databyte1 := newbyte
     databyte2 := pst.CharIn
     
-    pst2.Dec(databyte1)
-    pst2.Char(" ")
-    pst2.Dec(databyte2)
-    pst2.Char(" ")
-    
     if statusnibble == $90
         audio.PlayNewNote(databyte1)
     if statusnibble == $80 or databyte2 == 0
@@ -392,13 +483,6 @@ PRI ControlPitchBend
 
     databyte1 := newbyte
     databyte2 := pst.CharIn
-    
-    pst2.Dec(databyte1)
-    pst2.Char(" ")
-    pst2.Dec(databyte2)
-    pst2.Char(" ")
-    
-    pst2.Char(pst#NL)
 
 PRI MIDIController
 
@@ -410,10 +494,6 @@ PRI MIDIController
             statusbyte := newbyte
             statusnibble := statusbyte & $F0
             statuschannel := statusbyte & $0F
-            pst2.Char(10)
-            pst2.Char(13)
-            pst2.Hex(statusbyte, 2)
-            pst2.Char(" ")
 
         else
             case statusnibble
