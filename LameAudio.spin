@@ -140,22 +140,13 @@ VAR
     byte    linecursor
 
     long    LoopingPlayStack[20]
+    word    sample
 
 PUB Start
       
-    parameter := @freqTable
+    parameter := @freqTable + (@sample<<16)
     channelparam := (INITVAL << 8)
-    channelADSR := LONG[@instruments][0]
-    play := 0
-    
-    
-    repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
-        oscRegister[oscindexer] := 0
-        oscRegister[oscindexer+1] := 0
-        oscRegister[oscindexer+2] := 0
-        oscRegister[oscindexer+3] := 0
-    oscindexer := 0
-    oscindexcounter := 0
+    'channelADSR := LONG[@instruments][0]
     
     cognew(@oscmodule, @parameter)    'start assembly cog
     cognew(LoopingSongParser, @LoopingPlayStack)
@@ -185,6 +176,8 @@ PUB SetADSR(attackvar, decayvar, sustainvar, releasevar)
     SetSustain(sustainvar)
     SetRelease(releasevar)
 
+PUB SetSample(samplevar)
+    sample := samplevar
 
 PUB PressPedal
     channelADSR |= SUSPEDALBIT
@@ -196,9 +189,9 @@ PUB ReleasePedal
             oscRegister[oscoffindexer] &= !KEYONBIT        '9th bit
 
 
-PUB LoadInstr(instrnum)
+'PUB LoadInstr(instrnum)
 
-    channelADSR := LONG[@instruments][instrnum]
+'    channelADSR := LONG[@instruments][instrnum]
 
 PUB FindFreeOscillator
     oscindexcounter := 0
@@ -340,94 +333,65 @@ PRI LoopingSongParser | repeattime
 
 DAT
 
-    instruments
-    'tubular bells
-    long    (127 + (4 << D_OFFSET) + (80 << S_OFFSET) + (0 << R_OFFSET) + (3 << W_OFFSET))
-       
-    'jarn harpsichord
-    long    (127 + (41 << D_OFFSET) + (60 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
 
-    'super square
-    long    (10 + (127 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (1 << W_OFFSET))
+freqTable
 
-    'attack but no release....
-    long    (127 + (12 << D_OFFSET) + (0 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
-
-    'POWER
-    long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (0 << R_OFFSET) + (0 << W_OFFSET))
-
-    'accordion
-    long    (127 + (12 << D_OFFSET) + (127 << S_OFFSET) + (64 << R_OFFSET) + (5 << W_OFFSET))
-
-
-
-    freqTable
-    long    1071, 1135, 1202, 1274, 1350, 1430, 1515, 1605
-    long    1700, 1802, 1909, 2022, 2143, 2270, 2405, 2548
-    long    2700, 2860, 3030, 3210, 3401, 3604, 3818, 4045
-    long    4286, 4540, 4810, 5097, 5400, 5721, 6061, 6421
-    long    6803, 7208, 7636, 8090, 8572, 9081, 9621, 10194
-    long    10800, 11442, 12122, 12843, 13607, 14416, 15273, 16181
-    long    17144, 18163, 19243, 20388, 21600, 22884, 24245, 25687
-    long    27214, 28833, 30547, 32363, 34288, 36327, 38487, 40776
-    long    43200, 45769, 48491, 51374, 54429, 57666, 61095, 64727
-    long    68576, 72654, 76974, 81552, 86401, 91539, 96982, 102749
-    long    108859, 115332, 122190, 129455, 137153, 145309, 153949, 163104
-    long    172802, 183078, 193964, 205498, 217718, 230664, 244380, 258911
-    long    274307, 290618, 307899, 326208, 345605, 366156, 387929, 410996
-    long    435436, 461328, 488760, 517823, 548614, 581237, 615799, 652416
-    long    691211, 732313, 775858, 821993, 870872, 922656, 977520, 1035647
-    long    1097229, 1162474, 1231598, 1304833, 1382423, 1464626, 1551717, 1643987
-
+long		858, 909, 963, 1021, 1081, 1146, 1214, 1286
+long		1363, 1444, 1529, 1620, 1717, 1819, 1927, 2042
+long		2163, 2292, 2428, 2573, 2726, 2888, 3059, 3241
+long		3434, 3638, 3855, 4084, 4327, 4584, 4857, 5146
+long		5452, 5776, 6119, 6483, 6869, 7277, 7710, 8169
+long		8654, 9169, 9714, 10292, 10904, 11552, 12239, 12967
+long		13738, 14555, 15421, 16338, 17309, 18338, 19429, 20584
+long		21808, 23105, 24479, 25935, 27477, 29111, 30842, 32676
+long		34619, 36677, 38858, 41169, 43617, 46211, 48959, 51870
+long		54954, 58222, 61684, 65352, 69238, 73355, 77717, 82339
+long		87235, 92422, 97918, 103740, 109909, 116445, 123369, 130705
+long		138477, 146711, 155435, 164678, 174470, 184845, 195836, 207481
+long		219819, 232890, 246738, 261410, 276954, 293423, 310871, 329356
+long		348941, 369690, 391673, 414963, 439638, 465780, 493477, 522820
+long		553909, 586846, 621742, 658713, 697882, 739380, 783346, 829926
+long		879276, 931561, 986954, 1045641, 1107819, 1173693, 1243484, 1317426
 
 
 DAT
 
                         org
 
-oscmodule               mov       dira, diraval       'set APIN to output
-                        mov       ctra, ctraval       'establish counter A mode and APIN
-                        mov       frqa, #1            'set counter to increment 1 each cycle
+oscmodule               mov       dira, diraval         ' set APIN to output
+                        mov       ctra, ctraval         ' establish counter A mode and APIN
+                        mov       frqa, #1              ' set counter to increment 1 each cycle
 
-                        mov       time, cnt           'record current time
-                        add       time, period        'establish next period
+                        mov       time, cnt             ' record current time
+                        add       time, period          ' establish next period
 
-'ESTABLISH COMMUNICATION LINK BETWEEN SPIN AND PASM              
+' Establish communication between cog and spin
 
-                        'get address of frequency table
-                        mov       Addr, par
+                        mov       Addr, par             ' get address of frequency table
+
                         rdlong    freqAddr, Addr
-
-                        mov       organAddr, freqAddr
-                        add       organAddr, fivetwelve
-
+                        mov       sampleAddr, freqAddr
+                        and       freqAddr, halfmask
+                        shr       sampleAddr, #16
                         
-
-                        'get address to write out to
-                        mov       outputAddr, Addr
-                        add       outputAddr, #4
-
-                        'get address of channel parameters
-                        mov       paramAddr, outputAddr
-                        add       paramAddr, #4
-                        mov       adsrAddr, paramAddr
-                        add       adsrAddr, #4
-
-                        'get address of oscillator registers
-                        mov       oscAddr, adsrAddr
-                        add       oscAddr, #4
+                        add       Addr, #4
+                        mov       outputAddr, Addr      ' get output address
+                        add       Addr, #4
+                        mov       paramAddr, Addr       ' get channel parameters
+                        add       Addr, #4
+                        mov       adsrAddr, Addr        ' get adsr parameters
+                        add       Addr, #4
+                        mov       oscAddr, Addr         ' get oscillator registers
 
  
 
 'MAIN LOOP START       
-mainloop                waitcnt   time, period        'wait until next period
-                        neg       phsa, output         'back up phsa so that it trips "value cycles from now
+mainloop                waitcnt   time, period          ' wait until next period
+                        neg       phsa, output          ' back up phsa so that it trips "value cycles from now
 
-                        'UPDATE CHANNEL PARAMETERS BEFORE ANYTHING ELSE 
+' Update channel parameters before anything else
 
-
-                        rdlong    adsrtemp, adsrAddr
-              
+                        rdlong    adsrtemp, adsrAddr              
               
                         'attack
                         mov       attack, adsrtemp
@@ -450,16 +414,15 @@ mainloop                waitcnt   time, period        'wait until next period
                         mov       waveform, adsrtemp
                         and       waveform, #$F  
 
+' Initialize oscillator loop
 
-              
-
-                        'INITIALIZE OSCILLATOR LOOP
                         mov       output, #0
                         mov       oscIndex, oscTotal
                         mov       oscPtr, oscAddr
               
-oscloop                 'READ NOTE VALUE AND FIND FREQUENCY FROM LOOKUP
-                        rdlong    noteAddrtemp, oscPtr
+' Get frequency from note value using table lookup
+
+oscloop                 rdlong    noteAddrtemp, oscPtr
 
                         and       noteAddrtemp, keyonmask     nr, wz 'SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
 
@@ -467,12 +430,7 @@ oscloop                 'READ NOTE VALUE AND FIND FREQUENCY FROM LOOKUP
                         shl       noteAddrtemp, #2
                         add       noteAddrtemp, freqAddr
                         add       oscPtr, #4
-                        
-
-
-
-
-                        
+                                                
                         'ADSR FILTER (or in this case, ADS filter?)
                         rdlong    voltemp, oscPtr
                         mov       vollongtemp, voltemp
@@ -517,62 +475,62 @@ if_c                    mov       voltemp, #0
 
 
               
-                        'UPDATE PHASEINC OF OSC FROM FREQUENCY
+' Update phase increment with new frequency
+
                         rdlong    phaseinc, noteAddrtemp      
                         wrlong    phaseinc, oscPtr
                         add       noteAddrtemp, #4
                         add       oscPtr, #4
 
-                        'ADD PHASEINC TO PHASEACC OF OSC          
+ ' Add phase increment to accumulator of oscillator
+
                         rdlong    phase, oscPtr
                         add       phase, phaseinc
                         wrlong    phase, oscPtr
                         add       oscPtr, #4
 
-
-
-
-
               
-'PHASE ACCUMULATOR
-                        'shift and truncate phase to 512 samples
+' PHASE ACCUMULATOR
+' shift and truncate phase to 512 samples
+
                         shr     phase, #12
 '{deferred}             and     phase, #$1FF
 
 
-'WAVEFORM SELECTOR
-        'jumps to the appropriate waveform handler
+' WAVEFORM SELECTOR
+' jumps to the appropriate waveform handler
 
-                        add     $+2, waveform
-                        and     phase, #$1FF
+                        add     $+2, waveform       ' $ is the program counter, $+2 is the jumpret instruction, see "Here Symbol" in Propeller Manual
+                        and     phase, #$1FF        ' self-modifying code needs a filler instruction,  so this moved here to save space
                         jmpret  $, $+1
 
                         long    :rampwave, :squarewave, :triwave, :sinewave
-                        long    :whitenoise, :screechwave
+                        long    :whitenoise, :sample
  
-'RAMP WAVE
-        'if ramp wave, fit the truncated phase accumulator into
-        'the proper 8-bit scaling and output as waveform
+' RAMP WAVE
+' if ramp wave, fit the truncated phase accumulator into
+' the proper 8-bit scaling and output as waveform
+
 :rampwave               mov     osctemp, phase
                         subs    osctemp, #256
                         sar     osctemp, #1
                         jmp     #:oscOutput
-
   
-'SQUARE WAVE
-        'if square wave, compare truncated phase with 128
-        '(half the height of 8 bits) and scale
+' SQUARE WAVE
+' if square wave, compare truncated phase with 128
+' (half the height of 8 bits) and scale
+
 :squarewave             cmp     phase, #256             wc
 if_nc                   mov     osctemp, #0
 if_c                    mov     osctemp, #256
                         subs    osctemp, #128   
                         jmp     #:oscOutput
 
+' TRIANGLE WAVE
+' if triangle wave, double the amplitude of a square
+' wave and add truncated phase for first half, and
+' subtract truncated phase for second half of cycle
 
-'TRIANGLE WAVE
-        'if triangle wave, double the amplitude of a square
-        'wave and add truncated phase for first half, and
-        'subtract truncated phase for second half of cycle
 :triwave                cmp     phase, #256             wc
 if_c                    mov     osctemp, phase
 if_nc                   mov     osctemp, #511
@@ -580,12 +538,12 @@ if_nc                   subs    osctemp, phase
                         subs    osctemp, #128
                         jmp     #:oscOutput
 
+' SINE WAVE
+' if sine wave, use truncated phase to read values
+' from sine table in main memory.  This requires
+' the most time to complete, with the exception
+' of noise generation
 
-'SINE WAVE
-        'if sine wave, use truncated phase to read values
-        'from sine table in main memory.  This requires
-        'the most time to complete, with the exception
-        'of noise generation
 :sinewave               mov     Addrtemp, phase
                         and     Addrtemp, #$FF
                         cmp     Addrtemp, #128          wc
@@ -602,21 +560,18 @@ if_nc                   neg     osctemp, osctemp
 
                         jmp     #:oscOutput           
 
+' SAMPLER
 
-
-'ORGAN GENERATION
-:screechwave            mov     Addrtemp, phase
-                        add     Addrtemp, organAddr
+:sample                 rdword  Addrtemp, sampleAddr
+                        add     Addrtemp, phase
                         rdbyte  osctemp, Addrtemp
                         subs    osctemp, #128
 
                         jmp     #:oscOutput         
 
+' WHITE NOISE GENERATOR
+' pseudo-random number generator truncated to 8 bits.
 
-
-
-'WHITE NOISE GENERATOR
-        'pseudo-random number generator truncated to 8 bits.
 :whitenoise             sar     rand, #1
                         mov     rand2, rand
                         and     rand2, #$FF
@@ -629,11 +584,10 @@ if_nc                   neg     osctemp, osctemp
                         mov     osctemp, rand
                         and     osctemp, #$FF
 
+' ADSR MULTIPLIER
+' calculates proper volume of this oscillator's sample
 
-
-:oscOutput
-'UNROLLED ADSR MULTIPLIER   (calculates proper volume of this oscillator's sample)
-                        mov     multtemp, osctemp
+:oscOutput              mov     multtemp, osctemp
                         mov     osctemp, #0
                         shr     voltemp, #13 'shift right 10 for sustain then 3 for multiplier
                         
@@ -654,22 +608,18 @@ if_nz                   add     osctemp, multtemp
                             
                         sar     osctemp, #3     '5-2
 
+' SUM 
 
-
-
-
-'ADDS OUTPUT OF THIS OSCILLATOR TO OUTPUT VALUE    
                         adds    output, osctemp
                         djnz    oscIndex, #oscloop
 
+' Add DC offset for output to PWM
 
-'FINAL VOLUME ADJUSTMENT AND OUTPUT TO SOUND         
                         adds    output, outputoffset
-
-
                         wrlong    output, outputAddr
       
-'LOOP BACK FOR NEXT SAMPLE
+' End of oscillator loop
+
                         jmp       #mainloop
 
 
@@ -685,6 +635,7 @@ time          long      0
 waveform      long      3     '0 = ramp    1 = square    2 = triangle    3 = sine    4 = pseudo-random noise    5 = sine perversion
 volume        long      127
 
+halfmask        long    $FFFF
 multarg       long      3
 multtemp      long      2
 
@@ -708,20 +659,15 @@ attackmask    long      ATTACKBIT
 bigsusmask    long      $1FC00
 
 
-aoffset       long      A_OFFSET
 doffset       long      D_OFFSET
 soffset       long      S_OFFSET
 roffset       long      R_OFFSET
 woffset       long      W_OFFSET
 
-amask         long      !A_MASK
 dmask         long      !D_MASK
 smask         long      !S_MASK
 rmask         long      !R_MASK
 wmask         long      !W_MASK
-
-
-fivetwelve    long      512
 
 'variables for oscillator controller
 oscPtr        long      0
@@ -748,7 +694,7 @@ Addrtemp      long      0
 freqAddr      long      0
 outputAddr    long      0
 sineAddr      long      $E000
-organAddr     long      0
+sampleAddr     long      0
 
 paramAddr     long      0
 adsrAddr      long      0

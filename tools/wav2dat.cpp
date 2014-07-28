@@ -71,7 +71,7 @@ int main (int argc, char * argv[]) {
 		FILE * pFile = fopen(filename.c_str(),"rb");
 
 		filename = name;
-		filename += ".dat";
+		filename += ".spin";
 		FILE * pWrite = fopen(filename.c_str(),"w");
 
 		if (pFile != NULL) {
