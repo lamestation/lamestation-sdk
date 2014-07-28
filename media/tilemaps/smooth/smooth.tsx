@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset name="smooth" tilewidth="8" tileheight="8">
- <image source="smooth.png" trans="ff00ff" width="64" height="64"/>
+ <image source="smooth.png" trans="ff00ff" width="64" height="96"/>
  <terraintypes>
   <terrain name="Grass" tile="-1"/>
   <terrain name="Water" tile="-1"/>
   <terrain name="Trees" tile="-1"/>
   <terrain name="Mountain" tile="-1"/>
   <terrain name="Dirt" tile="-1"/>
+  <terrain name="Roof" tile="-1"/>
  </terraintypes>
  <tile id="0" terrain="1,1,1,0"/>
  <tile id="1" terrain="1,1,0,1"/>
@@ -56,9 +57,22 @@
  <tile id="53" terrain="0,3,0,3"/>
  <tile id="54" terrain="3,3,3,3"/>
  <tile id="55" terrain="3,0,3,0"/>
+ <tile id="56" terrain="0,0,0,5"/>
+ <tile id="57" terrain="0,0,5,5"/>
+ <tile id="58" terrain="0,0,5,0"/>
  <tile id="59" terrain="3,0,3,3"/>
  <tile id="60" terrain="0,3,3,3"/>
  <tile id="61" terrain="0,3,0,0"/>
  <tile id="62" terrain="3,3,0,0"/>
  <tile id="63" terrain="3,0,0,0"/>
+ <tile id="64" terrain="0,5,0,5"/>
+ <tile id="66" terrain="5,0,5,0"/>
+ <tile id="67" terrain="5,5,5,0"/>
+ <tile id="68" terrain="5,5,0,5"/>
+ <tile id="69" terrain="5,5,5,5"/>
+ <tile id="72" terrain="0,5,0,0"/>
+ <tile id="73" terrain="5,5,0,0"/>
+ <tile id="74" terrain="5,0,0,0"/>
+ <tile id="75" terrain="5,0,5,5"/>
+ <tile id="76" terrain="0,5,5,5"/>
 </tileset>
