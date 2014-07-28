@@ -223,17 +223,16 @@ PRI PatternPlayer | repeattime
         if play
             patindex := 0
             repeat while patindex < patindex_max 'and play                        
-                        if pattern[patindex] == SNOP
+                if pattern[patindex] == SNOP
 
-                        elseif pattern[patindex] == SOFF
-                            audio.StopSound( 0 )                                   
-                        else
-                            audio.PlaySound( 0, pattern[patindex] )
-                        patindex++
-                    waitcnt(repeattime += 100000000)
+                elseif pattern[patindex] == SOFF
+                    audio.StopSound( 0 )                                   
+                else
+                    audio.PlaySound( 0, pattern[patindex] )
+                patindex++
+
+                waitcnt(repeattime += 10000000)
             play := 0
-
-
 
 PRI GUI_Pattern(x,y,h,active)
 
