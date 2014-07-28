@@ -9,8 +9,8 @@ DAT
 
 data
 
-word    16 ' frameboost
-word    8, 8 ' width, height
+word    24 ' frameboost
+word    8, 12 ' width, height
 ' frame 0
 word    $3ffc ' █▓▓▓▓▓▓█
 word    $3c00 ' █████▓▓█
@@ -19,5 +19,9 @@ word    $3c00 ' █████▓▓█
 word    $3ffc ' █▓▓▓▓▓▓█
 word    $3c00 ' █████▓▓█
 word    $3ffc ' █▓▓▓▓▓▓█
+word    $3ffc ' █▓▓▓▓▓▓█
+word    $3c00 ' █████▓▓█
+word    $3ffc ' █▓▓▓▓▓▓█
+word    $3c00 ' █████▓▓█
 word    $3ffc ' █▓▓▓▓▓▓█
 
