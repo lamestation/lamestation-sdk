@@ -10,23 +10,25 @@ Authors: Brett Weir
 }}
 
 CON
-  _clkmode        = xtal1|pll16x
-  _xinfreq        = 5_000_000
+
+    _clkmode = xtal1|pll16x
+    _xinfreq = 5_000_000
 
     MAXSPRITES = 256
     BOUND_X = 128-16
     BOUND_Y = 64-16
 
 OBJ
-        lcd     :               "LameLCD" 
-        gfx     :               "LameGFX" 
-        ctrl    :               "LameControl"
-        
-        sprite  :               "happyface.full"
-        font    :               "font6x8"
 
+    lcd     :               "LameLCD" 
+    gfx     :               "LameGFX" 
+    ctrl    :               "LameControl"
+    
+    sprite  :               "gfx_happyface"
+    font    :               "font6x8"
 
 VAR
+
     long    x[MAXSPRITES]
     long    y[MAXSPRITES]
     long    speedx[MAXSPRITES]
@@ -37,7 +39,6 @@ VAR
     byte    framecounter[MAXSPRITES]
     
     byte    maxsprite
-    byte    ctrllag
     
     byte    intarray[4]
 
@@ -73,13 +74,12 @@ PUB SpriteDemo | s, ran
         ctrl.Update
         
         if ctrl.A or ctrl.B
-                ctrllag := 0
-                if ctrl.A
-                    if maxsprite > 1
-                        maxsprite--
-                if ctrl.B
-                    if maxsprite < MAXSPRITES-1
-                        maxsprite++
+            if ctrl.A
+                if maxsprite > 1
+                    maxsprite--
+            if ctrl.B
+                if maxsprite < MAXSPRITES-1
+                    maxsprite++
     
         repeat s from 0 to maxsprite-1
         
@@ -117,9 +117,6 @@ PUB Overlay | tmp
     intarray[3] := 0
 
     gfx.PutString(@intarray, 0, 0)
-
-
-
 
 
 DAT
