@@ -10,22 +10,18 @@ Authors: Brett Weir
 }}
 
 
-
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
-
   
 OBJ
         audio   :               "LameAudio"
         song    :               "song_townhall"
 
 PUB MusicDemo
-    ' Initialize the audio system
     audio.Start
     audio.SetWaveform(3)
     audio.SetADSR(127, 30, 100, 0) 
-
     audio.LoadSong(song.Addr)
     audio.LoopSong
 
