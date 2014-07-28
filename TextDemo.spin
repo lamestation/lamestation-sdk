@@ -21,8 +21,6 @@ OBJ
         font_8x8    :           "font8x8"
         font_6x8    :           "font6x8"
         font_4x4    :           "font4x4"
-
-        famus   :               "spacegirl"
         
 PUB TextDemo | x, ran, y
 
@@ -171,29 +169,12 @@ PUB RandomEverywhere | x, y, char, ran, count
         lcd.DrawScreen
         fn.Sleep(2)
 
-PUB StarWarsReel(text,reeltime) | x
-    gfx.LoadFont(font_6x8.Addr, " ", 6, 8)
-    
-    repeat x from 0 to reeltime
-        gfx.ClearScreen(0)
-        gfx.TextBox(text, 16, 64-x, 96, 64) 
-    
-        lcd.DrawScreen
-        fn.Sleep(20)
+
 
 
 DAT
 ''Strings need to be null-terminated
 allcharacters   byte    "!",34,"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz",0
-
-inaworld    byte    "In a world",10,"of awesome game",10,"consoles...",10,10,10,"One console",10,"dares to be...",0
-imagine     byte    "Imagine...",10,10,"A game console",10,"where the rules",10,"of business do",10,"not apply.",0
-takeyour    byte    "Take your memory",10,10,"Take your specs!",10,10,"Don't need 'em!",0
-somuch      byte    "The most action-packed 32 kilo-",10,"bytes you'll",10,"ever have!",0
-
-
-
-
 
 
 gfx_ls_seal_0032
@@ -334,71 +315,6 @@ word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0
 word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
 word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
 word    $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
-
-
-
-
-
-CON
-
-    'SONG PLAYER
-    ENDOFSONG = 0
-    TIMEWAIT = 1
-    NOTEON = 2
-    NOTEOFF = 3
-    
-    SONGS = 2
-    SONGOFF = 255
-    BAROFF = 254
-    SNOP = 253
-    SOFF = 252
-    
-DAT
-
-iBelieve
-byte    12     'number of bars
-byte    80    'tempo
-byte    16    'bar resolution
-
-'main
-byte    0,  50, 46, 53, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-byte    0,  55, 51, 46, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-byte    0,  58, SNOP, SNOP, SNOP, 57, SNOP, SNOP, SNOP, 55, SNOP, SNOP, SNOP, 51, SNOP, SNOP, SNOP
-byte    0,  50, 46, 41, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-
-'low harmony
-byte    1,  46, 41, 50, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-byte    1,  51, 46, 39, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-byte    1,  55, SNOP, SNOP, SNOP, 53, SNOP, SNOP, SNOP, 51, SNOP, SNOP, SNOP, 48, SNOP, SNOP, SNOP
-byte    1,  46, 41, 38, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-
-'low part
-byte    2,  22, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-byte    2,  27, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-byte    2,  31, SNOP, SNOP, SNOP, 29, SNOP, SNOP, SNOP, 27, SNOP, SNOP, SNOP, 24, SNOP, SNOP, SNOP
-byte    2,  22, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
-
-'SONG ------
-
-byte    0,BAROFF
-byte    1,BAROFF
-byte    2,BAROFF
-byte    3,BAROFF
-
-byte    0,4,BAROFF
-byte    1,5,BAROFF
-byte    2,6,BAROFF
-byte    3,7,BAROFF
-
-byte    0,4,8,BAROFF
-byte    1,5,9,BAROFF
-byte    2,6,10,BAROFF
-byte    3,7,11,BAROFF
-
-byte    SONGOFF
-
-
-
 
 DAT
 {{
