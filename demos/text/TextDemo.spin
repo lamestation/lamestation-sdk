@@ -25,41 +25,18 @@ OBJ
 PUB TextDemo | x, ran, y
 
     lcd.Start(gfx.Start)
-
     audio.Start
 
     repeat
-        LSLogo
         gfx.ClearScreen(0)
-
 
         ThisIsATest
     
         RandomEverywhere
         ZoomToCenter
         HouseOfLeaves     
-
-        audio.SetWaveform(0)
-        audio.SetADSR(120, 80, 40, 110) 
-        audio.LoadSong(@iBelieve)
-        audio.LoopSong
-    
-        StarWarsReel(@inaworld,120)
-        Lame
-        StarWarsReel(@imagine,120)
-        StarWarsReel(@takeyour,120)
-        StarWarsReel(@somuch,120)
-        Image
     
         audio.StopSong
-        
-PUB LSLogo
-    gfx.ClearScreen(0)
-    gfx.Sprite(@gfx_ls_seal_0032,48,16,0)
-    lcd.DrawScreen
-        
-    fn.Sleep(1000)
-
 
 PUB ThisIsATest
     gfx.LoadFont(font_8x8.Addr, " ", 8, 8)
@@ -75,29 +52,6 @@ PUB ThisIsATest
     lcd.DrawScreen
     fn.Sleep(1000)    
 
-
-PUB Lame
-    gfx.LoadFont(font_8x8.Addr, " ", 8, 8)
-    gfx.ClearScreen(0)
-    'gfx.PutString(string("LAME"), 48, 28)
-    gfx.Blit(@gfx_lame)
-    lcd.DrawScreen
-    fn.Sleep(1000)
-    gfx.ClearScreen(0)
-    lcd.DrawScreen
-    fn.Sleep(1000)
-    
-PUB Image
-    gfx.LoadFont(font_6x8.Addr, " ", 6, 8)
-    gfx.ClearScreen(0)
-    gfx.PutString(string("Yes, the LameStation"),3,28)
-    lcd.DrawScreen
-    fn.Sleep(3000)
-
-    gfx.ClearScreen(0)
-    gfx.Sprite(@gfx_ls_front_s, 16,0,0)
-    lcd.DrawScreen
-    fn.Sleep(10000)
 
 PUB HouseOfLeaves
         
@@ -175,76 +129,6 @@ PUB RandomEverywhere | x, y, char, ran, count
 DAT
 ''Strings need to be null-terminated
 allcharacters   byte    "!",34,"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz",0
-
-
-gfx_ls_seal_0032
-word    256  'frameboost
-word    32, 32   'width, height
-
-word    $aaaa, $0ffa, $aff0, $aaaa, $aaaa, $000f, $f000, $aaaa, $faaa, $0000, $0000, $aaaf, $3eaa, $0000, $0000, $aabc
-word    $03aa, $55c0, $0005, $aac0, $00ea, $55c0, $0005, $ab00, $00fa, $55c0, $0005, $af00, $003a, $55c0, $0005, $ac00
-word    $000e, $55c0, $0005, $b000, $000e, $55c0, $0005, $b000, $0003, $55c0, $0005, $c000, $0003, $55c0, $0005, $c000
-word    $0003, $55c0, $0005, $c000, $0003, $55c0, $0005, $c000, $0000, $55c0, $0005, $0000, $0000, $55c0, $0005, $0000
-word    $ffff, $55ff, $fff5, $ffff, $ffff, $55ff, $fff5, $ffff, $ffff, $55ff, $fff5, $ffff, $ffff, $55ff, $fff5, $ffff
-word    $ffff, $55ff, $fff5, $ffff, $ffff, $55ff, $fff5, $ffff, $fffe, $55ff, $fff5, $bfff, $fffe, $55ff, $fff5, $bfff
-word    $fffa, $55ff, $5555, $a555, $fffa, $55ff, $5555, $ad55, $ffea, $55ff, $5555, $ab55, $ffaa, $ffff, $ffff, $aaff
-word    $feaa, $ffff, $ffff, $aabf, $faaa, $ffff, $ffff, $aaaf, $aaaa, $ffff, $ffff, $aaaa, $aaaa, $fffa, $afff, $aaaa
-
-
-gfx_ls_front_s
-word    1536  'frameboost
-word    96, 64   'width, height
-
-word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
-word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
-word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5735, $5555, $55d5, $5555, $5555, $5555, $5555, $5555, $5555
-word    $5555, $5555, $ff55, $ffff, $ffff, $57d5, $5555, $5555, $5755, $5555, $5555, $5555, $5555, $5555, $d5fd, $ffff
-word    $ffff, $ffff, $ffff, $ffff, $f3ff, $57ff, $5555, $5555, $5555, $d555, $f957, $ffff, $ffff, $ffff, $ffff, $ffff
-word    $ffff, $fd5f, $5555, $5555, $5555, $dd55, $ff5f, $ffff, $ffff, $ffff, $ffff, $ffff, $ffff, $557f, $555f, $5555
-word    $5555, $d5d5, $ff7f, $ffff, $ffff, $ffff, $ffff, $ffff, $ffff, $f5ff, $55fd, $5555, $5555, $d575, $ffff, $ffff
-word    $ffff, $ffff, $ffff, $ffff, $ffff, $ffff, $7fc3, $5555, $5555, $555d, $fffd, $ffff, $ffff, $ffcf, $ffff, $ffff
-word    $ffff, $3fff, $c000, $5555, $5555, $5557, $ffff, $fc3f, $f3bf, $fccf, $ffff, $ffff, $ffff, $03f0, $0000, $5557
-word    $d555, $fd55, $ffff, $c00f, $3fff, $0000, $0000, $ffff, $ff0c, $0033, $0000, $555c, $7555, $fff5, $ffff, $c00f
-word    $ffff, $0000, $0000, $ffff, $c003, $003f, $0000, $5550, $7555, $ffff, $ffff, $c0f0, $ffff, $cf3f, $c30f, $ffff
-word    $c00f, $003f, $0000, $5570, $dd55, $ffff, $fcff, $c0f0, $ffff, $0fc3, $cfcf, $ffff, $0fbf, $000f, $0000, $5570
-word    $dd55, $ffff, $ffff, $f0f0, $ffff, $3fcf, $ffc3, $fff3, $0fff, $000c, $0000, $5570, $ff55, $ffe3, $ffff, $ffff
-word    $ffff, $3fff, $bfff, $3fc3, $0fff, $000c, $0000, $5540, $ff55, $ffc3, $fc0f, $5557, $5555, $d955, $f77d, $d57d
-word    $f5dd, $000f, $0000, $55f0, $ff55, $fff3, $f00f, $5557, $5555, $5555, $5555, $5555, $d555, $000f, $0000, $55f0
-word    $ff55, $f0c3, $7003, $5555, $5555, $5555, $5555, $5555, $5555, $000d, $000c, $55f0, $ffd5, $fff0, $7003, $5555
-word    $5555, $5555, $5555, $5555, $5555, $000d, $0000, $55f0, $ffd5, $08c0, $7000, $fff5, $ffff, $ffff, $ffff, $ffff
-word    $5fff, $003d, $0000, $55f0, $ffd5, $0000, $7000, $fe35, $ffff, $ffff, $ffff, $ffff, $53ff, $00cd, $0000, $57f0
-word    $ffd5, $00f0, $7c00, $0035, $0000, $0000, $0000, $0000, $5000, $038d, $c000, $57ff, $8fd5, $3ff0, $7c00, $0035
-word    $0000, $0000, $0000, $0000, $5000, $0c0d, $3000, $57c0, $0fd5, $d55e, $7000, $0035, $0000, $0000, $0000, $0000
-word    $5000, $f00d, $03ff, $57c0, $0fd5, $ffff, $7003, $0035, $0000, $0000, $0000, $0000, $5000, $000d, $0000, $57c0
-word    $3fd5, $0f00, $7000, $0035, $0000, $0000, $0000, $0000, $6000, $000d, $0000, $57c0, $3fd5, $0000, $7c00, $0035
-word    $0000, $0000, $0000, $0000, $5000, $000d, $0000, $57c0, $3fd5, $0000, $7c00, $0035, $0000, $0000, $0000, $0000
-word    $7000, $ff0d, $0003, $57c0, $3fd5, $0000, $7000, $0035, $0000, $0000, $0000, $0000, $7000, $ff0d, $0003, $57c0
-word    $3fd5, $0000, $7000, $0035, $0000, $0000, $0000, $0000, $7000, $f00d, $0000, $57c0, $3fd5, $0000, $7000, $0035
-word    $0000, $0000, $0000, $0000, $7000, $000d, $0000, $57f0, $0fd5, $0000, $7c00, $0035, $0000, $0000, $0000, $0000
-word    $5000, $000d, $0000, $57f0, $0fd5, $0000, $7000, $0035, $0000, $0000, $0000, $0000, $5000, $000d, $0000, $57fc
-word    $3fd5, $0000, $7000, $0035, $0000, $0000, $0000, $0000, $5000, $000d, $3c00, $57fc, $3fd5, $0000, $7f00, $0035
-word    $0000, $0000, $0000, $0000, $5000, $000d, $0c00, $57fc, $0fd5, $0000, $7000, $0035, $0000, $0000, $0000, $0000
-word    $7000, $00cd, $0c00, $57fc, $0fd5, $0000, $7000, $0035, $0000, $0000, $0000, $0000, $7000, $00cd, $0000, $57fc
-word    $0bd5, $ffc0, $5300, $0035, $0000, $0000, $0000, $0000, $7000, $000d, $0000, $57fe, $03d5, $0000, $5300, $0035
-word    $0000, $0000, $0000, $0000, $7000, $000d, $0000, $57ff, $03d5, $0000, $5000, $0035, $0000, $0000, $0000, $0000
-word    $7000, $c00d, $0000, $57ff, $01d5, $0000, $5000, $0005, $0000, $0000, $0000, $0000, $7000, $2005, $c000, $55ff
-word    $0fd5, $0000, $5300, $0005, $0000, $0000, $0000, $0000, $7000, $0005, $f000, $55ff, $3755, $0000, $5000, $0005
-word    $0000, $0000, $0000, $0000, $7000, $0005, $fc00, $55df, $d755, $0000, $5000, $0005, $0000, $0000, $0000, $0000
-word    $7000, $0005, $ff00, $55df, $5d55, $000f, $5000, $0005, $0000, $0000, $0000, $0000, $7000, $0005, $ffc0, $5576
-word    $5d55, $0bf5, $5000, $0005, $0000, $0000, $0000, $0000, $7000, $0035, $7ff0, $5575, $7555, $3555, $5000, $3f35
-word    $fc00, $fc0f, $ffff, $fff0, $70ff, $0005, $57fe, $555d, $f555, $d555, $5000, $7d55, $5555, $f555, $ffff, $ffff
-word    $5fff, $0005, $5557, $5557, $d555, $5557, $5003, $5555, $5555, $5555, $5555, $5555, $5555, $e005, $5555, $5557
-word    $5555, $f55f, $500f, $5555, $5555, $5555, $5555, $5555, $5555, $7f05, $d555, $5555, $5555, $fd7d, $5c37, $5555
-word    $5555, $5555, $5555, $5555, $5555, $5f05, $7555, $5555, $5555, $d5f5, $f0d5, $fd55, $ffff, $ffff, $ffff, $5557
-word    $5555, $d7f7, $5f57, $5555, $5555, $5f55, $5f55, $7d55, $f7df, $df5d, $7df7, $5557, $5555, $55f7, $57d5, $5555
-word    $5555, $f955, $7d56, $fffd, $ffff, $ffff, $59e5, $ffff, $5fff, $557d, $557d, $5555, $5555, $5555, $ffff, $ffff
-word    $ffff, $ffff, $ffff, $ffff, $7fff, $f55f, $5557, $5555, $5555, $5555, $d555, $ffff, $ffff, $ffff, $ffff, $ffff
-word    $ffff, $5fff, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
-word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
-word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
-word    $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555, $5555
-
-
 
 
 gfx_lame
