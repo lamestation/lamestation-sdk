@@ -1,5 +1,5 @@
 {{
-The Music Box - a LameStation jukebox
+JukeBox - a LameStation Music Player
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -12,8 +12,8 @@ Authors: Brett Weir
 
 
 CON
-    _clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
-    _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
+    _clkmode        = xtal1 + pll16x
+    _xinfreq        = 5_000_000
   
     SONGCOUNT = 5
     SONGPOS = 38
@@ -49,7 +49,7 @@ VAR
     byte    character[2]
 
 
-PUB MusicPlayer
+PUB JukeBox
 
     lcd.Start(gfx.Start)
     gfx.LoadFont(font.Addr, " ", 4, 6)
@@ -77,14 +77,11 @@ PUB MusicPlayer
 
     repeat
         
-        'To update the screen, you simply call switchFrame.
         lcd.DrawScreen
 
-        'Make sure to call update before attempting to check values
         ctrl.Update
         gfx.Blit(juke.Addr)
         
-        'Put some awesome text on the screen
         gfx.TextBox(string("The Music Box"),0,0,64,32)
         gfx.TextBox(string("Up/dn: choose",10,"  A/B: select"), 74, 0,64,32)
         gfx.PutString(string("NOW:"), 22, 26)
@@ -101,9 +98,6 @@ PUB MusicPlayer
             gfx.PutString(songnames[songinc+songoffset], 40, SONGPOS+songinc<<3)
         
        
-        ' Receive user input
-        ' Added a little debouncing code to require one joy
-        ' press for each menu entry.
         if ctrl.Up
             if not joymoved
                 joymoved := 1          
@@ -120,7 +114,6 @@ PUB MusicPlayer
         else
             joymoved := 0
         
-        ' If the player presses any button, act
         if ctrl.A or ctrl.B
             if not buttonpressed
                 buttonpressed := 1
@@ -135,7 +128,6 @@ PUB MusicPlayer
             buttonpressed := 0
                 
                 
-        ' Add scrolling to song menu for cool effect
         if songchoice > constant(SONGWINDOW-1)
             songoffset := songchoice - constant(SONGWINDOW-1)
         else
