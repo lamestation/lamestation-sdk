@@ -38,6 +38,9 @@ PUB TestBoxCollision
 
     lcd.Start(gfx.Start)
     gfx.LoadMap(tile.Addr, map.Addr)
+
+    x1 := 12
+    y1 := 12
     
     repeat
         gfx.ClearScreen(0)

@@ -23,7 +23,7 @@ OBJ
     song     : "song_ibelieve"
 
         
-PUB StarWarsReelDemo
+PUB Main
 
     lcd.Start(gfx.Start)
     lcd.SetFrameLimit(lcd#QUARTERSPEED)

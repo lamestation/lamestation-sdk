@@ -22,7 +22,7 @@ OBJ
         maptile :               "lostatsea"
         map     :               "lostatseamap"
         
-PUB Kerning
+PUB Main
 
     lcd.Start(gfx.Start)
 
@@ -43,8 +43,6 @@ PUB Kerning
 
     DialogBox(@strang2,0,32,128,24,6,6)
     lcd.DrawScreen
-
-    repeat
 
 
 PUB DialogBox(str, x,y,w,h, tw, th) | dx, dy, x1, y1, w1, h1, frame
