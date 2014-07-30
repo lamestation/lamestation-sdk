@@ -1,5 +1,5 @@
 {{
-DrawMap
+Parallax Scrolling
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
