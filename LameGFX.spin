@@ -154,7 +154,7 @@ PUB Sprite(source, x, y, frame)
     longmove(@c_parameters{0}, @result, 5)
     instruction := c_sprite
 
-PUB InvertColor(enabled{boolean})
+PUB InvertColor(enabled) ' boolean value
 '' When enabled colors black and white are plotted inverted (gray is left unchanged).
 
     repeat
