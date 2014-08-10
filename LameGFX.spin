@@ -173,8 +173,8 @@ PUB LoadMap(source_tilemap, source_levelmap)
     map_levelmap := source_levelmap
 
 PUB TestMapCollision(objx, objy, objw, objh) | tilebase, x, y, tx, ty
-'' Returns 1 if collision, 0 otherwise
-'' returned tiles start numbering at 1,1.
+'' Returns non-zero if a collision has occurred between an object and the map; 0 otherwise.
+'' Returned tiles are offset by (1,1).
 
     ty := word[map_tilemap][SY]
 
