@@ -1,6 +1,7 @@
 {{
-Star Wars Reel
+Sprite Frames With Direction
 -------------------------------------------------
+Version: 1.0
 Copyright (c) 2014 LameStation LLC
 See end of file for terms of use.
 
@@ -9,54 +10,56 @@ Authors: Brett Weir
 }}
 
 CON
-
-    _clkmode = xtal1 + pll16x
+    _clkmode = xtal1|pll16x
     _xinfreq = 5_000_000
 
 OBJ
+    lcd     :               "LameLCD" 
+    gfx     :               "LameGFX"
+    ctrl    :               "LameControl"
 
-    lcd      : "LameLCD"
-    gfx      : "LameGFX"
-    audio    : "LameAudio"
-    
-    font_6x8 : "font6x8_normal_w"
-    song     : "song_ibelieve"
+    sprite  :               "gfx_supertank"
 
-        
-PUB Main
+VAR
+    byte    apress
+
+PUB Main | dir,frame
 
     lcd.Start(gfx.Start)
     lcd.SetFrameLimit(lcd#QUARTERSPEED)
-
-    gfx.LoadFont(font_6x8.Addr, " ", 0, 0)
-    audio.Start
-
-    audio.SetWaveform(0)
-    audio.SetADSR(120, 80, 40, 110) 
-    audio.LoadSong(song.Addr)
-    audio.LoopSong
+    ctrl.Start
 
     repeat
-        StarWarsReel(@inaworld,120)
-        StarWarsReel(@imagine,120)
-        StarWarsReel(@takeyour,120)
-        StarWarsReel(@somuch,120)
-
-PUB StarWarsReel(text,reeltime) | x
-    
-    repeat x from 0 to reeltime
         gfx.ClearScreen(0)
-        gfx.TextBox(text, 16, 64-x, 96, 64) 
+
+        ctrl.Update
+        if ctrl.A
+            frame := 0
+            if not apress     
+                apress := 1           
+                frame := 2            
+        else
+            apress := 0
+            if ctrl.Left or ctrl.Right or ctrl.Up or ctrl.Down
+                if frame
+                    frame := 0
+                else
+                    frame := 1
+            else
+                frame := 0
+
+        if ctrl.Left
+            dir := 0
+        if ctrl.Right
+            dir := 1
+        if ctrl.Up
+            dir := 2
+        if ctrl.Down
+            dir := 3
+
+        gfx.Sprite(sprite.Addr, 56, 24, dir*3+frame)
         lcd.DrawScreen
-
-DAT
-
-inaworld    byte    "In a world",10,"of awesome game",10,"consoles...",10,10,10,"One console",10,"dares to be...",0
-imagine     byte    "Imagine...",10,10,"A game console",10,"where the rules",10,"of business do",10,"not apply.",0
-takeyour    byte    "Take your memory",10,10,"Take your specs!",10,10,"Don't need 'em!",0
-somuch      byte    "The most action-packed 32 kilo-",10,"bytes you'll",10,"ever have!",0
-
-
+    
 DAT
 {{
 

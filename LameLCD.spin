@@ -66,7 +66,7 @@ CON
   CMD_DRAWSCREEN    = $026
   CMD_INVERTSCREEN  = $036
 
-PUB Start(buffer{4n})
+PUB Start(buffer) 'must be long aligned
 '' Initializes the LCD object.
 ''
 '' parameters
@@ -104,7 +104,7 @@ PUB SetFrameLimit(frequency)
     rate := clkfreq / frequency                         ' division by 0 is 0 in SPIN
     Exec(CMD_SETFRAMELIMIT, @rate)
     
-PUB InvertScreen(enabled{boolean})
+PUB InvertScreen(enabled) ' boolean value
 '' Invert black/white but leave gray untouched.
 
     Exec(CMD_INVERTSCREEN, enabled <> 0)

@@ -10,7 +10,7 @@ DAT
 data
 
 word    16 ' frameboost
-word    8, 8 ' width, height
+word    6, 8 ' width, height
 ' frame 0
 word    $a555 ' ░░░░░░  
 word    $a555 ' ░░░░░░  
