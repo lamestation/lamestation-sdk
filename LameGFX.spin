@@ -232,7 +232,7 @@ PUB TestMapMoveX(x, y, w, h, newx) | tmp, tx
     if not tmp
         return
 
-    tx  := word[map_tilemap][SY]
+    tx  := word[map_tilemap][SX]
     tmp := ((tmp & $FFFF)-1) * tx - newx
 
     if newx > x
