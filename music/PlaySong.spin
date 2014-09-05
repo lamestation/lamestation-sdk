@@ -1,5 +1,5 @@
 {{
-Music Demo
+Play Song
 ─────────────────────────────────────────────────
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -11,14 +11,14 @@ Authors: Brett Weir
 
 
 CON
-    _clkmode        = xtal1 + pll16x
-    _xinfreq        = 5_000_000
+    _clkmode = xtal1 + pll16x
+    _xinfreq = 5_000_000
   
 OBJ
-        audio   :               "LameAudio"
-        song    :               "song_townhall"
+    audio   : "LameAudio"
+    song    : "song_townhall"
 
-PUB MusicDemo
+PUB PlaySong
     audio.Start
     audio.SetWaveform(3)
     audio.SetADSR(127, 30, 100, 0) 
@@ -26,7 +26,6 @@ PUB MusicDemo
     audio.LoopSong
 
     repeat
-       
 
 DAT
 {{
