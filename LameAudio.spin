@@ -51,15 +51,7 @@ CON
     S_MASK = !($7F << S_OFFSET)
     R_MASK = !($7F << R_OFFSET)
     W_MASK = !($F << W_OFFSET)
-    
-    SONGS = 1
-    SONGOFF = 255
-    BAROFF = 254
-    SNOP = 253
-    SOFF = 252 
 
-    BYTES_SONGHEADER = 3
-    BYTES_BARHEADER = 1
 
     '0 timestamp     amount (shift by 12)
     '1 note on    note  channel
@@ -101,10 +93,6 @@ CON
     OSCBITMASK = (OSCILLATORS-1) << 2
     INITVAL = 127
 
-OBJ
-
-    fn  :       "LameFunctions"
-
 VAR
 
     'ASM data structure (do not mess up)
@@ -115,33 +103,14 @@ VAR
     long    channelADSR
 
     long    oscRegister[OSCREGS]
-
+    
+    
 
     byte    oscindexer
     byte    oscindexcounter
     byte    oscoffindexer
 
-    long    songcursor
-    long    barcursor
-    long    timeconstant
-    word    loopsongPtr     '' This value points to the first address of the song definition in a song
-
-    byte    bar
-    byte    barinc   
-    byte    totalbars
-    byte    play
-    byte    replay
-    byte    barres
-    word    bartmp
-
-    word    barAddr
-
-    word    barshift
-    byte    linecursor
-
-    long    LoopingPlayStack[20]
     word    sample
-
 PUB Start
       
     parameter := @freqTable + (@sample<<16)
@@ -179,57 +148,6 @@ PUB SetADSR(attackvar, decayvar, sustainvar, releasevar)
 PUB SetSample(samplevar)
     sample := samplevar
 
-PUB PressPedal
-    channelADSR |= SUSPEDALBIT
-
-PUB ReleasePedal
-    channelADSR &= !SUSPEDALBIT
-    repeat oscoffindexer from 0 to OSCREGS-1 step REGPEROSC
-        if oscRegister[oscoffindexer] & HELDBIT == 0           'if note is not being held
-            oscRegister[oscoffindexer] &= !KEYONBIT        '9th bit
-
-
-'PUB LoadInstr(instrnum)
-
-'    channelADSR := LONG[@instruments][instrnum]
-
-PUB FindFreeOscillator
-    oscindexcounter := 0
-    repeat while oscRegister[oscindexer+1] & ADSRBITS <> 0 and oscindexcounter < OSCILLATORS
-        oscindexcounter += 1
-        oscindexer += 4
-        oscindexer &= OSCBITMASK
-
-PUB PlayNewNote(note)
-    FindFreeOscillator
-
-    if oscRegister[oscindexer] & HELDBIT == 0
-        oscRegister[oscindexer] := note + KEYBITS
-    else
-        oscindexcounter := 0
-        repeat while oscRegister[oscindexer] & HELDBIT <> 0 and oscindexcounter < OSCILLATORS
-            oscindexcounter += 1
-            oscindexer += 4
-            oscindexer &= OSCBITMASK
-        oscRegister[oscindexer] := note + KEYBITS
-
-    oscindexer += 4
-    oscindexer &= OSCBITMASK
-
-PUB StopNote(note)
-
-    if channelADSR & SUSPEDALBIT == 0
-        repeat oscoffindexer from 0 to OSCREGS-1 step REGPEROSC
-            if oscRegister[oscoffindexer] & NOTEBITS == note
-                oscRegister[oscoffindexer] &= !KEYBITS
-    else
-        repeat oscoffindexer from 0 to OSCREGS-1 step REGPEROSC
-            if oscRegister[oscoffindexer] & NOTEBITS == note
-                oscRegister[oscoffindexer] &= !HELDBIT           '9th bit
-
-
-        
-  
 PUB PlaySound(channel, note)
     if note < 128 and channel < VOICES
         oscindexer := channel << 2
@@ -248,49 +166,86 @@ PUB StopAllSound
     repeat oscindexer from 0 to OSCREGS-1 step REGPEROSC
         oscRegister[oscindexer] &= !KEYBITS
 
-PUB LoadSong(songBarAddrvar)
+CON
+    SONGOFF = 255
+    BAROFF = 254
+    SOFF = 252 
+    
+    #0, PATCH, PATTERN, SONG
+    
+VAR
+    long    songcursor
+    long    barcursor
+    long    timeconstant
+    
+    word    instAddr
+    word    barAddr
+    word    loopAddr     '' This value points to the first address of the song definition in a song
 
-    barAddr := songBarAddrvar
-    totalbars := byte[songBarAddrvar][0]
-    timeconstant := CalculateTimeConstant(byte[songBarAddrvar][1])
-    barres := byte[songBarAddrvar][2]
-    loopsongPtr := barAddr + totalbars*(barres+BYTES_BARHEADER) + BYTES_SONGHEADER        
+    byte    totalbars
+    byte    play
+    byte    replay
+    byte    barres
+    word    bartmp
+    long    transpose
+
+    word    barshift
+    byte    linecursor
+
+    long    LoopingPlayStack[20]
+    
+PUB LoadPatch(patchAddr, number)
+    instAddr := patchAddr
+    instAddr += 1 + number*6
+    
+    SetAttack(byte[instAddr][1])
+    SetDecay(byte[instAddr][2])
+    SetSustain(byte[instAddr][3])
+    SetRelease(byte[instAddr][4])
+    SetWaveform(byte[instAddr][5])
+    
+    
+PUB LoadSong(patchAddr, patternAddr, songAddr)
+
+    LoadPatch(patchAddr, 0)
+    LoadPatch(patchAddr, 1)
+        
+    barAddr := patternAddr
+    barres := byte[barAddr][0]
+    totalbars := byte[barAddr][1]
+    barAddr += 2
+
+    loopAddr := songAddr        
+    timeconstant := CalculateTimeConstant( byte[loopAddr] )
+    loopAddr += 1
     
     songcursor := 0
     barcursor := 0
 
+PUB SetTranspose(trans)
+    transpose := trans
+    
+PUB SetSpeed(speed)
+    timeconstant := CalculateTimeConstant( speed )
+    
 PUB PlaySong
     play := 1
-    replay := 0
+
+PUB LoopSong(looping)
+    replay := looping
     
-PUB LoopSong
-    play := 1
-    replay := 1    
-
 PUB StopSong
-
     play := 0
-    replay := 0
     StopAllSound
     
 PUB SongPlaying
     return play
         
-PRI FindLoopBarFromSongPointer | x
-'' This function increments the loop pointer by
-'' the value of the song pointr
-
-    x := 0
-    barshift := 0
-    repeat while x++ < byte[loopsongPtr][songcursor]
-        barshift += barres+BYTES_BARHEADER
-
 PRI CalculateTimeConstant(bpm)
     return ( clkfreq / bpm * 15 ) ' 60 / 4 for 16th note alignment
 
 PRI LoopingSongParser | repeattime
     
-
     repeat
         repeattime := cnt
         
@@ -299,7 +254,7 @@ PRI LoopingSongParser | repeattime
             
         if play
             songcursor := 0
-            repeat while byte[loopsongPtr][songcursor] <> SONGOFF and play
+            repeat while byte[loopAddr][songcursor] <> SONGOFF and play
                 
                 barcursor := songcursor
                 repeat linecursor from 0 to (barres-1)
@@ -307,20 +262,15 @@ PRI LoopingSongParser | repeattime
                     songcursor := barcursor
 
                     ' play all notes defined in song definition
-                    repeat while byte[loopsongPtr][songcursor] <> BAROFF and play 
-                        FindLoopBarFromSongPointer 
+                    repeat while byte[loopAddr][songcursor] <> BAROFF and play 
+                        barshift := (barres+1)*byte[loopAddr][songcursor]
+                        bartmp := barshift+1+linecursor
                         
-                        bartmp := barshift+BYTES_SONGHEADER+BYTES_BARHEADER+linecursor
-                        
-                        if byte[barAddr][bartmp] == SNOP
+                        case byte[barAddr][bartmp]
+                            SOFF:   StopSound( byte[barAddr][barshift] )
+                            0..127:  PlaySound( byte[barAddr][barshift] , byte[barAddr][bartmp] + transpose )  'channel, note
+                            other:
 
-                        elseif byte[barAddr][bartmp] == SOFF
-                            StopSound( byte[barAddr][barshift+BYTES_SONGHEADER] )       
-                            
-                        else
-                            PlaySound( byte[barAddr][barshift+BYTES_SONGHEADER] , byte[barAddr][bartmp] )  'channel, note
-
-                            
                         songcursor += 1
 
                     waitcnt(repeattime += timeconstant)               
@@ -332,7 +282,6 @@ PRI LoopingSongParser | repeattime
 
 
 DAT
-
 
 freqTable
 
