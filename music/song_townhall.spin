@@ -7,16 +7,23 @@ CON
     SNOP    = 253
     SOFF    = 252
 
-PUB Addr
-    return @song_data
-
+PUB Patches
+    return @patches_data
 DAT
 
-song_data
+patches_data
+byte    2       'patch count
 
-byte    10
-byte    120
-byte    16
+byte    0, 127,  30, 100,   0,   3
+byte    1, 127,  30, 100,   0,   3
+
+PUB Patterns
+    return @patterns_data
+DAT
+
+patterns_data
+byte    16      'bar resolution
+byte    10      'bar count
 
 byte    0, 36,SOFF,  48,SOFF,  36,SOFF,  48,SOFF,  36,SOFF,  48,SOFF,  36,SOFF,  48,SOFF
 
@@ -33,8 +40,16 @@ byte    1, 65,SOFF,  65,SOFF,  60,SOFF,  60,SOFF,  63,SNOP,  62,  63,SNOP,  62, 
 byte    0, 36,  36,  48,  48,  36,  41,  42,  43,SNOP,  43,  43,  43,  43,  43,  43,  43
 byte    1, 52,SOFF,SNOP,SNOP,SNOP,  53,  54,  55,SNOP,  55,  55,  55,  55,  55,  55,  55
 
-byte    0, BAROFF
+PUB Sequence
+    return @sequence_data
+DAT
 
+sequence_data
+byte    120     'tempo (bpm)
+
+byte    0, BAROFF
+byte    0, BAROFF
+    
 byte    0,1,BAROFF
 byte    0,2,BAROFF
 byte    0,1,BAROFF
