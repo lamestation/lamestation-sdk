@@ -182,7 +182,6 @@ VAR
     word    barAddr
     word    loopAddr     '' This value points to the first address of the song definition in a song
 
-    byte    totalbars
     byte    play
     byte    replay
     byte    barres
@@ -193,10 +192,11 @@ VAR
     byte    linecursor
 
     long    LoopingPlayStack[20]
+    word    songdata[3]
     
 PUB LoadPatch(patchAddr, number)
     instAddr := patchAddr
-    instAddr += 1 + number*6
+    instAddr += number*6
     
     SetAttack(byte[instAddr][1])
     SetDecay(byte[instAddr][2])
@@ -205,17 +205,20 @@ PUB LoadPatch(patchAddr, number)
     SetWaveform(byte[instAddr][5])
     
     
-PUB LoadSong(patchAddr, patternAddr, songAddr)
+PUB LoadSong(songAddr) | n
+    
+    wordmove(@songdata, songAddr.word{0},3)
+    repeat n from 0 to 2
+        songdata[n] += songAddr.word[1]
 
-    LoadPatch(patchAddr, 0)
-    LoadPatch(patchAddr, 1)
+    LoadPatch(songdata[PATCH], 0)
+    LoadPatch(songdata[PATCH], 1)
         
-    barAddr := patternAddr
+    barAddr := songdata[PATTERN]
     barres := byte[barAddr][0]
-    totalbars := byte[barAddr][1]
-    barAddr += 2
+    barAddr += 1
 
-    loopAddr := songAddr        
+    loopAddr := songdata[SONG]
     timeconstant := CalculateTimeConstant( byte[loopAddr] )
     loopAddr += 1
     
