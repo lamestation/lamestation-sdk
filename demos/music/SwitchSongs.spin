@@ -1,5 +1,5 @@
 {{
-Play Song
+Switch Songs
 ------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC

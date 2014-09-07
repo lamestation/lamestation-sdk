@@ -19,11 +19,10 @@ OBJ
 
 PUB Noise
     audio.Start
+
     audio.SetWaveform(4)
     audio.SetADSR(127, 0, 0, 70)
     audio.PlaySound(1,40)
-
-    repeat
 
 DAT
 {{

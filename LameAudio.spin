@@ -183,7 +183,6 @@ VAR
     long    barcursor
     long    timeconstant
     
-    word    instAddr
     word    barAddr
     word    loopAddr     '' This value points to the first address of the song definition in a song
 
@@ -198,27 +197,23 @@ VAR
     byte    linecursor
 
     long    LoopingPlayStack[20]
-    word    songdata[3]
+    word    songdata[2]
     
 PUB LoadPatch(patchAddr, number)
-    instAddr := patchAddr
+    SetAttack(byte[++patchAddr])
+    SetDecay(byte[++patchAddr])
+    SetSustain(byte[++patchAddr])
+    SetRelease(byte[++patchAddr])
+    SetWaveform(byte[++patchAddr])
     
-    SetAttack(byte[instAddr][1])
-    SetDecay(byte[instAddr][2])
-    SetSustain(byte[instAddr][3])
-    SetRelease(byte[instAddr][4])
-    SetWaveform(byte[instAddr][5])
+PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
     
-    
-PUB LoadSong(songAddr) | n
-    
-    wordmove(@songdata, songAddr.word{0},3)
-    repeat n from 0 to 2
-        songdata[n] += songAddr.word[1]
+    wordmove(@songdata, songAddr,3)
+    repeat 2
+        songdata[n++] += songAddr.word[1]
         
     barAddr := songdata[PATTERN]
-    barres := byte[barAddr]{0}
-    barAddr += 1
+    barres := byte[barAddr++]{0}
 
     loopAddr := songdata[SONG]
     
@@ -265,14 +260,17 @@ PRI LoopingSongParser | repeattime
                 if byte[loopAddr][songcursor] & $F0 == ADSRW
                     LoadPatch(loopAddr + songcursor, 0)                 'can't use array notation because loopAddr is word-size
                     songcursor += 6
+                    next
                         
-                elseif byte[loopAddr][songcursor] & $F0 == TEMPO
+                if byte[loopAddr][songcursor] & $F0 == TEMPO
                     timeconstant := CalculateTimeConstant(byte[loopAddr][songcursor+1])
                     songcursor += 2
+                    next
 
-                elseif byte[loopAddr][songcursor] & $F0 == TRANS
+                if byte[loopAddr][songcursor] & $F0 == TRANS
                     transpose := byte[loopAddr][songcursor+1]
                     songcursor += 2
+                    next
                             
                 else
                     barcursor := songcursor
@@ -298,8 +296,9 @@ PRI LoopingSongParser | repeattime
                     songcursor += 1
 
             play := 0
+            StopAllSound
         stop := 0
-        StopAllSound
+
 
 
 DAT
