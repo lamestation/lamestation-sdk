@@ -1,21 +1,29 @@
 ' *********************************************************
 ' lastboss.spin
 ' *********************************************************
-CON
-    SONGOFF = 255
-    BAROFF  = 254
-    SNOP    = 253
-    SOFF    = 252
+DAT    
+song_data
+word    @patterns_data, @sequence_data
 
+CON
+    SONGOFF = $80
+    BAROFF  = $81
+    SNOP    = $82
+    SOFF    = $83
+    
+    ADSRW   = $A0
+    TEMPO   = $B0
+    TRANS   = $C0
+    
+    #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
+    
 PUB Addr
-    return @song_data
+    result.word[1] := @@0
+    result.word{0} := @song_data
 
 DAT
-
-song_data
-
-byte    4     'number of bars
-byte    150    'tempo
+    
+patterns_data
 byte    12     'notes/bar
 
 'MAIN SECTION
@@ -28,6 +36,10 @@ byte    1,25,SNOP,SNOP,26,SNOP,SNOP,27,SNOP,SNOP,21,SNOP,SNOP
 
 
 'SONG ------
+sequence_data
+byte    TRANS, 0
+byte    TEMPO, 150
+byte    ADSRW+$F, 127, 100, 40, 100, SAW
 
 byte    0,2,BAROFF
 byte    1,3,BAROFF

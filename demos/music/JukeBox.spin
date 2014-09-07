@@ -36,7 +36,7 @@ OBJ
 
 VAR
 
-    word    songs[SONGCOUNT]
+    long    songs[SONGCOUNT]    ' song.Addr returns LONG, not WORD
     word    songnames[SONGCOUNT]
 
     byte    slide
@@ -55,11 +55,8 @@ PUB JukeBox
     gfx.LoadFont(font.Addr, " ", 4, 6)
     
     ctrl.Start
-    
     audio.Start
-    audio.SetWaveform(0)
-    audio.SetADSR(127, 100, 40, 100) 
-    
+ 
     character[1] := 0
 
     songnames[0] := @zero_name
@@ -73,7 +70,7 @@ PUB JukeBox
     songs[2] := song_pixl.Addr
     songs[3] := song_town.Addr
     songs[4] := song_last.Addr
-    
+
 
     repeat
         
@@ -132,7 +129,7 @@ PUB JukeBox
             songoffset := songchoice - constant(SONGWINDOW-1)
         else
             songoffset := 0
-                            
+                                  
 DAT
 
 tank_name   byte    "Tank Danger",0

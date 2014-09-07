@@ -189,6 +189,7 @@ VAR
 
     byte    play
     byte    replay
+    byte    stop
     byte    barres
     word    bartmp
     long    transpose
@@ -232,13 +233,16 @@ PUB SetSpeed(speed)
     
 PUB PlaySong
     play := 1
+    replay := 0
 
-PUB LoopSong(looping)
-    replay := looping
+PUB LoopSong
+    play := 1
+    replay := 1
     
 PUB StopSong
     play := 0
-    StopAllSound
+    replay := 0
+    stop := 1
     
 PUB SongPlaying
     return play
@@ -254,10 +258,10 @@ PRI LoopingSongParser | repeattime
         if replay
             play := 1
             
-        if play
+        if play and not stop
             songcursor := 0
-            repeat while byte[loopAddr][songcursor] <> SONGOFF and play
-
+            repeat while byte[loopAddr][songcursor] <> SONGOFF and play and not stop
+    
                 if byte[loopAddr][songcursor] & $F0 == ADSRW
                     LoadPatch(loopAddr + songcursor, 0)                 'can't use array notation because loopAddr is word-size
                     songcursor += 6
@@ -273,10 +277,12 @@ PRI LoopingSongParser | repeattime
                 else
                     barcursor := songcursor
                     repeat linecursor from 0 to (barres-1)
+                        if stop
+                            quit
                     
                         songcursor := barcursor
 
-                        repeat while byte[loopAddr][songcursor] <> BAROFF and play 
+                        repeat while byte[loopAddr][songcursor] <> BAROFF and play                             
                             barshift := (barres+1)*byte[loopAddr][songcursor]
                             bartmp := barshift+1+linecursor
                             
@@ -292,7 +298,8 @@ PRI LoopingSongParser | repeattime
                     songcursor += 1
 
             play := 0
-            StopAllSound
+        stop := 0
+        StopAllSound
 
 
 DAT

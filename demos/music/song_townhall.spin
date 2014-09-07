@@ -43,7 +43,7 @@ byte    1,52,SOFF,SNOP,SNOP,SNOP,  53,  54,  55,SNOP,  55,  55,  55,  55,  55,  
 
     
 sequence_data
-byte    TRANS, 24
+byte    TRANS, 12
 byte    TEMPO, 130
 byte    ADSRW+$F, 127,  30, 100,   0,   SINE
 
@@ -52,15 +52,9 @@ byte    0, BAROFF
     
 byte    0,1,BAROFF
 byte    0,2,BAROFF
-
-byte    TRANS, 20
     
 byte    0,1,BAROFF
 byte    0,3,BAROFF
-
-byte    ADSRW+$F, 127,  30, 100,   0,   SQUARE
-
-byte    TEMPO, 200
     
 byte    4,5,BAROFF
 byte    6,7,BAROFF
