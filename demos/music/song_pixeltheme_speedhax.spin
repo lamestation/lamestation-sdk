@@ -63,16 +63,23 @@ byte    1,BAROFF
 byte    2,BAROFF
 byte    3,BAROFF
 
-byte    0,4,BAROFF
-byte    1,4,BAROFF
-byte    2,5,BAROFF
-byte    3,5,BAROFF
+byte    TEMPO, 140
 
 byte    0,4,BAROFF
 byte    1,4,BAROFF
 byte    2,5,BAROFF
 byte    3,5,BAROFF
 
+byte    TEMPO, 160
+
+byte    0,4,BAROFF
+byte    1,4,BAROFF
+byte    2,5,BAROFF
+byte    3,5,BAROFF
+
+byte    ADSRW+$F, 127, 10, 100, 10, SINE
+byte    TRANS, 24
+    
 byte    0,6,BAROFF
 byte    1,7,BAROFF
 byte    2,6,BAROFF
@@ -88,6 +95,8 @@ byte    11,13,BAROFF
 byte    10,12,BAROFF
 byte    11,13,BAROFF
 
+byte    TEMPO, 240
+
 byte    0,6,8,BAROFF
 byte    1,7,9,BAROFF
 byte    2,6,8,BAROFF
@@ -100,6 +109,9 @@ byte    11,13,BAROFF
 
 byte    0,6,8,BAROFF
 byte    1,7,9,BAROFF
+
+byte    TEMPO, 255
+    
 byte    2,6,8,BAROFF
 byte    3,7,9,BAROFF
 

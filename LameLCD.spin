@@ -13,12 +13,24 @@
 '' 20140611: relaxed interface timing
 '' 20140707: moved mailbox into DAT space to link it with the screen area
 ''
+OBJ
+    pin  :   "Pinout"
 CON
 '' These indicate which pins connect to what. If developing your own prototype,
 '' you can change the value of LCDstart to change the location of the LCD
 '' pinout.
 ''
-  #0, LCDstart[11], LCDend
+''
+  DI = pin#DI
+  EN = pin#E
+  
+  DB = pin#D0
+  
+  CSA = pin#CSA
+  CSB = pin#CSB
+      
+  LCDstart = DI
+  LCDend   = CSB
 
 '' The pins on a KS0108 LCD are as follows.
 ''
@@ -31,8 +43,6 @@ CON
 ''           to one or both of the two chips, depending on which one is selected. In most cases, the Propeller is only
 ''           talking to one of these chips at a time, because most time is spending sending screen data. The rare case
 ''
-  #LCDstart, DI, EN, DB[8], CSA, CSB
-
 '' I have this constant so that the frame rate can be limited;
 '' however, in practice, I set it to some high value like 300
 '' so that the screen will refresh as fast as possible.

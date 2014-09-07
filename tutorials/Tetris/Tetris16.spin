@@ -64,8 +64,6 @@ PUB Main
     lcd.SetFrameLimit(lcd#HALFSPEED)
 
     audio.Start
-    audio.SetWaveform(0)
-    audio.SetADSR(127, 60, 127, 70)
     audio.LoadSong(song.Addr)
     audio.LoopSong
 

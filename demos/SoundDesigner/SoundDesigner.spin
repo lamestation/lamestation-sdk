@@ -1,12 +1,12 @@
 {{
 Sound Designer
-─────────────────────────────────────────────────
+------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
-─────────────────────────────────────────────────
+------------------------------------------------------------
 }}
 
 
@@ -66,8 +66,8 @@ PUB AudioDemo
 
     audio.Start
 
-    cognew(MIDIController, @Stack_MIDIController)
-    cognew(PatternPlayer, @Stack_PatternPlayer)
+    'cognew(MIDIController, @Stack_MIDIController)
+   ' cognew(PatternPlayer, @Stack_PatternPlayer)
 
     control[_NAV]  := _PAT
     control[_ATK]  := 127
@@ -445,8 +445,9 @@ wSAMP   byte    "Samp",0
 
 OBJ
 
-    organ   :   "ins_bass"
+    organ   :   "noise"
 
+   
 ' **********************************************************
 ' * MIDI Controller
 ' **********************************************************
@@ -456,27 +457,24 @@ PRI SetChannel
     audio.SetWaveform(control[_WAV] // 6)
     audio.SetVolume(control[_VOL])
     audio.SetSample(organ.Addr)
-
+ {{
 PRI ControlKnob
 
     databyte1 := newbyte
     databyte2 := pst.CharIn
     
     case databyte1
-        $40:    if databyte2 <> 0
-                    audio.PressPedal
-                else
-                    audio.ReleasePedal
+        $40:    
 
 PRI ControlNote
 
     databyte1 := newbyte
     databyte2 := pst.CharIn
     
-    if statusnibble == $90
-        audio.PlayNewNote(databyte1)
-    if statusnibble == $80 or databyte2 == 0
-        audio.StopNote(databyte1)
+'    if statusnibble == $90
+ '       audio.PlayNewNote(databyte1)
+  '  if statusnibble == $80 or databyte2 == 0
+   '     audio.StopNote(databyte1)
 
 PRI ControlPitchBend
 
@@ -500,3 +498,4 @@ PRI MIDIController
                 $B0:        ControlKnob
                 $90, $80:   ControlNote
                 other:
+}}

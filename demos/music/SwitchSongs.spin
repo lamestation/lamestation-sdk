@@ -1,32 +1,47 @@
 {{
-Music Demo
-─────────────────────────────────────────────────
+Switch Songs
+------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
-─────────────────────────────────────────────────
+------------------------------------------------------------
 }}
 
 
 CON
-    _clkmode        = xtal1 + pll16x
-    _xinfreq        = 5_000_000
+    _clkmode = xtal1 + pll16x
+    _xinfreq = 5_000_000
   
 OBJ
-        audio   :               "LameAudio"
-        song    :               "song_townhall"
+    audio   : "LameAudio"
+    fn      : "LameFunctions"
 
-PUB MusicDemo
+    song    : "song_pixeltheme"
+    song2   : "song_lastboss"
+
+PUB PlaySong
     audio.Start
-    audio.SetWaveform(3)
-    audio.SetADSR(127, 30, 100, 0) 
     audio.LoadSong(song.Addr)
     audio.LoopSong
+    
+    fn.Sleep(2000)
+    
+    audio.StopSong
+    audio.LoadSong(song2.Addr)
+    audio.LoopSong
 
-    repeat
-       
+    fn.Sleep(2000)    
+
+    audio.StopSong
+    audio.LoadSong(song.Addr)
+    audio.PlaySong
+    
+    repeat until not audio.SongPlaying
+    
+    audio.LoadSong(song2.Addr)
+    audio.PlaySong
 
 DAT
 {{
