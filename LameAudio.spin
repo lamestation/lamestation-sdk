@@ -46,12 +46,32 @@ CON
     W_MASK = !($F << W_OFFSET)
 
 
+'NEW LAYOUT
+'                      | .-byte-. .-byte-. .-byte-. .-byte-.
+'                Note -| 00000000 00000000 00000000 00000000
+'                      |   Sample          Waveform   Note 
+'     
+'                      | .-byte-. .-byte-. .-byte-. .-byte-.
+'                ADSR -| 00000000 00000000 00000000 00000000
+'                      |     R        S        D        A
+'     
+'                      | .-byte-. .--------3 bytes---------.
+'              Volume -| 00000000 00000000_00000000_00000000
+'                      |   State            Volume
+'     
+'                      | .-------------4 bytes-------------.
+'     Phase Increment -| 00000000_00000000_00000000_00000000
+
+'                      | .-------------4 bytes-------------.
+'   Phase Accumulator -| 00000000_00000000_00000000_00000000
+
+
     '0 - note (last 8 bits)
     '1 - target volume         
     '2 - phase inc
     '3 - phase acc
 
-    'OLD REGISTER LAYOUT
+'OLD REGISTER LAYOUT
 
     'ADSR register
     ' 4bit   7bit    7bit    7bit    7bit
@@ -76,12 +96,9 @@ CON
 
 
 
-    'CHANNEL PARAM REGISTER
-
     
     OSCREGS = OSCILLATORS*REGPEROSC
     OSCBITMASK = (OSCILLATORS-1) << 2
-    INITVAL = 127
 
 VAR
 
@@ -107,8 +124,6 @@ PUB null
 PUB Start
       
     parameter := @freqTable + (@sample<<16)
-    channelparam := (INITVAL << 8)
-    'channelADSR := LONG[@instruments][0]
     
     cognew(@oscmodule, @parameter)    'start assembly cog
     cognew(LoopingSongParser, @LoopingPlayStack)
@@ -128,9 +143,6 @@ PUB SetRelease(releasevar)
 
 PUB SetWaveform(waveformvar)
     channelADSR := (channelADSR & W_MASK) + (waveformvar << W_OFFSET)
-
-PUB SetVolume(volumevar)
-    channelparam := (channelparam & $FFFF00FF) + (volumevar << 8)
 
 PUB SetADSR(attackvar, decayvar, sustainvar, releasevar)
     SetAttack(attackvar)
@@ -597,10 +609,8 @@ period        long      PERIOD1               '800kHz period (_clkfreq / period)
 time          long      0
 
 waveform      long      3     '0 = ramp    1 = square    2 = triangle    3 = sine    4 = pseudo-random noise    5 = sine perversion
-volume        long      127
 
 halfmask        long    $FFFF
-multarg       long      3
 multtemp      long      2
 
 attack        long      0
@@ -640,14 +650,10 @@ oscIndex      long      0
 phaseinc      long      0
 phase         long      0
 noteAddrtemp  long      0
-notelongtemp  long      0
 
 'oscillator data                                                                                      
 oscAddr       long      0
-oscTotalRegs  long      OSCREGS
 oscTotal      long      OSCILLATORS
-
-'volumeshift   long      1
 
 osctemp       long      0
 outputoffset  long      PERIOD1/2
@@ -666,6 +672,7 @@ adsrAddr      long      0
 rand          long      203943
 rand2         long      0
 rand3         long      0
+
               fit 496
 
 DAT
