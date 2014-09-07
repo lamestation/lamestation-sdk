@@ -220,8 +220,10 @@ PUB TestMapMoveY(x, y, w, h, newy) | tmp, ty
 
     if newy > y
         return tmp - h
-    if newy < y
-        return tmp + ty
+
+' newy == y is covered at the top so now newy *is* less than y
+
+    return tmp + ty
 
 PUB TestMapMoveX(x, y, w, h, newx) | tmp, tx
 
@@ -232,13 +234,15 @@ PUB TestMapMoveX(x, y, w, h, newx) | tmp, tx
     if not tmp
         return
 
-    tx  := word[map_tilemap][SY]
+    tx  := word[map_tilemap][SX]
     tmp := ((tmp & $FFFF)-1) * tx - newx
 
     if newx > x
         return tmp - w
-    if newx < x
-        return tmp + tx
+
+' newx == x is covered at the top so now newx *is* less than x
+
+    return tmp + tx
 
 PUB GetMapWidth
 
