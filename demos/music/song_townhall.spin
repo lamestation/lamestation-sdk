@@ -1,30 +1,27 @@
 ' *********************************************************
 ' townhall.spin
-' *********************************************************
-' 
-' prg pattern
-' 000 00000
-' F
-' 
+' ********************************************************* 
 DAT    
 song_data
-word    @patches_data, @patterns_data, @sequence_data
+word    @patterns_data, @sequence_data
 
 CON
-    SONGOFF = 255
-    BAROFF  = 254
-    SNOP    = 253
-    SOFF    = 252
+    SONGOFF = $80
+    BAROFF  = $81
+    SNOP    = $82
+    SOFF    = $83
+    
+    ADSRW   = $A0
+    TEMPO   = $B0
+    TRANS   = $C0
+    
+    #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
     
 PUB Addr
     result.word[1] := @@0
     result.word{0} := @song_data
 
-DAT
-patches_data
-byte    0, 127,  30, 100,   0,   3
-byte    1, 127,  30, 100,   0,   3
-    
+DAT    
     
 patterns_data
 byte    16      'bar resolution
@@ -46,16 +43,25 @@ byte    1,52,SOFF,SNOP,SNOP,SNOP,  53,  54,  55,SNOP,  55,  55,  55,  55,  55,  
 
     
 sequence_data
-byte    120     'tempo (bpm)
+byte    TRANS, 24
+byte    TEMPO, 130
+byte    ADSRW+$F, 127,  30, 100,   0,   SINE
 
 byte    0, BAROFF
 byte    0, BAROFF
     
 byte    0,1,BAROFF
 byte    0,2,BAROFF
+
+byte    TRANS, 20
+    
 byte    0,1,BAROFF
 byte    0,3,BAROFF
 
+byte    ADSRW+$F, 127,  30, 100,   0,   SQUARE
+
+byte    TEMPO, 200
+    
 byte    4,5,BAROFF
 byte    6,7,BAROFF
 

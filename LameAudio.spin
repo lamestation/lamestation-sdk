@@ -167,11 +167,16 @@ PUB StopAllSound
         oscRegister[oscindexer] &= !KEYBITS
 
 CON
-    SONGOFF = 255
-    BAROFF = 254
-    SOFF = 252 
+    SONGOFF = $80
+    BAROFF  = $81
+    SNOP    = $82
+    SOFF    = $83
     
-    #0, PATCH, PATTERN, SONG
+    ADSRW   = $A0
+    TEMPO   = $B0
+    TRANS   = $C0
+        
+    #0, PATTERN, SONG
     
 VAR
     long    songcursor
@@ -196,7 +201,6 @@ VAR
     
 PUB LoadPatch(patchAddr, number)
     instAddr := patchAddr
-    instAddr += number*6
     
     SetAttack(byte[instAddr][1])
     SetDecay(byte[instAddr][2])
@@ -210,23 +214,18 @@ PUB LoadSong(songAddr) | n
     wordmove(@songdata, songAddr.word{0},3)
     repeat n from 0 to 2
         songdata[n] += songAddr.word[1]
-
-    LoadPatch(songdata[PATCH], 0)
-    LoadPatch(songdata[PATCH], 1)
         
     barAddr := songdata[PATTERN]
-    barres := byte[barAddr][0]
+    barres := byte[barAddr]{0}
     barAddr += 1
 
     loopAddr := songdata[SONG]
-    timeconstant := CalculateTimeConstant( byte[loopAddr] )
-    loopAddr += 1
     
     songcursor := 0
     barcursor := 0
 
-PUB SetTranspose(trans)
-    transpose := trans
+PUB SetTranspose(transvar)
+    transpose := transvar
     
 PUB SetSpeed(speed)
     timeconstant := CalculateTimeConstant( speed )
@@ -258,27 +257,39 @@ PRI LoopingSongParser | repeattime
         if play
             songcursor := 0
             repeat while byte[loopAddr][songcursor] <> SONGOFF and play
-                
-                barcursor := songcursor
-                repeat linecursor from 0 to (barres-1)
-                
-                    songcursor := barcursor
 
-                    ' play all notes defined in song definition
-                    repeat while byte[loopAddr][songcursor] <> BAROFF and play 
-                        barshift := (barres+1)*byte[loopAddr][songcursor]
-                        bartmp := barshift+1+linecursor
+                if byte[loopAddr][songcursor] & $F0 == ADSRW
+                    LoadPatch(loopAddr + songcursor, 0)                 'can't use array notation because loopAddr is word-size
+                    songcursor += 6
                         
-                        case byte[barAddr][bartmp]
-                            SOFF:   StopSound( byte[barAddr][barshift] )
-                            0..127:  PlaySound( byte[barAddr][barshift] , byte[barAddr][bartmp] + transpose )  'channel, note
-                            other:
+                elseif byte[loopAddr][songcursor] & $F0 == TEMPO
+                    timeconstant := CalculateTimeConstant(byte[loopAddr][songcursor+1])
+                    songcursor += 2
 
-                        songcursor += 1
+                elseif byte[loopAddr][songcursor] & $F0 == TRANS
+                    transpose := byte[loopAddr][songcursor+1]
+                    songcursor += 2
+                            
+                else
+                    barcursor := songcursor
+                    repeat linecursor from 0 to (barres-1)
+                    
+                        songcursor := barcursor
 
-                    waitcnt(repeattime += timeconstant)               
+                        repeat while byte[loopAddr][songcursor] <> BAROFF and play 
+                            barshift := (barres+1)*byte[loopAddr][songcursor]
+                            bartmp := barshift+1+linecursor
+                            
+                            case byte[barAddr][bartmp]
+                                SOFF:   StopSound( byte[barAddr][barshift] )
+                                0..127: PlaySound( byte[barAddr][barshift] , byte[barAddr][bartmp] + transpose )  'channel, note
+                                other:
 
-                songcursor += 1
+                            songcursor += 1
+
+                        waitcnt(repeattime += timeconstant)               
+
+                    songcursor += 1
 
             play := 0
             StopAllSound
