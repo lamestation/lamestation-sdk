@@ -8,7 +8,9 @@ See end of file for terms of use.
 Authors: Brett Weir
 -------------------------------------------------
 }}
-
+OBJ
+    pin  :   "Pinout"
+    
 CON
     PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
     FS      = 40000
@@ -18,14 +20,10 @@ CON
     OSCILLATORS = VOICES*PERVOICE
     REGPEROSC = 4
 
-    OUTPUTPIN_MONO = 27
-    
     KEYBITS = $180
     HELDBIT = $80
     KEYONBIT = $100
 
-    NOTEBITS = $7F
-    'VELOCITYBITS = $7F00
     VOLUMEBITS = $FFFFFF
 
     ADSRBITS = $3000000 'new
@@ -603,9 +601,9 @@ if_nz                   add     osctemp, multtemp
 
 
 
-diraval       long      |< OUTPUTPIN_MONO               'APIN=0
-ctraval       long      %00100 << 26 + OUTPUTPIN_MONO   'NCO/PWM APIN=0
-period        long      PERIOD1               '800kHz period (_clkfreq / period)
+diraval       long      |< pin#AUDIO                'APIN=0
+ctraval       long      %00100 << 26 + pin#AUDIO    'NCO/PWM APIN=0
+period        long      PERIOD1                     '800kHz period (_clkfreq / period)
 time          long      0
 
 waveform      long      3     '0 = ramp    1 = square    2 = triangle    3 = sine    4 = pseudo-random noise    5 = sine perversion

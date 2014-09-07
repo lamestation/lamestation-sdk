@@ -1,11 +1,11 @@
 '' LameControl
-'' ─────────────────────────────────────────────────
+'' -------------------------------------------------
 '' Version: 1.0
 '' Copyright (c) 2013 LameStation LLC
 '' See end of file for terms of use.
 '' 
 '' Authors: Brett Weir
-'' ─────────────────────────────────────────────────
+'' -------------------------------------------------
 ''
 '' LameControl? More like Game Control!
 ''
@@ -14,16 +14,18 @@
 '' to both show how the controls work and make
 '' managing controls easier.
 
-
+OBJ
+    pin  :   "Pinout"
+    
 CON
 
-    J_U = |< 12
-    J_D = |< 13
-    J_L = |< 14
-    J_R = |< 15
+    J_U = |< pin#JOY_UP
+    J_D = |< pin#JOY_DOWN
+    J_L = |< pin#JOY_LEFT
+    J_R = |< pin#JOY_RIGHT
    
-    SW_A = |< 25
-    SW_B = |< 26
+    SW_A = |< pin#BUTTON_A
+    SW_B = |< pin#BUTTON_B
      
 VAR
 
