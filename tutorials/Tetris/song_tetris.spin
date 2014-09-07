@@ -1,21 +1,29 @@
 ' *********************************************************
 ' tetris.spin
 ' *********************************************************
-CON
-    SONGOFF = 255
-    BAROFF  = 254
-    SNOP    = 253
-    SOFF    = 252
+DAT    
+song_data
+word    @patterns_data, @sequence_data
 
+CON
+    SONGOFF = $80
+    BAROFF  = $81
+    SNOP    = $82
+    SOFF    = $83
+    
+    ADSRW   = $A0
+    TEMPO   = $B0
+    TRANS   = $C0
+    
+    #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
+    
 PUB Addr
-    return @song_data
+    result.word[1] := @@0
+    result.word{0} := @song_data
 
 DAT
-
-song_data
-
-byte    26     'number of bars
-byte    120     'tempo
+    
+patterns_data
 byte    8      'bar resolution
 
 ' bass bass
@@ -54,7 +62,10 @@ byte    3,  64,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
 byte    3,SNOP,SNOP,SNOP,SNOP,  67,SNOP,  69,SNOP
 
 
-'SONG ------
+sequence_data
+byte    TRANS, 0
+byte    TEMPO, 120
+byte    ADSRW+$F, 127, 60, 127, 70, SQUARE
 
 byte    0,BAROFF
 byte    1,BAROFF
