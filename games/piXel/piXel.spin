@@ -76,6 +76,13 @@ OBJ
     
     gfx_tiles_pixel : "gfx_tiles_pixel"
 
+    song_theme      : "song_pixeltheme"
+    song_sad        : "song_sad"
+    song_ohno       : "song_ohno"
+    song_superohno  : "song_superohno"
+    song_boss       : "song_boss"
+    song_yeah       : "song_yeah"
+
 
 VAR
     byte    gamestate
@@ -97,7 +104,7 @@ PUB Main
     
     audio.SetWaveform(1)
     audio.SetADSR(127, 10, 100, 10)
-    audio.LoadSong(@pixel_theme)
+    audio.LoadSong(song_theme.Addr)
     audio.LoopSong
 
     
@@ -151,11 +158,8 @@ PUB GameLoop
     fn.Sleep(10)
             
 PUB Victory
-    audio.StopAllSound
     audio.StopSong
-    audio.SetWaveform(1)
-    audio.SetADSR(127, 10, 100, 10)
-    audio.LoadSong(@song_yeah)
+    audio.LoadSong(song_yeah.Addr)
     audio.LoopSong
     
     ShowGameView
@@ -163,10 +167,8 @@ PUB Victory
     lcd.DrawScreen
     fn.Sleep(2000)
     
-    audio.StopAllSound
-    audio.SetWaveform(1)
-    audio.SetADSR(127, 10, 100, 10)
-    audio.LoadSong(@pixel_theme)
+    audio.StopSong
+    audio.LoadSong(song_theme.Addr)
     audio.LoopSong            
     StarWarsReel(string("Looks like",10,"the galaxy",10,"is safe once",10,"again, thanks",10,"to you!"),110)
 
@@ -183,9 +185,7 @@ PUB PlayerDied
     playerlives--
     
     audio.StopAllSound
-    audio.SetWaveform(1)
-    audio.SetADSR(127, 10, 100, 10)
-    audio.LoadSong(@song_ohnooo)
+    audio.LoadSong(song_ohno.Addr)
     audio.PlaySong         
     
     ShowGameView
@@ -224,9 +224,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
 
 PUB ItsGameOver
     audio.StopAllSound
-    audio.SetWaveform(1)
-    audio.SetADSR(127, 10, 100, 10)
-    audio.LoadSong(@song_superohnooo)
+    audio.LoadSong(song_superohno.Addr)
     audio.PlaySong     
     
     ShowGameView
@@ -239,9 +237,7 @@ PUB ItsGameOver
     pos_frame := 4
     
     audio.StopSong   
-    audio.SetWaveform(3)
-    audio.SetADSR(127, 3, 0, 3)
-    audio.LoadSong(@song_sad)
+    audio.LoadSong(song_sad.Addr)
     audio.LoopSong    
     
     StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
@@ -262,9 +258,7 @@ PUB GameIntro
     pos_frame := 0
     
     audio.StopSong   
-    audio.SetWaveform(3)
-    audio.SetADSR(127, 3, 0, 3)
-    audio.LoadSong(@song_sad)
+    audio.LoadSong(song_sad.Addr)
     audio.LoopSong    
 
     StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all..",10,10,"Before it's",10,"too late..."),200)
@@ -772,9 +766,7 @@ PUB EnemyBoss(index) | dx, dy
     if not bossspawned
         bossspawned := 1
     
-        audio.SetWaveform(1)
-        audio.SetADSR(127, 10, 100, 10)
-        audio.LoadSong(@song_boss)
+        audio.LoadSong(song_boss.Addr)
         audio.LoopSong    
 
 
@@ -843,175 +835,6 @@ PUB ControlOffset | bound_x, bound_y
     elseif yoffset > bound_y
         yoffset := bound_y
 
-
-DAT
-
-song_yeah
-byte    2
-byte    120
-byte    13
-
-byte    0, 27, 27, 27, 29, 29, 29, 31, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF
-byte    1, 34, 34, 34, 36, 36, 36, 35, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF
-
-byte    0,1,BAROFF
-byte    SONGOFF
-
-
-song_ohnooo
-byte    2
-byte    120
-byte    7
-
-byte    0, 30, 29, 28, 27, SNOP, SNOP, SOFF
-byte    1, 18, 17, 16, 15, SNOP, SNOP, SOFF
-
-byte    0,1,BAROFF
-byte    SONGOFF
-
-
-song_superohnooo
-byte    2
-byte    75
-byte    7
-
-byte    0, 27, 26, 25, 24, SNOP, SNOP, SOFF
-byte    1, 15, 14, 13, 12, SNOP, SNOP, SOFF
-
-byte    0,1,BAROFF
-byte    SONGOFF
-
-song_boss
-byte    2
-byte    100
-byte    8
-
-byte    0, 26,26,26,SNOP,SNOP,SNOP,27,26
-byte    0, 27,26,27,26,SNOP,26,27,SNOP
-
-byte    0,BAROFF
-byte    1,BAROFF
-byte    SONGOFF
-
-
-song_sad
-byte    14
-byte    35
-byte    8
-'low part
-byte    0, 32,  39, 42, 46, 32, 39, 42, 46
-byte    0, 28,  35, 37, 42, 28, 35, 37, 42
-byte    0, 25,  32, 37, 40, 25, 32, 37, 40
-byte    0, 22,  29, 34, 38, 22, 29, 34, 38
-byte    0, 27,SNOP, 27, 29, 30, 27, 30, 34 ' do do dooo do doo
-'high part
-byte    1,   59,SNOP,  59,  58, 58, SNOP, SNOP, SNOP
-byte    1, SNOP,  59,  59,  58, 58,   54,   54,   51
-byte    1,   54,SNOP,SNOP,  52, 52, SNOP, SNOP, SNOP
-byte    1, SNOP,  54,  54,  52, 52,   51,   51,   54
-byte    1,   54,SNOP,SNOP,  52, 52, SNOP, SNOP, SNOP
-byte    1, SNOP,  54,  54,  51, 51,   47,   47,   51
-byte    1,   51,SNOP,SNOP,  50, 50, SNOP, SNOP, SNOP
-byte    1, SNOP,SNOP,  51,  53, 54,   51,   54,   58
-byte    1,   58,SNOP,SNOP,  56, 56, SNOP, SNOP, SNOP
-
-byte    0,5,BAROFF
-byte    0,6,BAROFF
-byte    1,7,BAROFF
-byte    1,8,BAROFF
-byte    2,9,BAROFF
-byte    2,10,BAROFF
-byte    3,11,BAROFF
-byte    4,12,BAROFF
-byte    0,13,BAROFF
-byte    0,BAROFF
-
-byte    SONGOFF
-
-pixel_theme
-byte    14     'number of bars
-byte    110     'tempo
-byte    8      'bar resolution
-
-'MAIN SECTION
-byte    0, 26,  26,  26,  38,   26,  26,  39,  26
-byte    0, 26,  36,  26,  26,   36,  26,  36,  38
-byte    0, 26,  26,  26,  33,   26,  26,  34,  26
-byte    0, 31,  26,  33,  26,   29,  26,  31,  28
-
-byte    1, 14, SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
-byte    1,SOFF,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
-
-byte    2, 33,  33,  33,  36,   33,  33,  36,  33
-byte    2, 33,  36,  33,  33,   36,  33,  36,  38
-
-byte    1, 14,  14,  14,  17,   14,  14,  17,  14
-byte    1, 14,  17,  14,  14,   17,  14,  17,  19
-
-'UPLIFTING
-byte    0, 31,  31,  31,  34,   31,  31,  34,  31
-byte    0, 31,  34,  31,  31,   34,  31,  34,  36
-
-
-
-byte    1, 19,  19,  19,  22,   19,  19,  22,  19
-byte    1, 19,  22,  19,  19,   22,  19,  22,  24
-
-
-
-
-'SONG ------
-
-byte    0,BAROFF
-byte    1,BAROFF
-byte    2,BAROFF
-byte    3,BAROFF
-byte    0,BAROFF
-byte    1,BAROFF
-byte    2,BAROFF
-byte    3,BAROFF
-
-byte    0,4,BAROFF
-byte    1,4,BAROFF
-byte    2,5,BAROFF
-byte    3,5,BAROFF
-
-byte    0,4,BAROFF
-byte    1,4,BAROFF
-byte    2,5,BAROFF
-byte    3,5,BAROFF
-
-byte    0,6,BAROFF
-byte    1,7,BAROFF
-byte    2,6,BAROFF
-byte    3,7,BAROFF
-
-byte    0,6,8,BAROFF
-byte    1,7,9,BAROFF
-byte    2,6,8,BAROFF
-byte    3,7,9,BAROFF
-
-byte    10,12,BAROFF
-byte    11,13,BAROFF
-byte    10,12,BAROFF
-byte    11,13,BAROFF
-
-byte    0,6,8,BAROFF
-byte    1,7,9,BAROFF
-byte    2,6,8,BAROFF
-byte    3,7,9,BAROFF
-
-byte    10,12,BAROFF
-byte    11,13,BAROFF
-byte    10,12,BAROFF
-byte    11,13,BAROFF
-
-byte    0,6,8,BAROFF
-byte    1,7,9,BAROFF
-byte    2,6,8,BAROFF
-byte    3,7,9,BAROFF
-
-byte    SONGOFF
 
 DAT
 {{
