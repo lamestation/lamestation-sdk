@@ -1,21 +1,29 @@
 ' *********************************************************
 ' pixeltheme.spin
 ' *********************************************************
-CON
-    SONGOFF = 255
-    BAROFF  = 254
-    SNOP    = 253
-    SOFF    = 252
-
-PUB Addr
-    return @song_data
-
-DAT
-
+DAT    
 song_data
+word    @patterns_data, @sequence_data
 
-byte    14     'number of bars
-byte    120    'tempo
+CON
+    SONGOFF = $80
+    BAROFF  = $81
+    SNOP    = $82
+    SOFF    = $83
+    
+    ADSRW   = $A0
+    TEMPO   = $B0
+    TRANS   = $C0
+    
+    #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
+    
+PUB Addr
+    result.word[1] := @@0
+    result.word{0} := @song_data
+
+DAT    
+
+patterns_data
 byte    8    'bar resolution
 
 'MAIN SECTION
@@ -37,15 +45,14 @@ byte    1, 14,  17,  14,  14,   17,  14,  17,  19
 byte    0, 31,  31,  31,  34,   31,  31,  34,  31
 byte    0, 31,  34,  31,  31,   34,  31,  34,  36
 
-
-
 byte    1, 19,  19,  19,  22,   19,  19,  22,  19
 byte    1, 19,  22,  19,  19,   22,  19,  22,  24
 
 
-
-
-'SONG ------
+sequence_data
+byte    TRANS, 0
+byte    TEMPO, 120
+byte    ADSRW+$F, 127, 10, 100, 10, SQUARE
 
 byte    0,BAROFF
 byte    1,BAROFF
@@ -97,6 +104,4 @@ byte    2,6,8,BAROFF
 byte    3,7,9,BAROFF
 
 byte    SONGOFF
-
-
 

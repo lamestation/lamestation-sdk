@@ -16,13 +16,32 @@ CON
   
 OBJ
     audio   : "LameAudio"
-    
+    fn      : "LameFunctions"
+
     song    : "song_pixeltheme"
+    song2   : "song_lastboss"
 
 PUB PlaySong
     audio.Start
     audio.LoadSong(song.Addr)
     audio.LoopSong
+    
+    fn.Sleep(2000)
+    
+    audio.StopSong
+    audio.LoadSong(song2.Addr)
+    audio.LoopSong
+
+    fn.Sleep(2000)    
+
+    audio.StopSong
+    audio.LoadSong(song.Addr)
+    audio.PlaySong
+    
+    repeat until not audio.SongPlaying
+    
+    audio.LoadSong(song2.Addr)
+    audio.PlaySong
 
 DAT
 {{

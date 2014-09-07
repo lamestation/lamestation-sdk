@@ -67,7 +67,7 @@ PUB AudioDemo
     audio.Start
 
     'cognew(MIDIController, @Stack_MIDIController)
-    cognew(PatternPlayer, @Stack_PatternPlayer)
+   ' cognew(PatternPlayer, @Stack_PatternPlayer)
 
     control[_NAV]  := _PAT
     control[_ATK]  := 127
@@ -445,7 +445,7 @@ wSAMP   byte    "Samp",0
 
 OBJ
 
-    organ   :   "ins_bass"
+    organ   :   "noise"
 
    
 ' **********************************************************
@@ -471,10 +471,10 @@ PRI ControlNote
     databyte1 := newbyte
     databyte2 := pst.CharIn
     
-    if statusnibble == $90
-        audio.PlayNewNote(databyte1)
-    if statusnibble == $80 or databyte2 == 0
-        audio.StopNote(databyte1)
+'    if statusnibble == $90
+ '       audio.PlayNewNote(databyte1)
+  '  if statusnibble == $80 or databyte2 == 0
+   '     audio.StopNote(databyte1)
 
 PRI ControlPitchBend
 
