@@ -21,10 +21,6 @@ OBJ
 PUB PlaySong
     audio.Start
     audio.LoadSong(song.Addr)
-    audio.LoadSong(song.Addr)
-    audio.LoadSong(song.Addr)        
-    audio.SetTranspose(12)
-    audio.SetSpeed(180)
     audio.LoopSong(True)
     audio.PlaySong
 
