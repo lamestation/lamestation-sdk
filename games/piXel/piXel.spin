@@ -601,7 +601,7 @@ PUB SpawnBullet(x, y, dir)
 
     audio.SetWaveform(1)
     audio.SetADSR(127, 50, 0, 50)
-    audio.PlaySound(2,50)        
+    audio.PlaySound(2,70)        
 
 PUB HandleBullets | bulletxtemp, bulletytemp
 
