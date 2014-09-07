@@ -1,12 +1,12 @@
 {{
 Noise
-─────────────────────────────────────────────────
+-------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
-─────────────────────────────────────────────────
+-------------------------------------------------
 }}
 
 
@@ -20,7 +20,7 @@ OBJ
 PUB Noise
     audio.Start
 
-    audio.SetWaveform(4)
+    audio.SetWaveform(1)
     audio.SetADSR(127, 0, 0, 70)
     audio.PlaySound(1,40)
 
