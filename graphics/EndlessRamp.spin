@@ -1,5 +1,5 @@
 {{
-Sprite  Command
+Endless Ramp
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -7,6 +7,8 @@ See end of file for terms of use.
 
 Authors: Brett Weir
 -------------------------------------------------
+This demo shows you how a simple ClearScreen command can be used to make
+something not so obvious.
 }}
 
 CON
@@ -17,16 +19,18 @@ OBJ
 
     lcd     :               "LameLCD" 
     gfx     :               "LameGFX"
-
-    sprite  :               "gfx_supertank"
-
-
-PUB Sprite
+    fn      :               "LameFunctions"
+    
+PUB Blit | val
 
     lcd.Start(gfx.Start)
-    gfx.Sprite(sprite.Addr, 56, 24, 0)
-    lcd.DrawScreen
     
+    val := %%1000_0000_1000_0000
+    repeat
+        gfx.ClearScreen(val)
+        lcd.DrawScreen
+        val ->= 2
+
 DAT
 {{
 

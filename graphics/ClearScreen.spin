@@ -1,5 +1,5 @@
 {{
-Sprite  Command
+ClearScreen Command
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -18,15 +18,12 @@ OBJ
     lcd     :               "LameLCD" 
     gfx     :               "LameGFX"
 
-    sprite  :               "gfx_supertank"
-
-
-PUB Sprite
+PUB Blit
 
     lcd.Start(gfx.Start)
-    gfx.Sprite(sprite.Addr, 56, 24, 0)
+    gfx.ClearScreen(0)
     lcd.DrawScreen
-    
+        
 DAT
 {{
 

@@ -1,5 +1,5 @@
 {{
-Sprite  Command
+ClearScreen Colors Command
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -17,16 +17,24 @@ OBJ
 
     lcd     :               "LameLCD" 
     gfx     :               "LameGFX"
+    fn      :               "LameFunctions"
 
-    sprite  :               "gfx_supertank"
-
-
-PUB Sprite
+PUB Blit
 
     lcd.Start(gfx.Start)
-    gfx.Sprite(sprite.Addr, 56, 24, 0)
+    gfx.ClearScreen(gfx#WHITE)
     lcd.DrawScreen
-    
+
+    fn.Sleep(1000)
+        
+    gfx.ClearScreen(gfx#BLACK)
+    lcd.DrawScreen
+
+    fn.Sleep(1000)
+
+    gfx.ClearScreen(gfx#GRAY)
+    lcd.DrawScreen
+        
 DAT
 {{
 
