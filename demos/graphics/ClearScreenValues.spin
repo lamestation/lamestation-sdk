@@ -1,5 +1,5 @@
 {{
-Sprite  Command
+ClearScreen Values Command
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -17,16 +17,29 @@ OBJ
 
     lcd     :               "LameLCD" 
     gfx     :               "LameGFX"
-
-    sprite  :               "gfx_supertank"
-
-
-PUB Sprite
+    fn      :               "LameFunctions"
+    
+PUB Blit | val
 
     lcd.Start(gfx.Start)
-    gfx.Sprite(sprite.Addr, 56, 24, 0)
+    gfx.ClearScreen($FFFF)
+    lcd.DrawScreen
+
+    fn.Sleep(500)
+        
+    gfx.ClearScreen(0)
+    lcd.DrawScreen
+
+    fn.Sleep(500)
+
+    gfx.ClearScreen($FF00)
     lcd.DrawScreen
     
+    fn.Sleep(500)
+
+    gfx.ClearScreen($abc3)
+    lcd.DrawScreen
+
 DAT
 {{
 

@@ -1,5 +1,5 @@
 {{
-Sprite  Command
+Blit Command
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -18,13 +18,13 @@ OBJ
     lcd     :               "LameLCD" 
     gfx     :               "LameGFX"
 
-    sprite  :               "gfx_supertank"
+    img     :               "dagron_2b"
 
 
-PUB Sprite
+PUB Blit
 
     lcd.Start(gfx.Start)
-    gfx.Sprite(sprite.Addr, 56, 24, 0)
+    gfx.Blit(img.Addr)
     lcd.DrawScreen
     
 DAT
