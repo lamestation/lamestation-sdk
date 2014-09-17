@@ -67,31 +67,38 @@ CON
 
     F_INVERTCOLOR = %00000001                           ' color inversion (black/white)
 
-VAR
+DAT
 '' These longs make up the interface between Spin and
 '' assembly.
 '' They must apppear in this order.
 '' ---------------------------------------------------
-    long    instruction                                 ' |
-    long    drawsurface                                 ' order/type locked
+instruction     long    NEGX                            ' |
+drawsurface     long    0                               ' order/type locked
 '' ---------------------------------------------------
-    word    font
-    byte    startingchar
-    byte    tilesize_x
-    byte    tilesize_y
+font            word    0
+lock            byte    0
+startingchar    byte    0
+tilesize_x      byte    0
+tilesize_y      byte    0
 
-VAR
-    long    c_fillbuffer, c_blitscreen, c_setmode, c_setcliprect, c_drawtilemap, c_sprite
-    long    c_parameters[9]
+DAT
+c_fillbuffer    long    0
+c_blitscreen    long    0
+c_setmode       long    0
+c_setcliprect   long    0
+c_drawtilemap   long    0
+c_sprite        long    0
 
-VAR
-    long    map_tilemap                                 ' |
-    long    map_levelmap                                ' order/type locked
+c_parameters    long    0[9]
+
+DAT
+map_tilemap     long    0                               ' |
+map_levelmap    long    0                               ' order/type locked
 
 PUB Start
 
     drawsurface := @graphicsdriver                      ' reuse DAT section
-    instruction := NEGX                                 ' lock (see below)
+    instruction |= lock := locknew                      ' complete lock (see below)
     cognew(@graphicsdriver, @instruction)
 '                                                 function has(1) no(0) argument(s) -----+
 '                                                            number of arguments -1 ---+ |
@@ -116,6 +123,7 @@ PUB Start
     return drawsurface
 
 PUB WaitToDraw
+' Check command completion without affecting the lock state.
 
     repeat
     while instruction
@@ -124,7 +132,7 @@ PUB ClearScreen(color)
 '' Fill the composition buffer with the given color.
 
     repeat
-    while instruction
+    while lockset(lock)
 
     longmove(@c_parameters{0}, @result, 2)
     instruction := c_fillbuffer
@@ -135,7 +143,7 @@ PUB Blit(source)
 '' not for its game utility so much.
 
     repeat
-    while instruction
+    while lockset(lock)
 
     longmove(@c_parameters{0}, @result, 2)
     instruction := c_blitscreen
@@ -149,7 +157,7 @@ PUB Sprite(source, x, y, frame)
 '' drawing command.
 
     repeat
-    while instruction
+    while lockset(lock)
 
     longmove(@c_parameters{0}, @result, 5)
     instruction := c_sprite
@@ -158,7 +166,7 @@ PUB InvertColor(enabled) ' boolean value
 '' When enabled colors black and white are plotted inverted (gray is left unchanged).
 
     repeat
-    while instruction
+    while lockset(lock)
 
     c_parameters{0} := enabled
     c_parameters[1] := F_INVERTCOLOR
@@ -263,7 +271,7 @@ PUB DrawMapRectangle(offset_x, offset_y, x1, y1, x2, y2)
 '' Underlying method to DrawMap which lets you specify the clipping region.
 
     repeat
-    while instruction
+    while lockset(lock)
 
     longmove(@c_parameters{0}, @result,      7)
     longmove(@c_parameters[7], @map_tilemap, 2)
@@ -316,7 +324,7 @@ PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Defaults to 0, 0, 128, 64.
 
     repeat
-    while instruction
+    while lockset(lock)
 
     longmove(@c_parameters{0}, @clipx1, 4)
     instruction := c_setcliprect
@@ -325,7 +333,9 @@ DAT                     org     0
 
 graphicsdriver          jmpret  $, #setup               ' run setup once, then used
                                                         ' as return vector
-{done}                  wrlong  zero, par               ' command finished
+{done}                  wrlong  zero, par               ' |
+                        lockclr ina                     ' command finished
+
 {idle}                  rdlong  code, par wz            ' fetch next command
                         test    code, argn wc           ' check for arguments
                 if_z    jmp     #$-2                    ' try again
@@ -895,7 +905,8 @@ grid                    long    $55555555               ' transparent color extr
 
 ' Stuff below is re-purposed for temporary storage.
 
-setup                   add     surface, par            ' default render buffer location
+setup                   rdbyte  ina, par                ' get access lock (dst access OK)
+                        add     surface, par            ' default render buffer location
 
                         movi    ctrb, #%0_11111_000     ' LOGIC.always counter for math support
                         jmp     %%0                     ' return
