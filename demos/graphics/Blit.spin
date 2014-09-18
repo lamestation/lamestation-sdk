@@ -18,7 +18,7 @@ OBJ
     lcd     :               "LameLCD" 
     gfx     :               "LameGFX"
 
-    img     :               "dagron_2b"
+    img     :               "gfx_dagron"
 
 
 PUB Blit
