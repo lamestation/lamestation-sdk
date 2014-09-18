@@ -19,8 +19,8 @@ OBJ
     gfx      : "LameGFX"
     audio    : "LameAudio"
     
-    font_6x8 : "font6x8_normal_w"
-    song     : "song_ibelieve"
+    font_6x8 : "gfx_font6x8_normal_w"
+    song     : "sng_ibelieve"
 
         
 PUB Main
@@ -29,10 +29,8 @@ PUB Main
     lcd.SetFrameLimit(lcd#QUARTERSPEED)
 
     gfx.LoadFont(font_6x8.Addr, " ", 0, 0)
-    audio.Start
 
-    audio.SetWaveform(0)
-    audio.SetADSR(120, 80, 40, 110) 
+    audio.Start
     audio.LoadSong(song.Addr)
     audio.LoopSong
 

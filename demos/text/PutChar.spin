@@ -15,7 +15,7 @@ CON
 OBJ
         lcd     :               "LameLCD"
         gfx     :               "LameGFX"
-        font_8x8    :           "font8x8"
+        font_8x8    :           "gfx_font8x8"
         
 PUB PutChar | x, ran, y, count, char
 

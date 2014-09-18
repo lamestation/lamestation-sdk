@@ -15,7 +15,7 @@ CON
 OBJ
         lcd     :               "LameLCD"
         gfx     :               "LameGFX"
-        font    :               "font4x6"
+        font    :               "gfx_font4x6"
         
 PUB Kerning
 
