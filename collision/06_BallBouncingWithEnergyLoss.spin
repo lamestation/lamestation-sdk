@@ -1,5 +1,5 @@
 {{
-Ball Bouncing Demo
+Ball Bouncing Demo (Adding Gravity)
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -8,6 +8,8 @@ See end of file for terms of use.
 Authors: Brett Weir
 -------------------------------------------------
 }}
+
+' notice that this demo is completely unstable
 
 CON
 
@@ -20,9 +22,9 @@ OBJ
     gfx  :               "LameGFX"
     ctrl :               "LameControl"
     
-    ball :               "ball_16x16"
-    map  :               "map"
-    tile :               "box_s"
+    ball :               "gfx_ball_16x16"
+    map  :               "map_map"
+    tile :               "gfx_box_s"
 
 VAR
 
@@ -30,12 +32,16 @@ VAR
     long    x, y
     long    speedx, speedy
     long    adjust
+    byte    jumping
 
 CON
 
     w = 16
     h = 16
     maxspeed = 20
+
+    lossnum = 8
+    lossdenom = 9
 
 PUB TestBoxCollision
 
@@ -67,15 +73,10 @@ PUB TestBoxCollision
         adjust := gfx.TestMapMoveX(oldx, oldy, word[ball.Addr][1], word[ball.Addr][2], x)
         if adjust
             x += adjust
-            speedx := -speedx
+            speedx := -speedx*lossnum/lossdenom
 
-        ' then up and down
-        if ctrl.Up
-            if speedy > -maxspeed
-                speedy--
-        if ctrl.Down
-            if speedy < maxspeed
-                speedy++
+        ' add gravity
+        speedy += 1
 
         y += speedy
 
@@ -83,7 +84,14 @@ PUB TestBoxCollision
         adjust := gfx.TestMapMoveY(oldx, oldy, word[ball.Addr][1], word[ball.Addr][2], y)
         if adjust
             y += adjust
-            speedy := -speedy
+            speedy := -speedy*lossnum/lossdenom
+
+        ' add jumping ability
+        if speedy == 0
+            if ctrl.Up
+                speedy -= 9
+
+
 
         gfx.DrawMap(0,0)
         gfx.Sprite(ball.Addr,x, y,0)

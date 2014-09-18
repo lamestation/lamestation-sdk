@@ -1,5 +1,5 @@
 {{
-Ball Bouncing Demo (Adding Gravity)
+Ball Bouncing Demo
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -8,8 +8,6 @@ See end of file for terms of use.
 Authors: Brett Weir
 -------------------------------------------------
 }}
-
-' notice that this demo is completely unstable
 
 CON
 
@@ -22,9 +20,9 @@ OBJ
     gfx  :               "LameGFX"
     ctrl :               "LameControl"
     
-    ball :               "ball_16x16"
-    map  :               "map"
-    tile :               "box_s"
+    ball :               "gfx_ball_16x16"
+    map  :               "map_map"
+    tile :               "gfx_box_s"
 
 VAR
 
@@ -71,8 +69,13 @@ PUB TestBoxCollision
             x += adjust
             speedx := -speedx
 
-        ' add gravity
-        speedy += 1
+        ' then up and down
+        if ctrl.Up
+            if speedy > -maxspeed
+                speedy--
+        if ctrl.Down
+            if speedy < maxspeed
+                speedy++
 
         y += speedy
 

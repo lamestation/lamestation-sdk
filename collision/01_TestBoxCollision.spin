@@ -21,8 +21,8 @@ OBJ
     ctrl :               "LameControl"
     fn   :               "LameFunctions"
     
-    box  :               "box"
-    boxo :               "box_o"
+    box  :               "gfx_box"
+    boxo :               "gfx_box_o"
 
 VAR
 

@@ -20,10 +20,10 @@ OBJ
     gfx  :               "LameGFX"
     ctrl :               "LameControl"
     
-    box  :               "box"
+    box  :               "gfx_box"
 
-    map  :               "map"
-    tile :               "box_s"
+    map  :               "map_map"
+    tile :               "gfx_box_s"
 
 VAR
 
