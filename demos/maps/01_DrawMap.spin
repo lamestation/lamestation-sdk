@@ -18,8 +18,8 @@ OBJ
     lcd     :   "LameLCD" 
     gfx     :   "LameGFX"
 
-    map     :   "cave"
-    tileset :   "cavemountain"
+    map     :   "map_cave"
+    tileset :   "gfx_cave"
 
 
 PUB Main

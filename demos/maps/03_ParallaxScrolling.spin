@@ -19,10 +19,10 @@ OBJ
     gfx     :   "LameGFX"
     ctrl    :   "LameControl"
 
-    map     :   "cave"
-    map2    :   "cave2"
-    tileset :   "cavemountain"
-    bkdrop  :   "cavelake"
+    map     :   "map_cave"
+    map2    :   "map_cave2"
+    tileset :   "gfx_cave"
+    bkdrop  :   "gfx_cavelake"
 
 VAR
     long    xoffset, yoffset
