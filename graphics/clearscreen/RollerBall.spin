@@ -20,8 +20,8 @@ OBJ
     ctrl    :               "LameControl"
     fn      :               "LameFunctions"
     
-    ball    :               "rollerball"
-    font    :               "font6x8"
+    ball    :               "gfx_rollerball"
+    font    :               "gfx_font6x8"
     
 VAR
     byte    ball_frame

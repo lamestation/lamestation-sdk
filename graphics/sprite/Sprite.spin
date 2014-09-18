@@ -21,7 +21,7 @@ OBJ
     sprite  :               "gfx_supertank"
 
 
-PUB Sprite
+PUB Main
 
     lcd.Start(gfx.Start)
     gfx.Sprite(sprite.Addr, 56, 24, 0)
