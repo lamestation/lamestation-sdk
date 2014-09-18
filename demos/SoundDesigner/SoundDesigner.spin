@@ -56,7 +56,8 @@ OBJ
     ctrl    :   "LameControl"
     fn      :   "LameFunctions"
     pst     :   "LameSerial"
-    font    :   "font4x6"
+
+    font    :   "gfx_font4x6"
 
 PUB AudioDemo
     lcd.Start(gfx.Start)
@@ -67,7 +68,7 @@ PUB AudioDemo
     audio.Start
 
     'cognew(MIDIController, @Stack_MIDIController)
-   ' cognew(PatternPlayer, @Stack_PatternPlayer)
+    cognew(PatternPlayer, @Stack_PatternPlayer)
 
     control[_NAV]  := _PAT
     control[_ATK]  := 127
@@ -187,11 +188,11 @@ PRI Control_SND
     GUI_Keyboard(0,48)
 
 OBJ
-    patview : "pattern"
-    pat : "pat_piano"
-    key : "pat_key"
-    cur : "cursor"
-    led : "led"
+    patview : "map_pattern"
+    pat     : "gfx_pat_piano"
+    key     : "gfx_pat_key"
+    cur     : "gfx_cursor"
+    led     : "gfx_led"
 
 VAR
     byte    patindex
@@ -290,14 +291,14 @@ PRI Control_PAT | i
 ' **********************************************************
 
 OBJ
-    box18 : "box_18x9"
-    box24 : "box_24x9"
+    box18 : "gfx_box_18x9"
+    box24 : "gfx_box_24x9"
 
-    key_w : "key_w"
-    key_b : "key_b"
+    key_w : "gfx_key_w"
+    key_b : "gfx_key_b"
 
-    val   : "valuebar"
-    blip  : "blipbar"
+    val   : "gfx_valuebar"
+    blip  : "gfx_blipbar"
 
 PRI ValueBar(value,x,y) | ox,oy
 
@@ -420,12 +421,12 @@ PRI LoadAssets
 
 OBJ
 
-    gsin  : "wsin"
-    gtri  : "wtri"
-    gsaw  : "wsaw"
-    gsqr  : "wsqr"
-    gnoi  : "wnoi"
-    gsamp : "wsamp"
+    gsin  : "gfx_wsin"
+    gtri  : "gfx_wtri"
+    gsaw  : "gfx_wsaw"
+    gsqr  : "gfx_wsqr"
+    gnoi  : "gfx_wnoi"
+    gsamp : "gfx_wsamp"
 
 DAT
 
@@ -445,7 +446,7 @@ wSAMP   byte    "Samp",0
 
 OBJ
 
-    organ   :   "noise"
+    organ   :   "ins_hammond"
 
    
 ' **********************************************************
@@ -455,7 +456,7 @@ OBJ
 PRI SetChannel
     audio.SetADSR(control[_ATK],control[_DEC],control[_SUS],control[_REL])
     audio.SetWaveform(control[_WAV] // 6)
-    audio.SetVolume(control[_VOL])
+   ' audio.SetVolume(control[_VOL])
     audio.SetSample(organ.Addr)
  {{
 PRI ControlKnob
