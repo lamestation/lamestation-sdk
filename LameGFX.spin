@@ -98,11 +98,12 @@ map_levelmap    long    0                               ' order/type locked
 PUB Start
 
     drawsurface := @graphicsdriver                      ' reuse DAT section
-    instruction |= lock := locknew                      ' complete lock (see below)
-    cognew(@graphicsdriver, @instruction)
-'                                                 function has(1) no(0) argument(s) -----+
-'                                                            number of arguments -1 ---+ |
-'                                                                                      | |
+    ifnot (instruction |= lock := locknew) +1           ' complete lock (see below)
+        abort
+    ifnot cognew(@graphicsdriver, @instruction) +1
+        lockret(lock)           '                 function has(1) no(0) argument(s) -----+
+        abort                   '                            number of arguments -1 ---+ |
+                                '                                                      | |
     c_fillbuffer  := @c_parameters << 16 | (@fillbuffer  - @graphicsdriver) >> 2 | %0001_1 << 11
     c_blitscreen  := @c_parameters << 16 | (@blitscreen  - @graphicsdriver) >> 2 | %0001_1 << 11
     c_setmode     := @c_parameters << 16 | (@setmode     - @graphicsdriver) >> 2 | %0001_1 << 11
