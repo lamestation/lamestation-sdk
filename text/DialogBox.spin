@@ -16,11 +16,11 @@ OBJ
         lcd     :               "LameLCD"
         gfx     :               "LameGFX"
         ctrl    :               "LameControl"
-        font    :               "font4x6_b"
-        dia     :               "scroll"
 
-        maptile :               "lostatsea"
-        map     :               "lostatseamap"
+        font    :               "gfx_font4x6_b"
+        dia     :               "gfx_scroll"
+        maptile :               "gfx_lostatsea"
+        map     :               "map_lostatsea"
         
 PUB Main
 

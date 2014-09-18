@@ -1,21 +1,29 @@
 ' *********************************************************
 ' ibelieve.spin
 ' *********************************************************
-CON
-    SONGOFF = 255
-    BAROFF  = 254
-    SNOP    = 253
-    SOFF    = 252
-
-PUB Addr
-    return @song_data
-
-DAT
-
+DAT    
 song_data
+word    @patterns_data, @sequence_data
 
-byte    12    'number of bars
-byte    80    'tempo
+CON
+    SONGOFF = $80
+    BAROFF  = $81
+    SNOP    = $82
+    SOFF    = $83
+    
+    ADSRW   = $A0
+    TEMPO   = $B0
+    TRANS   = $C0
+    
+    #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
+    
+PUB Addr
+    result.word[1] := @@0
+    result.word{0} := @song_data
+
+DAT    
+
+patterns_data
 byte    16    'bar resolution
 
 'main
@@ -36,7 +44,11 @@ byte    2,  27, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP
 byte    2,  31, SNOP, SNOP, SNOP, 29, SNOP, SNOP, SNOP, 27, SNOP, SNOP, SNOP, 24, SNOP, SNOP, SNOP
 byte    2,  22, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF, SNOP
 
-'SONG ------
+
+sequence_data
+byte    TRANS, 0
+byte    TEMPO, 80
+byte    ADSRW+$F, 120, 80, 40, 110, SQUARE
 
 byte    0,BAROFF
 byte    1,BAROFF

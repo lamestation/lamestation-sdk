@@ -18,9 +18,9 @@ OBJ
         fn      :               "LameFunctions"
         audio   :               "LameAudio"
         
-        font_8x8    :           "font8x8"
-        font_6x8    :           "font6x8"
-        font_4x4    :           "font4x4"
+        font_8x8    :           "gfx_font8x8"
+        font_6x8    :           "gfx_font6x8"
+        font_4x4    :           "gfx_font4x4"
         
 PUB TextDemo | x, ran, y
 
