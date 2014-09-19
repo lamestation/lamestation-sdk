@@ -25,12 +25,12 @@ OBJ
     ctrl    : "LameControl"
     fn      : "LameFunctions"
 
-    tilemap  : "tilemap"
-    player   : "frappy"
-    title    : "frappybird"
-    youdied  : "youdie"
-    font     : "numbers"
-    pressa   : "pressa"
+    tilemap  : "gfx_tilemap"
+    player   : "gfx_frappy"
+    title    : "gfx_frappybird"
+    youdied  : "gfx_youdie"
+    font     : "gfx_numbers"
+    pressa   : "gfx_pressa"
 
 
 CON
