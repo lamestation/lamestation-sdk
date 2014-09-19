@@ -942,23 +942,23 @@ PUB HandleStatusBar
 
 
 OBJ
-    font                        : "chars_cropped"
+    font                        : "gfx_chars_cropped"
     
-    gfx_tilemap                 : "tiles_2b_poketron"
-    map_supercastle             : "supercastle"
+    gfx_tilemap                 : "gfx_tiles_2b_poketron"
+    map_supercastle             : "map_supercastle"
     
-    gfx_supertank               : "supertank"
-    gfx_superthang              : "superthang"
-    gfx_class16                 : "class16"
-    gfx_happyface               : "happyface"
-    gfx_moonman                 : "moonman"
+    gfx_supertank               : "gfx_supertank"
+    gfx_superthang              : "gfx_superthang"
+    gfx_class16                 : "gfx_class16"
+    gfx_happyface               : "gfx_happyface"
+    gfx_moonman                 : "gfx_moonman"
     
-    gfx_bullet                  : "bullet"
-    gfx_heart                   : "heart"
-    gfx_tankstand               : "tankstand"
-    gfx_logo_teamlame           : "logo_teamlame"
-    gfx_logo_tankbattle_name    : "logo_tankbattle_name"
-    gfx_logo_tankbattle         : "logo_tankbattle"
+    gfx_bullet                  : "gfx_bullet"
+    gfx_heart                   : "gfx_heart"
+    gfx_tankstand               : "gfx_tankstand"
+    gfx_logo_teamlame           : "gfx_logo_teamlame"
+    gfx_logo_tankbattle_name    : "gfx_logo_tankbattle_name"
+    gfx_logo_tankbattle         : "gfx_logo_tankbattle"
 
 DAT 'SONG DATA
 
