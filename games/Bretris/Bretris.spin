@@ -1,4 +1,4 @@
-Ma{{
+{{
 Tetris
 -------------------------------------------------
 Version: 1.0
@@ -21,9 +21,12 @@ OBJ
     ctrl    :   "LameControl"
     fn      :   "LameFunctions"
 
-    blocks  :   "tetris"
-    frame   :   "wall"
-    song    :   "song_tetris"
+    blocks  :   "gfx_bretrominos"
+    frame   :   "gfx_wall"
+    font    :   "gfx_font4x6_w"
+    box     :   "gfx_scorebox"
+
+    song    :   "sng_tetris"
 
 CON
     MAP_W = 10
@@ -34,6 +37,8 @@ CON
 
     TETRO_W = 4
     TETRO_SIZE = TETRO_W*TETRO_W
+
+    LEVELBREAK = 10
 
 VAR
     long    dropcounter
@@ -50,7 +55,7 @@ VAR
     byte    tx, ty, tr, tw, th
     byte    tetro[TETRO_SIZE]
 
-    byte    type
+    byte    type, nexttype
     byte    apress, bpress
 
 
@@ -60,8 +65,6 @@ PUB Main
     lcd.SetFrameLimit(lcd#HALFSPEED)
 
     audio.Start
-    audio.SetWaveform(0)
-    audio.SetADSR(127, 60, 127, 70)
     audio.LoadSong(song.Addr)
     audio.LoopSong
 
@@ -73,10 +76,14 @@ PUB Main
     gfx.LoadMap(blocks.Addr, @mapw)
     LoadTetrominos
 
+    gfx.LoadFont(font.Addr," ",0,0)
+
     ResetGame
 
 
     repeat
+
+        Overlay        
         gfx.DrawMapRectangle(0, 0, MAP_X, MAP_Y, constant(MAP_X+MAP_W<<2), constant(MAP_Y+MAP_H<<2))
 
         otx := tx
@@ -85,17 +92,20 @@ PUB Main
         oth := th
         otr := tr
 
+        dropmax := 9 - level
+
         ctrl.Update
 
         DrawTetromino
+        
 
         lcd.DrawScreen
 
 PUB ResetGame | x,y
-    tx := 0
-    ty := 0
+    GetNewTetro
 
-    dropmax := 4
+    dropmax := 9
+    score := 0
 
     bytefill(@map, 1, MAP_SIZE)
 
@@ -104,6 +114,43 @@ PUB ResetGame | x,y
 
     repeat y from 0 to 63 step 8
         gfx.Sprite(frame.Addr,MAP_X+MAP_W<<2,y,1)
+
+
+PUB Overlay
+    gfx.PutString(string("Lines"),1,1)
+    CalculateScoreStr(score)
+    gfx.Sprite(box.Addr,1,7,0)
+    gfx.PutString(@scorestr,14,9)
+
+    gfx.PutString(string("Level"),1,17)
+    gfx.Sprite(box.Addr,1,23,0)
+    gfx.PutChar("0"+level,30,25)
+
+
+VAR
+    long    score
+    byte    scorestr[6]
+    byte    level
+    byte    levelinc
+
+PUB CalculateScoreStr(value) | i, active, ind
+    i := 10_000
+    active := 0
+
+    repeat ind from 0 to 4
+        if value => i
+            active := 1
+            scorestr[ind] := value / i + "0"
+            value //= i
+        else
+            if active or (i == 1 and value == 0)
+                scorestr[ind] := "0"
+            else
+                scorestr[ind] := " "
+
+        i /= 10
+
+    scorestr[5] := 0
 
 
 
@@ -118,24 +165,20 @@ PUB DrawTetromino
     CheckTetromino(_MOVEX)
     otx := tx
 
-
     ' drop down
     if dropcounter > dropmax or ctrl.A
         dropcounter := 0
         ty++
     else
         dropcounter++
-
     
     if CheckTetromino(_COLLIDE)
-        if ty < 2
+        if ty < 1
             ResetGame
             return
 
         ty := oty
         CheckTetromino(_PLACE)
-        ty := 0
-        tx := 4
 
     oty := ty
 
@@ -203,7 +246,6 @@ PUB CheckTetromino(attr) | x, y, base, addr
         CheckMap
         GetNewTetro
 
-
 VAR
     byte    linecleared[MAP_H]
 
@@ -212,6 +254,12 @@ PUB GetClearedLinesCount | lines, l
     repeat l from 0 to MAP_H-1
         if linecleared[l]
             lines++
+            score++
+
+            levelinc++
+            if levelinc => levelbreak
+                level++
+                levelinc := 0
     return lines
 
 PUB CheckMap | line
@@ -244,7 +292,10 @@ PUB MarkLinesForDeletion | l1,l2
 
 PUB GetNewTetro | ran
     ran := cnt
-    type := (ran? & $FF) // 7
+    type := nexttype
+    nexttype := (ran? & $FF) // 7
+    ty := -1
+    tx := 4
 
 
 PUB LoadTetrominos
@@ -255,7 +306,6 @@ PUB LoadTetrominos
     tetrominos[4] := @tetro5
     tetrominos[5] := @tetro6
     tetrominos[6] := @tetro7
-
 
 DAT
 
