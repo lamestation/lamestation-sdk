@@ -298,15 +298,16 @@ DAT
 
                         org
 
-oscmodule               mov     dira, diraval         ' set APIN to output
-                        mov     ctra, ctraval         ' establish counter A mode and APIN
-                        mov     frqa, #1              ' set counter to increment 1 each cycle
+oscmodule               mov     dira, diraval                           ' set APIN to output
+                        mov     ctra, ctraval                           ' establish counter A mode and APIN
+                        mov     frqa, #1                                ' set counter to increment 1 each cycle
 
-                        mov     time, cnt             ' record current time
-                        add     time, period          ' establish next period
+                        mov     time, cnt                               ' record current time
+                        add     time, period                            ' establish next period
 
                         ' Establish communication between cog and spin
-                        mov     Addr, par             ' get address of frequency table
+
+                        mov     Addr, par                               ' get address of frequency table
 
                         rdlong  freqAddr, Addr
                         mov     sampleAddr, freqAddr
@@ -314,37 +315,33 @@ oscmodule               mov     dira, diraval         ' set APIN to output
                         shr     sampleAddr, #16
                         
                         add     Addr, #4
-                        mov     outputAddr, Addr      ' get output address
+                        mov     outputAddr, Addr                        ' get output address
                         add     Addr, #4
-                        mov     paramAddr, Addr       ' get channel parameters
+                        mov     paramAddr, Addr                         ' get channel parameters
                         add     Addr, #4
-                        mov     adsrAddr, Addr        ' get adsr parameters
+                        mov     adsrAddr, Addr                          ' get adsr parameters
                         add     Addr, #8
-                        mov     oscAddr, Addr         ' get oscillator registers
-
- 
-
-'MAIN LOOP START       
-mainloop                waitcnt time, period          ' wait until next period
-                        neg     phsa, output          ' back up phsa so that it trips "value cycles from now
-
-                        ' Update channel parameters before anything else
+                        mov     oscAddr, Addr                           ' get oscillator registers
 
     
-                        rdbyte  attack, adsrAddr
+mainloop                waitcnt time, period                            ' wait until next period
+                        neg     phsa, output                            ' back up phsa so that it trips "value cycles from now
+
+                        
+                        rdbyte  attack, adsrAddr                        ' read attack
                         add     adsrAddr, #1
 
-                        mov     output, #0              ' filler (1/3)
+                        mov     output, #0                              ' filler (1/3)
 
                         rdbyte  decay, adsrAddr
                         add     adsrAddr, #1
 
-                        mov     oscIndex, oscTotal      ' filler (2/3)
+                        mov     oscIndex, oscTotal                      ' filler (2/3)
 
                         rdbyte  sustain, adsrAddr
                         add     adsrAddr, #1
 
-                        mov     oscPtr, oscAddr         ' filler (3/3)
+                        mov     oscPtr, oscAddr                         ' filler (3/3)
 
                         rdbyte  release, adsrAddr
                         add     adsrAddr, #1
@@ -356,9 +353,10 @@ mainloop                waitcnt time, period          ' wait until next period
 
     
                         ' Get frequency from note value using table lookup
+                        
 oscloop                 rdlong  noteAddrtemp, oscPtr
 
-                        and     noteAddrtemp, keyonmask     nr, wz 'SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
+                        and     noteAddrtemp, keyonmask         nr, wz  'SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
 
                         and     noteAddrtemp, #$7F
                         shl     noteAddrtemp, #2
@@ -366,38 +364,40 @@ oscloop                 rdlong  noteAddrtemp, oscPtr
                         add     oscPtr, #4
                                                 
                         'ADSR FILTER (or in this case, ADS filter?)
+                       
                         rdlong  voltemp, oscPtr
                         mov     vollongtemp, voltemp
 
                         'since Z flag still set from previous operation, no extra instructions needed
+                        
                         and     vollongtemp, ADSRmask
 if_z                    mov     vollongtemp, #0
-if_nz                   cmp     vollongtemp, #1               wc
+if_nz                   cmp     vollongtemp, #1                 wc
 if_nz_and_c             or      vollongtemp, attackmask
 
 
 
                             
 
-                        and     vollongtemp, attackmask       nr, wz  'ATTACK  
+                        and     vollongtemp, attackmask         nr, wz  'ATTACK  
 if_nz                   mov     targetvol, sustainfull
 if_nz                   jmp     #attackjump
 
-                        and     vollongtemp, sustainmask      nr, wz  'CHECK IF SHOULD BE SUSTAINING
+                        and     vollongtemp, sustainmask        nr, wz  'CHECK IF SHOULD BE SUSTAINING
 if_nz                   mov     targetvol, sustain
 if_z                    mov     targetvol, #0
 attackjump
 
 
                         and     voltemp, volmask
-                        cmps    voltemp, targetvol        wc
+                        cmps    voltemp, targetvol              wc
 if_c                    adds    voltemp, attack
 if_nc                   subs    voltemp, decay
-if_nc                   and     vollongtemp, attackmask        nr, wz
+if_nc                   and     vollongtemp, attackmask         nr, wz
 if_nc_and_nz            add     vollongtemp, attackmask
 
                       
-                        cmps    voltemp, #0           wc
+                        cmps    voltemp, #0                     wc
 if_c                    mov     voltemp, #0
 
                         add     voltemp, vollongtemp
@@ -410,7 +410,6 @@ if_c                    mov     voltemp, #0
 
               
                         ' Update phase increment with new frequency
-
                         rdlong  phaseinc, noteAddrtemp      
                         wrlong  phaseinc, oscPtr
                         add     noteAddrtemp, #4

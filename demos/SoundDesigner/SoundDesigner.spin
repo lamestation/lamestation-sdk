@@ -455,7 +455,7 @@ OBJ
 
 PRI SetChannel
     audio.SetADSR(control[_ATK],control[_DEC],control[_SUS],control[_REL])
-    audio.SetWaveform(control[_WAV] // 6)
+    audio.SetParam(audio#_WAV, control[_WAV] // 6)
    ' audio.SetVolume(control[_VOL])
     audio.SetSample(organ.Addr)
  {{
