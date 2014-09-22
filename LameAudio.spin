@@ -16,7 +16,7 @@ CON
     FS      = 40000
     SAMPLES = 512
     OSCILLATORS = 4
-    REGPEROSC = 4
+    REGPEROSC = 5
     OSCREGS = OSCILLATORS*REGPEROSC
     
     KEYBITS = $180
@@ -30,11 +30,13 @@ CON
     SUSTAINBIT = $2000000
 
     #0, _ATK, _DEC, _SUS, _REL, _WAV
+    #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE
 
 'NEW LAYOUT
-'                      | .-byte-. .-byte-. .-byte-. .-byte-.
-'                Note -| 00000000 00000000 00000000 00000000
-'                      |   Sample          Waveform   Note 
+'                        MSB                             LSB
+'                      | .----2 bytes----. .-byte-. .-byte-.
+'                Note -| 00000000_00000000 00000000 00000000
+'                      |      Sample       Waveform   Note 
 '     
 '                      | .-byte-. .-byte-. .-byte-. .-byte-.
 '                ADSR -| 00000000 00000000 00000000 00000000
@@ -83,9 +85,6 @@ VAR
 
     'ASM data structure (do not mess up)
     long    parameter
-    long    outputlong
-
-    long    channelparam  'volume   'waveform LSB
     long    channelADSR[2]
 
     long    oscRegister[OSCREGS]
@@ -309,21 +308,16 @@ oscmodule               mov     dira, diraval                           ' set AP
 
                         mov     Addr, par                               ' get address of frequency table
 
-                        rdlong  freqAddr, Addr
-                        mov     sampleAddr, freqAddr
-                        and     freqAddr, halfmask
-                        shr     sampleAddr, #16
-                        
-                        add     Addr, #4
-                        mov     outputAddr, Addr                        ' get output address
-                        add     Addr, #4
-                        mov     paramAddr, Addr                         ' get channel parameters
-                        add     Addr, #4
+                        rdword  freqAddr, Addr                          ' get frequency table address
+                        add     Addr, #2
+                        rdword  sampleAddr, Addr                        ' get sample address
+                        add     Addr, #2                   
                         mov     adsrAddr, Addr                          ' get adsr parameters
                         add     Addr, #8
                         mov     oscAddr, Addr                           ' get oscillator registers
 
-    
+
+' MAINLOOP ======================================================
 mainloop                waitcnt time, period                            ' wait until next period
                         neg     phsa, output                            ' back up phsa so that it trips "value cycles from now
 
@@ -352,9 +346,9 @@ mainloop                waitcnt time, period                            ' wait u
                         sub     adsrAddr, #4
 
     
-                        ' Get frequency from note value using table lookup
                         
-oscloop                 rdlong  noteAddrtemp, oscPtr
+' OSCLOOP -------------------------------------------------------                   
+oscloop                 rdlong  noteAddrtemp, oscPtr                    ' Get frequency from note value using table lookup
 
                         and     noteAddrtemp, keyonmask         nr, wz  'SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
 
@@ -424,6 +418,7 @@ if_c                    mov     voltemp, #0
 
               
 ' PHASE ACCUMULATOR
+' -------------------------------------------------------------
 ' shift and truncate phase to 512 samples
 
                         shr     phase, #12
@@ -524,6 +519,7 @@ if_nc                   neg     osctemp, osctemp
                         subs    osctemp, #128
     
 ' ADSR MULTIPLIER
+' -------------------------------------------------------------
 ' calculates proper volume of this oscillator's sample
 
 :oscOutput              mov     multtemp, osctemp
@@ -551,18 +547,13 @@ if_nz                   add     osctemp, multtemp
 
                         adds    output, osctemp
                         djnz    oscIndex, #oscloop
-
-
-                        ' Add DC offset for output to PWM
-                        adds    output, outputoffset
-                        wrlong  output, outputAddr
+' OSCLOOP END ---------------------------------------------------
+                        
+                        adds    output, outputoffset                ' Add DC offset for output to PWM
       
                         ' End of oscillator loop
                         jmp     #mainloop
-
-
-
-
+' MAINLOOP END ==================================================
 
 
 diraval       long      |< pin#AUDIO                'APIN=0
@@ -570,17 +561,16 @@ ctraval       long      %00100 << 26 + pin#AUDIO    'NCO/PWM APIN=0
 period        long      PERIOD1                     '800kHz period (_clkfreq / period)
 time          long      0
 
-waveform      long      3     '0 = ramp    1 = square    2 = triangle    3 = sine    4 = pseudo-random noise    5 = sine perversion
-
-halfmask        long    $FFFF
-multtemp      long      2
 
 attack        long      0
 decay         long      0
 sustain       long      127 << 10
 sustainfull   long      127 << 10
 release       long      0
-adsrtemp      long      0
+waveform      long      _SINE    
+
+multtemp      long      2
+
 targetvol     long      0
 volAddrtemp   long      0
 voltemp       long      0
@@ -617,7 +607,6 @@ outputAddr    long      0
 sineAddr      long      $E000
 sampleAddr     long      0
 
-paramAddr     long      0
 adsrAddr      long      0
 
 rand          long      203943
