@@ -27,7 +27,7 @@ CON
     #0, _OFF, _A, _D, _S, _R
 
 ' CONTROL REGISTER LAYOUT (per oscillator)
-    #0, _NOTE, _TRANS, _SAMP[2], _ATK, _DEC, _SUS, _REL, _WAV, _STATE, _VOL[2], _INC[4], _ACC[4]
+    #0, _NOTE, _TRANS, _ATK, _DEC, _SUS, _REL, _WAV, _STATE, _VOL[2], _INC[4], _ACC[4]
 
 '                        MSB                             LSB
 '                      | .----2 bytes----. .-byte-. .-byte-.
@@ -52,23 +52,35 @@ VAR
 
     'ASM data structure (do not mess up)
     long    parameter
-    long    oscRegister[OSCREGS]
 
-    long    oscindexer
+    long    osc_note
+    long    osc_trans
+    long    osc_attack
+    long    osc_decay
+    long    osc_sustain
+    long    osc_release
+    long    osc_waveform
+    long    osc_state
+    
+    long    osc_volume[2]
+    
+    long    osc_acc[4]
+    long    osc_inc[4]
+    
+    word    osc_sample
 
 PUB null
     
 PUB Start
       
-    parameter := @freqTable
+    parameter := @freqTable + (@osc_sample << 16)
     
     cognew(@oscmodule, @parameter)    'start assembly cog
     cognew(LoopingSongParser, @LoopingPlayStack)
 
 PUB SetParam(channel, type, value)
     if channel < OSCILLATORS
-        oscindexer := (channel*REGPEROSC) << 2
-        oscRegister.byte[oscindexer + type] := value
+        osc_note.byte[(type << 2) + channel] := value
 
 PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
     if channel < OSCILLATORS
@@ -81,25 +93,20 @@ PUB SetWaveform(channel, value)
     if channel < OSCILLATORS
         SetParam(channel, _WAV, value)
     
-PUB SetSample(channel, samplevar)
-    oscindexer := (channel*REGPEROSC) << 2
-    oscRegister.word[oscindexer + 1] := samplevar
+PUB SetSample(value) | i
+    osc_sample := value
 
-PUB PlaySound(channel, notevar)
-    oscindexer := (channel*REGPEROSC) << 2
-    oscRegister.byte[oscindexer + _NOTE] := notevar
-    oscRegister.byte[oscindexer + _STATE] := 0
+PUB PlaySound(channel, value) | i
+    if channel < OSCILLATORS
+        osc_note.byte[channel] := value
+        osc_state.byte[channel] := 0
 
 PUB StopSound(channel)
-    oscRegister.byte[(channel*REGPEROSC) << 2 + _NOTE] := SOFF
+    osc_note.byte[channel] := SOFF
     
-PUB StopAllSound
-    oscRegister.byte[(0*REGPEROSC) << 2 + _NOTE] := SOFF
-    oscRegister.byte[(1*REGPEROSC) << 2 + _NOTE] := SOFF
-    oscRegister.byte[(2*REGPEROSC) << 2 + _NOTE] := SOFF
-    oscRegister.byte[(3*REGPEROSC) << 2 + _NOTE] := SOFF
-'    repeat oscindexer from 0 to OSCREGS-1 step (REGPEROSC << 2)
- '       oscRegister.byte[oscindexer + _NOTE] := SOFF
+PUB StopAllSound | i
+    repeat i from 0 to OSCILLATORS-1
+        osc_note.byte[i] := SOFF    
 
 CON
     SONGOFF = $80
@@ -134,11 +141,11 @@ VAR
     long    LoopingPlayStack[20]
     word    songdata[2]
     
-PUB LoadPatch(patchAddr)
-    oscindexer := _ATK
-    repeat 3
-        bytemove(@oscRegister + oscindexer, patchAddr+1, 5)
-        oscindexer += 20
+PUB LoadPatch(patchAddr) | i, j, t    
+    repeat j from 0 to 3
+        t := patchAddr + 1
+        repeat i from _ATK to _WAV
+            SetParam(j, i, byte[t++])
         
 PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
     
@@ -220,7 +227,7 @@ PRI LoopingSongParser | repeattime
                             
                             case byte[barAddr][bartmp]
                                 SOFF:   StopSound( byte[barAddr][barshift] )
-                                1..127: PlaySound( byte[barAddr][barshift] , byte[barAddr][bartmp] + transpose )  'channel, note
+                                0..127: PlaySound( byte[barAddr][barshift] , byte[barAddr][bartmp] + transpose )  'channel, note
                                 other:
 
                             songcursor += 1
@@ -269,54 +276,60 @@ oscmodule               mov     dira, diraval                           ' set AP
                         add     time, period                            ' establish next period
 
                         mov     oscAddr, par                            ' get parameter address
-                        rdword  freqAddr, oscAddr                       ' get frequency table address
-                        add     oscAddr, #4                   
-
+                        rdlong  freqAddr, oscAddr                       ' get frequency table address
+                        mov     sample, freqAddr                        ' get sample address
+                        and     freqAddr, halfmask
+                        shr     sample, #16
+                        add     oscAddr, #4
+                                           
+                        mov     volAddr, oscAddr                        ' get volume register address
+                        add     volAddr, #32
+                        mov     phsAddr, volAddr                        ' get phase accumulator register address
+                        add     phsAddr, #8
+    
 ' MAINLOOP ======================================================
 mainloop                waitcnt time, period                            ' wait until next period
                         neg     phsa, output                            ' back up phsa so that it trips "value cycles from now
     
                         mov     output, #0                              ' zero out output long
                         mov     oscIndex, oscTotal                      ' count number of oscillators
-                        mov     oscPtr, oscAddr                         ' filler (3/3)
+                        
+                        mov     volPtr, volAddr
+                        mov     phsPtr, phsAddr
            
 ' OSCLOOP -------------------------------------------------------                   
-oscloop                 ' get note controllers
-                        rdbyte  note, oscPtr
-                        add     oscPtr, #1
-                        rdbyte  trans, oscPtr
-                        add     oscPtr, #1
+oscloop                 mov     oscPtr, #4
+                        sub     oscPtr, oscIndex
+                        add     oscPtr, oscAddr
                         
-                        ' get adsr parameters
-                        rdword  sample, oscPtr
-                        add     oscPtr, #2     
+                        ' get note controllers
+                        rdbyte  note, oscPtr
+                        add     oscPtr, #4
+                        rdbyte  trans, oscPtr
+                        add     oscPtr, #4
                         rdbyte  attack, oscPtr
-                        add     oscPtr, #1
+                        add     oscPtr, #4
                         rdbyte  decay, oscPtr
-                        add     oscPtr, #1
+                        add     oscPtr, #4
+                        
                         rdbyte  sustain, oscPtr
-                        add     oscPtr, #1
+                        add     oscPtr, #4
                         rdbyte  release, oscPtr
-                        add     oscPtr, #1
+                        add     oscPtr, #4
                         rdbyte  waveform, oscPtr
-                        add     oscPtr, #1
-        
-                        ' get volume parameters   
+                        add     oscPtr, #4
                         rdbyte  state, oscPtr
-                        add     oscPtr, #1
-                        rdword  volume, oscPtr
-                        sub     oscPtr, #1                             ' don't add 2 because this register must be written back to
-
+                        
     
                         ' Get frequency from note value using table lookup
                         cmp     note, #0                   nr, wz      ' (filler) ' SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
-                        cmp     note, #SOFF                nr, wz      ' (filler) ' SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
                         and     note, #$7F
                         shl     note, #2
                         add     note, freqAddr
-                                                
+                        
+                                             
 ' ENVELOPE CONTROL
-                        'since Z flag still set from previous operation, no extra instructions needed
+                        rdword  volume, volPtr                         ' get volume parameters
                         
 if_z                    mov     state, #0
 if_nz                   cmp     state, #1                   wc
@@ -343,24 +356,25 @@ if_nc_and_nz            add     state, #1
 if_c                    mov     volume, #0
 
                         wrbyte  state, oscPtr
-                        add     oscPtr, #1
-                        wrword  volume, oscPtr
-                        add     oscPtr, #2
+                        wrword  volume, volPtr
+                        add     volPtr, #2
+                        
 
 
 ' PHASE ACCUMULATOR
 ' shift and truncate phase to 512 samples
 
                         ' Update phase increment with new frequency
-                        rdlong  phaseinc, note    
-                        wrlong  phaseinc, oscPtr
-                        add     oscPtr, #4
+                        rdlong  phaseinc, note   
+                        wrlong  phaseinc, phsPtr
+                        add     phsPtr, #16
 
                         ' Add phase increment to accumulator of oscillator
-                        rdlong  phase, oscPtr
+                        rdlong  phase, phsPtr
                         add     phase, phaseinc
-                        wrlong  phase, oscPtr
-                        add     oscPtr, #4
+                        wrlong  phase, phsPtr
+                        
+                        sub     phsPtr, #12
 
                         shr     phase, #12
 '{deferred}             and     phase, #$1FF
@@ -485,6 +499,7 @@ if_nz                   add     osctemp, multtemp
 ' SUM 
 
                         adds    output, osctemp
+
                         djnz    oscIndex, #oscloop
 ' OSCLOOP END ---------------------------------------------------
                         
@@ -498,16 +513,24 @@ ctraval         long    %00100 << 26 + pin#AUDIO    'NCO/PWM APIN=0
 period          long    PERIOD1                     '800kHz period (_clkfreq / period)
 time            long    0
 
+adsrAddr        long    0
+volAddr         long    0
+phsAddr         long    0
+
+oscPtr          long    0
+volPtr          long    0
+phsPtr          long    0
+
 Addrtemp        long    0
 freqAddr        long    0
 sineAddr        long    $E000
+halfmask        long    $FFFF
 
 sustainfull     long    127 << 8
         
 'variables for oscillator controller
 oscTotal        long    OSCILLATORS    
 outputoffset    long    PERIOD1/2
-oscPtr          long    0
 oscIndex        long    0
 osctemp         long    0
     
