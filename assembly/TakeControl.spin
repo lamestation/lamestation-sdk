@@ -11,13 +11,16 @@
 '' are working by blinking the test LED whenever the joystick
 '' or buttons are pressed.
 ''
+
+CON
+    _clkmode        = xtal1 + pll16x
+    _xinfreq        = 5_000_000
+    
 OBJ
     ctrl    : "LameControl"
     pin     : "Pinout"
-CON
-  '_clkmode        = xtal1 + pll16x           ' Feedback and PLL multiplier
- ' _xinfreq        = 5_000_000                ' External oscillator = 5 MHz
 
+CON
     LED_PIN = pin#LED
     LED_PERIOD = 10
 
