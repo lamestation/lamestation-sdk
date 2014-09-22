@@ -66,17 +66,20 @@ PUB Start
     cognew(LoopingSongParser, @LoopingPlayStack)
 
 PUB SetParam(channel, type, value)
-    oscindexer := (channel*REGPEROSC) << 2
-    oscRegister.byte[oscindexer + type] := value
+    if channel < OSCILLATORS
+        oscindexer := (channel*REGPEROSC) << 2
+        oscRegister.byte[oscindexer + type] := value
 
 PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
-    SetParam(channel, _ATK, attackvar)
-    SetParam(channel, _DEC, decayvar)
-    SetParam(channel, _SUS, sustainvar)
-    SetParam(channel, _REL, releasevar)
+    if channel < OSCILLATORS
+        SetParam(channel, _ATK, attackvar)
+        SetParam(channel, _DEC, decayvar)
+        SetParam(channel, _SUS, sustainvar)
+        SetParam(channel, _REL, releasevar)
 
 PUB SetWaveform(channel, value)
-    SetParam(channel, _WAV, value)
+    if channel < OSCILLATORS
+        SetParam(channel, _WAV, value)
     
 PUB SetSample(channel, samplevar)
     oscindexer := (channel*REGPEROSC) << 2
@@ -102,7 +105,7 @@ CON
     SONGOFF = $80
     BAROFF  = $81
     SNOP    = $82
-    SOFF    = $83
+    SOFF    = 0
     
     ADSRW   = $A0
     TEMPO   = $B0
@@ -306,7 +309,8 @@ oscloop                 ' get note controllers
 
     
                         ' Get frequency from note value using table lookup
-                        cmp     note, #0                   nr, wz      ' SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
+                        cmp     note, #0                   nr, wz      ' (filler) ' SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
+                        cmp     note, #SOFF                nr, wz      ' (filler) ' SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
                         and     note, #$7F
                         shl     note, #2
                         add     note, freqAddr
@@ -314,9 +318,9 @@ oscloop                 ' get note controllers
 ' ENVELOPE CONTROL
                         'since Z flag still set from previous operation, no extra instructions needed
                         
-if_z                   mov     state, #0
-if_nz                    cmp     state, #1                   wc
-if_nz_and_c              or      state, #1
+if_z                    mov     state, #0
+if_nz                   cmp     state, #1                   wc
+if_nz_and_c             or      state, #1
 
                         and     state, #1                   nr, wz      ' ATTACK  
 if_nz                   mov     targetvol, sustainfull
@@ -494,52 +498,49 @@ ctraval         long    %00100 << 26 + pin#AUDIO    'NCO/PWM APIN=0
 period          long    PERIOD1                     '800kHz period (_clkfreq / period)
 time            long    0
 
-    
-' temporary control registers    
-note            long    0
-waveform        long    0
-state           long    0
-transp          long    0
-
-attack          long    0
-decay           long    0
-sustain         long    127 << 8
-sustainfull     long    127 << 8
-release         long    0
-
-sample          long    0
-volume          long    0
-
-multtemp        long    2
-
-targetvol       long    0
-
-'variables for oscillator controller
-oscPtr          long    0
-oscIndex        long    0
-
-phaseinc        long    0
-phase           long    0
-
-'oscillator data                                                                                      
-oscAddr         long    0
-oscTotal        long    OSCILLATORS
-
-osctemp         long    0
-outputoffset    long    PERIOD1/2
-output          long    0
-
 Addrtemp        long    0
 freqAddr        long    0
-outputAddr      long    0
 sineAddr        long    $E000
 
+sustainfull     long    127 << 8
+        
+'variables for oscillator controller
+oscTotal        long    OSCILLATORS    
+outputoffset    long    PERIOD1/2
+oscPtr          long    0
+oscIndex        long    0
+osctemp         long    0
+    
+multtemp        long    2
+output          long    0
 
 rand            long    203943
-rand2           long    0
-rand3           long    0
 
-              fit 496
+' temporary control registers  
+rand2           res     1
+rand3           res     1
+    
+oscAddr         res     1
+    
+note            res     1
+waveform        res     1
+state           res     1
+transp          res     1
+
+attack          res     1
+decay           res     1
+sustain         res     1
+
+release         res     1
+
+sample          res     1
+volume          res     1
+targetvol       res     1
+
+phaseinc        res     1
+phase           res     1
+    
+                fit 496
 
 DAT
 {{
