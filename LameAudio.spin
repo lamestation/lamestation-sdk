@@ -15,11 +15,10 @@ CON
     PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
     FS      = 40000
     SAMPLES = 512
-    PERVOICE = 1
-    VOICES = 4
-    OSCILLATORS = VOICES*PERVOICE
+    OSCILLATORS = 4
     REGPEROSC = 4
-
+    OSCREGS = OSCILLATORS*REGPEROSC
+    
     KEYBITS = $180
     HELDBIT = $80
     KEYONBIT = $100
@@ -30,19 +29,7 @@ CON
     ATTACKBIT = $1000000
     SUSTAINBIT = $2000000
 
-
-    A_OFFSET = 0
-    D_OFFSET = 7
-    S_OFFSET = 14
-    R_OFFSET = 21
-    W_OFFSET = 28
-
-    A_MASK = !($7F << A_OFFSET)
-    D_MASK = !($7F << D_OFFSET)
-    S_MASK = !($7F << S_OFFSET)
-    R_MASK = !($7F << R_OFFSET)
-    W_MASK = !($F << W_OFFSET)
-
+    #0, _ATK, _DEC, _SUS, _REL, _WAV
 
 'NEW LAYOUT
 '                      | .-byte-. .-byte-. .-byte-. .-byte-.
@@ -92,12 +79,6 @@ CON
     ' %0000_0000 0000_0000 0000_0000 0000_0000       accumulator
          
 
-
-
-    
-    OSCREGS = OSCILLATORS*REGPEROSC
-    OSCBITMASK = (OSCILLATORS-1) << 2
-
 VAR
 
     'ASM data structure (do not mess up)
@@ -105,7 +86,7 @@ VAR
     long    outputlong
 
     long    channelparam  'volume   'waveform LSB
-    long    channelADSR
+    long    channelADSR[2]
 
     long    oscRegister[OSCREGS]
     
@@ -125,34 +106,21 @@ PUB Start
     
     cognew(@oscmodule, @parameter)    'start assembly cog
     cognew(LoopingSongParser, @LoopingPlayStack)
-    
 
-PUB SetAttack(attackvar)
-    channelADSR := (channelADSR & A_MASK) + (attackvar << A_OFFSET)
-
-PUB SetDecay(decayvar)
-    channelADSR := (channelADSR & D_MASK) + (decayvar << D_OFFSET)
-
-PUB SetSustain(sustainvar)
-    channelADSR := (channelADSR & S_MASK) + (sustainvar << S_OFFSET)
-
-PUB SetRelease(releasevar)
-    channelADSR := (channelADSR & R_MASK) + (releasevar << R_OFFSET)
-
-PUB SetWaveform(waveformvar)
-    channelADSR := (channelADSR & W_MASK) + (waveformvar << W_OFFSET)
+PUB SetParam(type, value)
+    channelADSR.byte[type] := value
 
 PUB SetADSR(attackvar, decayvar, sustainvar, releasevar)
-    SetAttack(attackvar)
-    SetDecay(decayvar)
-    SetSustain(sustainvar)
-    SetRelease(releasevar)
+    SetParam(_ATK, attackvar)
+    SetParam(_DEC, decayvar)
+    SetParam(_SUS, sustainvar)
+    SetParam(_REL, releasevar)
 
 PUB SetSample(samplevar)
     sample := samplevar
 
 PUB PlaySound(channel, note)
-    if note < 128 and channel < VOICES
+    if note < 128 and channel < OSCILLATORS
         oscindexer := channel << 2
         oscRegister[oscindexer] &= !KEYBITS          
         oscRegister[oscindexer+1] &= !ADSRBITS
@@ -160,7 +128,7 @@ PUB PlaySound(channel, note)
 
 PUB StopSound(channel)
 
-    if channel < VOICES
+    if channel < OSCILLATORS
         oscindexer := channel << 2          
         oscRegister[oscindexer] &= !KEYBITS 
 
@@ -203,11 +171,11 @@ VAR
     word    songdata[2]
     
 PUB LoadPatch(patchAddr, number)
-    SetAttack(byte[++patchAddr])
-    SetDecay(byte[++patchAddr])
-    SetSustain(byte[++patchAddr])
-    SetRelease(byte[++patchAddr])
-    SetWaveform(byte[++patchAddr])
+    SetParam(_ATK,byte[++patchAddr])
+    SetParam(_DEC,byte[++patchAddr])
+    SetParam(_SUS,byte[++patchAddr])
+    SetParam(_REL,byte[++patchAddr])
+    SetParam(_WAV,byte[++patchAddr])
     
 PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
     
@@ -351,7 +319,7 @@ oscmodule               mov     dira, diraval         ' set APIN to output
                         mov     paramAddr, Addr       ' get channel parameters
                         add     Addr, #4
                         mov     adsrAddr, Addr        ' get adsr parameters
-                        add     Addr, #4
+                        add     Addr, #8
                         mov     oscAddr, Addr         ' get oscillator registers
 
  
@@ -362,34 +330,31 @@ mainloop                waitcnt time, period          ' wait until next period
 
                         ' Update channel parameters before anything else
 
-                        rdlong  adsrtemp, adsrAddr              
-              
-                        ' attack
-                        mov     attack, adsrtemp
-                        and     attack, #$7F
-                        ' decay
-                        shr     adsrtemp, doffset
-                        mov     decay, adsrtemp
-                        and     decay, #$7F
-                        ' sustain 
-                        shl     adsrtemp, #3
-                        mov     sustain, adsrtemp
-                        and     sustain, bigsusmask
-                        ' release               
-                        shr     adsrtemp, #17
-                        mov     release, adsrtemp
-                        and     release, #$7F  
-                        
-                        ' waveform               
-                        shr     adsrtemp, #7
-                        mov     waveform, adsrtemp
-                        and     waveform, #$F  
+    
+                        rdbyte  attack, adsrAddr
+                        add     adsrAddr, #1
 
-                        ' Initialize oscillator loop
-                        mov     output, #0
-                        mov     oscIndex, oscTotal
-                        mov     oscPtr, oscAddr
-              
+                        mov     output, #0              ' filler (1/3)
+
+                        rdbyte  decay, adsrAddr
+                        add     adsrAddr, #1
+
+                        mov     oscIndex, oscTotal      ' filler (2/3)
+
+                        rdbyte  sustain, adsrAddr
+                        add     adsrAddr, #1
+
+                        mov     oscPtr, oscAddr         ' filler (3/3)
+
+                        rdbyte  release, adsrAddr
+                        add     adsrAddr, #1
+    
+                        rdbyte  waveform, adsrAddr
+                        
+                            
+                        sub     adsrAddr, #4
+
+    
                         ' Get frequency from note value using table lookup
 oscloop                 rdlong  noteAddrtemp, oscPtr
 
@@ -629,17 +594,6 @@ ADSRmask      long      ADSRBITS
 sustainmask   long      SUSTAINBIT
 attackmask    long      ATTACKBIT
 bigsusmask    long      $1FC00
-
-
-doffset       long      D_OFFSET
-soffset       long      S_OFFSET
-roffset       long      R_OFFSET
-woffset       long      W_OFFSET
-
-dmask         long      !D_MASK
-smask         long      !S_MASK
-rmask         long      !R_MASK
-wmask         long      !W_MASK
 
 'variables for oscillator controller
 oscPtr        long      0
