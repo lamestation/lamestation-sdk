@@ -1,5 +1,5 @@
 {{
-Switch Songs
+Play Song
 ------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -16,32 +16,15 @@ CON
   
 OBJ
     audio   : "LameAudio"
-    fn      : "LameFunctions"
-
+    music   : "LameMusic"
+    
     song    : "song_pixeltheme"
-    song2   : "song_lastboss"
 
-PUB PlaySong
+PUB Main
     audio.Start
-    audio.LoadSong(song.Addr)
-    audio.LoopSong
-    
-    fn.Sleep(2000)
-    
-    audio.StopSong
-    audio.LoadSong(song2.Addr)
-    audio.LoopSong
-
-    fn.Sleep(2000)    
-
-    audio.StopSong
-    audio.LoadSong(song.Addr)
-    audio.PlaySong
-    
-    repeat until not audio.SongPlaying
-    
-    audio.LoadSong(song2.Addr)
-    audio.PlaySong
+    music.Start
+    music.LoadSong(song.Addr)
+    music.LoopSong
 
 DAT
 {{

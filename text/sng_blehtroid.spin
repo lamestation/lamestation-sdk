@@ -34,7 +34,7 @@ byte    1,  SNOP, SNOP, 23, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP
 sequence_data
 byte    TRANS, 0
 byte    TEMPO, 110
-byte    ADSRW+$F, 110, 90, 30, 100, SAW
+byte    ADSRW+$F, 127, 3, 60, 0, SAW
 
 byte    0,BAROFF
 byte    0,BAROFF
