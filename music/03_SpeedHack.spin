@@ -1,5 +1,5 @@
 {{
-Play Song
+Play Song (Speed Hack!!)
 ------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
