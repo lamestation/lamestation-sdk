@@ -9,9 +9,11 @@ Authors: Brett Weir
 -------------------------------------------------
 }}
 OBJ
+
     pin  :   "Pinout"
     
 CON
+
     PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
     FS      = 40000
     SAMPLES = 512
@@ -27,47 +29,41 @@ CON
     #0, _OFF, _A, _D, _S, _R
 
 ' CONTROL REGISTER LAYOUT (per oscillator)
-    #0, _NOTE, _TRANS, _ATK, _DEC, _SUS, _REL, _WAV, _STATE, _VOL[2], _INC[4], _ACC[4]
+    #0, _NOTE, _TRANS, _ATK, _DEC, _SUS, _REL, _WAV, _STATE
 
-'                        MSB                             LSB
-'                      | .----2 bytes----. .-byte-. .-byte-.
-'                Note -| 00000000_00000000 00000000 00000000
-'                      |       Sample       Trans.    Note
-'     
-'                      | .-byte-. .-byte-. .-byte-. .-byte-.
-'                ADSR -| 00000000 00000000 00000000 00000000
-'                      |     R        S        D        A
-'     
-'                      | .----2 bytes----. .-byte-. .-byte-.
-'              Volume -| 00000000_00000000 00000000 00000000
-'                      |       Volume       State   Waveform
-'     
-'                      | .-------------4 bytes-------------.
-'     Phase Increment -| 00000000_00000000_00000000_00000000
+'                   LSB|  osc 1    osc 2    osc 3    osc 4   |MSB
+'                      |-------------------------------------|
+'    (byte)      Note -| 00000000 00000000 00000000 00000000 |
+'            Tranpose -| 00000000 00000000 00000000 00000000 |
+'                      |                                     |
+'              Attack -| 00000000 00000000 00000000 00000000 |
+'               Decay -| 00000000 00000000 00000000 00000000 |
+'             Sustain -| 00000000 00000000 00000000 00000000 |
+'             Release -| 00000000 00000000 00000000 00000000 |
+'                      |                                     |
+'            Waveform -| 00000000 00000000 00000000 00000000 |
+'               State -| 00000000 00000000 00000000 00000000 |
+'                      |-------------------------------------|
 
-'                      | .-------------4 bytes-------------.
-'   Phase Accumulator -| 00000000_00000000_00000000_00000000
+DAT
 
-VAR
-
-    'ASM data structure (do not mess up)
-    long    parameter
-
-    long    osc_note
-    long    osc_trans
-    long    osc_attack
-    long    osc_decay
-    long    osc_sustain
-    long    osc_release
-    long    osc_waveform
-    long    osc_state
+    parameter       long    0
     
-    long    osc_volume[2]
+    osc_note        long    0
+    osc_trans       long    0
+    osc_attack      long    0
+    osc_decay       long    0
+    osc_sustain     long    0
+    osc_release     long    0
+    osc_waveform    long    0
+    osc_state       long    0
     
-    long    osc_acc[4]
-    long    osc_inc[4]
+    osc_volume      long    0[2]
     
-    word    osc_sample
+    osc_acc         long    0[4]
+    osc_inc         long    0[4]
+    
+    osc_sample      word    0
 
 PUB null
     
@@ -79,10 +75,12 @@ PUB Start
     cognew(LoopingSongParser, @LoopingPlayStack)
 
 PUB SetParam(channel, type, value)
+
     if channel < OSCILLATORS
         osc_note.byte[(type << 2) + channel] := value
 
 PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
+
     if channel < OSCILLATORS
         SetParam(channel, _ATK, attackvar)
         SetParam(channel, _DEC, decayvar)
@@ -90,21 +88,26 @@ PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
         SetParam(channel, _REL, releasevar)
 
 PUB SetWaveform(channel, value)
+
     if channel < OSCILLATORS
         SetParam(channel, _WAV, value)
     
 PUB SetSample(value) | i
+
     osc_sample := value
 
 PUB PlaySound(channel, value) | i
+
     if channel < OSCILLATORS
         osc_note.byte[channel] := value
         osc_state.byte[channel] := 0
 
 PUB StopSound(channel)
+
     osc_note.byte[channel] := SOFF
     
 PUB StopAllSound | i
+
     repeat i from 0 to OSCILLATORS-1
         osc_note.byte[i] := SOFF    
 
@@ -121,6 +124,7 @@ CON
     #0, PATTERN, SONG
     
 VAR
+
     long    songcursor
     long    barcursor
     long    timeconstant
@@ -142,6 +146,7 @@ VAR
     word    songdata[2]
     
 PUB LoadPatch(patchAddr) | i, j, t    
+
     repeat j from 0 to 3
         t := patchAddr + 1
         repeat i from _ATK to _WAV
@@ -162,28 +167,35 @@ PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, requi
     barcursor := 0
 
 PUB SetTranspose(transvar)
+
     transpose := transvar
     
 PUB SetSpeed(speed)
+
     timeconstant := CalculateTimeConstant( speed )
     
 PUB PlaySong
+
     play := 1
     replay := 0
 
 PUB LoopSong
+
     play := 1
     replay := 1
     
 PUB StopSong
+
     play := 0
     replay := 0
     stop := 1
     
 PUB SongPlaying
+
     return play
         
 PRI CalculateTimeConstant(bpm)
+
     return ( clkfreq / bpm * 15 ) ' 60 / 4 for 16th note alignment
 
 PRI LoopingSongParser | repeattime
@@ -239,8 +251,6 @@ PRI LoopingSongParser | repeattime
             play := 0
             StopAllSound
         stop := 0
-
-
 
 DAT
 
