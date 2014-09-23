@@ -1,5 +1,5 @@
 {{
-Noise
+PutString
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -8,22 +8,25 @@ See end of file for terms of use.
 Authors: Brett Weir
 -------------------------------------------------
 }}
-
-
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
 
 OBJ
-    audio   :               "LameAudio"
+        lcd  : "LameLCD"
+        gfx  : "LameGFX"
+        
+        font : "gfx_font6x8"
+        
+PUB Main
 
-PUB Noise
-    audio.Start
+    lcd.Start(gfx.Start)
 
-    audio.SetWaveform(1, 4)
-    audio.SetADSR(1,127, 1, 0, 70)
-    audio.PlaySound(1,50)
+    gfx.LoadFont(font.Addr, " ", 0, 0)
+    gfx.PutString(string("THIS IS A TEST"),4,28)
 
+    lcd.DrawScreen
+    
 DAT
 {{
 
