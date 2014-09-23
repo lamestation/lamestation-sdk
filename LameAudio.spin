@@ -115,7 +115,7 @@ CON
     SONGOFF = $80
     BAROFF  = $81
     SNOP    = $82
-    SOFF    = 0
+    SOFF    = $83
     
     ADSRW   = $A0
     TEMPO   = $B0
@@ -332,18 +332,18 @@ oscloop                 mov     oscPtr, #4
                         
     
                         ' Get frequency from note value using table lookup
-                        cmp     note, #0                   nr, wz      ' (filler) ' SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
+                        and     note, #$80                  nr, wz      ' (filler) ' SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
                         and     note, #$7F
                         shl     note, #2
                         add     note, freqAddr
                         
                                              
 ' ENVELOPE CONTROL
-                        rdword  volume, volPtr                         ' get volume parameters
+                        rdword  volume, volPtr                          ' get volume parameters
                         
-if_z                    mov     state, #0
-if_nz                   cmp     state, #1                   wc
-if_nz_and_c             or      state, #1
+if_nz                   mov     state, #0
+if_z                    cmp     state, #1                   wc
+if_z_and_c              or      state, #1
 
                         and     state, #1                   nr, wz      ' ATTACK  
 if_nz                   mov     targetvol, sustainfull

@@ -376,6 +376,7 @@ PRI GUI_Keyboard(x,y) | i, k, keys, oldx, keyoffset, keymin, keymax
                           x += 1
             4, 11:        x += 4
             other:        x += 3
+            
 PRI GUI_Tab(text,x,y,inv)
 
     if inv == control[_NAV]
@@ -454,8 +455,8 @@ OBJ
 ' **********************************************************
 
 PRI SetChannel
-    audio.SetADSR(control[_ATK],control[_DEC],control[_SUS],control[_REL])
-    audio.SetParam(audio#_WAV, control[_WAV] // 6)
+    audio.SetADSR(0,control[_ATK],control[_DEC],control[_SUS],control[_REL])
+    audio.SetParam(0,audio#_WAV, control[_WAV] // 6)
    ' audio.SetVolume(control[_VOL])
     audio.SetSample(organ.Addr)
  {{

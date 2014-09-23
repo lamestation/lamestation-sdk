@@ -487,8 +487,8 @@ PUB SpawnEffect(x, y, type)
     if effect > constant(EFFECTS-1)
         effect := 0
         
-    audio.SetWaveform(4)
-    audio.SetADSR(127, 10, 0, 70)
+    audio.SetWaveform(2, 4)
+    audio.SetADSR(2, 127, 10, 0, 70)
     audio.PlaySound(2,40)
 
 PUB HandleEffects | effectxtemp, effectytemp, index
@@ -597,8 +597,8 @@ PUB SpawnBullet(x, y, dir)
     if bullet > constant(BULLETS-1)
         bullet := 0
 
-    audio.SetWaveform(1)
-    audio.SetADSR(127, 50, 0, 50)
+    audio.SetWaveform(2, 1)
+    audio.SetADSR(2, 127, 50, 0, 50)
     audio.PlaySound(2,70)        
 
 PUB HandleBullets | bulletxtemp, bulletytemp
