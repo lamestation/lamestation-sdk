@@ -16,37 +16,29 @@ OBJ
     pin  :   "Pinout"
     
 CON
-
-    PERIOD1 = 2000         ' 'FS = 80MHz / PERIOD1'
-    FS      = 40000
-    SAMPLES = 512
+    SAMPLES     = 512
+    PERIOD      = 80_000_000 / 40_000                           ' clkfreq / sample rate
     OSCILLATORS = 4
-    REGPEROSC = 5
-    OSCREGS = OSCILLATORS*REGPEROSC
 
-' WAVEFORMS
-    #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE
-    
-    
-' ADSR STATES
-    #0, _OFF, _A, _D, _S, _R
+    #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE        ' waveform options
+                                                                ' 
+    #0, _OFF, _A, _D, _S, _R                                    ' ADSR states
+                                                                ' 
+    #0, _NOTE, _TRANS, _ATK, _DEC, _SUS, _REL, _WAV, _STATE     ' control registers per oscillator
 
-' CONTROL REGISTER LAYOUT (per oscillator)
-    #0, _NOTE, _TRANS, _ATK, _DEC, _SUS, _REL, _WAV, _STATE
-
-'                   LSB|  osc 1    osc 2    osc 3    osc 4   |MSB
-'                      |-------------------------------------|
-'    (byte)      Note -| 00000000 00000000 00000000 00000000 |
-'            Tranpose -| 00000000 00000000 00000000 00000000 |
-'                      |                                     |
-'              Attack -| 00000000 00000000 00000000 00000000 |
-'               Decay -| 00000000 00000000 00000000 00000000 |
-'             Sustain -| 00000000 00000000 00000000 00000000 |
-'             Release -| 00000000 00000000 00000000 00000000 |
-'                      |                                     |
-'            Waveform -| 00000000 00000000 00000000 00000000 |
-'               State -| 00000000 00000000 00000000 00000000 |
-'                      |-------------------------------------|
+'                   LSB|  osc 1   |   osc 2  |   osc 3  |  osc 4   |MSB
+'                      |-------------------------------------------|
+'    (byte)      Note -| 00000000 | 00000000 | 00000000 | 00000000 |
+'            Tranpose -| 00000000 | 00000000 | 00000000 | 00000000 |
+'                      |          |          |          |          |
+'              Attack -| 00000000 | 00000000 | 00000000 | 00000000 |
+'               Decay -| 00000000 | 00000000 | 00000000 | 00000000 |
+'             Sustain -| 00000000 | 00000000 | 00000000 | 00000000 |
+'             Release -| 00000000 | 00000000 | 00000000 | 00000000 |
+'                      |          |          |          |          |
+'            Waveform -| 00000000 | 00000000 | 00000000 | 00000000 |
+'               State -| 00000000 | 00000000 | 00000000 | 00000000 |
+'                      |-------------------------------------------|
 
 DAT
 
@@ -73,44 +65,42 @@ PUB null
 PUB Start
       
     parameter := @freqTable + (@osc_sample << 16)
-    
     cognew(@oscmodule, @parameter)    'start assembly cog
 
-PUB SetParam(channel, type, value)
+PUB SetFreq(channel, value)
+    
 
-    if channel < OSCILLATORS
-        osc_note.byte[(type << 2) + channel] := value
+PUB SetParam(channel, type, value)
+    
+    osc_note.byte[(type << 2) + channel] := value
 
 PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
-
-    if channel < OSCILLATORS
-        SetParam(channel, _ATK, attackvar)
-        SetParam(channel, _DEC, decayvar)
-        SetParam(channel, _SUS, sustainvar)
-        SetParam(channel, _REL, releasevar)
+    
+    SetParam(channel, _ATK, attackvar)
+    SetParam(channel, _DEC, decayvar)
+    SetParam(channel, _SUS, sustainvar)
+    SetParam(channel, _REL, releasevar)
 
 PUB SetWaveform(channel, value)
-
-    if channel < OSCILLATORS
-        SetParam(channel, _WAV, value)
     
-PUB SetSample(value) | i
-
+    SetParam(channel, _WAV, value)
+    
+PUB SetSample(value)
+    
     osc_sample := value
 
 PUB PlaySound(channel, value) | i
-
-    if channel < OSCILLATORS
-        osc_note.byte[channel] := value
-        osc_state.byte[channel] := 0
+    
+    osc_note.byte[channel] := value
+    osc_state.byte[channel] := 0
 
 PUB StopSound(channel)
-
+    
     osc_note.byte[channel] := -1
     
 PUB StopAllSound | i
 
-    repeat i from 0 to OSCILLATORS-1
+    repeat i from 0 to 3
         osc_note.byte[i] := -1  
 DAT
 
@@ -143,7 +133,7 @@ oscmodule               mov     dira, diraval                           ' set AP
                         mov     frqa, #1                                ' set counter to increment 1 each cycle
 
                         mov     time, cnt                               ' record current time
-                        add     time, period                            ' establish next period
+                        add     time, periodval                         ' establish next period
 
                         mov     oscAddr, par                            ' get parameter address
                         rdlong  freqAddr, oscAddr                       ' get frequency table address
@@ -158,40 +148,40 @@ oscmodule               mov     dira, diraval                           ' set AP
                         add     phsAddr, #8
     
 ' MAINLOOP ======================================================
-mainloop                waitcnt time, period                            ' wait until next period
+mainloop                waitcnt time, periodval                         ' wait until next period
                         neg     phsa, output                            ' back up phsa so that it trips "value cycles from now
     
                         mov     output, #0                              ' zero out output long
-                        mov     oscIndex, oscTotal                      ' count number of oscillators
+                        mov     oscIndex, #OSCILLATORS                  ' count number of oscillators
                         
                         mov     volPtr, volAddr
                         mov     phsPtr, phsAddr
            
 ' OSCLOOP -------------------------------------------------------                   
-oscloop                 mov     oscPtr, #4
+oscloop                 mov     oscPtr, #OSCILLATORS
                         sub     oscPtr, oscIndex
                         add     oscPtr, oscAddr
                         
                         ' get note controllers
                         rdbyte  note, oscPtr
-                        add     oscPtr, #4
-                        rdbyte  transp, oscPtr
-                        add     oscPtr, #4
+                        add     oscPtr, #8
+'                        rdbyte  transp, oscPtr
+ '                       add     oscPtr, #4
                         rdbyte  attack, oscPtr
                         add     oscPtr, #4
                         rdbyte  decay, oscPtr
                         add     oscPtr, #4
                         
                         rdbyte  sustain, oscPtr
-                        add     oscPtr, #4
-                        rdbyte  release, oscPtr
-                        add     oscPtr, #4
+                        add     oscPtr, #8
+'                        rdbyte  release, oscPtr
+ '                       add     oscPtr, #4
                         rdbyte  waveform, oscPtr
                         add     oscPtr, #4
                         rdbyte  state, oscPtr
                         
     
-                        ' Get frequency from note value using table lookup
+' FREQUENCY LOOKUP
                         and     note, #$80                  nr, wz      ' (filler) ' SET Z FLAG FOR LATER OPERATION, REMEMBER!!!
                         and     note, #$7F
                         shl     note, #2
@@ -229,8 +219,6 @@ if_c                    mov     volume, #0
                         wrword  volume, volPtr
                         add     volPtr, #2
                         
-
-
 ' PHASE ACCUMULATOR
 ' shift and truncate phase to 512 samples
 
@@ -259,8 +247,6 @@ if_c                    mov     volume, #0
 
                         long    :squarewave, :rampwave, :triwave, :sinewave
                         long    :whitenoise, :sample
- 
-
   
                         ' SQUARE WAVE
                         ' if square wave, compare truncated phase with 128
@@ -271,7 +257,6 @@ if_nc                   mov     osctemp, #0
 if_c                    mov     osctemp, #256
                         subs    osctemp, #128   
                         jmp     #:oscOutput
-
     
                         ' RAMP WAVE
                         ' if ramp wave, fit the truncated phase accumulator into
@@ -314,9 +299,7 @@ if_nc                   xor     Addrtemp, #$FF
                         cmp     phase, #256             wc              
 if_nc                   neg     osctemp, osctemp
 
-                        jmp     #:oscOutput           
-
-
+                        jmp     #:oscOutput
 
                         ' WHITE NOISE GENERATOR
                         ' pseudo-random number generator truncated to 8 bits.
@@ -378,18 +361,12 @@ if_nz                   add     osctemp, multtemp
 ' MAINLOOP END ==================================================
 
 
-diraval         long    |< pin#AUDIO                'APIN=0
-ctraval         long    %00100 << 26 + pin#AUDIO    'NCO/PWM APIN=0
-period          long    PERIOD1                     '800kHz period (_clkfreq / period)
+diraval         long    |< pin#AUDIO                ' APIN=0
+ctraval         long    %00100 << 26 + pin#AUDIO    ' NCO/PWM APIN=0
+periodval       long    PERIOD                      ' period = clkfreq / period
 time            long    0
 
-adsrAddr        long    0
-volAddr         long    0
-phsAddr         long    0
 
-oscPtr          long    0
-volPtr          long    0
-phsPtr          long    0
 
 Addrtemp        long    0
 freqAddr        long    0
@@ -399,21 +376,23 @@ halfmask        long    $FFFF
 sustainfull     long    127 << 8
         
 'variables for oscillator controller
-oscTotal        long    OSCILLATORS    
-outputoffset    long    PERIOD1/2
+outputoffset    long    PERIOD/2
 oscIndex        long    0
-osctemp         long    0
+
     
 multtemp        long    2
 output          long    0
 
 rand            long    203943
 
-' temporary control registers  
-rand2           res     1
-rand3           res     1
-    
+' temporary control registers      
 oscAddr         res     1
+volAddr         res     1
+phsAddr         res     1
+
+oscPtr          res     1
+volPtr          res     1
+phsPtr          res     1
     
 note            res     1
 waveform        res     1
@@ -432,6 +411,11 @@ targetvol       res     1
 
 phaseinc        res     1
 phase           res     1
+
+osctemp         res     1
+
+rand2           res     1
+rand3           res     1
     
                 fit 496
 
