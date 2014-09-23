@@ -18,6 +18,7 @@ OBJ
     lcd      : "LameLCD"
     gfx      : "LameGFX"
     audio    : "LameAudio"
+    music    : "LameMusic"
     
     font_6x8 : "gfx_font6x8_normal_w"
     song     : "sng_ibelieve"
@@ -31,8 +32,9 @@ PUB Main
     gfx.LoadFont(font_6x8.Addr, " ", 0, 0)
 
     audio.Start
-    audio.LoadSong(song.Addr)
-    audio.LoopSong
+    music.Start
+    music.LoadSong(song.Addr)
+    music.LoopSong
 
     repeat
         StarWarsReel(@inaworld,120)

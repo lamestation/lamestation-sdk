@@ -18,6 +18,7 @@ OBJ
     lcd     :   "LameLCD"
     gfx     :   "LameGFX"
     audio   :   "LameAudio"
+    music   :   "LameMusic"
     ctrl    :   "LameControl"
     fn      :   "LameFunctions"
 
@@ -65,8 +66,9 @@ PUB Main
     lcd.SetFrameLimit(lcd#HALFSPEED)
 
     audio.Start
-    audio.LoadSong(song.Addr)
-    audio.LoopSong
+    music.Start
+    music.LoadSong(song.Addr)
+    music.LoopSong
 
 
     mapw := MAP_W

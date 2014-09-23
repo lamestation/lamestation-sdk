@@ -1,13 +1,16 @@
-{{
-LameAudio Synthesizer
--------------------------------------------------
-Version: 1.0
-Copyright (c) 2013-2014 LameStation LLC
-See end of file for terms of use.
+' LameAudio Synthesizer
+' -------------------------------------------------
+' Version: 1.0
+' Copyright (c) 2013-2014 LameStation LLC
+' See end of file for terms of use.
+' 
+' Authors: Brett Weir
+' -------------------------------------------------
+' Can be extended with:
+'   LameMusic
+'   LameSFX
+'   LameMIDI
 
-Authors: Brett Weir
--------------------------------------------------
-}}
 OBJ
 
     pin  :   "Pinout"
@@ -72,7 +75,6 @@ PUB Start
     parameter := @freqTable + (@osc_sample << 16)
     
     cognew(@oscmodule, @parameter)    'start assembly cog
-    cognew(LoopingSongParser, @LoopingPlayStack)
 
 PUB SetParam(channel, type, value)
 
@@ -104,154 +106,12 @@ PUB PlaySound(channel, value) | i
 
 PUB StopSound(channel)
 
-    osc_note.byte[channel] := SOFF
+    osc_note.byte[channel] := -1
     
 PUB StopAllSound | i
 
     repeat i from 0 to OSCILLATORS-1
-        osc_note.byte[i] := SOFF    
-
-CON
-    SONGOFF = $80
-    BAROFF  = $81
-    SNOP    = $82
-    SOFF    = $83
-    
-    ADSRW   = $A0
-    TEMPO   = $B0
-    TRANS   = $C0
-        
-    #0, PATTERN, SONG
-    
-VAR
-
-    long    songcursor
-    long    barcursor
-    long    timeconstant
-    
-    word    barAddr
-    word    loopAddr     '' This value points to the first address of the song definition in a song
-
-    byte    play
-    byte    replay
-    byte    stop
-    byte    barres
-    word    bartmp
-    long    transpose
-
-    word    barshift
-    byte    linecursor
-
-    long    LoopingPlayStack[20]
-    word    songdata[2]
-    
-PUB LoadPatch(patchAddr) | i, j, t    
-
-    repeat j from 0 to 3
-        t := patchAddr + 1
-        repeat i from _ATK to _WAV
-            SetParam(j, i, byte[t++])
-        
-PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
-    
-    wordmove(@songdata, songAddr,3)
-    repeat 2
-        songdata[n++] += songAddr.word[1]
-        
-    barAddr := songdata[PATTERN]
-    barres := byte[barAddr++]{0}
-
-    loopAddr := songdata[SONG]
-    
-    songcursor := 0
-    barcursor := 0
-
-PUB SetTranspose(transvar)
-
-    transpose := transvar
-    
-PUB SetSpeed(speed)
-
-    timeconstant := CalculateTimeConstant( speed )
-    
-PUB PlaySong
-
-    play := 1
-    replay := 0
-
-PUB LoopSong
-
-    play := 1
-    replay := 1
-    
-PUB StopSong
-
-    play := 0
-    replay := 0
-    stop := 1
-    
-PUB SongPlaying
-
-    return play
-        
-PRI CalculateTimeConstant(bpm)
-
-    return ( clkfreq / bpm * 15 ) ' 60 / 4 for 16th note alignment
-
-PRI LoopingSongParser | repeattime
-    
-    repeat
-        repeattime := cnt
-        
-        if replay
-            play := 1
-            
-        if play and not stop
-            songcursor := 0
-            repeat while byte[loopAddr][songcursor] <> SONGOFF and play and not stop
-    
-                if byte[loopAddr][songcursor] & $F0 == ADSRW
-                    LoadPatch(loopAddr + songcursor)                 'can't use array notation because loopAddr is word-size
-                    songcursor += 6
-                    next
-                        
-                if byte[loopAddr][songcursor] & $F0 == TEMPO
-                    timeconstant := CalculateTimeConstant(byte[loopAddr][songcursor+1])
-                    songcursor += 2
-                    next
-
-                if byte[loopAddr][songcursor] & $F0 == TRANS
-                    transpose := byte[loopAddr][songcursor+1]
-                    songcursor += 2
-                    next
-                            
-                else
-                    barcursor := songcursor
-                    repeat linecursor from 0 to (barres-1)
-                        if stop
-                            quit
-                    
-                        songcursor := barcursor
-
-                        repeat while byte[loopAddr][songcursor] <> BAROFF and play                             
-                            barshift := (barres+1)*byte[loopAddr][songcursor]
-                            bartmp := barshift+1+linecursor
-                            
-                            case byte[barAddr][bartmp]
-                                SOFF:   StopSound( byte[barAddr][barshift] )
-                                0..127: PlaySound( byte[barAddr][barshift] , byte[barAddr][bartmp] + transpose )  'channel, note
-                                other:
-
-                            songcursor += 1
-
-                        waitcnt(repeattime += timeconstant)               
-
-                    songcursor += 1
-
-            play := 0
-            StopAllSound
-        stop := 0
-
+        osc_note.byte[i] := -1  
 DAT
 
 freqTable
@@ -315,7 +175,7 @@ oscloop                 mov     oscPtr, #4
                         ' get note controllers
                         rdbyte  note, oscPtr
                         add     oscPtr, #4
-                        rdbyte  trans, oscPtr
+                        rdbyte  transp, oscPtr
                         add     oscPtr, #4
                         rdbyte  attack, oscPtr
                         add     oscPtr, #4

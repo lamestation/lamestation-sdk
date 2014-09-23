@@ -77,7 +77,7 @@ byte    1,4,BAROFF
 byte    2,5,BAROFF
 byte    3,5,BAROFF
 
-byte    ADSRW+$F, 127, 10, 100, 10, SINE
+byte    ADSRW+$F, 127, 10, 100, 10, TRIANGLE
 byte    TRANS, 24
     
 byte    0,6,BAROFF

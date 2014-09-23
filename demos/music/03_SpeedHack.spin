@@ -16,13 +16,15 @@ CON
   
 OBJ
     audio   : "LameAudio"
+    music   : "LameMusic"
     
     song    : "song_pixeltheme_speedhax"
 
-PUB PlaySong
+PUB Main
     audio.Start
-    audio.LoadSong(song.Addr)
-    audio.LoopSong
+    music.Start
+    music.LoadSong(song.Addr)
+    music.LoopSong
 
 DAT
 {{

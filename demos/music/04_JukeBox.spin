@@ -23,16 +23,17 @@ OBJ
     lcd       : "LameLCD" 
     gfx       : "LameGFX" 
     audio     : "LameAudio"
+    music     : "LameMusic"
     ctrl      : "LameControl"
 
-    font      : "font4x6"
+    font      : "gfx_font4x6"
     juke      : "gfx_jukebox"
 
-    song_last : "song_lastboss.spin"
-    song_pixl : "song_pixeltheme.spin"
-    song_tank : "song_tankbattle.spin"
-    song_town : "song_townhall.spin"
-    song_zero : "song_zeroforce.spin"
+    song_last : "song_lastboss"
+    song_pixl : "song_pixeltheme"
+    song_tank : "song_tankbattle"
+    song_town : "song_townhall"
+    song_zero : "song_zeroforce"
 
 VAR
 
@@ -56,6 +57,7 @@ PUB JukeBox
     
     ctrl.Start
     audio.Start
+    music.Start
  
     character[1] := 0
 
@@ -83,7 +85,7 @@ PUB JukeBox
         gfx.TextBox(string("Up/dn: choose",10,"  A/B: select"), 74, 0,64,32)
         gfx.PutString(string("NOW:"), 22, 26)
         
-        if audio.SongPlaying        
+        if music.SongPlaying        
             gfx.PutString(songnames[songplaying], 40, 26)
         
         repeat songinc from 0 to constant(SONGWINDOW-1)
@@ -114,13 +116,13 @@ PUB JukeBox
         if ctrl.A or ctrl.B
             if not buttonpressed
                 buttonpressed := 1
-                if audio.SongPlaying and songplaying == songchoice
-                    audio.StopSong
+                if music.SongPlaying and songplaying == songchoice
+                    music.StopSong
                 else
                     songplaying := songchoice
-                    audio.StopSong
-                    audio.LoadSong(songs[songplaying])
-                    audio.LoopSong
+                    music.StopSong
+                    music.LoadSong(songs[songplaying])
+                    music.LoopSong
         else
             buttonpressed := 0
                 

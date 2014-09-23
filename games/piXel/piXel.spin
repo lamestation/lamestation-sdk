@@ -56,6 +56,7 @@ OBJ
     lcd     : "LameLCD" 
     gfx     : "LameGFX"  
     audio   : "LameAudio"
+    music   : "LameMusic"
     ctrl    : "LameControl"
     fn      : "LameFunctions"
     
@@ -95,6 +96,7 @@ PUB Main
     gfx.LoadFont(font.Addr, " ", 8, 8)
 
     audio.Start
+    music.Start
     ctrl.Start
 
     InitGraphicAssets
@@ -102,8 +104,8 @@ PUB Main
     InitGame
     InitLevel
     
-    audio.LoadSong(song_theme.Addr)
-    audio.LoopSong
+    music.LoadSong(song_theme.Addr)
+    music.LoopSong
 
     
     gamestate := TITLE
@@ -114,7 +116,7 @@ PUB Main
             INTRO:      GameIntro
                         gamestate := STARTLEVEL
             STARTLEVEL: InitLevel                
-                        audio.StopSong                        
+                        music.StopSong                        
                         gamestate := INGAME
             INGAME:     GameLoop
             DIED:       PlayerDied
@@ -156,18 +158,18 @@ PUB GameLoop
     fn.Sleep(10)
             
 PUB Victory
-    audio.StopSong
-    audio.LoadSong(song_yeah.Addr)
-    audio.LoopSong
+    music.StopSong
+    music.LoadSong(song_yeah.Addr)
+    music.LoopSong
     
     ShowGameView
     gfx.TextBox(string("YOU WIN"), 40, 30, 100, 60)
     lcd.DrawScreen
     fn.Sleep(2000)
     
-    audio.StopSong
-    audio.LoadSong(song_theme.Addr)
-    audio.LoopSong            
+    music.StopSong
+    music.LoadSong(song_theme.Addr)
+    music.LoopSong            
     StarWarsReel(string("Looks like",10,"the galaxy",10,"is safe once",10,"again, thanks",10,"to you!"),110)
 
 PUB ShowGameView
@@ -182,9 +184,8 @@ PUB ShowGameView
 PUB PlayerDied
     playerlives--
     
-    audio.StopAllSound
-    audio.LoadSong(song_ohno.Addr)
-    audio.PlaySong         
+    music.LoadSong(song_ohno.Addr)
+    music.PlaySong         
     
     ShowGameView
     gfx.TextBox(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
@@ -221,9 +222,8 @@ PUB StarWarsReel(text,reeltime) | x, choice
         x++
 
 PUB ItsGameOver
-    audio.StopAllSound
-    audio.LoadSong(song_superohno.Addr)
-    audio.PlaySong     
+    music.LoadSong(song_superohno.Addr)
+    music.PlaySong     
     
     ShowGameView
     gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
@@ -234,9 +234,9 @@ PUB ItsGameOver
     crouching := 1
     pos_frame := 4
     
-    audio.StopSong   
-    audio.LoadSong(song_sad.Addr)
-    audio.LoopSong    
+    music.StopSong   
+    music.LoadSong(song_sad.Addr)
+    music.LoopSong    
     
     StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
     
@@ -255,9 +255,9 @@ PUB GameIntro
     crouching := 0
     pos_frame := 0
     
-    audio.StopSong   
-    audio.LoadSong(song_sad.Addr)
-    audio.LoopSong    
+    music.StopSong   
+    music.LoadSong(song_sad.Addr)
+    music.LoopSong    
 
     StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all..",10,10,"Before it's",10,"too late..."),200)
 
@@ -764,8 +764,8 @@ PUB EnemyBoss(index) | dx, dy
     if not bossspawned
         bossspawned := 1
     
-        audio.LoadSong(song_boss.Addr)
-        audio.LoopSong    
+        music.LoadSong(song_boss.Addr)
+        music.LoopSong    
 
 
     enemyframe[index] := 0
