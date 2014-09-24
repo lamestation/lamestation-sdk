@@ -1,5 +1,5 @@
 {{
-Play Song (Speed Hack!!)
+Frequency Slider
 ------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -15,16 +15,35 @@ CON
   
 OBJ
     audio   : "LameAudio"
-    music   : "LameMusic"
+    ctrl    : "LameControl"
     
-    song    : "song_pixeltheme_speedhax"
+VAR
+    long    frequency
 
 PUB Main
     audio.Start
-    music.Start
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    ctrl.Start
+    
+    frequency := 10000
+ 
+    audio.SetParam(0, audio#_WAV, audio#_SINE)
+    audio.SetParam(1, audio#_WAV, audio#_SAW)
+    audio.SetParam(2, audio#_WAV, audio#_SQUARE)
+    audio.SetParam(3, audio#_WAV, audio#_SINE)
 
+    repeat
+        ctrl.Update
+        
+        if ctrl.Left
+            frequency -= 1
+        if ctrl.Right
+            frequency += 1
+
+        audio.SetFreq(0, frequency)
+        audio.SetFreq(1, frequency >> 1)
+        audio.SetFreq(2, frequency)
+        audio.SetFreq(3, frequency >> 2)
+    
 DAT
 {{
 

@@ -1,5 +1,5 @@
 {{
-Play Song (Speed Hack!!)
+MOD ATTACK!
 ------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -8,6 +8,8 @@ See end of file for terms of use.
 Authors: Brett Weir
 ------------------------------------------------------------
 }}
+' Watch how a makeshift mod filter can DESTROY YOUR EARS
+' WITH AN EPIC BATTLE LIKE NONE YOU'VE EVER SEEN!
 
 CON
     _clkmode = xtal1 + pll16x
@@ -15,16 +17,39 @@ CON
   
 OBJ
     audio   : "LameAudio"
-    music   : "LameMusic"
+    ctrl    : "LameControl"
     
-    song    : "song_pixeltheme_speedhax"
+VAR
+    long    frequency
+    long    frequency_inc
 
 PUB Main
     audio.Start
-    music.Start
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    ctrl.Start
+    
+    frequency := 10000
+    frequency_inc := 100
+    
+    audio.SetParam(0, audio#_WAV, audio#_SINE)
+    audio.SetParam(1, audio#_WAV, audio#_SAW)
+    audio.SetParam(2, audio#_WAV, audio#_SQUARE)
+    audio.SetParam(3, audio#_WAV, audio#_SINE)
 
+    repeat
+        ctrl.Update
+        
+        if ctrl.Left
+            frequency_inc -= 1
+        if ctrl.Right
+            frequency_inc += 1
+            
+        frequency += frequency_inc
+
+        audio.SetFreq(0, frequency // 100000)
+        audio.SetFreq(1, frequency >> 1  // 100000)
+        audio.SetFreq(2, frequency // 100000)
+        audio.SetFreq(3, frequency >> 2  // 100000)
+    
 DAT
 {{
 

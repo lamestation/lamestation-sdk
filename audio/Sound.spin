@@ -1,29 +1,25 @@
 {{
-Play Song (Speed Hack!!)
-------------------------------------------------------------
+Sound
+-------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
-------------------------------------------------------------
+-------------------------------------------------
 }}
 
+
 CON
-    _clkmode = xtal1 + pll16x
-    _xinfreq = 5_000_000
-  
+    _clkmode        = xtal1 + pll16x
+    _xinfreq        = 5_000_000
+
 OBJ
-    audio   : "LameAudio"
-    music   : "LameMusic"
-    
-    song    : "song_pixeltheme_speedhax"
+    audio   :               "LameAudio"
 
 PUB Main
     audio.Start
-    music.Start
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    audio.PlaySound(1,50)
 
 DAT
 {{
