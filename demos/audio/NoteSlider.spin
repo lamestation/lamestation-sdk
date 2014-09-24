@@ -1,5 +1,5 @@
 {{
-Play Song (Speed Hack!!)
+Wild Tone
 ------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -9,22 +9,47 @@ Authors: Brett Weir
 ------------------------------------------------------------
 }}
 
+
 CON
     _clkmode = xtal1 + pll16x
     _xinfreq = 5_000_000
   
 OBJ
     audio   : "LameAudio"
-    music   : "LameMusic"
+    ctrl    : "LameControl"
+    fn      : "LameFunctions"
     
-    song    : "song_pixeltheme_speedhax"
+VAR
+    long    note
 
 PUB Main
     audio.Start
-    music.Start
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    ctrl.Start
+    
+    note := 24
+    
+    audio.SetParam(0, audio#_WAV, audio#_SQUARE)
+    audio.SetParam(1, audio#_WAV, audio#_SAW)
+    audio.SetParam(2, audio#_WAV, audio#_SINE)
+    audio.SetParam(3, audio#_WAV, audio#_SINE)
+    
+    repeat
+        ctrl.Update
+        
+        if ctrl.Left
+            if note > 0
+                note--
+        if ctrl.Right
+            if note < 150
+                note++
 
+        audio.SetNote(0, note)
+        audio.SetNote(1, note - 12)
+        audio.SetFreq(2, note << 10)
+        audio.SetFreq(3, note >> 2)
+        
+        fn.Sleep(5)
+    
 DAT
 {{
 
