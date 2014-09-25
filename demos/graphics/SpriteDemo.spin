@@ -25,7 +25,7 @@ OBJ
     ctrl    :               "LameControl"
     
     sprite  :               "gfx_happyface"
-    font    :               "font6x8"
+    font    :               "gfx_font6x8"
 
 VAR
 

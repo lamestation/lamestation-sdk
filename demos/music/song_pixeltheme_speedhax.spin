@@ -52,7 +52,7 @@ byte    1, 19,  22,  19,  19,   22,  19,  22,  24
 sequence_data
 byte    TRANS, 0
 byte    TEMPO, 120
-byte    ADSRW+$F, 127, 10, 100, 10, SQUARE
+byte    ADSRW+$F, 127, 10, 100, 10, SAW
 
 byte    0,BAROFF
 byte    1,BAROFF
@@ -77,7 +77,7 @@ byte    1,4,BAROFF
 byte    2,5,BAROFF
 byte    3,5,BAROFF
 
-byte    ADSRW+$F, 127, 10, 100, 10, SINE
+byte    ADSRW+$F, 127, 10, 100, 10, TRIANGLE
 byte    TRANS, 24
     
 byte    0,6,BAROFF

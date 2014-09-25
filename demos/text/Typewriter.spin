@@ -20,20 +20,21 @@ OBJ
     gfx      : "LameGFX"
     fn       : "LameFunctions"
     audio    : "LameAudio"
+    music    : "LameMusic"
     
-    font_6x8 : "font6x8_normal_w"
+    font_6x8 : "gfx_font6x8_normal_w"
     famus    : "gfx_spacegirl"
-    blehtrd  : "song_blehtroid"
+    blehtrd  : "sng_blehtroid"
         
 PUB TypewriterTextDemo | count
 
     lcd.Start(gfx.Start)
 
     audio.Start
-    audio.SetWaveform(1)
-    audio.SetADSR(110, 90, 30, 100) 
-    audio.LoadSong(blehtrd.Addr)
-    audio.LoopSong
+    
+    music.Start
+    music.LoadSong(blehtrd.Addr)
+    music.LoopSong
 
     gfx.ClearScreen(0)
 
