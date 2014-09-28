@@ -27,9 +27,9 @@ CON
     SW_A = |< pin#BUTTON_A
     SW_B = |< pin#BUTTON_B
      
-VAR
+DAT
 
-    long controls
+    controls    long    0
 
 PUB Start
 
