@@ -54,7 +54,8 @@ CON
 
 OBJ
     lcd     : "LameLCD" 
-    gfx     : "LameGFX"  
+    gfx     : "LameGFX"
+    map     : "LameMap"
     audio   : "LameAudio"
     music   : "LameMusic"
     ctrl    : "LameControl"
@@ -148,7 +149,7 @@ PUB GameLoop
     gfx.Blit(gfx_starmap.Addr)
     HandlePlayer                        
     ControlOffset
-    gfx.DrawMap(xoffset, yoffset)
+    map.Draw(xoffset, yoffset)
     DrawPlayer
     HandleBullets
     HandleEnemies
@@ -176,7 +177,7 @@ PUB ShowGameView
     gfx.Blit(gfx_starmap.Addr)
     HandlePlayer                        
     ControlOffset
-    gfx.DrawMap(xoffset, yoffset)
+    map.Draw(xoffset, yoffset)
     HandleBullets
     HandleEnemies
     HandleStatusBar
@@ -211,7 +212,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
          
         ControlOffset
         gfx.Blit(gfx_starmap.Addr)
-        gfx.DrawMap(xoffset, yoffset)
+        map.Draw(xoffset, yoffset)
         DrawPlayer
 
         
@@ -241,7 +242,7 @@ PUB ItsGameOver
     StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
     
     gfx.Blit(gfx_starmap.Addr)
-    gfx.DrawMap(xoffset, yoffset)
+    map.Draw(xoffset, yoffset)
     DrawPlayer            
     gfx.PutString(string("Press A and "),18,24)
     gfx.PutString(string("try again..."),18,32)
@@ -296,7 +297,7 @@ PUB InitLevel
     InitEnemies
     InitEffects
         
-    gfx.LoadMap(tilemap, leveldata[currentlevel])
+    map.Load(tilemap, leveldata[currentlevel])
     ReadObjects(map_pixel.objAddr)
 
             
@@ -371,7 +372,7 @@ PUB HandlePlayer | adjust
     if jumping
         pos_frame := 3
 
-    adjust := gfx.TestMapMoveX(pos_oldx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playerx)
+    adjust := map.TestMoveX(pos_oldx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playerx)
     if adjust
         playerx += adjust
 
@@ -402,7 +403,7 @@ PUB HandlePlayer | adjust
     pos_speed += 1
     playery += pos_speed
 
-    adjust := gfx.TestMapMoveY(playerx, pos_oldy, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playery)
+    adjust := map.TestMoveY(playerx, pos_oldy, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playery)
     if adjust
         if  pos_speed > 0
             jumping := 0
@@ -412,7 +413,7 @@ PUB HandlePlayer | adjust
     if pos_speed > 0
         jumping := 1
         
-    if playery > (gfx.GetMapHeight << 3)
+    if playery > (map.GetHeight << 3)
         KillPlayer
                 
     if playerhealth_timeout > 0
@@ -720,14 +721,14 @@ PUB EnemyTank(index) | dx, dy
         else
             enemyx[index] -= 1
 
-    if gfx.TestMapCollision(enemyx[index], enemyy[index], 16, 16)
+    if map.TestCollision(enemyx[index], enemyy[index], 16, 16)
         enemyx[index] := pos_oldx
         enemyspeedx[index] := -enemyspeedx[index]
     
     enemyspeedy[index] += 1
     enemyy[index] += enemyspeedy[index]
 
-    if gfx.TestMapCollision(enemyx[index], enemyy[index], 16, 16)
+    if map.TestCollision(enemyx[index], enemyy[index], 16, 16)
         enemyy[index] := pos_oldy
         enemyspeedy[index] := 0
     
@@ -817,8 +818,8 @@ PUB CheckEnemyCollision(index) | x, y, boom, ran
 
 PUB ControlOffset | bound_x, bound_y
 
-    bound_x := gfx.GetMapWidth << 3 - SCREEN_W
-    bound_y := gfx.GetMapHeight << 3 - SCREEN_H
+    bound_x := map.GetWidth << 3 - SCREEN_W
+    bound_y := map.GetHeight << 3 - SCREEN_H
     
     xoffset := playerx + (word[gfx_player.Addr][1]>>1) - (SCREEN_W>>1)
     if xoffset < 0
