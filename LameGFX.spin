@@ -266,16 +266,18 @@ PUB DrawMap(offset_x, offset_y)
 '' Used in conjunction with the map2dat program included with this kit, it is
 '' an easy way to draw your first game world to the screen.
 
-  DrawMapRectangle(offset_x, offset_y, 0, 0, res_x, res_y)
+    Map(map_tilemap, map_levelmap, offset_x, offset_y, 0, 0, res_x, res_y)
 
 PUB DrawMapRectangle(offset_x, offset_y, x1, y1, x2, y2)
-'' Underlying method to DrawMap which lets you specify the clipping region.
+
+    Map(map_tilemap, map_levelmap, offset_x, offset_y, x1, y1, x2, y2)
+
+PUB Map(tilemap, levelmap, offset_x, offset_y, x1, y1, x2, y2)
 
     repeat
     while lockset(lock)
 
-    longmove(@c_parameters{0}, @result,      7)
-    longmove(@c_parameters[7], @map_tilemap, 2)
+    longmove(@c_parameters{0}, @result, 9)
     instruction := c_drawtilemap
 
 ' *********************************************************
@@ -466,14 +468,14 @@ popCR_ret               ret
 ' #### DRAW TILE MAP
 ' ------------------------------------------------------
 ' parameters: arg0: dst buffer (word aligned) or NULL
-'             arg1: x offset
-'             arg2: y offset
-'             arg3: cx1
-'             arg4: cy1
-'             arg5: cx2
-'             arg6: cy2
-'             arg7: tile data
-'             arg8: level map
+'             arg1: tile data
+'             arg2: level map
+'             arg3: x offset
+'             arg4: y offset
+'             arg5: cx1
+'             arg6: cy1
+'             arg7: cx2
+'             arg8: cy2
 {
 PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 
@@ -494,23 +496,23 @@ PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 }
 drawtilemap             call    #pushCR                 ' preserve current clipping rectangle
 
-                        mov     c_x1, arg3              ' copy local settings
-                        mov     c_y1, arg4
-                        mov     c_x2, arg5
-                        mov     c_y2, arg6
+                        mov     c_x1, arg5              ' copy local settings
+                        mov     c_y1, arg6
+                        mov     c_x2, arg7
+                        mov     c_y2, arg8
 
                         jmpret  %%0, #validateCR        ' validate local settings
 
 ' Get logical tile size (previously 8n by 8m).
 
-                        mov     tadr, arg7              ' local copy                    (%%)
-                        add     arg7, #2
-                        rdword  tm_x, arg7              ' word[map_tilemap][SX]
-                        add     arg7, #2
-                        rdword  tm_y, arg7              ' word[map_tilemap][SY]
+                        mov     tadr, arg1              ' local copy                    (%%)
+                        add     arg1, #2
+                        rdword  tm_x, arg1              ' word[map_tilemap][SX]
+                        add     arg1, #2
+                        rdword  tm_y, arg1              ' word[map_tilemap][SY]
 
 ' This routine calls another one which means that arg# can't be used for temporary
-' registers. We therefore preserve arg0, arg7 and arg8 (dest, tadr, madr).
+' registers. We therefore preserve arg0, arg1 and arg2 (dest, tadr, madr).
 
                         mov     dest, arg0              ' local copy (fill hub window)  (%%)
 
@@ -518,7 +520,7 @@ drawtilemap             call    #pushCR                 ' preserve current clipp
 '   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
 '                  =                                                              ==============
 
-                        mov     madr, arg8              ' local copy                    (%%)
+                        mov     madr, arg2              ' local copy                    (%%)
                         rdword  madv, madr              ' map (byte) width
                         add     madr, #4                ' skip header
 
@@ -526,7 +528,7 @@ drawtilemap             call    #pushCR                 ' preserve current clipp
 '   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
 '                  =                                            ================================
 
-                        mov     eins, arg1
+                        mov     eins, arg3
                         mov     zwei, tm_x
                         call    #divide                 ' offset_x / tx
                         add     madr, eins              ' high word (remainder) ignored
@@ -544,7 +546,7 @@ drawtilemap             call    #pushCR                 ' preserve current clipp
 '   tilecnttemp := 4 + word[map_levelmap][MX] * (offset_y / ty) + (offset_x / tx) + map_levelmap
 '                  =============================================================================
 
-                        mov     eins, arg2
+                        mov     eins, arg4
                         mov     zwei, tm_y
                         call    #divide                 ' offset_y / ty
                         mov     zwei, eins              ' preserve value
