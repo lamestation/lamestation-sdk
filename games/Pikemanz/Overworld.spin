@@ -1,5 +1,5 @@
 {{
-Pikemanz Overworld
+Pikemanz - Overworld
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation.
@@ -8,108 +8,112 @@ See end of file for terms of use.
 Authors: Brett Weir
 -------------------------------------------------
 }}
-
-
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
 
-    #0, RIGHT, UP, LEFT, DOWN
-                     
+    #0, UP, RIGHT, DOWN, LEFT
 
 OBJ
     lcd     :               "LameLCD"
     gfx     :               "LameGFX"
+    map     :               "LameMap"
     ctrl    :               "LameControl"
     fn      :               "LameFunctions"
 
-    world   :               "world"
-    tilemap :               "piketiles"
-    player  :               "knight"
+    world   :               "map_parrot_town"
+    tilemap :               "gfx_pikeman"
+    player  :               "gfx_nash"
 
-VAR
-    long    playerx
-    long    playery
-    long    oldx
-    long    oldy
-    byte    frame
-    byte    dir
-    byte    count
-    long    xoffset
-    long    yoffset
-
-
-
+DAT
+    playerx long    16
+    playery long    16
+    xoffset long    0
+    yoffset long    0
+    targetx long    16
+    targety long    16
+    moving  byte    0
+    frame   byte    0
+    dir     byte    DOWN
+    count   byte    0
+    
 PUB Main
     lcd.Start(gfx.Start)
-    lcd.SetFrameLimit(lcd#HALFSPEED)
     ctrl.Start
+    
+    Run
 
-
-    playerx := 140
-
-    gfx.LoadMap(tilemap.Addr, world.Addr)
+PUB Run
+    lcd.SetFrameLimit(lcd#HALFSPEED)
+        
+    playerx := targetx := 16
+    playery := targety := 16
+    
+    map.Load(tilemap.Addr, world.Addr)
     repeat
         ctrl.Update
         gfx.ClearScreen(0)
 
         HandlePlayer
         ControlOffset
-        gfx.DrawMap(xoffset,yoffset)
+        map.Draw(xoffset, yoffset)
         DrawPlayer
 
         lcd.DrawScreen
         
 
-PUB HandlePlayer  | adjust
-
-    oldx := playerx
-    oldy := playery    
-            
-    if ctrl.Left or ctrl.Right or ctrl.Up or ctrl.Down
+PUB HandlePlayer | adjust
     
+    if not moving
         if ctrl.Left
-            playerx--
-            dir := LEFT
-        if ctrl.Right
-            playerx++
-            dir := RIGHT
+            if not map.TestPoint((playerx>>3)-1, playery>>3)
+                targetx -= 8
+                dir := LEFT
+        elseif ctrl.Right
+            if not map.TestPoint((playerx>>3)+1, playery>>3)
+                targetx += 8
+                dir := RIGHT
+        elseif ctrl.Up
+            if not map.TestPoint(playerx>>3, (playery>>3)-1)
+                targety -= 8
+                dir := UP
+        elseif ctrl.Down
+            if not map.TestPoint(playerx>>3, (playery>>3)+1)
+                targety += 8
+                dir := DOWN
 
-        adjust := gfx.TestMapMoveX(oldx, playery, word[player.Addr][1], word[player.Addr][2], playerx)
-        if adjust
-            playerx += adjust
-
-        if ctrl.Up
-            playery--
-            dir := UP
-        if ctrl.Down
-            playery++
-            dir := DOWN
-
-        adjust := gfx.TestMapMoveY(playerx, oldy, word[player.Addr][1], word[player.Addr][2],  playery)
-        if adjust
-            playery += adjust
-    
+    moving := 1
+    if targetx > playerx
+        playerx++
+    elseif targetx < playerx
+        playerx--
+    elseif targety > playery
+        playery++
+    elseif targety < playery
+        playery--
+    else
+        moving := 0
+            
+                
+    if moving
         count++
         if count & $3 == 0
             case (count >> 2) & $1
                 0:  frame := 1
                 1:  frame := 2
-             '   2:  frame := 0
-              '  3:  frame := 2                                                
     else
         frame := 0
-        count := 0
+        'count := 0
 
 
 PUB DrawPlayer
-    gfx.Sprite(player.Addr,playerx-xoffset,playery-yoffset, dir*3+frame)
+    gfx.Sprite(player.Addr,(playerx)-xoffset,(playery)-yoffset, dir*3+frame)
 
 
 PUB ControlOffset | bound_x, bound_y
 
-    bound_x := gfx.GetMapWidth<<3 - lcd#SCREEN_W
-    bound_y := gfx.GetMapHeight<<3 - lcd#SCREEN_H
+    bound_x := map.GetWidth<<3 - lcd#SCREEN_W
+    bound_y := map.GetHeight<<3 - lcd#SCREEN_H
     
     xoffset := playerx + (word[player.Addr][1]>>1) - (lcd#SCREEN_W>>1)
     if xoffset < 0
@@ -123,7 +127,7 @@ PUB ControlOffset | bound_x, bound_y
     elseif yoffset > bound_y
         yoffset := bound_y
 
-
+DAT
 {{
 
  TERMS OF USE: MIT License

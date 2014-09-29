@@ -5,7 +5,7 @@ import argparse
 import SpinFormatting as SF
 
 
-MIDINOTES = 128
+MIDINOTES = 150
 ROOTNOTE = 16.35159781250000000000 # C0
 
 
@@ -46,10 +46,10 @@ for i in range(0,MIDINOTES):
     incrementFrequency.append(int(pow(2.0,12.0)*realFrequency[i]/FCmin))
 
 for i in range(0,MIDINOTES):
-    if i % 8 == 0:
+    if i % 12 == 0:
         output += "\nlong\t\t"
     output += str(incrementFrequency[i])
-    if not i % 8 == 7:
+    if not i % 12 == 11:
         output += ", "
 
 output += "\n"

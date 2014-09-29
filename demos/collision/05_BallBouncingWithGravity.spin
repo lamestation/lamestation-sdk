@@ -20,10 +20,11 @@ OBJ
 
     lcd  :               "LameLCD" 
     gfx  :               "LameGFX"
+    map  :               "LameMap"
     ctrl :               "LameControl"
     
     ball :               "gfx_ball_16x16"
-    map  :               "map_map"
+    map1  :               "map_map"
     tile :               "gfx_box_s"
 
 VAR
@@ -43,7 +44,7 @@ PUB TestBoxCollision
 
     lcd.Start(gfx.Start)
     lcd.SetFrameLimit(lcd#FULLSPEED)
-    gfx.LoadMap(tile.Addr, map.Addr)
+    map.Load(tile.Addr, map1.Addr)
 
     x := 12
     y := 12
@@ -66,7 +67,7 @@ PUB TestBoxCollision
         x += speedx
 
         ' apply movement adjustments to ensure object stays within bounds
-        adjust := gfx.TestMapMoveX(oldx, oldy, word[ball.Addr][1], word[ball.Addr][2], x)
+        adjust := map.TestMoveX(oldx, oldy, word[ball.Addr][1], word[ball.Addr][2], x)
         if adjust
             x += adjust
             speedx := -speedx
@@ -77,12 +78,12 @@ PUB TestBoxCollision
         y += speedy
 
         ' apply movement adjustments to ensure object stays within bounds
-        adjust := gfx.TestMapMoveY(oldx, oldy, word[ball.Addr][1], word[ball.Addr][2], y)
+        adjust := map.TestMoveY(oldx, oldy, word[ball.Addr][1], word[ball.Addr][2], y)
         if adjust
             y += adjust
             speedy := -speedy
 
-        gfx.DrawMap(0,0)
+        map.Draw(0,0)
         gfx.Sprite(ball.Addr,x, y,0)
 
         lcd.DrawScreen

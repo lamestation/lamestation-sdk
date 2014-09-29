@@ -102,7 +102,7 @@ class LevelData:
         self.width = int(self.root.attrib['width'])
         self.height = int(self.root.attrib['height'])
         self.filename = filename
-        self.fullfilename = files.getFullFilename("", self.filename, 'spin')
+        self.fullfilename = files.getFullFilename("map_", self.filename, 'spin')
         self.shortname = files.getShortFilename(self.filename)
         self.data = {}
 

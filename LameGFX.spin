@@ -91,10 +91,6 @@ c_sprite        long    0
 
 c_parameters    long    0[9]
 
-DAT
-map_tilemap     long    0                               ' |
-map_levelmap    long    0                               ' order/type locked
-
 PUB Start
 
     drawsurface := @graphicsdriver                      ' reuse DAT section
@@ -172,105 +168,6 @@ PUB InvertColor(enabled) ' boolean value
     c_parameters{0} := enabled
     c_parameters[1] := F_INVERTCOLOR
     instruction := c_setmode
-
-' *********************************************************
-'  Maps
-' *********************************************************
-PUB LoadMap(source_tilemap, source_levelmap)
-
-    map_tilemap  := source_tilemap
-    map_levelmap := source_levelmap
-
-PUB TestMapCollision(objx, objy, objw, objh) | tilebase, x, y, tx, ty
-'' Returns non-zero if a collision has occurred between an object and the map; 0 otherwise.
-'' Returned tiles are offset by (1,1).
-
-    ty := word[map_tilemap][SY]
-
-    objh  := (word[map_levelmap][MY] * ty) <# (objh += objy)
-    objy #>= 0
-
-    if objh-- =< objy
-        return
-
-    tx := word[map_tilemap][SX]
-
-    objw  := (word[map_levelmap][MX] * tx) <# (objw += objx)
-    objx #>= 0
-
-    if objw-- =< objx
-        return
-
-    objx /= tx
-    objy /= ty
-    objw /= tx
-    objh /= ty
-
-    tilebase := 4 + word[map_levelmap][MX] * objy + map_levelmap
-
-    repeat y from objy to objh
-        repeat x from objx to objw
-            if (byte[tilebase][x] & COLLIDEBIT)
-                return (x+1)+((y+1) << 16)
-
-        tilebase += word[map_levelmap][MX]
-
-PUB TestMapMoveY(x, y, w, h, newy) | tmp, ty
-
-    if newy == y
-        return
-
-    tmp := TestMapCollision(x, newy, w, h)
-    if not tmp
-        return
-
-    ty  := word[map_tilemap][SY]
-    tmp := ((tmp >> 16)-1) * ty - newy
-
-    if newy > y
-        return tmp - h
-
-' newy == y is covered at the top so now newy *is* less than y
-
-    return tmp + ty
-
-PUB TestMapMoveX(x, y, w, h, newx) | tmp, tx
-
-    if newx == x
-        return
-
-    tmp := TestMapCollision(newx, y, w, h)
-    if not tmp
-        return
-
-    tx  := word[map_tilemap][SX]
-    tmp := ((tmp & $FFFF)-1) * tx - newx
-
-    if newx > x
-        return tmp - w
-
-' newx == x is covered at the top so now newx *is* less than x
-
-    return tmp + tx
-
-PUB GetMapWidth
-
-    return word[map_levelmap][MX]
-
-PUB GetMapHeight
-
-    return word[map_levelmap][MY]
-
-PUB DrawMap(offset_x, offset_y)
-'' This function uses the Sprite command to draw an array of tiles to the screen.
-'' Used in conjunction with the map2dat program included with this kit, it is
-'' an easy way to draw your first game world to the screen.
-
-    Map(map_tilemap, map_levelmap, offset_x, offset_y, 0, 0, res_x, res_y)
-
-PUB DrawMapRectangle(offset_x, offset_y, x1, y1, x2, y2)
-
-    Map(map_tilemap, map_levelmap, offset_x, offset_y, x1, y1, x2, y2)
 
 PUB Map(tilemap, levelmap, offset_x, offset_y, x1, y1, x2, y2)
 

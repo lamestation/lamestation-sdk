@@ -25,7 +25,8 @@ CON
   
 OBJ
    lcd: "LameLCD"
-   gfx: "LameGFX"                         
+   gfx: "LameGFX"    
+   map: "LameMap"                     
   ctrl: "LameControl"
 
 VAR
@@ -36,10 +37,10 @@ VAR
 PUB null : visible | tiles
 
   lcd.Start(gfx.Start)                                  ' setup screen and renderer
-  gfx.LoadMap(tiles := @gfx_data, @map_data)            ' prepare map
+  map.Load(tiles := @gfx_data, @map_data)               ' prepare map
 
-  map_w := gfx.GetMapWidth  * word[tiles][SX] - lcd#SCREEN_W
-  map_h := gfx.GetMapHeight * word[tiles][SY] - lcd#SCREEN_H
+  map_w := map.GetWidth  * word[tiles][SX] - lcd#SCREEN_W
+  map_h := map.GetHeight * word[tiles][SY] - lcd#SCREEN_H
 
   cur_y := map_h                                        ' game start location (piXel)
 
@@ -54,7 +55,7 @@ PUB null : visible | tiles
       visible := 73                                     ' and reset visibility if any
 
     gfx.ClearScreen(0)                                  ' clear screen (map may be transparent)
-    gfx.DrawMap(cur_x, cur_y)                           ' draw map
+    map.Draw(cur_x, cur_y)                              ' draw map
 
     if visible                                          ' draw navi cross if visible (auto-hide)
       navi(cur_x - old_x, cur_y - old_y, cur_s)
@@ -75,7 +76,7 @@ PRI navi(dx, dy, spd)
 PRI demo(dx, dy, spd, frm)
 
   gfx.ClearScreen(0)                                          
-  gfx.DrawMap(cur_x, cur_y)                                   
+  map.Draw(cur_x, cur_y)                                   
 
   navi(dx, dy, spd)
 

@@ -48,7 +48,7 @@ def getColorValue(pixeldata):
 
 class ImageData:
 
-    prefix = ''
+    prefix = 'gfx_'
     bitdepth = 2
 
     def openImage(self,filename):

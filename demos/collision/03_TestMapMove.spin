@@ -18,11 +18,12 @@ OBJ
 
     lcd  :               "LameLCD" 
     gfx  :               "LameGFX"
+    map  :               "LameMap"
     ctrl :               "LameControl"
     
     box  :               "gfx_box"
 
-    map  :               "map_map"
+    map1  :               "map_map"
     tile :               "gfx_box_s"
 
 VAR
@@ -36,10 +37,10 @@ CON
     w = 24
     h = 24
 
-PUB TestBoxCollision
+PUB Main
 
     lcd.Start(gfx.Start)
-    gfx.LoadMap(tile.Addr, map.Addr)
+    map.Load(tile.Addr, map1.Addr)
 
     x := 12
     y := 12
@@ -60,7 +61,7 @@ PUB TestBoxCollision
                 x++
 
         ' apply movement adjustments to ensure object stays within bounds
-        adjust := gfx.TestMapMoveX(oldx, oldy, word[box.Addr][1], word[box.Addr][2], x)
+        adjust := map.TestMoveX(oldx, oldy, word[box.Addr][1], word[box.Addr][2], x)
         if adjust
             x += adjust
             gfx.InvertColor(True)
@@ -75,13 +76,13 @@ PUB TestBoxCollision
                 y++
 
         ' apply movement adjustments to ensure object stays within bounds
-        adjust := gfx.TestMapMoveY(oldx, oldy, word[box.Addr][1], word[box.Addr][2], y)
+        adjust := map.TestMoveY(oldx, oldy, word[box.Addr][1], word[box.Addr][2], y)
         if adjust
             y += adjust
             gfx.InvertColor(True)
 
 
-        gfx.DrawMap(0,0)
+        map.Draw(0,0)
         gfx.Sprite(box.Addr,x, y,0)
 
         gfx.InvertColor(False)

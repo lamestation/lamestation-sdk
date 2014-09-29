@@ -6,11 +6,12 @@ OBJ
 
     gfx     : "LameGFX"
     lcd     : "LameLCD"
+    map     : "LameMap"
     audio   : "LameAudio"
     ctrl    : "LameControl"
     fn      : "LameFunctions"
 
-    map     : "map1"
+    map1    : "map1"
     tilemap : "level1"
     lumpy   : "lumpy"
 
@@ -37,21 +38,21 @@ PUB Main
     gfx.ClearScreen(0)
     lcd.DrawScreen
     lcd.SetFrameLimit(40)
-    gfx.LoadMap(tilemap.Addr, map.Addr)
+    map.Load(tilemap.Addr, map1.Addr)
 
     repeat
         ctrl.Update
         gfx.ClearScreen($5555)
 
-        gfx.DrawMap(xoffset,0)
+        map.Draw(xoffset,0)
 
         HandlePlayer
     
         xoffset := playerx + (word[lumpy.Addr][1]>>1) - (lcd#SCREEN_W>>1)
         if xoffset < 0
             xoffset := 0      
-        elseif xoffset > gfx.GetMapWidth << 3 - lcd#SCREEN_W
-            xoffset := gfx.GetMapWidth << 3 - lcd#SCREEN_W
+        elseif xoffset > map.GetWidth << 3 - lcd#SCREEN_W
+            xoffset := map.GetWidth << 3 - lcd#SCREEN_W
 
 
 
@@ -92,7 +93,7 @@ PUB HandlePlayer | adjust
          
     playerx += (speedx ~> 2)
 
-    adjust := gfx.TestMapMoveX(oldx, playery, word[lumpy.Addr][1], word[lumpy.Addr][2], playerx)
+    adjust := map.TestMoveX(oldx, playery, word[lumpy.Addr][1], word[lumpy.Addr][2], playerx)
     if adjust
         playerx += adjust
         speedx := 0
@@ -107,7 +108,7 @@ PUB HandlePlayer | adjust
 
     playery += (speedy ~> 2)
 
-    adjust := gfx.TestMapMoveY(playerx, oldy, word[lumpy.Addr][1], word[lumpy.Addr][2], playery)
+    adjust := map.TestMoveY(playerx, oldy, word[lumpy.Addr][1], word[lumpy.Addr][2], playery)
     if adjust
         playery += adjust
         if  speedy > 0

@@ -17,9 +17,10 @@ OBJ
 
     lcd     :   "LameLCD" 
     gfx     :   "LameGFX"
+    map     :   "LameMap"
     ctrl    :   "LameControl"
 
-    map     :   "map_cave"
+    mp      :   "map_cave"
     tileset :   "gfx_cave"
 
 VAR
@@ -32,9 +33,9 @@ PUB Main
 
     lcd.Start(gfx.Start)
 
-    gfx.LoadMap(tileset.Addr, map.Addr)
-    bound_x := gfx.GetMapWidth<<3 - lcd#SCREEN_W
-    bound_y := gfx.GetMapHeight<<3 - lcd#SCREEN_H
+    map.Load(tileset.Addr, mp.Addr)
+    bound_x := map.GetWidth<<3 - lcd#SCREEN_W
+    bound_y := map.GetHeight<<3 - lcd#SCREEN_H
     
     yoffset := bound_y
 
@@ -57,7 +58,7 @@ PUB Main
             if xoffset < bound_x
                 xoffset++
                   
-        gfx.DrawMap(xoffset, yoffset)
+        map.Draw(xoffset, yoffset)
         lcd.DrawScreen
 DAT
 {{

@@ -20,6 +20,7 @@ CON
 OBJ
     lcd     :               "LameLCD"
     gfx     :               "LameGFX"
+    map     :               "LameMap"
     ctrl    :               "LameControl"
     fn      :               "LameFunctions"
 
@@ -58,14 +59,14 @@ PUB Main
 
     playerx := 40
 
-    gfx.LoadMap(tilemap.Addr, world.Addr)
+    map.Load(tilemap.Addr, world.Addr)
     repeat
         ctrl.Update
         gfx.ClearScreen(0)
 
         HandlePlayer
         ControlOffset
-        gfx.DrawMap(xoffset,yoffset)
+        map.Draw(xoffset,yoffset)
         DrawPlayer
 
         lcd.DrawScreen
@@ -85,7 +86,7 @@ PUB HandlePlayer  | adjust
             playerx++
             dir := RIGHT
 
-        adjust := gfx.TestMapMoveX(oldx, playery, word[player.Addr][1], word[player.Addr][2], playerx)
+        adjust := map.TestMoveX(oldx, playery, word[player.Addr][1], word[player.Addr][2], playerx)
         if adjust
             playerx += adjust
 
@@ -96,7 +97,7 @@ PUB HandlePlayer  | adjust
             playery++
             dir := DOWN
 
-        adjust := gfx.TestMapMoveY(playerx, oldy, word[player.Addr][1], word[player.Addr][2],  playery)
+        adjust := map.TestMoveY(playerx, oldy, word[player.Addr][1], word[player.Addr][2],  playery)
         if adjust
             playery += adjust
     
@@ -118,8 +119,8 @@ PUB DrawPlayer
 
 PUB ControlOffset | bound_x, bound_y
 
-    bound_x := gfx.GetMapWidth<<3 - lcd#SCREEN_W
-    bound_y := gfx.GetMapHeight<<3 - lcd#SCREEN_H
+    bound_x := map.GetWidth<<3 - lcd#SCREEN_W
+    bound_y := map.GetHeight<<3 - lcd#SCREEN_H
     
     xoffset := playerx + (word[player.Addr][1]>>1) - (lcd#SCREEN_W>>1)
     if xoffset < 0

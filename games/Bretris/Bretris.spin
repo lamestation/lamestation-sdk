@@ -75,7 +75,6 @@ PUB Main
     maph := MAP_H
 
 
-    gfx.LoadMap(blocks.Addr, @mapw)
     LoadTetrominos
 
     gfx.LoadFont(font.Addr," ",0,0)
@@ -86,7 +85,7 @@ PUB Main
     repeat
 
         Overlay        
-        gfx.DrawMapRectangle(0, 0, MAP_X, MAP_Y, constant(MAP_X+MAP_W<<2), constant(MAP_Y+MAP_H<<2))
+        gfx.Map(blocks.Addr, @mapw, 0, 0, MAP_X, MAP_Y, constant(MAP_X+MAP_W<<2), constant(MAP_Y+MAP_H<<2))
 
         otx := tx
         oty := ty

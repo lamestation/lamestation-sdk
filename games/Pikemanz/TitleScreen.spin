@@ -1,35 +1,49 @@
 {{
-Play Song
-------------------------------------------------------------
+Pikemanz - Title Screen
+-------------------------------------------------
 Version: 1.0
-Copyright (c) 2014 LameStation LLC
+Copyright (c) 2014 LameStation.
 See end of file for terms of use.
 
 Authors: Brett Weir
-------------------------------------------------------------
+-------------------------------------------------
 }}
 
 
 CON
-    _clkmode = xtal1 + pll16x
-    _xinfreq = 5_000_000
-  
+    _clkmode        = xtal1 + pll16x
+    _xinfreq        = 5_000_000
+                     
 OBJ
-    audio   : "LameAudio"
-    music   : "LameMusic"
-    ctrl    : "LameControl"
+    lcd         :   "LameLCD"
+    gfx         :   "LameGFX"
+
+    title       :   "gfx_title"
+    font_text   :   "gfx_font4x6_b"
+    nash        :   "gfx_nash_fetchum"
     
-    song    : "song_pixeltheme"
+    ctrl        :   "LameControl"
 
 PUB Main
-    audio.Start
-    music.Start
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    lcd.Start(gfx.Start)
+    Run
     
+PUB Run
+    gfx.ClearScreen(gfx#WHITE)
+    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+    
+    gfx.Sprite(title.Addr,1,10,0)
+    gfx.PutString(string("Eggheadz Version"), 17, 47)
+    gfx.Sprite(nash.Addr, 100,18,0)
+    
+    lcd.DrawScreen
+
+    ctrl.Update    
+    repeat until ctrl.A
+        ctrl.Update
+
 DAT
 {{
-
  TERMS OF USE: MIT License
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -48,4 +62,3 @@ DAT
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 }}
-DAT
