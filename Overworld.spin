@@ -25,17 +25,18 @@ OBJ
     tilemap :               "gfx_pikeman"
     player  :               "gfx_nash"
 
-VAR
-    long    playerx
-    long    playery
-    long    oldx
-    long    oldy
-    byte    frame
-    byte    dir
-    byte    count
-    long    xoffset
-    long    yoffset
-
+DAT
+    playerx long    16
+    playery long    16
+    xoffset long    0
+    yoffset long    0
+    targetx long    16
+    targety long    16
+    moving  byte    0
+    frame   byte    0
+    dir     byte    DOWN
+    count   byte    0
+    
 PUB Main
     lcd.Start(gfx.Start)
     ctrl.Start
@@ -45,8 +46,10 @@ PUB Main
 PUB Run
     lcd.SetFrameLimit(lcd#HALFSPEED)
         
-    playerx := 1
-    playery := 1
+    playerx := targetx := 16
+    playery := targety := 16
+    
+    
 
     gfx.LoadMap(tilemap.Addr, world.Addr)
     repeat
@@ -61,49 +64,52 @@ PUB Run
         lcd.DrawScreen
         
 
-PUB HandlePlayer  | adjust
-
-    oldx := playerx
-    oldy := playery    
-            
-    if ctrl.Left or ctrl.Right or ctrl.Up or ctrl.Down
+PUB HandlePlayer | adjust
     
+    if not moving
         if ctrl.Left
-            playerx--
-            dir := LEFT
-        if ctrl.Right
-            playerx++
-            dir := RIGHT
+            if not gfx.TestMapPoint((playerx>>3)-1, playery>>3)
+                targetx -= 8
+                dir := LEFT
+        elseif ctrl.Right
+            if not gfx.TestMapPoint((playerx>>3)+1, playery>>3)
+                targetx += 8
+                dir := RIGHT
+        elseif ctrl.Up
+            if not gfx.TestMapPoint(playerx>>3, (playery>>3)-1)
+                targety -= 8
+                dir := UP
+        elseif ctrl.Down
+            if not gfx.TestMapPoint(playerx>>3, (playery>>3)+1)
+                targety += 8
+                dir := DOWN
 
-        adjust := gfx.TestMapMoveX(oldx, playery, word[player.Addr][1], word[player.Addr][2], playerx)
-        if adjust
-            playerx += adjust
-
-        if ctrl.Up
-            playery--
-            dir := UP
-        if ctrl.Down
-            playery++
-            dir := DOWN
-
-        adjust := gfx.TestMapMoveY(playerx, oldy, word[player.Addr][1], word[player.Addr][2],  playery)
-        if adjust
-            playery += adjust
-    
+    moving := 1
+    if targetx > playerx
+        playerx++
+    elseif targetx < playerx
+        playerx--
+    elseif targety > playery
+        playery++
+    elseif targety < playery
+        playery--
+    else
+        moving := 0
+            
+                
+    if moving
         count++
         if count & $3 == 0
             case (count >> 2) & $1
                 0:  frame := 1
                 1:  frame := 2
-             '   2:  frame := 0
-              '  3:  frame := 2                                                
     else
         frame := 0
-        count := 0
+        'count := 0
 
 
 PUB DrawPlayer
-    gfx.Sprite(player.Addr,(playerx<<3)-xoffset,(playery<<3)-yoffset, dir*3+frame)
+    gfx.Sprite(player.Addr,(playerx)-xoffset,(playery)-yoffset, dir*3+frame)
 
 
 PUB ControlOffset | bound_x, bound_y
