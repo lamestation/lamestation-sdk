@@ -179,6 +179,11 @@ PUB LoadMap(source_tilemap, source_levelmap)
 
     map_tilemap  := source_tilemap
     map_levelmap := source_levelmap
+    
+PUB TestMapPoint(x, y) | tilebase
+    tilebase := 4 + word[map_levelmap][MX] * y + map_levelmap
+    if (byte[tilebase][x] & COLLIDEBIT)
+        return 1
 
 PUB TestMapCollision(objx, objy, objw, objh) | tilebase, x, y, tx, ty
 '' Returns non-zero if a collision has occurred between an object and the map; 0 otherwise.
