@@ -17,6 +17,7 @@ OBJ
 
     lcd     :   "LameLCD" 
     gfx     :   "LameGFX"
+    map     :   "LameMap"
 
     map     :   "map_cave"
     tileset :   "gfx_cave"
@@ -26,8 +27,8 @@ PUB Main
 
     lcd.Start(gfx.Start)
 
-    gfx.LoadMap(tileset.Addr, map.Addr)
-    gfx.DrawMap(0,64)
+    map.Load(tileset.Addr, map.Addr)
+    map.Draw(0,64)
     lcd.DrawScreen
     
 DAT

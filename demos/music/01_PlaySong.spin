@@ -20,28 +20,12 @@ OBJ
     ctrl    : "LameControl"
     
     song    : "song_pixeltheme"
-    
-VAR
-    long    freqenzy
 
 PUB Main
     audio.Start
     music.Start
-    'music.LoadSong(song.Addr)
-    'music.LoopSong
-    '
-    repeat
-        ctrl.Update
-        
-        if ctrl.Left
-            freqenzy -= 100
-        if ctrl.Right
-            freqenzy += 100
-
-        audio.SetFreq(0, freqenzy)
-        audio.SetFreq(1, freqenzy >> 1)
-        audio.SetFreq(2, freqenzy >> 1)
-        audio.SetFreq(3, freqenzy >> 2)
+    music.LoadSong(song.Addr)
+    music.LoopSong
     
 DAT
 {{

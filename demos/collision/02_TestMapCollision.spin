@@ -18,11 +18,12 @@ OBJ
 
     lcd  :               "LameLCD" 
     gfx  :               "LameGFX"
+    map  :               "LameMap"
     ctrl :               "LameControl"
     
     box  :               "gfx_box"
 
-    map  :               "map_map"
+    map1 :               "map_map"
     tile :               "gfx_box_s"
 
 VAR
@@ -37,7 +38,7 @@ CON
 PUB TestBoxCollision
 
     lcd.Start(gfx.Start)
-    gfx.LoadMap(tile.Addr, map.Addr)
+    map.Load(tile.Addr, map1.Addr)
 
     x1 := 12
     y1 := 12
@@ -61,10 +62,10 @@ PUB TestBoxCollision
                 y1++
 
         ' if a map collision has occurred, invert colors
-        if gfx.TestMapCollision(x1, y1, w, h)
+        if map.TestCollision(x1, y1, w, h)
             gfx.InvertColor(True)
 
-        gfx.DrawMap(0,0)
+        map.Draw(0,0)
         gfx.Sprite(box.Addr,x1,y1,0)
 
         gfx.InvertColor(False)

@@ -13,11 +13,11 @@ CON
     _xinfreq        = 5_000_000
 
     #0, UP, RIGHT, DOWN, LEFT
-                     
 
 OBJ
     lcd     :               "LameLCD"
     gfx     :               "LameGFX"
+    map     :               "LameMap"
     ctrl    :               "LameControl"
     fn      :               "LameFunctions"
 
@@ -49,16 +49,14 @@ PUB Run
     playerx := targetx := 16
     playery := targety := 16
     
-    
-
-    gfx.LoadMap(tilemap.Addr, world.Addr)
+    map.Load(tilemap.Addr, world.Addr)
     repeat
         ctrl.Update
         gfx.ClearScreen(0)
 
         HandlePlayer
         ControlOffset
-        gfx.DrawMap(xoffset,yoffset)
+        map.Draw(xoffset, yoffset)
         DrawPlayer
 
         lcd.DrawScreen
@@ -68,19 +66,19 @@ PUB HandlePlayer | adjust
     
     if not moving
         if ctrl.Left
-            if not gfx.TestMapPoint((playerx>>3)-1, playery>>3)
+            if not map.TestPoint((playerx>>3)-1, playery>>3)
                 targetx -= 8
                 dir := LEFT
         elseif ctrl.Right
-            if not gfx.TestMapPoint((playerx>>3)+1, playery>>3)
+            if not map.TestPoint((playerx>>3)+1, playery>>3)
                 targetx += 8
                 dir := RIGHT
         elseif ctrl.Up
-            if not gfx.TestMapPoint(playerx>>3, (playery>>3)-1)
+            if not map.TestPoint(playerx>>3, (playery>>3)-1)
                 targety -= 8
                 dir := UP
         elseif ctrl.Down
-            if not gfx.TestMapPoint(playerx>>3, (playery>>3)+1)
+            if not map.TestPoint(playerx>>3, (playery>>3)+1)
                 targety += 8
                 dir := DOWN
 
@@ -114,8 +112,8 @@ PUB DrawPlayer
 
 PUB ControlOffset | bound_x, bound_y
 
-    bound_x := gfx.GetMapWidth<<3 - lcd#SCREEN_W
-    bound_y := gfx.GetMapHeight<<3 - lcd#SCREEN_H
+    bound_x := map.GetWidth<<3 - lcd#SCREEN_W
+    bound_y := map.GetHeight<<3 - lcd#SCREEN_H
     
     xoffset := playerx + (word[player.Addr][1]>>1) - (lcd#SCREEN_W>>1)
     if xoffset < 0
@@ -129,7 +127,7 @@ PUB ControlOffset | bound_x, bound_y
     elseif yoffset > bound_y
         yoffset := bound_y
 
-
+DAT
 {{
 
  TERMS OF USE: MIT License

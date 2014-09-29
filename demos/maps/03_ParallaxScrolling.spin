@@ -17,10 +17,11 @@ OBJ
 
     lcd     :   "LameLCD" 
     gfx     :   "LameGFX"
+    map     :   "LameMap"
     ctrl    :   "LameControl"
 
-    map     :   "map_cave"
-    map2    :   "map_cave2"
+    mp      :   "map_cave"
+    mp2     :   "map_cave2"
     tileset :   "gfx_cave"
     bkdrop  :   "gfx_cavelake"
 
@@ -34,13 +35,13 @@ PUB Main
 
     lcd.Start(gfx.Start)
 
-    gfx.LoadMap(tileset.Addr, map.Addr)
-    w1 := gfx.GetMapWidth<<3-128
-    h1 := gfx.GetMapHeight<<3-64
+    map.Load(tileset.Addr, mp.Addr)
+    w1 := map.GetWidth<<3-128
+    h1 := map.GetHeight<<3-64
 
-    gfx.LoadMap(tileset.Addr, map2.Addr)
-    w2 := gfx.GetMapWidth<<3-128
-    h2 := gfx.GetMapHeight<<3-64
+    map.Load(tileset.Addr, mp2.Addr)
+    w2 := map.GetWidth<<3-128
+    h2 := map.GetHeight<<3-64
 
     dx  := w1/w2
     dy  := h1/h2
@@ -65,12 +66,12 @@ PUB Main
         gfx.Blit(bkdrop.Addr)
 
         gfx.InvertColor(True)
-        gfx.LoadMap(tileset.Addr, map2.Addr)
-        gfx.DrawMap(xoffset/dx, yoffset/dy)
+        map.Load(tileset.Addr, mp2.Addr)
+        map.Draw(xoffset/dx, yoffset/dy)
         gfx.InvertColor(False)
 
-        gfx.LoadMap(tileset.Addr, map.Addr)
-        gfx.DrawMap(xoffset, yoffset)
+        map.Load(tileset.Addr, mp.Addr)
+        map.Draw(xoffset, yoffset)
 
         lcd.DrawScreen
     
