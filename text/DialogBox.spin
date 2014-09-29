@@ -15,12 +15,13 @@ CON
 OBJ
         lcd     :               "LameLCD"
         gfx     :               "LameGFX"
+        map     :               "LameMap"
         ctrl    :               "LameControl"
 
         font    :               "gfx_font4x6_b"
         dia     :               "gfx_scroll"
-        maptile :               "gfx_lostatsea"
-        map     :               "map_lostatsea"
+        map1gfx :               "gfx_lostatsea"
+        map1    :               "map_lostatsea"
         
 PUB Main
 
@@ -30,8 +31,8 @@ PUB Main
     gfx.LoadFont(font.Addr, " ", 0, 0)
 
     ' add a map for a cool effect
-    gfx.LoadMap(maptile.Addr, map.Addr)
-    gfx.DrawMap(0,0)
+    map.Load(map1gfx.Addr, map1.Addr)
+    map.Draw(0,0)
 
     ' cool dialog box function with customizable graphics
     DialogBox(@strang,0,32,128,24,6,6)
