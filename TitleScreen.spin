@@ -1,5 +1,5 @@
 {{
-Pikeman Title Screen
+Pikemanz - Title Screen
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation.
@@ -15,15 +15,32 @@ CON
     _xinfreq        = 5_000_000
                      
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
+    lcd         :   "LameLCD"
+    gfx         :   "LameGFX"
 
-    title   :               "title"
+    title       :   "gfx_title"
+    font_text   :   "font4x6_b"
+    nash        :   "nash_fetchum"
+    
+    ctrl        :   "LameControl"
 
 PUB Main
     lcd.Start(gfx.Start)
-    gfx.Blit(title.Addr)
+    Run
+    
+PUB Run
+    gfx.ClearScreen(gfx#WHITE)
+    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+    
+    gfx.Sprite(title.Addr,1,10,0)
+    gfx.PutString(string("Eggheadz Version"), 17, 47)
+    gfx.Sprite(nash.Addr, 100,18,0)
+    
     lcd.DrawScreen
+
+    ctrl.Update    
+    repeat until ctrl.A
+        ctrl.Update
 
 DAT
 {{
