@@ -9,18 +9,18 @@ Authors: Brett Weir
 -------------------------------------------------
 }}
 OBJ
-    gfx     :   "LameGFX"
+    gfx         :   "LameGFX"
     
-    dia     :   "gfx_dialog"
-    bar     :   "gfx_bar"
+    dia         :   "gfx_dialog"
+    bar         :   "gfx_bar"
     
-    hp      :   "gfx_healthbar"
-    hp_box  :   "gfx_health"
+    hp          :   "gfx_healthbar"
+    hp_box      :   "gfx_health"
 
 
-    font_text :   "font6x6_b"
-    font_num  :   "font4x6_b"
-    font_tny  :   "font4x4_b"
+    font_text   :   "gfx_font6x6_b"
+    font_num    :   "gfx_font4x6_b"
+    font_tny    :   "gfx_font4x4_b"
     
 PUB StatusBox(name, health, maxhealth, x, y, opposing)
     ' pikemanz name

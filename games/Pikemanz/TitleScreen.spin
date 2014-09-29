@@ -19,8 +19,8 @@ OBJ
     gfx         :   "LameGFX"
 
     title       :   "gfx_title"
-    font_text   :   "font4x6_b"
-    nash        :   "nash_fetchum"
+    font_text   :   "gfx_font4x6_b"
+    nash        :   "gfx_nash_fetchum"
     
     ctrl        :   "LameControl"
 

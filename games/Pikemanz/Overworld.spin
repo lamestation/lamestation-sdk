@@ -12,7 +12,7 @@ CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
 
-    #0, RIGHT, UP, LEFT, DOWN
+    #0, UP, RIGHT, DOWN, LEFT
                      
 
 OBJ
@@ -21,9 +21,9 @@ OBJ
     ctrl    :               "LameControl"
     fn      :               "LameFunctions"
 
-    world   :               "world"
-    tilemap :               "piketiles"
-    player  :               "knight"
+    world   :               "map_parrot_town"
+    tilemap :               "gfx_pikeman"
+    player  :               "gfx_nash"
 
 VAR
     long    playerx
@@ -45,7 +45,8 @@ PUB Main
 PUB Run
     lcd.SetFrameLimit(lcd#HALFSPEED)
         
-    playerx := 140
+    playerx := 1
+    playery := 1
 
     gfx.LoadMap(tilemap.Addr, world.Addr)
     repeat
@@ -102,7 +103,7 @@ PUB HandlePlayer  | adjust
 
 
 PUB DrawPlayer
-    gfx.Sprite(player.Addr,playerx-xoffset,playery-yoffset, dir*3+frame)
+    gfx.Sprite(player.Addr,(playerx<<3)-xoffset,(playery<<3)-yoffset, dir*3+frame)
 
 
 PUB ControlOffset | bound_x, bound_y
