@@ -1,5 +1,5 @@
 {{
-Pikemanz Overworld
+Pikemanz - Overworld
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation.
@@ -8,8 +8,6 @@ See end of file for terms of use.
 Authors: Brett Weir
 -------------------------------------------------
 }}
-
-
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
@@ -38,14 +36,15 @@ VAR
     long    xoffset
     long    yoffset
 
-
-
 PUB Main
     lcd.Start(gfx.Start)
-    lcd.SetFrameLimit(lcd#HALFSPEED)
     ctrl.Start
+    
+    Run
 
-
+PUB Run
+    lcd.SetFrameLimit(lcd#HALFSPEED)
+        
     playerx := 140
 
     gfx.LoadMap(tilemap.Addr, world.Addr)
