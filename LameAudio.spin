@@ -43,13 +43,13 @@ CON
 DAT
 
     parameter       long    0
-    
+
+    osc_state       long    0    
     osc_attack      long    0
     osc_decay       long    0
     osc_sustain     long    0
     osc_release     long    0
     osc_waveform    long    0
-    osc_state       long    0
     
     osc_volinc      long    0[4]
     osc_target      long    0[4]
@@ -147,34 +147,50 @@ mainloop                waitcnt time, periodval                         ' wait u
 oscloop                 mov     oscPtr, #OSCILLATORS
                         sub     oscPtr, oscIndex
                         add     oscPtr, oscAddr
-                        
-                        ' get note controllers
 
-                        add     oscPtr, #16
-{{                        rdbyte  attack, oscPtr
-                        add     oscPtr, #4
-                        rdbyte  decay, oscPtr
-                        add     oscPtr, #4
-                        rdbyte  sustain, oscPtr
-                        add     oscPtr, #4
-                        rdbyte  release, oscPtr
-                        add     oscPtr, #4
-                    }}                        
-                        rdbyte  waveform, oscPtr
-                        add     oscPtr, #4
-                        rdbyte  state, oscPtr
-                                                    
 ' ENVELOPE CONTROL
-                        rdlong  volinc, phsPtr
+                        rdbyte  state, oscPtr                       
+                        add     $+2, state
+                        nop
+                        jmpret  $, $+1
+
+                        long    :man, :atk, :dec, :sus, :rel
+' -----------------------------------------------
+:man                    rdlong  volinc, phsPtr
+                        add     oscPtr, #20
                         add     phsPtr, #16
                         rdlong  voltarget, phsPtr
                         add     phsPtr, #16
+                        jmp     #:adsrSkip
+' -----------------------------------------------
+:atk                    add     oscPtr, #4
+                        mov     voltarget, #127
+                        shl     voltarget, #8
+                        rdbyte  volinc, oscPtr
+                        add     oscPtr, #16
+                        jmp     #:adsrOut
+' -----------------------------------------------                                                
+:dec
+:sus                    add     oscPtr, #8
+                        rdbyte  volinc, oscPtr
+                        add     oscPtr, #4
+                        rdbyte  voltarget, oscPtr
+                        shl     voltarget, #8
+                        add     oscPtr, #8
+                        jmp     #:adsrOut
+' -----------------------------------------------                        
+:rel                    add     oscPtr, #16
+                        rdbyte  volinc, oscPtr
+                        mov     voltarget, #0
+                        add     oscPtr, #4
+' -----------------------------------------------
+:adsrOut                add     phsPtr, #32
+' -----------------------------------------------
+:adsrSkip                  
                         rdlong  volume, phsPtr                          ' get volume parameters
                                                                         ' 
                  '       cmp     volume, voltarget
-                  '      add     phase, phaseinc
-                        'mov     volume, sustainfull
-                       ' wrlong  volume, phsPtr
+                        wrlong  volume, phsPtr
                         add     phsPtr, #16
                         
 ' PHASE ACCUMULATOR
@@ -197,6 +213,7 @@ oscloop                 mov     oscPtr, #OSCILLATORS
 
 ' WAVEFORM SELECTOR
 ' jumps to the appropriate waveform handler
+                        rdbyte  waveform, oscPtr
 
                         add     $+2, waveform       ' $ is the program counter, $+2 is the jumpret instruction, see "Here Symbol" in Propeller Manual
                         and     phase, #$1FF        ' self-modifying code needs a filler instruction,  so this moved here to save space
@@ -302,7 +319,7 @@ if_nz                   add     osctemp, multtemp
                         and     volume, #%10000      nr, wz
 if_nz                   add     osctemp, multtemp
                             
-                        sar     osctemp, #3     '5-2
+                        sar     osctemp, #5     '5-2
 
 ' SUM 
 
