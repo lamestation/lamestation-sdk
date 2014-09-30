@@ -51,7 +51,9 @@ DAT
     osc_waveform    long    0
     osc_state       long    0
     
-    osc_volume      long    0[4]
+    osc_volinc      long    0[4]
+    osc_target      long    0[4]
+    osc_vol         long    (127<<8)[4]
     osc_inc         long    0[4]
     osc_acc         long    0[4]
         
@@ -66,6 +68,10 @@ PUB Start
       
     parameter := @freqTable + (@osc_sample << 16)
     cognew(@oscmodule, @parameter)    'start assembly cog
+
+PUB SetVolume(channel, value)
+    
+    osc_vol.long[channel] := value << 8
 
 PUB SetNote(channel, value)
     
@@ -143,7 +149,9 @@ oscloop                 mov     oscPtr, #OSCILLATORS
                         add     oscPtr, oscAddr
                         
                         ' get note controllers
-                        rdbyte  attack, oscPtr
+
+                        add     oscPtr, #16
+{{                        rdbyte  attack, oscPtr
                         add     oscPtr, #4
                         rdbyte  decay, oscPtr
                         add     oscPtr, #4
@@ -151,14 +159,22 @@ oscloop                 mov     oscPtr, #OSCILLATORS
                         add     oscPtr, #4
                         rdbyte  release, oscPtr
                         add     oscPtr, #4
+                    }}                        
                         rdbyte  waveform, oscPtr
                         add     oscPtr, #4
                         rdbyte  state, oscPtr
                                                     
 ' ENVELOPE CONTROL
-'                        rdlong  volume, phsPtr                          ' get volume parameters
-                        mov     volume, sustainfull
- '                       wrlong  volume, phsPtr
+                        rdlong  volinc, phsPtr
+                        add     phsPtr, #16
+                        rdlong  voltarget, phsPtr
+                        add     phsPtr, #16
+                        rdlong  volume, phsPtr                          ' get volume parameters
+                                                                        ' 
+                 '       cmp     volume, voltarget
+                  '      add     phase, phaseinc
+                        'mov     volume, sustainfull
+                       ' wrlong  volume, phsPtr
                         add     phsPtr, #16
                         
 ' PHASE ACCUMULATOR
@@ -173,7 +189,7 @@ oscloop                 mov     oscPtr, #OSCILLATORS
                         add     phase, phaseinc
                         wrlong  phase, phsPtr
                         
-                        sub     phsPtr, #28
+                        sub     phsPtr, #60
 
                         shr     phase, #12
 '{deferred}             and     phase, #$1FF
@@ -269,7 +285,7 @@ if_nc                   neg     osctemp, osctemp
 
 :oscOutput              mov     multtemp, osctemp
                         mov     osctemp, #0
-                        shr     volume, #13 'shift right 10 for sustain then 3 for multiplier
+                        shr     volume, #11 'shift right 8 for sustain then 3 for multiplier
                         
                         and     volume, #%00001      nr, wz
 if_nz                   add     osctemp, multtemp                             
@@ -310,7 +326,7 @@ freqAddr        long    0
 sineAddr        long    $E000
 halfmask        long    $FFFF
 
-sustainfull     long    127 << 8
+'sustainfull     long    127 << 8
         
 'variables for oscillator controller
 outputoffset    long    PERIOD/2
@@ -335,8 +351,9 @@ release         res     1
 waveform        res     1
 state           res     1
     
+volinc          res     1
+voltarget       res     1
 volume          res     1
-targetvol       res     1    
 phaseinc        res     1
 phase           res     1
 
