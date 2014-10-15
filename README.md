@@ -35,3 +35,4 @@ Learn more at [our homepage](http://www.lamestation.com) or check out [the wiki]
            ╰──── C_R ───┨P15        P16┣─── EX0       ────╯
                         ┗━━━━━━━━━━━━━━┛
 ```
+---
