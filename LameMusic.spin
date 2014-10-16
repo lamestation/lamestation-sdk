@@ -27,27 +27,23 @@ CON
         
     #0, PATTERN, SONG
     
-VAR
+DAT
 
-    long    songcursor
-    long    barcursor
-    long    timeconstant
-    
-    word    barAddr
-    word    loopAddr     '' This value points to the first address of the song definition in a song
-
-    byte    play
-    byte    replay
-    byte    stop
-    byte    barres
-    word    bartmp
-    long    transpose
-
-    word    barshift
-    byte    linecursor
-
-    long    LoopingPlayStack[20]
-    word    songdata[2]
+    songcursor          long    0
+    barcursor           long    0
+    timeconstant        long    0
+                                
+    barAddr             word    0
+    loopAddr            word    0
+                                
+    play                byte    0
+    replay              byte    0
+    stop                byte    0
+    barres              byte    0
+    transpose           long    0
+                                
+    LoopingPlayStack    long    0[20]
+    songdata            word    0[2]
 
 PUB null
     
@@ -75,14 +71,6 @@ PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, requi
     songcursor := 0
     barcursor := 0
 
-PUB SetTranspose(transvar)
-
-    transpose := transvar
-    
-PUB SetSpeed(speed)
-
-    timeconstant := CalculateTimeConstant( speed )
-    
 PUB PlaySong
 
     play := 1
@@ -107,7 +95,7 @@ PRI CalculateTimeConstant(bpm)
 
     return ( clkfreq / bpm * 15 ) ' 60 / 4 for 16th note alignment
 
-PRI LoopingSongParser | repeattime
+PRI LoopingSongParser | repeattime, linecursor, barshift, bartmp
     
     repeat
         repeattime := cnt
@@ -160,8 +148,6 @@ PRI LoopingSongParser | repeattime
             play := 0
             audio.StopAllSound
         stop := 0
-
-
 
 DAT
 {{
