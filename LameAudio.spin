@@ -22,7 +22,7 @@ CON
 
     #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE        ' waveform options
                                                                 ' 
-    #0, _OFF, _A, _D, _S, _R                                    ' ADSR states
+    #0, _OFF, _A, _S, _R                                    ' ADSR states  Decay/Sustain are identical
                                                                 ' 
     #0, _ATK, _DEC, _SUS, _REL, _WAV, _STATE                    ' control registers per oscillator
 
@@ -148,13 +148,13 @@ oscloop                 mov     oscPtr, #OSCILLATORS
                         sub     oscPtr, oscIndex
                         add     oscPtr, oscAddr
 
-' ENVELOPE CONTROL
+' ENVELOPE CONTROL ----------------------------------------------
                         rdbyte  state, oscPtr                       
                         add     $+2, state
                         nop
                         jmpret  $, $+1
 
-                        long    :man, :atk, :dec, :sus, :rel
+                        long    :man, :atk, :sus, :rel
 ' -----------------------------------------------
 :man                    rdlong  volinc, phsPtr
                         add     oscPtr, #20
@@ -170,7 +170,6 @@ oscloop                 mov     oscPtr, #OSCILLATORS
                         add     oscPtr, #16
                         jmp     #:adsrOut
 ' -----------------------------------------------                                                
-:dec
 :sus                    add     oscPtr, #8
                         rdbyte  volinc, oscPtr
                         add     oscPtr, #4
