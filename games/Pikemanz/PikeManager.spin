@@ -66,8 +66,7 @@ PUB Heal(id, health)
         hp[id] := hp_max[id]
         
 PUB Draw(id, x, y)
-    if not status[id] == FAINTED
-        gfx.Sprite(sprit[id], x, y, 0)
+    gfx.Sprite(sprit[id], x, y, 0)
     
 PUB GetName(id)
     return nm[id]
