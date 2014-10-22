@@ -16,7 +16,6 @@ CON
 OBJ
     audio   : "LameAudio"
     ctrl    : "LameControl"
-    fn      : "LameFunctions"
     
 VAR
     long    volume
@@ -55,8 +54,6 @@ PUB Main
 
         audio.SetFreq(1,freq)
         audio.SetVolume(1,(volume >> 10) // 127)
-        
-'        fn.Sleep(2)
     
 DAT
 {{
