@@ -23,6 +23,8 @@ OBJ
     top     :   "gfx_toprotor"
     body    :   "gfx_body"
     
+    msl     :   "gfx_missile"
+    
     mtn     :   "map_mountain"
     mtn_gfx :   "gfx_mountain"
        
@@ -35,13 +37,16 @@ DAT
     hvx         long    0
     hvy         long    0
     
-    SFXStack            long    0[20]
+    SFXStack    long    0[20]
     
     frame       byte    0
     frame_cnt   byte    20
     
     xoffset     long    0
     yoffset     long    0
+    
+    mx          long    0
+    my          long    0
 
 PUB Main
     lcd.Start(gfx.Start)
