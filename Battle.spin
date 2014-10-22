@@ -10,11 +10,7 @@ Authors: Brett Weir
 }}
 CON
     _clkmode        = xtal1 + pll16x
-    _xinfreq        = 5_000_000 
-    
-VAR
-    
-    word    buffer    
+    _xinfreq        = 5_000_000     
 
 OBJ
     lcd     :   "LameLCD"
@@ -22,14 +18,23 @@ OBJ
     audio   :   "LameAudio"
     music   :   "LameMusic"
     ctrl    :   "LameControl"
-    pk      :   "PikeCore"
-    
-    pk2     :   "pk_mootoo"
-    pk_back :   "pk_pakechu_back"
+   
+    pk1     :   "gfx_pk_pakechu2"
+    pk2     :   "gfx_pk_mootoo"
 
     song    :   "song_battle"
     
     dia     :   "PikeCore"
+    pike    :   "PikeManager"
+
+VAR
+    byte    front_pk
+    byte    back_pk
+    
+    byte    health
+    byte    hp_dsp[2]
+        
+    byte    click
     
 PUB Main
     lcd.Start(gfx.Start)
@@ -43,18 +48,40 @@ PUB Run
 
     music.LoadSong(song.Addr)
     music.LoopSong
-
+    
+    front_pk := pike.SetPikeman(0, string("PAKECHU"), 76, 40, 32, 50, pk1.Addr)
+    back_pk := pike.SetPikeman(1, string("MOOTOO"), 76, 40, 32, 50, pk2.Addr)
+    
+    hp_dsp[back_pk] := pike.GetHealth(back_pk)
+    hp_dsp[front_pk] := pike.GetHealth(front_pk)
+    
     repeat
         ctrl.Update
         gfx.ClearScreen(gfx#WHITE)
+        
+        if ctrl.A
+            if not click
+                click := 1
+                pike.Hurt(back_pk, 20)
+        else
+            click := 0
 
-        gfx.Sprite(pk2.Addr, 78, 0, 0)
-        gfx.Sprite(pk_back.Addr, 20, 20, 0)
-
-        dia.StatusBox(pk2.Name,120,120, 1, 1, 1)    
-        dia.StatusBox(string("PAKECHU"),85,85, 76, 40,0)
+        if ctrl.Down
+            pike.Hurt(front_pk, 2)
+        if ctrl.Up
+            pike.Heal(front_pk, 2)
             
-        dia.Dialog(string("JAKE wants",10,"to FIGHT"))
+        Handler
+        
+
+        pike.Draw(back_pk, 78, 0)
+        pike.Draw(front_pk, 20, 20)
+    
+        dia.StatusBox(pike.GetName(back_pk),hp_dsp[back_pk], pike.GetMaxHealth(back_pk), 1, 1, 1)    
+        dia.StatusBox(pike.GetName(front_pk),hp_dsp[front_pk], pike.GetMaxHealth(front_pk), 76, 40,0)
+            
+        dia.MessageBox(string("JAKE wants",10,"to FIGHT"), 1,40,72,24,6,6)
+'        dia.AttackBox(string(
         
         if ctrl.B
             lcd.InvertScreen(True)
@@ -63,7 +90,15 @@ PUB Run
         
         lcd.DrawScreen
 
+DAT
+    
 
+PUB HealthHandler | i
+    repeat i from 0 to pike#PIKEZ-1
+        if hp_dsp[i] > pike.GetHealth(i)
+            hp_dsp[i]--
+        if hp_dsp[i] < pike.GetHealth(i)
+            hp_dsp[i]++
 
 DAT
 {{
