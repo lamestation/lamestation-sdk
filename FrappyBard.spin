@@ -14,7 +14,7 @@
 }}
 
 CON
-    _clkmode = XTAL1|PLL16X
+    _clkmode = XTAL1 | PLL16X
     _xinfreq = 5_000_000
 
 OBJ
@@ -62,9 +62,6 @@ VAR
 PUB Main
 
     lcd.Start(gfx.Start)
-    gfx.ClearScreen(0)
-    lcd.DrawScreen
-    lcd.SetFrameLimit(40)
     gfx.LoadFont(font.Addr, "0", 4, 6)
 
     clicked := 0
