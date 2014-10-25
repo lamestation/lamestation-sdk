@@ -10,8 +10,6 @@ Authors: Brett Weir
 }}  
 OBJ
     gfx     :   "LameGFX"
-    audio   :   "LameAudio"
-    pk      :   "PikeCore"
 
 CON
     PIKEZ   = 2
