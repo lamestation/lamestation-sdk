@@ -13,8 +13,6 @@ Authors: Brett Weir
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
-    
-    #0, _TITLE, _OVERWORLD, _BATTLE
                      
 OBJ
     lcd         :   "LameLCD"
@@ -23,12 +21,15 @@ OBJ
     music       :   "LameMusic"
     ctrl        :   "LameControl"
     
+    state       :   "PikeState"
+    
     title       :   "TitleScreen"
     overworld   :   "Overworld"
     battle      :   "Battle"
 
 VAR
     byte    gamestate
+    byte    in_battle
     
 PUB Main
 
@@ -38,15 +39,13 @@ PUB Main
     music.Start
     ctrl.Start
 
-    gamestate := _TITLE
+    gamestate := state#_TITLE
     repeat
         case gamestate
-            _TITLE:         title.Run
-                            gamestate := _OVERWORLD
-            _OVERWORLD:     overworld.Run
-                            gamestate := _BATTLE
-            _BATTLE:        battle.Run
-                            gamestate := _TITLE
+            state#_TITLE:       title.Run
+                                gamestate := state#_OVERWORLD
+            state#_OVERWORLD:   gamestate := overworld.Run
+            state#_BATTLE:      gamestate := battle.Run
 
 DAT
 {{

@@ -21,22 +21,41 @@ OBJ
     ctrl    :               "LameControl"
     fn      :               "LameFunctions"
 
-    world   :               "map_parrot_town"
-    tilemap :               "gfx_pikeman"
+    state   :   "PikeState"
+    
     player  :               "gfx_nash"
 
 DAT
-    playerx long    16
-    playery long    16
-    xoffset long    0
-    yoffset long    0
-    targetx long    16
-    targety long    16
-    moving  byte    0
-    frame   byte    0
-    dir     byte    DOWN
-    count   byte    0
+    playerx long        0
+    playery long        0
+    xoffset long        0
+    yoffset long        0
+    targetx long        0
+    targety long        0
+    moving  byte        0
+    frame   byte        0
+    dir     byte        DOWN
+    count   byte        0
     
+OBJ
+    map_parrot_town     :   "map_parrot_town"
+    map_path1           :   "map_path1"
+    map_path2           :   "map_path2"
+        
+    tilemap     :   "gfx_pikeman"
+    
+CON
+    WORLD_W = 1
+    WORLD_H = 3
+DAT
+    currentmap  word    0 
+    worldmap    word    0[9]
+    worldx      word    0
+    worldy      word    2
+    
+    mapchanged  word    0
+    
+        
 PUB Main
     lcd.Start(gfx.Start)
     ctrl.Start
@@ -44,27 +63,51 @@ PUB Main
     Run
 
 PUB Run
-    lcd.SetFrameLimit(lcd#HALFSPEED)
-        
-    playerx := targetx := 16
-    playery := targety := 16
     
-    map.Load(tilemap.Addr, world.Addr)
+    playerx := targetx := 3<<3
+    playery := targety := 4<<3
+    
+    worldmap[0] := map_path2.Addr
+    worldmap[1] := map_path1.Addr
+    worldmap[2] := map_parrot_town.Addr
+    
+    mapchanged := 1
+    
     repeat
+
         ctrl.Update
         gfx.ClearScreen(0)
+        
+
 
         HandlePlayer
+        ControlMap
         ControlOffset
         map.Draw(xoffset, yoffset)
         DrawPlayer
+        fn.Sleep(30)
 
+        if playerx >> 3 > 10
+            playerx := targetx := 3 << 3
+            return state#_BATTLE
+    
         lcd.DrawScreen
-        
 
 PUB HandlePlayer | adjust
     
     if not moving
+
+
+    moving := 1
+    if targetx > playerx
+        playerx++
+    elseif targetx < playerx
+        playerx--
+    elseif targety > playery
+        playery++
+    elseif targety < playery
+        playery--
+    else
         if ctrl.Left
             if not map.TestPoint((playerx>>3)-1, playery>>3)
                 targetx -= 8
@@ -81,18 +124,8 @@ PUB HandlePlayer | adjust
             if not map.TestPoint(playerx>>3, (playery>>3)+1)
                 targety += 8
                 dir := DOWN
-
-    moving := 1
-    if targetx > playerx
-        playerx++
-    elseif targetx < playerx
-        playerx--
-    elseif targety > playery
-        playery++
-    elseif targety < playery
-        playery--
-    else
-        moving := 0
+        else
+            moving := 0
             
                 
     if moving
@@ -110,6 +143,29 @@ PUB DrawPlayer
     gfx.Sprite(player.Addr,(playerx)-xoffset,(playery)-yoffset, dir*3+frame)
 
 
+PUB ControlMap
+    if not moving
+        if playerx < 0
+            if worldx > 0
+                worldx--
+                playerx := targetx := (map.GetWidth-1)<<3
+        if playerx > (map.GetWidth-1)<<3
+            if worldx < WORLD_W-1
+                worldx++
+                playerx := targetx := 0
+            
+        if playery < 0
+            if worldy > 0
+                worldy--
+                playery := targety := (map.GetHeight-1)<<3
+        if playery > (map.GetHeight-1)<<3
+            if worldy < WORLD_H-1
+                worldy++
+                playery := targety := 0   
+                
+    if mapchanged
+        map.Load(tilemap.Addr, worldmap[WORLD_W*worldx + worldy])                     
+    
 PUB ControlOffset | bound_x, bound_y
 
     bound_x := map.GetWidth<<3 - lcd#SCREEN_W
