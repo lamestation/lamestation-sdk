@@ -18,42 +18,7 @@ OBJ
     hp          :   "gfx_healthbar"
     hp_box      :   "gfx_health"
 
-
-    font_text   :   "gfx_font6x6_b"
-    font_num    :   "gfx_font4x6_b"
-    font_tny    :   "gfx_font4x4_b"
-    
-PUB StatusBox(name, health, maxhealth, x, y, opposing) | w
-    
-    w := health*word[hp.Addr][1]/maxhealth
-    
-    ' pikemanz name
-    gfx.LoadFont(font_text.Addr, " ", 0, 0)
-    gfx.PutString(name,x, y+1)
-    y += 7
-    
-    ' health bar
-    gfx.LoadFont(font_tny.Addr, " ", 0, 0)
-    gfx.PutString(string("HP:"),x,y)
-
-
-    gfx.Sprite(hp_box.Addr, x+9, y, 0)
-    
-    gfx.SetClipRectangle(x+10, y+1, x+10+w, y+3)
-    gfx.Sprite(hp.Addr, x+10, y+1, 0)
-    gfx.SetClipRectangle(0, 0, gfx#SCREEN_W, gfx#SCREEN_H)
-    y += 6
-    
-    ' actual health count
-    if not opposing    
-        gfx.LoadFont(font_num.Addr, " ", 0, 0)
-        gfx.PutString(string(" 19/ 19"),x+24,y)
-        y += 7
-        x += 11
-    
-    gfx.Sprite(bar.Addr, x, y, 0)        '
-    gfx.Sprite(bar.Addr, x+16, y, 0)
-    
+    font_text   :   "gfx_font6x6_b"    
     
 PUB YesNo(str)
     

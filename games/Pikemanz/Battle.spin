@@ -10,7 +10,14 @@ Authors: Brett Weir
 }}
 CON
     _clkmode        = xtal1 + pll16x
-    _xinfreq        = 5_000_000     
+    _xinfreq        = 5_000_000 
+    
+    
+CON
+    BACK_OX    = 78
+    BACK_OY    = 0
+    FRONT_OX     = 20
+    FRONT_OY     = 20
 
 OBJ
     lcd     :   "LameLCD"
@@ -18,20 +25,22 @@ OBJ
     audio   :   "LameAudio"
     music   :   "LameMusic"
     ctrl    :   "LameControl"
+    fn      :   "LameFunctions"
+    
+    state   :   "PikeState"
    
     pk1     :   "gfx_pk_pakechu2"
     pk2     :   "gfx_pk_mootoo"
 
-    song    :   "song_battle"
+   ' song    :   "song_battle"
     
-    dia     :   "PikeCore"
+    menu    :   "PikeMenu"
     pike    :   "PikeManager"
 
 VAR
     byte    front_pk
     byte    back_pk
     
-    byte    health
     byte    hp_dsp[2]
         
     byte    click
@@ -42,20 +51,39 @@ PUB Main
     music.Start    
     ctrl.Start
     
+    gfx.ClearScreen(gfx#WHITE)
+    
     Run
-    
-PUB Run    
+        
+PUB FaceOffScene | i
 
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    repeat i from 100 to 0 step 1
+        gfx.ClearScreen(gfx#WHITE)
+        pike.Draw(back_pk, BACK_OX - i, BACK_OY)
+        pike.Draw(front_pk, FRONT_OX + i, FRONT_OY)
+        menu.MessageBox(string("DURP wants",10,"to FIGHT"), 1,40,128,24,6,6)
+        lcd.DrawScreen
+    fn.Sleep(1000)
+        
+PUB Run     
     
-    front_pk := pike.SetPikeman(0, string("PAKECHU"), 76, 40, 32, 50, pk1.Addr)
-    back_pk := pike.SetPikeman(1, string("MOOTOO"), 76, 40, 32, 50, pk2.Addr)
+   ' music.LoadSong(song.Addr)
+    'music.LoopSong    
+    
+    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+    
+    front_pk := pike.SetPikeman(0, string("PAKECHU"), 20, 10, 32, 50, pk1.Addr)
+    CreateNumberStr(@str_hpmax, pike.GetMaxHealth(front_pk))
+    
+    back_pk := pike.SetPikeman(1, string("MOOTOO"), 130, 40, 32, 50, pk2.Addr)
     
     hp_dsp[back_pk] := pike.GetHealth(back_pk)
-    hp_dsp[front_pk] := pike.GetHealth(front_pk)
+    hp_dsp[front_pk] := pike.GetHealth(front_pk)    
     
-    repeat
+    SquareWipe
+    FaceOffScene
+        
+    repeat     
         ctrl.Update
         gfx.ClearScreen(gfx#WHITE)
         
@@ -65,40 +93,183 @@ PUB Run
                 pike.Hurt(back_pk, 20)
         else
             click := 0
+           
 
         if ctrl.Down
             pike.Hurt(front_pk, 2)
         if ctrl.Up
             pike.Heal(front_pk, 2)
             
-        Handler
+        HealthHandler
         
+        pike.Draw(back_pk, BACK_OX, BACK_OY)
+        pike.Draw(front_pk, FRONT_OX, FRONT_OY)
+  
+        StatusBox(pike.GetName(back_pk),hp_dsp[back_pk], pike.GetMaxHealth(back_pk), 1, 1, 1)    
+        StatusBox(pike.GetName(front_pk),hp_dsp[front_pk], pike.GetMaxHealth(front_pk), 76, 40,0)
+        
+        SelectDialog(1,40)
 
-        pike.Draw(back_pk, 78, 0)
-        pike.Draw(front_pk, 20, 20)
-    
-        dia.StatusBox(pike.GetName(back_pk),hp_dsp[back_pk], pike.GetMaxHealth(back_pk), 1, 1, 1)    
-        dia.StatusBox(pike.GetName(front_pk),hp_dsp[front_pk], pike.GetMaxHealth(front_pk), 76, 40,0)
-            
-        dia.MessageBox(string("JAKE wants",10,"to FIGHT"), 1,40,72,24,6,6)
-'        dia.AttackBox(string(
+        HandleInterface
         
         if ctrl.B
-            lcd.InvertScreen(True)
-        else
-            lcd.InvertScreen(False)
-        
-        lcd.DrawScreen
-
-DAT
+            return state#_OVERWORLD
     
+        lcd.DrawScreen
+        
+        
+PUB HandleInterface
+    
+   ' AttackDialog(1, 40, pike.GetName(back_pk), string("SLASH"), true)    
+'    AttackDialog(1, 40, pike.GetName(front_pk), string("HYPER DESTROY"), false)    
+'    
+PUB SelectDialog(x, y)
+    menu.Box(x,y,74,24,6,6)
+    
+    y += 6
+    x += 7
+        gfx.PutString(string("FYTE"),x, y)
+        gfx.PutString(string("ITAM"),x+34, y)
+        
+    y += 6
+        gfx.PutString(string("PIKE"),x, y)
+        gfx.PutString(string("RAN"),x+34, y)
 
+PUB AttackDialog(x, y, name, attack, enemy)
+    menu.Box(x,y,128,24,6,6)
+    
+    y += 6
+    x += 7
+    
+    if enemy
+        gfx.PutString(string("Enemy"),x+1, y)
+        gfx.PutString(name,x+36, y)
+    else
+        gfx.PutString(name,x, y)
+    
+    y += 7
+    gfx.PutString(string("used"),x, y)
+    gfx.PutString(attack,x+30, y)
+    
 PUB HealthHandler | i
     repeat i from 0 to pike#PIKEZ-1
         if hp_dsp[i] > pike.GetHealth(i)
             hp_dsp[i]--
         if hp_dsp[i] < pike.GetHealth(i)
             hp_dsp[i]++
+
+OBJ
+    dia         :   "gfx_dialog"
+    bar         :   "gfx_bar"
+    
+    hp          :   "gfx_healthbar"
+    hp_box      :   "gfx_health"
+    hp_text     :   "gfx_hp"
+
+    font_text   :   "gfx_font6x6_b"   
+            
+PUB StatusBox(name, health, maxhealth, x, y, opposing) | w
+    
+    w := health*word[hp.Addr][1]/maxhealth
+    
+    ' pikemanz name
+    gfx.PutString(name,x, y+1)
+    y += 7
+    
+    ' health bar
+    gfx.Sprite(hp_text.Addr, x, y+1, 0)
+
+    gfx.Sprite(hp_box.Addr, x+9, y, 0)
+    
+    gfx.SetClipRectangle(x+10, y+1, x+10+w, y+3)
+    gfx.Sprite(hp.Addr, x+10, y+1, 0)
+    gfx.SetClipRectangle(0, 0, gfx#SCREEN_W, gfx#SCREEN_H)
+    y += 6
+    
+    ' actual health count
+    if not opposing    
+        CreateNumberStr(@str_hp, hp_dsp[front_pk])
+        gfx.PutString(@str_hp,x+11,y)
+        gfx.PutChar("/",x+29,y)
+        gfx.PutString(@str_hpmax,x+34,y)
+            
+        y += 7
+        x += 11
+    
+    gfx.Sprite(bar.Addr, x, y, 0)        '
+    gfx.Sprite(bar.Addr, x+16, y, 0)
+    
+    
+VAR
+    byte    str_hp[4]
+    byte    str_hpmax[4]
+
+PUB CreateNumberStr(str, value) | i, active, ind
+    i := 100
+    active := 0
+
+    repeat ind from 0 to 2
+        if value => i
+            active := 1
+            byte[str][ind] := value / i + "0"
+            value //= i
+        else
+            if active or (i == 1 and value == 0)
+                byte[str][ind] := "0"
+            else
+                byte[str][ind] := " "
+
+        i /= 10
+
+    byte[str][3] := 0
+    
+OBJ
+    black   :   "gfx_black"
+    
+    
+CON
+    #0, DOWN, RIGHT, UP, LEFT
+
+    
+
+    
+PUB SquareWipe | x1, y1, x2, y2, x, y, dir
+    
+    lcd.SetFrameLimit(0)
+    
+    dir := DOWN
+    x := y := y1 := 0
+    x1 := 1
+    x2 := 15
+    y2 := 7
+    
+    repeat 128
+        gfx.Sprite(black.Addr, x << 3, y << 3, 0)
+        case dir
+            DOWN:   if y < y2
+                        y++
+                    else
+                        y2--
+                        dir := RIGHT
+            RIGHT:  if x < x2
+                        x++
+                    else
+                        dir := UP
+                        x2--
+
+            UP:     if y > y1
+                        y--
+                    else
+                        dir := LEFT
+                        y1++
+            LEFT:   if x > x1
+                        x--
+                    else
+                        dir := DOWN
+                        x1++
+        lcd.DrawScreen
+
+    lcd.SetFrameLimit(lcd#FULLSPEED)
 
 DAT
 {{

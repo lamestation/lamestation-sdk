@@ -17,9 +17,11 @@ CON
 OBJ
     lcd         :   "LameLCD"
     gfx         :   "LameGFX"
+    
+    state       :   "PikeState"
 
     title       :   "gfx_title"
-    font_text   :   "gfx_font4x6_b"
+    font_text   :   "gfx_font6x6_b"
     nash        :   "gfx_nash_fetchum"
     
     ctrl        :   "LameControl"
@@ -33,8 +35,8 @@ PUB Run
     gfx.LoadFont(font_text.Addr, " ", 0, 0)
     
     gfx.Sprite(title.Addr,1,10,0)
-    gfx.PutString(string("Eggheadz Version"), 17, 47)
-    gfx.Sprite(nash.Addr, 100,18,0)
+    gfx.PutString(string("Eggheadz Version"), 17, 53)
+    gfx.Sprite(nash.Addr, 100,14,0)
     
     lcd.DrawScreen
 
