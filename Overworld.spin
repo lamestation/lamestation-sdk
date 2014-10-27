@@ -59,10 +59,12 @@ DAT
 PUB Main
     lcd.Start(gfx.Start)
     ctrl.Start
-    
-    Run
 
-PUB Run
+    Init
+    repeat
+        View    
+    
+PUB Init
     
     playerx := targetx := 3<<3
     playery := targety := 4<<3
@@ -73,12 +75,12 @@ PUB Run
     
     mapchanged := 1
     
+PUB View
+    
     repeat
 
         ctrl.Update
         gfx.ClearScreen(0)
-        
-
 
         HandlePlayer
         ControlMap
@@ -86,9 +88,9 @@ PUB Run
         map.Draw(xoffset, yoffset)
         DrawPlayer
         fn.Sleep(30)
-
+        
         if playerx >> 3 > 10
-            playerx := targetx := 3 << 3
+            'playerx := targetx := 3 << 3
             return state#_BATTLE
     
         lcd.DrawScreen

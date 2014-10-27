@@ -24,6 +24,7 @@ OBJ
     state       :   "PikeState"
     
     title       :   "TitleScreen"
+    intro       :   "PikeIntro"
     overworld   :   "Overworld"
     battle      :   "Battle"
 
@@ -38,14 +39,19 @@ PUB Main
     audio.Start
     music.Start
     ctrl.Start
+    
+    
+    overworld.Init
 
-    gamestate := state#_TITLE
+    gamestate := 3'state#_TITLE
     repeat
         case gamestate
-            state#_TITLE:       title.Run
+            state#_TITLE:       title.View
+                                gamestate := state#_INTRO
+            state#_INTRO:       intro.Scene
                                 gamestate := state#_OVERWORLD
-            state#_OVERWORLD:   gamestate := overworld.Run
-            state#_BATTLE:      gamestate := battle.Run
+            state#_OVERWORLD:   gamestate := overworld.View
+            state#_BATTLE:      gamestate := battle.Scene
 
 DAT
 {{

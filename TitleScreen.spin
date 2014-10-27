@@ -28,9 +28,9 @@ OBJ
 
 PUB Main
     lcd.Start(gfx.Start)
-    Run
+    View
     
-PUB Run
+PUB View
     gfx.ClearScreen(gfx#WHITE)
     gfx.LoadFont(font_text.Addr, " ", 0, 0)
     
