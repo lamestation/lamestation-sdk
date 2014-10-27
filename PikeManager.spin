@@ -12,7 +12,7 @@ OBJ
     gfx     :   "LameGFX"
 
 CON
-    PIKEZ   = 2
+    PIKEZ   = 16
     #0, INACTIVE, FAINTED, GOOD
     
 DAT

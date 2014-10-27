@@ -21,4 +21,10 @@
 29,29,20,31,31,18,29,29,29,29,29,29,29,29,29,29
 </data>
  </layer>
+ <objectgroup name="Object Layer 1" width="16" height="16">
+  <object name="DOOR" x="80" y="80" width="8" height="8"/>
+  <object name="DOOR" x="24" y="32" width="8" height="8"/>
+  <object name="DOOR" x="88" y="32" width="8" height="8"/>
+  <object name="COACHER" x="72" y="16" width="8" height="8"/>
+ </objectgroup>
 </map>

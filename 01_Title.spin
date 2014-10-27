@@ -1,5 +1,5 @@
 {{
-Pikemanz - Intro
+Pikemanz - Title Screen
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation.
@@ -8,51 +8,46 @@ See end of file for terms of use.
 Authors: Brett Weir
 -------------------------------------------------
 }}
+
+
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
-
-    #0, UP, RIGHT, DOWN, LEFT
-
+                     
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
-    map     :               "LameMap"
-    ctrl    :               "LameControl"
-    fn      :               "LameFunctions"
-
-    state   :   "PikeState"
-    menu    :   "PikeMenu"
+    lcd         :   "LameLCD"
+    gfx         :   "LameGFX"
     
+    state       :   "PikeState"
+
+    title       :   "gfx_title"
+    font_text   :   "gfx_font6x6_b"
     nash        :   "gfx_nash_fetchum"
     
-        
+    ctrl        :   "LameControl"
+
 PUB Main
     lcd.Start(gfx.Start)
-    ctrl.Start
-    Scene
-        
-PUB Scene
+    View
     
-    repeat
-        View
-PRI View
+PUB View
+    gfx.ClearScreen(gfx#WHITE)
+    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+    
+    gfx.Sprite(title.Addr,1,10,0)
+    gfx.PutString(string("Eggheadz Version"), 17, 53)
+    gfx.Sprite(nash.Addr, 100,14,0)
+    
+    lcd.DrawScreen
 
+    ctrl.Update    
+    repeat until ctrl.A
         ctrl.Update
-        gfx.ClearScreen(gfx#WHITE)        
-        gfx.Sprite(nash.Addr,52,4, 0)
         
-        menu.Dialog(@strang)
-    
-        lcd.DrawScreen
-    
-DAT
-
-strang   byte    "TEACH: This is the ",10,"BACON",0
+    state.SetState(state#_INTRO)
 
 DAT
 {{
-
  TERMS OF USE: MIT License
 
  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -71,4 +66,3 @@ DAT
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 }}
-DAT

@@ -14,6 +14,8 @@ CON
     
     
 CON
+    FRONT       =   0
+    BACK        =   1
     BACK_OX    = 78
     BACK_OY    = 0
     FRONT_OX     = 20
@@ -28,14 +30,11 @@ OBJ
     fn      :   "LameFunctions"
     
     state   :   "PikeState"
-   
-    pk1     :   "gfx_pk_pakechu2"
-    pk2     :   "gfx_pk_mootoo"
-
-   ' song    :   "song_battle"
-    
     menu    :   "PikeMenu"
     pike    :   "PikeManager"
+    
+   ' song    :   "song_battle"
+    
 
 VAR
     byte    front_pk
@@ -54,7 +53,7 @@ PUB Main
     
     gfx.ClearScreen(gfx#WHITE)
     
-    Scene
+    Wild
         
 PUB FaceOffScene | i
 
@@ -66,26 +65,36 @@ PUB FaceOffScene | i
         lcd.DrawScreen
     fn.Sleep(1000)
 
-PUB Init
-   ' music.LoadSong(song.Addr)
-    'music.LoopSong    
-   
-    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+OBJ
+    dox :   "Pikedox"
     
-    front_pk := pike.SetPikeman(0, string("PAKECHU"), 20, 10, 32, 50, pk1.Addr)
-    CreateNumberStr(@str_hpmax, pike.GetMaxHealth(front_pk))
+PUB Wild
+    dox.CreatePikedox
+    front_pk := 0
+    back_pk := 7
     
-    back_pk := pike.SetPikeman(1, string("MOOTOO"), 130, 40, 32, 50, pk2.Addr)
+    Scene
+
+'PUB Coacher
+'    back_pk := pike.SetPikeman(1, string("MOOTOO"), 130, 40, 32, 50, pk2.Addr)
+                
+PUB Scene    
+    ' music.LoadSong(song.Addr)
+    ' music.LoopSong    
+    gfx.LoadFont(font_text.Addr, " ", 0, 0)    
+    CreateNumberStr(@str_hpmax, pike.GetMaxHealth(front_pk))    
+    hp_dsp[BACK] := pike.GetHealth(back_pk)
+    hp_dsp[FRONT] := pike.GetHealth(front_pk)    
     
-    hp_dsp[back_pk] := pike.GetHealth(back_pk)
-    hp_dsp[front_pk] := pike.GetHealth(front_pk)    
-            
-PUB Scene
-    Init
-    SquareWipe
-    FaceOffScene
+'    SquareWipe
+  '  FaceOffScene
     
     repeat
+        View
+'        if ctrl.B
+ '           return state.SetState(state#_WORLD)
+    
+PUB View
     
         ctrl.Update
         gfx.ClearScreen(gfx#WHITE)
@@ -99,17 +108,17 @@ PUB Scene
            
         HealthHandler
         
-        pike.Draw(back_pk, BACK_OX, BACK_OY)
-        pike.Draw(front_pk, FRONT_OX, FRONT_OY)
+        if hp_dsp[BACK] > 0
+            pike.Draw(back_pk, BACK_OX, BACK_OY)
+            
+        if hp_dsp[FRONT] > 0
+            pike.Draw(front_pk, FRONT_OX, FRONT_OY)
   
-        StatusBox(pike.GetName(back_pk),hp_dsp[back_pk], pike.GetMaxHealth(back_pk), 1, 1, 1)    
-        StatusBox(pike.GetName(front_pk),hp_dsp[front_pk], pike.GetMaxHealth(front_pk), 76, 40,0)
+        StatusBox(pike.GetName(back_pk),hp_dsp[BACK], pike.GetMaxHealth(back_pk), 1, 1, 1)    
+        StatusBox(pike.GetName(front_pk),hp_dsp[FRONT], pike.GetMaxHealth(front_pk), 76, 40,0)
 
         HandleInterface
         
-        if ctrl.B
-            return state#_OVERWORLD
-    
         lcd.DrawScreen
 DAT
     dialog      byte    _SELECT
@@ -194,12 +203,16 @@ PUB AttackDialog(x, y, name, attack, enemy)
     gfx.PutString(string("used"),x, y)
     gfx.PutString(attack,x+30, y)
     
-PUB HealthHandler | i
-    repeat i from 0 to pike#PIKEZ-1
-        if hp_dsp[i] > pike.GetHealth(i)
-            hp_dsp[i]--
-        if hp_dsp[i] < pike.GetHealth(i)
-            hp_dsp[i]++
+PUB HealthHandler
+        if hp_dsp[FRONT] > pike.GetHealth(front_pk)
+            hp_dsp[FRONT]--
+        if hp_dsp[FRONT] < pike.GetHealth(front_pk)
+            hp_dsp[FRONT]++
+            
+        if hp_dsp[BACK] > pike.GetHealth(back_pk)
+            hp_dsp[BACK]--
+        if hp_dsp[BACK] < pike.GetHealth(back_pk)
+            hp_dsp[BACK]++
 
 OBJ
     dia         :   "gfx_dialog"
@@ -231,7 +244,7 @@ PUB StatusBox(name, health, maxhealth, x, y, opposing) | w
     
     ' actual health count
     if not opposing    
-        CreateNumberStr(@str_hp, hp_dsp[front_pk])
+        CreateNumberStr(@str_hp, hp_dsp[FRONT])
         gfx.PutString(@str_hp,x+11,y)
         gfx.PutChar("/",x+29,y)
         gfx.PutString(@str_hpmax,x+34,y)

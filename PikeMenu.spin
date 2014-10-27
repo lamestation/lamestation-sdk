@@ -11,6 +11,7 @@ Authors: Brett Weir
 OBJ
     gfx         :   "LameGFX"
     lcd         :   "LameLCD"
+    ctrl        :   "LameControl"
     
     dia         :   "gfx_dialog"
     bar         :   "gfx_bar"
@@ -58,7 +59,18 @@ PUB MessageBox(str, x, y, w, h, tw, th)
 PUB AttackDialog(attack1, attack2, attack3, attack4)
     Box(1,40,72,24,6,6)
  '   dia.Dialog(string("JAKE wants",10,"to FIGHT"))
+
+DAT
+    click   byte    0
     
+PUB WaitKey        
+    repeat until not click
+        ctrl.Update
+        if not ctrl.A and not ctrl.B
+            click := 0
+    repeat until ctrl.A or ctrl.B
+        ctrl.Update
+    click := 1
 
 DAT
 {{
