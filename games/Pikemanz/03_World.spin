@@ -59,10 +59,12 @@ DAT
 PUB Main
     lcd.Start(gfx.Start)
     ctrl.Start
-    
-    Run
 
-PUB Run
+    Init
+    repeat
+        View    
+    
+PUB Init
     
     playerx := targetx := 3<<3
     playery := targety := 4<<3
@@ -73,12 +75,15 @@ PUB Run
     
     mapchanged := 1
     
+    
+    
+    
+PUB View
+    
     repeat
 
         ctrl.Update
         gfx.ClearScreen(0)
-        
-
 
         HandlePlayer
         ControlMap
@@ -86,10 +91,11 @@ PUB Run
         map.Draw(xoffset, yoffset)
         DrawPlayer
         fn.Sleep(30)
-
+        
         if playerx >> 3 > 10
-            playerx := targetx := 3 << 3
-            return state#_BATTLE
+            'playerx := targetx := 3 << 3
+            return state.SetState(state#_BATTLE)
+            
     
         lcd.DrawScreen
 
@@ -109,21 +115,25 @@ PUB HandlePlayer | adjust
         playery--
     else
         if ctrl.Left
+            dir := LEFT
             if not map.TestPoint((playerx>>3)-1, playery>>3)
                 targetx -= 8
-                dir := LEFT
+
         elseif ctrl.Right
+            dir := RIGHT
             if not map.TestPoint((playerx>>3)+1, playery>>3)
                 targetx += 8
-                dir := RIGHT
+
         elseif ctrl.Up
+            dir := UP
             if not map.TestPoint(playerx>>3, (playery>>3)-1)
                 targety -= 8
-                dir := UP
+
         elseif ctrl.Down
+            dir := DOWN
             if not map.TestPoint(playerx>>3, (playery>>3)+1)
                 targety += 8
-                dir := DOWN
+
         else
             moving := 0
             

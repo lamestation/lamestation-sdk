@@ -1,5 +1,5 @@
 {{
-Pikemanz The Game!
+Pikemanz - Title Screen
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation.
@@ -17,35 +17,34 @@ CON
 OBJ
     lcd         :   "LameLCD"
     gfx         :   "LameGFX"
-    audio       :   "LameAudio"
-    music       :   "LameMusic"
-    ctrl        :   "LameControl"
     
     state       :   "PikeState"
-    
-    title       :   "TitleScreen"
-    overworld   :   "Overworld"
-    battle      :   "Battle"
 
-VAR
-    byte    gamestate
-    byte    in_battle
+    title       :   "gfx_title"
+    font_text   :   "gfx_font6x6_b"
+    nash        :   "gfx_nash_fetchum"
     
+    ctrl        :   "LameControl"
+
 PUB Main
-
     lcd.Start(gfx.Start)
-    lcd.SetFrameLimit(lcd#FULLSPEED)
-    audio.Start
-    music.Start
-    ctrl.Start
+    View
+    
+PUB View
+    gfx.ClearScreen(gfx#WHITE)
+    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+    
+    gfx.Sprite(title.Addr,1,10,0)
+    gfx.PutString(string("Eggheadz Version"), 17, 53)
+    gfx.Sprite(nash.Addr, 100,14,0)
+    
+    lcd.DrawScreen
 
-    gamestate := state#_TITLE
-    repeat
-        case gamestate
-            state#_TITLE:       title.Run
-                                gamestate := state#_OVERWORLD
-            state#_OVERWORLD:   gamestate := overworld.Run
-            state#_BATTLE:      gamestate := battle.Run
+    ctrl.Update    
+    repeat until ctrl.A
+        ctrl.Update
+        
+    state.SetState(state#_INTRO)
 
 DAT
 {{

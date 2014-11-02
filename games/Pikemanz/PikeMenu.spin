@@ -11,6 +11,7 @@ Authors: Brett Weir
 OBJ
     gfx         :   "LameGFX"
     lcd         :   "LameLCD"
+    ctrl        :   "LameControl"
     
     dia         :   "gfx_dialog"
     bar         :   "gfx_bar"
@@ -24,7 +25,7 @@ PUB YesNo(str)
     
 PUB Dialog(str)
     gfx.LoadFont(font_text.Addr, " ", 0, 0)
-    MessageBox(str,1,40,72,24,6,6)
+    MessageBox(str,1,39,128,24,6,6)
     
 PUB Box(x, y, w, h, tw, th) | dx, dy, x1, y1, w1, h1, frame
 
@@ -58,7 +59,18 @@ PUB MessageBox(str, x, y, w, h, tw, th)
 PUB AttackDialog(attack1, attack2, attack3, attack4)
     Box(1,40,72,24,6,6)
  '   dia.Dialog(string("JAKE wants",10,"to FIGHT"))
+
+DAT
+    click   byte    0
     
+PUB WaitKey        
+    repeat until not click
+        ctrl.Update
+        if not ctrl.A and not ctrl.B
+            click := 0
+    repeat until ctrl.A or ctrl.B
+        ctrl.Update
+    click := 1
 
 DAT
 {{
