@@ -17,14 +17,14 @@ CON
 OBJ
     lcd         :   "LameLCD"
     gfx         :   "LameGFX"
+    ctrl        :   "LameControl"
     
     state       :   "PikeState"
+    menu        :   "PikeMenu"
 
     title       :   "gfx_title"
     font_text   :   "gfx_font6x6_b"
     nash        :   "gfx_nash_fetchum"
-    
-    ctrl        :   "LameControl"
 
 PUB Main
     lcd.Start(gfx.Start)
@@ -40,9 +40,7 @@ PUB View
     
     lcd.DrawScreen
 
-    ctrl.Update    
-    repeat until ctrl.A
-        ctrl.Update
+    ctrl.WaitKey
         
     state.SetState(state#_INTRO)
 
