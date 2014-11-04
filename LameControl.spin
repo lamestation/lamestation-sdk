@@ -15,7 +15,8 @@
 '' managing controls easier.
 
 OBJ
-    pin  :   "Pinout"
+    pin     :   "Pinout"
+    fn      :   "LameFunctions"
     
 CON
 
@@ -44,10 +45,10 @@ PUB Update
 ' 'On' is a logic low for every control pin coming
 ' from the hardware, so they must all be inverted.
 PUB A
-    return not controls & SW_A
+    return (!controls) & SW_A
     
 PUB B
-    return not controls & SW_B
+    return (!controls) & SW_B
 
 PUB Left
     return controls & J_L    
@@ -60,3 +61,17 @@ PUB Up
 
 PUB Down
     return controls & J_D
+    
+DAT
+    click   byte    0
+    
+PUB WaitKey
+    repeat
+        Update
+        if A or B
+            if not click
+                click := 1
+                quit
+        else
+            click := 0
+        fn.Sleep(20)
