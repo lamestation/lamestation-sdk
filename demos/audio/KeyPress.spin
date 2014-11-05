@@ -18,85 +18,60 @@ OBJ
     audio   :   "LameAudio"
     ctrl    :   "LameControl"
     
+    
+OBJ
+    ser : "LameSerial"
+    
 VAR
-    long    volume
-    long    target
-    long    volinc
-    byte    decay
-    byte    clicked
-    byte    clickb
-    byte    waveform
-    byte    state
+    byte    clicked    
+    byte    note
+    byte    volume
     
 PUB Noise
     audio.Start
     ctrl.Start
     
-    decay := 8
-    state := audio#_R
-    
-    audio.SetNote(1, 70)
+    audio.SetNote(0, note := 60)
+    audio.SetVolume(0, volume := 127)
         
+    ser.StartRxTx(31,30,0,115200)
+    
+    ser.Char("B")
+    
     repeat
         ctrl.Update
-
-        if ctrl.Left or ctrl.Right
-            if not clicked
-                clicked := 1
-                if ctrl.Left        
-                    if decay > 0
-                        decay--
-                        volume ~>= 1
-                if ctrl.Right
-                    if decay < 10
-                        volume <<= 1
-                        decay++
-        else
-            clicked := 0
-            
-            
+        
         if ctrl.A
-            if state == audio#_R
-                state := audio#_A
+            audio.SetEnvelope(0,0,1)
         else
-            state := audio#_R
+            audio.SetEnvelope(0,0,0)
             
-           
-        if state == audio#_A
-            target := 127 << decay
-        elseif state == audio#_S
-            target := 40 << decay
-        elseif state == audio#_R
-            target := 0
-            
-        if ctrl.B
-            if not clickb
-                clickb := 1
-                waveform := (waveform + 1)//6
-                audio.SetWaveform(1,waveform)
-        else
-            clickb := 0
-      
-     
-        if volume < target
-            volume += 10
-        if volume > target
-            volume -= 10
-        if volume < 0
-            volume := 0
-        if volume => (127 << decay)
-            volume := (127 << decay)
-            if state == audio#_A
-                state := audio#_S
+        if ctrl.Left
+            if note > 40
+                note--
+        if ctrl.Right
+            if note < 80
+                note++
                 
-    
+        if ctrl.Up
+            if volume < 127
+                volume++
+        if ctrl.Down
+            if volume > 0
+                volume--
+                
+        audio.SetNote(0,note)
+        audio.SetVolume(0,volume)
+            
+        ser.Hex(audio.GetValue1, 8)
+        ser.Char(" ")
+        ser.Hex(audio.GetValue2, 8)
+        ser.Char(10)
+        ser.Char(13)
+        repeat 10000
+        
+        
                     
-        audio.SetVolume(1,volume ~> decay)
-                
-
-        
-        
-
 DAT
 {{
 

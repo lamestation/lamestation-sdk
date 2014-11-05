@@ -25,11 +25,21 @@ PUB Main
     ctrl.Start
     
     frequency := 10000
- 
-    audio.SetParam(0, audio#_WAV, audio#_SINE)
-    audio.SetParam(1, audio#_WAV, audio#_SAW)
-    audio.SetParam(2, audio#_WAV, audio#_SQUARE)
-    audio.SetParam(3, audio#_WAV, audio#_SINE)
+    
+    audio.SetVolume(0, 127, 1000)
+    audio.SetVolume(1, 127, 1000)
+    audio.SetVolume(2, 127, 1000)
+    audio.SetVolume(3, 127, 1000)
+    
+  '  audio.SetWaveform(0, audio#_SINE)
+'    audio.SetWaveform(1, audio#_SAW)
+ '   audio.SetWaveform(2, audio#_SQUARE)
+  '  audio.SetWaveform(3, audio#_SINE)
+    
+    audio.SetEnvelope(0,0,0)
+  '  audio.SetEnvelope(1,0,0)
+  '  audio.SetEnvelope(2,0,0)
+   ' audio.SetEnvelope(3,0,0)
 
     repeat
         ctrl.Update
@@ -40,7 +50,7 @@ PUB Main
             frequency += 1
 
         audio.SetFreq(0, frequency)
-        audio.SetFreq(1, frequency >> 1)
+        audio.SetFreq(1, frequency << 2)
         audio.SetFreq(2, frequency)
         audio.SetFreq(3, frequency >> 2)
     
