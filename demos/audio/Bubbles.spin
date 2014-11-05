@@ -45,7 +45,7 @@ PUB Main
         audio.SetFreq(1,freq)
 
         if ctrl.A
-            volume_inc++
+            volume_inc--
             
             volcount++ 
             if (volcount // volume_inc) > (volume_inc >> 1)
@@ -55,7 +55,7 @@ PUB Main
             
             audio.SetVolume(1,volume)
         else
-            volume_inc := 0
+            volume_inc := 1000
             audio.SetVolume(1,0)
            
 
