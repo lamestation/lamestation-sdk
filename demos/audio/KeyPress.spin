@@ -38,13 +38,15 @@ PUB Noise
     
     ser.Char("B")
     
+    audio.SetEnvelope(%1111, 0)
+    
     repeat
         ctrl.Update
         
         if ctrl.A
-            audio.SetEnvelope(0,0,1)
+            audio.SetEnvelope(%1111,1)
         else
-            audio.SetEnvelope(0,0,0)
+            audio.SetEnvelope(%1111,0)
             
         if ctrl.Left
             if note > 40

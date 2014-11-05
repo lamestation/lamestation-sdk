@@ -36,8 +36,8 @@ DAT
     osc_waveform    long    0
     
     osc_volinc      long    1000[4]                                             ' 1000 is like instaneous
-    osc_target      long    0[4]
-    osc_vol         long    (127<<12)[4]
+    osc_target      long    (127<<12)[4]
+    osc_vol         long    0[4]
     
     osc_inc         long    0[4]
     osc_acc         long    0[4]    
@@ -49,10 +49,6 @@ PUB null
    
 PUB Start
     cognew(@entry, @osc_sample)    'start assembly cog
-
-'PUB SetVolume(channel, value)
- '   
-  '  osc_vol.long[channel] := value << 12
     
 PUB SetVolume(channel, value)
     
@@ -79,9 +75,19 @@ PUB SetWaveform(channel, value)
     
     osc_waveform.byte[channel] := value
     
-PUB SetEnvelope(channel, active, on)
+PUB SetEnvelope(channel, value) | i
     
-    osc_envelope.byte[channel] := active + (on << 1)
+    repeat i from 0 to 3
+        if channel & 1
+            osc_envelope.byte[i] &= !1
+            if value
+                osc_envelope.byte[i] |= 1
+        channel >>= 1
+    
+PUB StartEnvelope(channel, enable)
+    osc_envelope.byte[channel] &= !2
+    if enable
+        osc_envelope.byte[channel] |= 2
  
 PUB SetSample(value)
     
@@ -89,18 +95,18 @@ PUB SetSample(value)
 
 PUB PlaySound(channel, value)
     
-'    SetEnvelope(channel, 1, 1)
+    StartEnvelope(channel, 1)
     SetNote(channel, value)
 
 PUB StopSound(channel)
     
-    SetEnvelope(channel, 1, 0)
-    SetFreq(channel, 0)
+    StartEnvelope(channel, 0)
+    SetVolume(channel, 0)
     
 PUB StopAllSound | i
 
     repeat i from 0 to 3
-        SetFreq(i, 0)
+        StopSound(i)
         
 PUB GetValue1
     return osc_sample
