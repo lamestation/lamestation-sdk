@@ -6,36 +6,29 @@
 ' 
 ' Authors: Brett Weir
 ' -------------------------------------------------
-' Can be extended with:
-'   LameMusic
-'   LameSFX
-'   LameMIDI
 
 OBJ
     pin  :   "Pinout"
     
 CON
-    SAMPLES     = 512                                           ' samples per cycle
-    PERIOD      = 80_000_000 / 40_000                           ' clkfreq / sample rate
-    OSCILLATORS = 4                                             ' hardcoded oscillators used by synthesizer
+    SAMPLES     = 512                                                           ' samples per cycle
+    PERIOD      = 80_000_000 / 40_000                                           ' clkfreq / sample rate
+    OSCILLATORS = 4                                                             ' hardcoded oscillators used by synthesizer
 
-    #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE        ' waveform options
-                                                                ' 
-    #0, _R, _A                                                  ' ADSR states  Decay/Sustain are identical
-                                                                ' 
-    #0, _ENV, _ATK, _REL, _WAV                                  ' adsr registers
-    #0, _VOLINC, _TARGET, _VOLUME                               ' volume registers
-    #0, _INC, _ACC                                              ' phase registers
+    #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE                        ' waveform options
+    #0, _ENV, _ATK, _DEC, _SUS, _REL, _WAV
 
 DAT
     osc_sample      long    0
 
-    osc_envelope    long    0   
-    osc_attack      long    0
+    osc_envelope    long    $01010101   
+    osc_attack      long    $7F7F7F7F
+    osc_decay       long    0
+    osc_sustain     long    $7F7F7F7F
     osc_release     long    0
     osc_waveform    long    0
     
-    osc_volinc      long    1000[4]                                             ' 1000 is like instaneous
+    osc_volinc      long    1000[4]                                             ' 1000 is instaneous, 0 is never
     osc_target      long    (127<<12)[4]
     osc_vol         long    0[4]
     
@@ -64,25 +57,36 @@ PUB SetNote(channel, value)
     
 PUB SetFreq(channel, value)
     
-    osc_inc.long[channel] := value                                         ' setting the phase increment to zero stops the oscillator.
-                                                                           ' 
-PUB SetAttackRelease(channel, attackvar, releasevar)
+    osc_inc.long[channel] := value
+
+PUB SetParam(channel, type, value)
+    
+    osc_envelope.byte[channel + (type << 2)] := value
+    
+PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
     
     osc_attack.byte[channel] := attackvar
+    osc_decay.byte[channel] := decayvar
+    osc_sustain.byte[channel] := sustainvar
     osc_release.byte[channel] := releasevar
+    
+PUB SetAttack(channel, value)
+    
+    osc_attack.byte[channel] := value
+    
+PUB SetRelease(channel, value)
+
+    osc_release.byte[channel] := value
 
 PUB SetWaveform(channel, value)
     
     osc_waveform.byte[channel] := value
     
 PUB SetEnvelope(channel, value) | i
-    
-    repeat i from 0 to 3
-        if channel & 1
-            osc_envelope.byte[i] &= !1
-            if value
-                osc_envelope.byte[i] |= 1
-        channel >>= 1
+   
+    osc_envelope.byte[channel] &= !1
+    if value
+        osc_envelope.byte[channel] |= 1
     
 PUB StartEnvelope(channel, enable)
     osc_envelope.byte[channel] &= !2
@@ -108,14 +112,10 @@ PUB StopAllSound | i
     repeat i from 0 to 3
         StopSound(i)
         
-PUB GetValue1
-    return osc_sample
-    
-PUB GetValue2
-    return osc_envelope
-    
 DAT
                         org
+' ---------------------------------------------------------------
+' Setup
 ' ---------------------------------------------------------------
 entry                   mov     dira, diraval                               ' set APIN to output
                         mov     ctra, ctraval                               ' establish counter A mode and APIN
@@ -131,6 +131,10 @@ entry                   mov     dira, diraval                               ' se
                         mov     addr_env, t1                                ' envelope address
                         add     t1, #4
                         mov     addr_atk, t1                                ' attack address
+                        add     t1, #4
+                        mov     addr_dec, t1                                ' decay address
+                        add     t1, #4
+                        mov     addr_sus, t1                                ' sustain address
                         add     t1, #4
                         mov     addr_rel, t1                                ' release address
                         add     t1, #4
@@ -157,10 +161,10 @@ loop_main               waitcnt time, periodval                             ' wa
                         mov     out_main, #0                                ' zero out out_main long
                         mov     index, #OSCILLATORS                         ' count number of oscillators
                         
-                        mov     ptr_env, addr_env
-                        mov     ptr_atk, addr_atk
-                        mov     ptr_rel, addr_rel
-                        mov     ptr_wav, addr_wav
+                        rdlong  ptr_env, addr_env
+                        rdlong  ptr_atk, addr_atk
+                        rdlong  ptr_rel, addr_rel
+                        rdlong  ptr_wav, addr_wav
                         
                         mov     ptr_volinc, addr_volinc
                         mov     ptr_voltgt, addr_voltgt
@@ -169,18 +173,15 @@ loop_main               waitcnt time, periodval                             ' wa
                         mov     ptr_inc, addr_inc
                         mov     ptr_acc, addr_acc
                         
-                        
-                        wrlong  durp, addr_sample
-                        
 loop_channel            call    #routine_adsr
                         call    #routine_phase
                         call    #routine_waveform
                         call    #routine_amplitude
                         
-                        add     ptr_env, #1
-                        add     ptr_atk, #1
-                        add     ptr_rel, #1
-                        add     ptr_wav, #1
+                        shr     ptr_env, #8
+                        shr     ptr_atk, #8
+                        shr     ptr_rel, #8
+                        shr     ptr_wav, #8
                         
                         add     ptr_volinc, #4
                         add     ptr_voltgt, #4
@@ -193,31 +194,30 @@ loop_channel            call    #routine_adsr
 
                         adds    out_main, outputoffset                      ' Add DC offset for output to PWM
                         jmp     #loop_main
+                        
                        
 ' ---------------------------------------------------------------
 ' ADSR Envelope
 ' ---------------------------------------------------------------    
-routine_adsr            rdbyte  envelope, ptr_env
+routine_adsr            mov     envelope, ptr_env
                         test    envelope, #1        wz ' envelope on
                 if_nz   jmp     #:adsr_on
 ' ---------------------------------------------------------------
 :adsr_off               rdlong  volinc, ptr_volinc
                         rdlong  voltarget, ptr_voltgt  
                         
-                        mov     durp, #$AA
-                        
-                        jmp     #:adsr_tracker               
+                        jmp     #:adsr_tracker
 ' ---------------------------------------------------------------                          
 :adsr_on                test    envelope, #2        wz
 
-                        mov     durp, #$BB
+                        mov     volinc, #10                                 ' needed for volinc calculation.
                         
-            if_nz       jmp     #:state_A
             if_z        jmp     #:state_R
 ' ``````````````````````````````````````````````````````````````` 
 :state_A                mov     voltarget, #127
                         
-                        rdbyte  t1, ptr_atk                                ' read attack
+                        mov     t1, ptr_atk                                 ' read attack
+                        and     t1, #$FF
                         shr     t1, #3
                         shl     volinc, t1
                         
@@ -225,22 +225,26 @@ routine_adsr            rdbyte  envelope, ptr_env
 ' ```````````````````````````````````````````````````````````````
 :state_R                mov     voltarget, #0
                         
-                        rdbyte  t1, ptr_rel                                ' read release
+                        mov     t1, ptr_rel                                 ' read release
+                        and     t1, #$FF
                         shr     t1, #4
                         mov     t2, #8
                         sub     t2, t1
                         shl     volinc, t2
+                        
 ' ```````````````````````````````````````````````````````````````
 :adsr_stateend          shl     voltarget, #12
       
 ' ---------------------------------------------------------------         
 :adsr_tracker           rdlong  volume, ptr_vol                             ' get volume parameters
+
                         cmps    volume, voltarget           wc, wz              
             if_b        adds    volume, volinc                              ' if volume < target    volume += volinc
             if_a        subs    volume, volinc                              ' if volume > target    volume -= volinc
             
                         cmps    volume, #0                  wc              ' if volume < 0
             if_b        mov     volume, #0                                  '     volume := 0
+                        
 
                         wrlong  volume, ptr_vol
 routine_adsr_ret        ret
@@ -248,9 +252,9 @@ routine_adsr_ret        ret
 ' ---------------------------------------------------------------                         
 ' Phase Accumulator
 ' --------------------------------------------------------------- 
-routine_phase           rdlong  t1, ptr_inc                                  ' Update phase increment with new frequency
+routine_phase           rdlong  t1, ptr_inc                                 ' Update phase increment with new frequency
                         
-                        rdlong  phase, ptr_acc                               ' Add phase increment to accumulator of oscillator
+                        rdlong  phase, ptr_acc                              ' Add phase increment to accumulator of oscillator
                         add     phase, t1
                         wrlong  phase, ptr_acc
 
@@ -262,9 +266,11 @@ routine_phase_ret       ret
 ' --------------------------------------------------------------- 
 ' Waveform Generator
 ' --------------------------------------------------------------- 
-routine_waveform        rdbyte  t1, ptr_wav
+routine_waveform        mov     t1, ptr_wav
+                        and     t1, #$FF
 
                         add     $+2, t1                                     ' jumps to the appropriate waveform handler
+                        nop
                         jmpret  $, $+1                                      ' see "Here Symbol" in Propeller Manual
 
                         long    :squarewave, :rampwave,   :triwave
@@ -306,13 +312,13 @@ if_nc                   neg     out_osc, out_osc
                         jmp     #:oscOutput
 ' ```````````````````````````````````````````````````````````````
 :whitenoise             sar     rand, #1                                    ' pseudo-random number generator truncated to 8 bits.
-                        mov     rand2, rand
-                        and     rand2, #$FF
-                        mov     rand3, rand2
-                        shl     rand3, #2
-                        xor     rand3, rand2
-                        shl     rand3, #24
-                        add     rand, rand3
+                        mov     t1, rand
+                        and     t1, #$FF
+                        mov     t2, t1
+                        shl     t2, #2
+                        xor     t2, t1
+                        shl     t2, #24
+                        add     rand, t2
 
                         mov     out_osc, rand
                         and     out_osc, #$FF
@@ -334,6 +340,7 @@ routine_amplitude       mov     t1, out_osc
                         mov     t2, volume
                         call    #routine_multiply                           ' result is in tr
                         adds    out_main, tr
+
 routine_amplitude_ret   ret
 
 ' ---------------------------------------------------------------
@@ -359,7 +366,7 @@ if_nz                   add     tr, t1
                             
                         sar     tr, #5     '5-2
 routine_multiply_ret    ret
-
+    
 ' ---------------------------------------------------------------
 ' Variables
 ' ---------------------------------------------------------------
@@ -371,9 +378,6 @@ sineAddr        long    $E000
 outputoffset    long    PERIOD/2
 rand            long    203943
 
-durp            long    $CAAF
-
-' temporary control registers
 time            res     1
 index           res     1  
 
@@ -381,6 +385,8 @@ addr_sample     res     1
         
 addr_env        res     1    
 addr_atk        res     1
+addr_dec        res     1
+addr_sus        res     1
 addr_rel        res     1
 addr_wav        res     1
 
@@ -420,9 +426,6 @@ out_osc         res     1
 t1              res     1
 t2              res     1
 tr              res     1
-
-rand2           res     1
-rand3           res     1
 ' ---------------------------------------------------------------
     
                 fit 496

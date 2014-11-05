@@ -88,12 +88,12 @@ PUB Main
                 hvy -= 8
             frame_cnt++
             if volume_inc < 1000
-                volume_inc += 10
-                freq += 20
+                volume_inc += 20
+                freq += 40
         else
-            if volume_inc > 100
-                volume_inc -= 20
-                freq -= 40     
+            if volume_inc > 200
+                volume_inc -= 10
+                freq -= 20     
            
         if hvy < 150
             hvy += 4     ' gravity
@@ -120,13 +120,18 @@ PUB DrawCopter(x, y, f)
     gfx.Sprite(tail.Addr, x+1, y+9, f)
     
 PUB SFXEngine    
-    audio.SetParam(1, audio#_WAV, audio#_SAW)
+    audio.SetWaveform(1, audio#_SAW)
+    audio.SetEnvelope(1,0)
 
     repeat
         volume += volume_inc
 
         audio.SetFreq(1,freq)
         audio.SetVolume(1,(volume >> 10) // 127)
+        
+      '  if hy~>8 > 100
+       '     audio.SetWaveform(2, audio#_NOISE)
+        '    audio.StartEnvelope(2,1)
         
 '        fn.Sleep(2)
 DAT
