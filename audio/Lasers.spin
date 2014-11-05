@@ -1,70 +1,65 @@
 {{
-Key Press Demo
--------------------------------------------------
+MOD ATTACK!
+------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
 See end of file for terms of use.
 
 Authors: Brett Weir
--------------------------------------------------
+------------------------------------------------------------
 }}
 
-
 CON
-    _clkmode        = xtal1 + pll16x
-    _xinfreq        = 5_000_000
-
+    _clkmode = xtal1 + pll16x
+    _xinfreq = 5_000_000
+  
 OBJ
-    audio   :   "LameAudio"
-    ctrl    :   "LameControl"
-    
-    
-OBJ
-    ser : "LameSerial"
+    audio   : "LameAudio"
+    ctrl    : "LameControl"
     
 VAR
-    byte    clicked    
-    byte    note
-    byte    volume
-    
-PUB Noise
+    long    volume
+    long    volume_inc
+    long    volcount
+    long    freq
+
+PUB Main
     audio.Start
     ctrl.Start
     
-    audio.SetNote(0, note := 60)
-    audio.SetVolume(0, volume := 127)
-    audio.SetWaveform(0, audio#_TRIANGLE)
-    audio.SetADSR(0,40, 127, 0, 127)
+    volume:= 1
+    volume_inc := 1
     
-    audio.SetEnvelope(0, 1)
-    
+    audio.SetWaveform(1, audio#_SAW)
+    audio.SetVolumeSpeed(1, 100)    
+    audio.SetEnvelope(1, 0)
+
     repeat
         ctrl.Update
-        
-        if ctrl.A
-            audio.StartEnvelope(0,1)
-        else
-            audio.StartEnvelope(0,0)
-            
-        if ctrl.Left
-            if note > 40
-                note--
-        if ctrl.Right
-            if note < 80
-                note++
-                
+               
         if ctrl.Up
-            if volume < 127
-                volume++
+            freq++
         if ctrl.Down
-            if volume > 0
-                volume--
-                
-        audio.SetNote(0,note)
-        audio.SetVolume(0,volume)  
-        
-        repeat 10000      
-                    
+            freq--
+
+        audio.SetFreq(1,freq)
+
+        if ctrl.A
+            volume_inc++
+            
+            volcount++ 
+            if (volcount // volume_inc) > (volume_inc >> 1)
+                volume := 127
+            else
+                volume := 0
+            
+            audio.SetVolume(1,volume)
+        else
+            volume_inc := 0
+            audio.SetVolume(1,0)
+           
+
+    
 DAT
 {{
 
