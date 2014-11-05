@@ -1,5 +1,5 @@
 {{
-Key Press Demo
+Sampler
 -------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -8,7 +8,8 @@ See end of file for terms of use.
 Authors: Brett Weir
 -------------------------------------------------
 }}
-
+' This demo shows how to use the built-in sampler
+' as well as a simple chord playback.
 
 CON
     _clkmode        = xtal1 + pll16x
@@ -16,55 +17,27 @@ CON
 
 OBJ
     audio   :   "LameAudio"
-    ctrl    :   "LameControl"
-    
-    
-OBJ
-    ser : "LameSerial"
-    
-VAR
-    byte    clicked    
-    byte    note
-    byte    volume
-    
-PUB Noise
+    fn      :   "LameFunctions"
+    sample  :   "ins_hammond"
+
+PUB Main
     audio.Start
-    ctrl.Start
+    audio.SetSample(sample.Addr)
+    audio.SetWaveform(0, audio#_SAMPLE)
+    audio.SetWaveform(1, audio#_SAMPLE)
+    audio.SetWaveform(2, audio#_SAMPLE)
+    audio.SetWaveform(3, audio#_SAMPLE)
     
-    audio.SetNote(0, note := 60)
-    audio.SetVolume(0, volume := 127)
-    audio.SetWaveform(0, audio#_TRIANGLE)
-    audio.SetADSR(0,40, 127, 0, 127)
+    audio.PlaySound(0,50)
+    fn.Sleep(1000)
+    audio.PlaySound(1,54)
+    fn.Sleep(1000)
+    audio.PlaySound(2,57)
+    fn.Sleep(1000)
+    audio.PlaySound(3,62)
+    fn.Sleep(2000)
+    audio.StopAllSound
     
-    audio.SetEnvelope(0, 1)
-    
-    repeat
-        ctrl.Update
-        
-        if ctrl.A
-            audio.StartEnvelope(0,1)
-        else
-            audio.StartEnvelope(0,0)
-            
-        if ctrl.Left
-            if note > 40
-                note--
-        if ctrl.Right
-            if note < 80
-                note++
-                
-        if ctrl.Up
-            if volume < 127
-                volume++
-        if ctrl.Down
-            if volume > 0
-                volume--
-                
-        audio.SetNote(0,note)
-        audio.SetVolume(0,volume)  
-        
-        repeat 10000      
-                    
 DAT
 {{
 

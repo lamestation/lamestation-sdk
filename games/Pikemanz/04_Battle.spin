@@ -71,7 +71,7 @@ OBJ
 PUB Wild
     dox.CreatePikedox
     front_pk := 0
-    back_pk := 7
+    back_pk := 4
     
     Scene
 
@@ -86,8 +86,8 @@ PUB Scene
     hp_dsp[BACK] := pike.GetHealth(back_pk)
     hp_dsp[FRONT] := pike.GetHealth(front_pk)    
     
-'    SquareWipe
-  '  FaceOffScene
+    SquareWipe
+    FaceOffScene
     
     repeat
         View

@@ -20,40 +20,44 @@ OBJ
 VAR
     long    volume
     long    volume_inc
+    long    volcount
     long    freq
 
 PUB Main
     audio.Start
     ctrl.Start
     
-    volume:= 10000
-    volume_inc := 100
+    volume:= 1
+    volume_inc := 1
     
-    audio.SetParam(0, audio#_WAV, audio#_SINE)
-    audio.SetParam(1, audio#_WAV, audio#_SAW)
-    audio.SetParam(2, audio#_WAV, audio#_SQUARE)
-    audio.SetParam(3, audio#_WAV, audio#_SINE)
-    
-    audio.PlaySound(1,70)
+    audio.SetWaveform(1, audio#_SAW)
+    audio.SetVolumeSpeed(1, 100)    
+    audio.SetEnvelope(1, 0)
 
     repeat
         ctrl.Update
-        
-        if ctrl.Left
-            if volume_inc > 0
-                volume_inc -= 1
-        if ctrl.Right
-            volume_inc += 1
-            
+               
         if ctrl.Up
             freq++
         if ctrl.Down
             freq--
-            
-        volume += volume_inc
 
         audio.SetFreq(1,freq)
-        audio.SetVolume(1,(volume >> 10) // 127)
+
+        if ctrl.A
+            volume_inc--
+            volcount++ 
+            if (volcount // volume_inc) > (volume_inc >> 1)
+                volume := 127
+            else
+                volume := 0
+            
+            audio.SetVolume(1,volume)
+        else
+            volume_inc := 1000
+            audio.SetVolume(1,0)
+           
+
     
 DAT
 {{

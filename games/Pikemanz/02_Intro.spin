@@ -35,38 +35,39 @@ PUB Main
         
 PUB Scene
         ctrl.Update
-        gfx.ClearScreen(gfx#WHITE)        
+        gfx.ClearScreen(gfx#WHITE)
+        
         gfx.Sprite(nash.Addr,52,4, 0)
         
-        
-        menu.Dialog(string("TEACH: Hi! My name",10,"is Mr. Teak, but"))
+        menu.Dialog(string("TEACH: Hi! My name",10,"is Mr. Pine, but"))
         gfx.Sprite(arrow.Addr, 115,54, 0)
         lcd.DrawScreen
-        menu.WaitKey
+        ctrl.WaitKey
         
         menu.Dialog(string("you can call me",10,"TEACH."))
         lcd.DrawScreen
-        menu.WaitKey
+        ctrl.WaitKey
         
         menu.Dialog(string("In the Pikemanz",10,"world, you make..."))
         gfx.Sprite(arrow.Addr, 115,54, 0)
         lcd.DrawScreen
-        menu.WaitKey
+        ctrl.WaitKey
         
         menu.Dialog(string("the rules."))
         lcd.DrawScreen
-        menu.WaitKey
+        ctrl.WaitKey
         
         menu.Dialog(string("You'll never play",10,"a game as good as"))
         gfx.Sprite(arrow.Addr, 115,54, 0)
         lcd.DrawScreen
-        menu.WaitKey
+        ctrl.WaitKey
 
         menu.Dialog(string("the one you make",10,"yourself!"))            
         lcd.DrawScreen
-        menu.WaitKey
+        ctrl.WaitKey
 
         state.SetState(state#_WORLD)
+    
 
 DAT
 {{
