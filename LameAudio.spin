@@ -53,15 +53,15 @@ PUB SetVolumeSpeed(channel, value)
 
 PUB SetNote(channel, value)
     
-    osc_inc.long[channel] := long[@freqtable][value//12] >> (9 - value/12)
+    osc_inc.long[channel] := freqtable[value//12] >> (9 - value/12)
     
 PUB SetFreq(channel, value)
     
     osc_inc.long[channel] := value
 
 PUB SetParam(channel, type, value)
-    
-    osc_envelope.byte[channel + (type << 2)] := value
+
+    byte[@osc_envelope[type]][channel] := value
     
 PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
     
@@ -82,14 +82,14 @@ PUB SetWaveform(channel, value)
     
     osc_waveform.byte[channel] := value
     
-PUB SetEnvelope(channel, value) | i
+PUB SetEnvelope(channel, value)
    
-    osc_envelope.byte[channel] &= !1
+    osc_envelope.byte[channel] &= constant(!1)
     if value
         osc_envelope.byte[channel] |= 1
     
 PUB StartEnvelope(channel, enable)
-    osc_envelope.byte[channel] &= !2
+    osc_envelope.byte[channel] &= constant(!2)
     if enable
         osc_envelope.byte[channel] |= 2
  
