@@ -99,6 +99,7 @@ PUB SetSample(value)
 
 PUB PlaySound(channel, value)
     
+    SetEnvelope(channel, 1)
     StartEnvelope(channel, 1)
     SetNote(channel, value)
 
