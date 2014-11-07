@@ -28,6 +28,8 @@ OBJ
     box     :   "gfx_scorebox"
 
     song    :   "sng_tetris"
+    title   :   "gfx_bretris_logo"
+    over    :   "gfx_gameover"
 
 CON
     MAP_W = 10
@@ -67,8 +69,7 @@ PUB Main
 
     audio.Start
     music.Start
-    music.LoadSong(song.Addr)
-    music.LoopSong
+
 
 
     mapw := MAP_W
@@ -102,7 +103,83 @@ PUB Main
 
         lcd.DrawScreen
 
+PUB GameOver
+    
+    lcd.InvertScreen(true)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#WHITE)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#GRAY)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#BLACK)
+    gfx.Sprite(over.Addr,22,28,0)
+    fn.Sleep(200)
+    lcd.InvertScreen(false)
+    lcd.DrawScreen
+
+    ctrl.WaitKey
+    
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#WHITE)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#GRAY)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#BLACK)
+    lcd.DrawScreen
+    fn.Sleep(500)
+    
+PUB TitleScreen
+    
+    music.LoadSong(song.Addr)
+    music.LoopSong
+    
+    gfx.ClearScreen(gfx#BLACK)
+    lcd.DrawScreen
+    fn.Sleep(1500)
+    gfx.ClearScreen(gfx#GRAY)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#WHITE)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#BLACK)
+    gfx.Sprite(title.Addr,12,12,0)
+    lcd.DrawScreen
+    lcd.InvertScreen(true)    
+    fn.Sleep(200)
+    lcd.InvertScreen(false)
+        
+    gfx.ClearScreen(gfx#BLACK)
+    gfx.Sprite(title.Addr,12,12,0)
+    lcd.DrawScreen
+
+    ctrl.WaitKey
+    
+    lcd.InvertScreen(true)
+    fn.Sleep(200)
+    lcd.InvertScreen(false)
+    gfx.ClearScreen(gfx#WHITE)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#GRAY)
+    lcd.DrawScreen
+    fn.Sleep(200)
+    gfx.ClearScreen(gfx#BLACK)
+    lcd.DrawScreen
+    fn.Sleep(300)
+    music.StopSong
+    fn.Sleep(1000)
+    
+    
 PUB ResetGame | x,y
+    
+    TitleScreen
+    
     GetNewTetro
 
     dropmax := 9
@@ -175,6 +252,7 @@ PUB DrawTetromino
     
     if CheckTetromino(_COLLIDE)
         if ty < 1
+            GameOver
             ResetGame
             return
 
