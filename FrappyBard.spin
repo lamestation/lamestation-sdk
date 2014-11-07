@@ -32,6 +32,8 @@ OBJ
     youdied  : "gfx_youdie"
     font     : "gfx_numbers"
     pressa   : "gfx_pressa"
+    
+    song     : "song_frappy"
 
 
 CON
@@ -81,6 +83,15 @@ PUB TitleScreen | flightstate
 
     xoffset := 0
 
+    audio.SetWaveform(3,audio#_NOISE)
+    audio.SetEnvelope(0,1)
+    audio.SetEnvelope(1,1)
+    audio.SetEnvelope(2,1)
+    audio.SetEnvelope(3,1)
+    audio.SetADSR(3, 127, 100, 0, 100)
+    music.LoadSong(song.Addr)
+    music.PlaySong
+
     repeat while not ctrl.A or ctrl.B
         ctrl.Update
 
@@ -107,6 +118,8 @@ PUB TitleScreen | flightstate
         gfx.Sprite(title.Addr, 40, 4, 0)
         gfx.Sprite(pressa.Addr,44,52,0)
         lcd.DrawScreen
+        
+    music.StopSong
 
 PUB GameLoop
 
