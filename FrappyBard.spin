@@ -22,6 +22,7 @@ OBJ
     gfx     : "LameGFX"
     lcd     : "LameLCD"
     audio   : "LameAudio"
+    music   : "LameMusic"
     ctrl    : "LameControl"
     fn      : "LameFunctions"
 
@@ -62,7 +63,12 @@ VAR
 PUB Main
 
     lcd.Start(gfx.Start)
+    lcd.SetFrameLimit(lcd#FULLSPEED)
     gfx.LoadFont(font.Addr, "0", 4, 6)
+    audio.Start
+    music.Start
+
+    cognew(SFXEngine, @SFXStack)
 
     clicked := 0
     repeat
@@ -102,7 +108,6 @@ PUB TitleScreen | flightstate
         gfx.Sprite(pressa.Addr,44,52,0)
         lcd.DrawScreen
 
-
 PUB GameLoop
 
     xoffset := 0
@@ -138,7 +143,8 @@ PUB GameLoop
 PUB GameOver
     gfx.Sprite(youdied.Addr,40,32,0)
     lcd.DrawScreen
-    fn.Sleep(1500)
+    Errr
+    fn.Sleep(1000)
 
 
 PUB HandlePlayer
@@ -146,6 +152,7 @@ PUB HandlePlayer
     if ctrl.A
         if not clicked
             clicked := 1
+            RunSound(_JUMP)
             flighttimeout := 10
             speedy := -9
     else
@@ -218,6 +225,8 @@ PUB ControlPipes | t, ran
             if playerx+xoffset > pipex[t]+16 and not passed[t]
                 passed[t] := 1
                 score++
+                RunSound(_DING)
+
 
 
 PUB PutPipeOpening(x,y,h) | bound_upper, bound_lower, dy, t
@@ -236,8 +245,9 @@ PUB PutPipeOpening(x,y,h) | bound_upper, bound_lower, dy, t
     
     PutTile(x,bound_upper,PIPE_BOT)
     PutTile(x,bound_lower,PIPE_TOP)
-
     
+    if not playerx + word[player.Addr][1] < x and not playerx > x+16 and playery < -word[player.Addr][2]
+            died := 1
     if fn.TestBoxCollision(playerx, playery, word[player.Addr][1], word[player.Addr][2], x, 0, 16, bound_upper+16)
         died := 1
     if fn.TestBoxCollision(playerx, playery, word[player.Addr][1], word[player.Addr][2], x, bound_lower, 16, 64)
@@ -271,7 +281,82 @@ PUB KeepScore | tmp
     intarray[3] := 0
 
     gfx.PutString(@intarray, 0, 0)
+                      
+DAT
+    SFXStack    long    0[20]
+    
+    SFXplay     byte    0
+    SFXstop     byte    0
+    
+CON
+    #1, _JUMP, _DING, _ERRR
+    
+PUB SFXEngine
+    repeat
+        case SFXplay
+            _JUMP: Jump(3)
+            _DING: Ding(2)
+            _ERRR: Errr
+               
+        SFXstop := 0
+         
+PUB RunSound(sound)
 
+    if SFXplay
+        SFXstop := 1
+    repeat until not SFXstop
+    SFXplay := sound
+        
+PRI Jump(channel) | freq, volcount
+    
+    audio.SetWaveform(channel, audio#_TRIANGLE)   
+    audio.SetEnvelope(channel, 0)
+    audio.SetVolumeSpeed(channel,10)
+    
+    freq := 30000
+    volcount := 3000
+
+    repeat while volcount > 0
+        if SFXstop
+            audio.SetVolume(channel,0)
+            SFXplay := 0
+            SFXstop := 0
+            return
+        volcount--
+    
+        freq += 12
+        audio.SetFreq(channel,freq)
+        audio.SetVolume(channel,127)
+    
+    audio.SetVolume(channel,0)
+    SFXplay := 0
+    SFXstop := 0
+    
+PRI Ding(channel)
+    audio.SetWaveform(channel, audio#_SINE)
+    audio.SetEnvelope(channel, 1)
+    audio.SetVolumeSpeed(channel,1000)
+    audio.SetADSR(channel, 127,120, 0, 120)
+    audio.PlaySound(channel, 60)
+    fn.Sleep(100)
+    audio.PlaySound(channel, 72)
+    audio.StopSound(channel)
+    SFXplay := 0
+    SFXstop := 0
+    
+PRI Errr
+    audio.SetWaveform(0, audio#_SQUARE)
+    audio.SetWaveform(1, audio#_SQUARE)
+    audio.SetEnvelope(0, 1)
+    audio.SetEnvelope(1, 1)
+    audio.SetADSR(0, 127,0, 0, 0)
+    audio.SetADSR(1, 127,0, 0, 0)
+    audio.PlaySound(0, 19)
+    audio.PlaySound(1, 23)
+    fn.Sleep(300)
+    audio.StopSound(0)
+    audio.StopSound(1)
+    
 
 DAT
 
