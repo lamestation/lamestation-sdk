@@ -54,8 +54,8 @@ PUB LoadPatch(patchAddr) | i, j, t
 
     repeat j from 0 to 3
         t := patchAddr + 1
-        repeat i from audio#_ATK to audio#_WAV
-            audio.SetParam(j, i, byte[t++])
+      '  repeat i from audio#_ATK to audio#_WAV
+       '     audio.SetParam(j, i, byte[t++])
         
 PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
     

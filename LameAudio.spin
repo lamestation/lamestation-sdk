@@ -16,7 +16,7 @@ CON
     OSCILLATORS = 4                                                             ' hardcoded oscillators used by synthesizer
 
     #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE                        ' waveform options
-    #0, _ENV, _ATK, _DEC, _SUS, _REL, _WAV
+    #0, _ATK, _DEC, _SUS, _REL, _WAV
 
 DAT
     osc_sample      long    0
@@ -61,7 +61,7 @@ PUB SetFreq(channel, value)
 
 PUB SetParam(channel, type, value)
     
-    osc_envelope.byte[channel + (type << 2)] := value
+    osc_attack.byte[channel + (type << 2)] := value
     
 PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
     
@@ -105,7 +105,6 @@ PUB PlaySound(channel, value)
 PUB StopSound(channel)
     
     StartEnvelope(channel, 0)
-    SetVolume(channel, 0)
     
 PUB StopAllSound | i
 
