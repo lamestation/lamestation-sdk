@@ -61,6 +61,9 @@ OBJ
     ctrl    : "LameControl"
     fn      : "LameFunctions"
     
+    efx     : "piXel_Effects"
+    sfx     : "piXel_Sound"
+    
     gfx_player      : "gfx_player_small"
     gfx_ibot        : "gfx_ibot"
     gfx_idrone      : "gfx_idrone"
@@ -69,12 +72,11 @@ OBJ
     gfx_laser       : "gfx_laser"
     gfx_bullet      : "gfx_bullet"        
     gfx_head        : "gfx_head"
-    gfx_boom        : "gfx_boom"
     gfx_healthbar   : "gfx_healthbar"
     gfx_starmap     : "gfx_starmap"
     gfx_pixmain     : "gfx_pixmain"
     
-    font : "font8x8"
+    font            : "font8x8"
     
     gfx_tiles_pixel : "gfx_tiles_pixel"
 
@@ -99,6 +101,7 @@ PUB Main
     audio.Start
     music.Start
     ctrl.Start
+    sfx.Start
 
     InitGraphicAssets
 
@@ -153,13 +156,14 @@ PUB GameLoop
     DrawPlayer
     HandleBullets
     HandleEnemies
-    HandleEffects
+    efx.Handle(xoffset,yoffset)
     HandleStatusBar
     lcd.DrawScreen
     fn.Sleep(10)
             
 PUB Victory
     music.StopSong
+    fn.Sleep(100)
     music.LoadSong(song_yeah.Addr)
     music.LoopSong
     
@@ -235,9 +239,9 @@ PUB ItsGameOver
     crouching := 1
     pos_frame := 4
     
-    music.StopSong   
-    music.LoadSong(song_sad.Addr)
-    music.LoopSong    
+   ' music.StopSong   
+    'music.LoadSong(song_sad.Addr)
+   ' music.LoopSong    
     
     StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
     
@@ -256,9 +260,9 @@ PUB GameIntro
     crouching := 0
     pos_frame := 0
     
-    music.StopSong   
-    music.LoadSong(song_sad.Addr)
-    music.LoopSong    
+    'music.StopSong   
+   ' music.LoadSong(song_sad.Addr)
+  '  music.LoopSong    
 
     StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all..",10,10,"Before it's",10,"too late..."),200)
 
@@ -295,7 +299,7 @@ PUB InitLevel
     InitPlayer
     InitBullets
     InitEnemies
-    InitEffects
+    efx.Init
         
     map.Load(tilemap, leveldata[currentlevel])
     ReadObjects(map_pixel.objAddr)
@@ -371,10 +375,15 @@ PUB HandlePlayer | adjust
 
     if jumping
         pos_frame := 3
-
+    
     adjust := map.TestMoveX(pos_oldx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playerx)
     if adjust
         playerx += adjust
+        
+    if playerx < 0
+        playerx := 0
+    if playerx > map.GetWidth << 3 - word[gfx_player.Addr][1]
+        playerx := map.GetWidth << 3 - word[gfx_player.Addr][1]
 
     if ctrl.A
         if not jumping               
@@ -419,6 +428,9 @@ PUB HandlePlayer | adjust
     if playerhealth_timeout > 0
         playerhealth_timeout--
         
+        
+PUB TestPlayerCollision(x, y, w, h)
+    return fn.TestBoxCollision(x, y, w, h, playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
 
 PUB DrawPlayer
     if not playerhealth_timeout or (playerhealth_timeout & $2)
@@ -448,70 +460,6 @@ PUB HandleStatusBar | x
         
     repeat x from 0 to (playerhealth-1)
         gfx.Sprite(gfx_healthbar.Addr, 124-x<<2, 56, 0)        
-
-
-
-' *********************************************************
-'  Effects
-' *********************************************************
-CON 
-    EFFECTS = 6
-    #1, EXPLOSION
-  
-VAR
-    word    effect
-    long    effectx[EFFECTS]
-    long    effecty[EFFECTS]
-    byte    effecton[EFFECTS]
-    byte    effectframe[EFFECTS]
-    word    effecttime[EFFECTS]
-
-PUB InitEffects | index
-    effect := 0
-    repeat index from 0 to constant(EFFECTS-1)
-        effecton[index] := 0 
-        effectx[index] := 0
-        effecty[index] := 0
-        effectframe[index] := 0
-        effecttime[index] := 0
-    
-
-PUB SpawnEffect(x, y, type)
-
-    effecton[effect] := type
-    effectx[effect] := x
-    effecty[effect] := y
-    effectframe[effect] := 0
-    effecttime[effect] := 0
-                                
-    effect++
-    if effect > constant(EFFECTS-1)
-        effect := 0
-        
-    audio.SetWaveform(2, 4)
-    audio.SetADSR(2, 127, 10, 0, 70)
-    audio.PlaySound(2,40)
-
-PUB HandleEffects | effectxtemp, effectytemp, index
-
-    repeat index from 0 to constant(EFFECTS-1)
-        if effecton[index]
-        
-            effecttime[index]++
-            if effecttime[index] > 4
-                effecttime[index] := 0
-                effectframe[index]++
-                
-            if effectframe[index] > 2
-                effecton[index] := 0
-            else
-                effectxtemp := effectx[index] - xoffset
-                effectytemp := effecty[index] - yoffset
-      
-                if (effectxtemp => 0) and (effectxtemp =< SCREEN_W-1) and (effectytemp => 0) and (effectytemp =< SCREEN_H - 1)          
-                    gfx.Sprite(gfx_boom.Addr, effectxtemp , effectytemp, effectframe[index])
-                else
-                    effecton[index] := 0
 
 
 ' *********************************************************
@@ -598,9 +546,7 @@ PUB SpawnBullet(x, y, dir)
     if bullet > constant(BULLETS-1)
         bullet := 0
 
-    audio.SetWaveform(2, 1)
-    audio.SetADSR(2, 127, 50, 0, 50)
-    audio.PlaySound(2,70)        
+    sfx.RunSound(sfx#_LASER)
 
 PUB HandleBullets | bulletxtemp, bulletytemp
 
@@ -623,17 +569,13 @@ PUB HandleBullets | bulletxtemp, bulletytemp
           bulletytemp := bullety[bulletindex] - yoffset
 
           if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)
-              if fn.TestBoxCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1, playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
+              if TestPlayerCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1)
                   HitPlayer
                   bulleton[bulletindex] := 0
               else
                   gfx.Sprite(gfx_laser.Addr, bulletxtemp , bulletytemp, 0)
           else
               bulleton[bulletindex] := 0
-              
-          
-
-
 
 ' *********************************************************
 '  Enemies
@@ -802,9 +744,10 @@ PUB CheckEnemyCollision(index) | x, y, boom, ran
                 enemytimeout[index] := ENEMY_TIMEOUT
             else
             
+                
                 repeat y from 0 to (GetObjectHeight(enemyon[index])>>3)-1
                     repeat x from 0 to (GetObjectWidth(enemyon[index])>>3)-1
-                        SpawnEffect(enemyx[index]+(x<<3), enemyy[index]+(y<<3), EXPLOSION)
+                        efx.Spawn(enemyx[index]+(x<<3), enemyy[index]+(y<<3), efx#EXPLOSION)
                         
                 if enemyon[index] == BOSS
                     gamestate := WIN
