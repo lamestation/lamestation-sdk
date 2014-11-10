@@ -42,7 +42,7 @@ DAT
     barres              byte    0
     transpose           long    0
                                 
-    LoopingPlayStack    long    0[20]
+    LoopingPlayStack    long    0[40]
     songdata            word    0[2]
 
 PUB null
@@ -59,7 +59,7 @@ PUB LoadPatch(patchAddr) | i, j, t
         
 PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
     
-    wordmove(@songdata, songAddr,3)
+    wordmove(@songdata, songAddr, 2)
     repeat 2
         songdata[n++] += songAddr.word[1]
         
