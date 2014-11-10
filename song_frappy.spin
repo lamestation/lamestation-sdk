@@ -40,21 +40,11 @@ byte    3,SOFF,SOFF,  40,SOFF,SOFF,SOFF,  40,SOFF,SOFF,SOFF,  40,SOFF,  40,SOFF,
 sequence_data
 byte    TRANS, 0
 byte    TEMPO, 80
-'byte    ADSRW+$F, 127, 10, 100, 10, SQUARE
+byte    ADSRW+%0111, 127, 10, 100, 10, SQUARE
+byte    ADSRW+%1000, 127, 100, 100, 100, NOISE
+
 
 byte    0,1,2,3,BAROFF
 byte    4,5,6,7,BAROFF
 
 byte    SONGOFF
-
-
-{{    
-    audio.SetWaveform(3,audio#_NOISE)
-    audio.SetEnvelope(0,1)
-    audio.SetEnvelope(1,1)
-    audio.SetEnvelope(2,1)
-    audio.SetEnvelope(3,1)
-    audio.SetADSR(3, 127, 100, 0, 100)
-    music.LoadSong(theme.Addr)
-    music.PlaySong
-    }}

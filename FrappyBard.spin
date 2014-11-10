@@ -83,12 +83,6 @@ PUB TitleScreen | flightstate
 
     xoffset := 0
 
-    audio.SetWaveform(3,audio#_NOISE)
-    audio.SetEnvelope(0,1)
-    audio.SetEnvelope(1,1)
-    audio.SetEnvelope(2,1)
-    audio.SetEnvelope(3,1)
-    audio.SetADSR(3, 127, 100, 0, 100)
     music.LoadSong(song.Addr)
     music.PlaySong
 
