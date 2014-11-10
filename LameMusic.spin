@@ -45,17 +45,8 @@ DAT
     LoopingPlayStack    long    0[40]
     songdata            word    0[2]
 
-PUB null
-    
 PUB Start
     cognew(LoopingSongParser, @LoopingPlayStack)
-    
-PUB LoadPatch(patchAddr) | i, j, t    
-
-    repeat j from 0 to 3
-        t := patchAddr + 1
-        repeat i from audio#_ATK to audio#_WAV
-            audio.SetParam(j, i, byte[t++])
         
 PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
     
@@ -111,7 +102,7 @@ PRI LoopingSongParser | repeattime, linecursor, barshift, bartmp
             repeat while byte[loopAddr][songcursor] <> SONGOFF and not stop
     
                 if byte[loopAddr][songcursor] & $F0 == ADSRW
-                    LoadPatch(loopAddr + songcursor)                 'can't use array notation because loopAddr is word-size
+                    audio.LoadPatch(loopAddr + songcursor)                 'can't use array notation because loopAddr is word-size
                     songcursor += 6
                     next
                         
