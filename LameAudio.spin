@@ -16,7 +16,7 @@ CON
     OSCILLATORS = 4                                                             ' hardcoded oscillators used by synthesizer
 
     #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE                        ' waveform options
-    #0, _ATK, _DEC, _SUS, _REL, _WAV
+    #0, _ENV, _ATK, _DEC, _SUS, _REL, _WAV
 
 DAT
     osc_sample      long    0

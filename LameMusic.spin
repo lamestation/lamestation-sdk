@@ -54,8 +54,8 @@ PUB LoadPatch(patchAddr) | i, j, t
 
     repeat j from 0 to 3
         t := patchAddr + 1
-      '  repeat i from audio#_ATK to audio#_WAV
-       '     audio.SetParam(j, i, byte[t++])
+        repeat i from audio#_ATK to audio#_WAV
+            audio.SetParam(j, i, byte[t++])
         
 PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
     
@@ -83,9 +83,12 @@ PUB LoopSong
     
 PUB StopSong
 
-    play := 0
     replay := 0
+    play := 0
+    
     stop := 1
+    repeat until not stop
+    stop := 0
     
 PUB SongPlaying
 
@@ -103,9 +106,9 @@ PRI LoopingSongParser | repeattime, linecursor, barshift, bartmp
         if replay
             play := 1
             
-        if play and not stop
+        if play
             songcursor := 0
-            repeat while byte[loopAddr][songcursor] <> SONGOFF and play and not stop
+            repeat while byte[loopAddr][songcursor] <> SONGOFF and not stop
     
                 if byte[loopAddr][songcursor] & $F0 == ADSRW
                     LoadPatch(loopAddr + songcursor)                 'can't use array notation because loopAddr is word-size
@@ -130,7 +133,7 @@ PRI LoopingSongParser | repeattime, linecursor, barshift, bartmp
                     
                         songcursor := barcursor
 
-                        repeat while byte[loopAddr][songcursor] <> BAROFF and play                             
+                        repeat while byte[loopAddr][songcursor] <> BAROFF and not stop                          
                             barshift := (barres+1)*byte[loopAddr][songcursor]
                             bartmp := barshift+1+linecursor
                             
