@@ -17,20 +17,23 @@ CON
 
     #0, _SQUARE, _SAW, _TRIANGLE, _SINE, _NOISE, _SAMPLE                        ' waveform options
     #0, _ENV, _ATK, _DEC, _SUS, _REL, _WAV
+    #0, _O, _A, _D, _S, _R
 
 DAT
     osc_sample      long    0
 
-    osc_envelope    long    $01010101   
+    osc_envelope    long    $01010101 
     osc_attack      long    $7F7F7F7F
     osc_decay       long    0
     osc_sustain     long    $7F7F7F7F
     osc_release     long    0
     osc_waveform    long    0
+
+    osc_state       long    0
     
     osc_volinc      long    1000[4]                                             ' 1000 is instaneous, 0 is never
-    osc_target      long    (127<<12)[4]
-    osc_vol         long    0[4]
+    osc_target      long    0[4]
+    osc_vol         long    (127<<12)[4]
     
     osc_inc         long    0[4]
     osc_acc         long    0[4]    
@@ -45,7 +48,7 @@ PUB Start
     
 PUB SetVolume(channel, value)
     
-    osc_target[channel] := value << 12
+    osc_vol[channel] := value << 12
     
 PUB SetVolumeSpeed(channel, value)
     
@@ -104,6 +107,8 @@ PUB StartEnvelope(channel, enable)
     osc_envelope.byte[channel] &= constant(!2)
     if enable
         osc_envelope.byte[channel] |= 2
+    osc_envelope.byte[channel] |= 4
+    osc_envelope.byte[channel] &= !4
  
 PUB SetSample(value)
     
@@ -153,6 +158,9 @@ entry                   mov     dira, diraval                               ' se
                         mov     addr_wav, t1                                ' waveform address
                         add     t1, #4
                         
+                        mov     addr_state, t1                              ' adsr state address
+                        add     t1, #4
+                        
                         mov     addr_volinc, t1                             ' volume inc address
                         add     t1, #16
                         mov     addr_voltgt, t1                             ' volume target address
@@ -175,8 +183,12 @@ loop_main               waitcnt time, periodval                             ' wa
                         
                         rdlong  ptr_env, addr_env
                         rdlong  ptr_atk, addr_atk
+                        rdlong  ptr_dec, addr_dec
+                        rdlong  ptr_sus, addr_sus
                         rdlong  ptr_rel, addr_rel
                         rdlong  ptr_wav, addr_wav
+                        
+                        mov     ptr_state, addr_state
                         
                         mov     ptr_volinc, addr_volinc
                         mov     ptr_voltgt, addr_voltgt
@@ -192,8 +204,12 @@ loop_channel            call    #routine_adsr
                         
                         shr     ptr_env, #8
                         shr     ptr_atk, #8
+                        shr     ptr_dec, #8
+                        shr     ptr_sus, #8
                         shr     ptr_rel, #8
                         shr     ptr_wav, #8
+                        
+                        add     ptr_state, #1
                         
                         add     ptr_volinc, #4
                         add     ptr_voltgt, #4
@@ -211,54 +227,67 @@ loop_channel            call    #routine_adsr
 ' ---------------------------------------------------------------
 ' ADSR Envelope
 ' ---------------------------------------------------------------    
-routine_adsr            mov     envelope, ptr_env
+routine_adsr            rdbyte  state, ptr_state
+                        mov     envelope, ptr_env
                         test    envelope, #1        wz ' envelope on
                 if_nz   jmp     #:adsr_on
 ' ---------------------------------------------------------------
-:adsr_off               rdlong  volinc, ptr_volinc
-                        rdlong  voltarget, ptr_voltgt  
+:adsr_off               rdlong  volume, ptr_vol
                         
-                        jmp     #:adsr_tracker
+                        jmp     #routine_adsr_ret
 ' ---------------------------------------------------------------                          
-:adsr_on                test    envelope, #2        wz
+:adsr_on                test    envelope, #4        wz
+            if_nz       jmp     #:state_O
+    
+                        test    envelope, #2        wz
 
                         mov     volinc, #10                                 ' needed for volinc calculation.
                         
             if_z        jmp     #:state_R
+            if_nz       jmp     #:state_A
+' ``````````````````````````````````````````````````````````````` 
+:state_O                mov     voltarget, #0
+                        mov     volume, #0
+                        mov     volinc, #0
+                        
+                        jmp     #:adsr_write
 ' ``````````````````````````````````````````````````````````````` 
 :state_A                mov     voltarget, #127
+                        shl     voltarget, #12
                         
                         mov     t1, ptr_atk                                 ' read attack
-                        and     t1, #$FF
+                        and     t1, #$7F
                         shr     t1, #3
                         shl     volinc, t1
                         
-                        jmp     #:adsr_stateend
+                        jmp     #:adsr_trackup
 ' ```````````````````````````````````````````````````````````````
 :state_R                mov     voltarget, #0
                         
                         mov     t1, ptr_rel                                 ' read release
-                        and     t1, #$FF
+                        and     t1, #$7F
                         shr     t1, #4
                         mov     t2, #8
                         sub     t2, t1
                         shl     volinc, t2
                         
-' ```````````````````````````````````````````````````````````````
-:adsr_stateend          shl     voltarget, #12
-      
-' ---------------------------------------------------------------         
-:adsr_tracker           rdlong  volume, ptr_vol                             ' get volume parameters
-
-                        cmps    volume, voltarget           wc, wz              
-            if_b        adds    volume, volinc                              ' if volume < target    volume += volinc
-            if_a        subs    volume, volinc                              ' if volume > target    volume -= volinc
+                        jmp     #:adsr_trackdown
+' ---------------------------------------------------------------
+:adsr_trackup           rdlong  volume, ptr_vol                             ' get volume parameters
+                        cmps    volume, voltarget           wc, wz
+            if_b        adds    volume, volinc                              ' if volume < target    volume += osc_volinc
+            if_ae       mov     volume, voltarget
+            if_ae       mov     state, #_S
             
-                        cmps    volume, #0                  wc              ' if volume < 0
-            if_b        mov     volume, #0                                  '     volume := 0
+                        jmp     #:adsr_write
                         
-
-                        wrlong  volume, ptr_vol
+:adsr_trackdown         rdlong  volume, ptr_vol                             ' get volume parameters
+                        cmps    volume, voltarget           wc, wz          ' track downwards
+            if_a        subs    volume, volinc                              ' if volume > target    volume -= osc_volinc
+            if_be       mov     volume, voltarget
+' ---------------------------------------------------------------
+:adsr_write             wrlong  volume, ptr_vol
+                        rdbyte  state, ptr_state
 routine_adsr_ret        ret
 
 ' ---------------------------------------------------------------                         
@@ -402,6 +431,8 @@ addr_sus        res     1
 addr_rel        res     1
 addr_wav        res     1
 
+addr_state      res     1
+
 addr_volinc     res     1
 addr_voltgt     res     1
 addr_vol        res     1
@@ -412,8 +443,12 @@ addr_acc        res     1
 
 ptr_env         res     1    
 ptr_atk         res     1
+ptr_dec         res     1
+ptr_sus         res     1
 ptr_rel         res     1
 ptr_wav         res     1
+
+ptr_state       res     1
 
 ptr_volinc      res     1
 ptr_voltgt      res     1
@@ -424,8 +459,7 @@ ptr_acc         res     1
 
 
 envelope        res     1
-attack          res     1
-release         res     1
+state           res     1
     
 volinc          res     1
 voltarget       res     1
