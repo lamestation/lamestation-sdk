@@ -318,7 +318,6 @@ PRI Jump(channel) | freq, volcount
     
     audio.SetWaveform(channel, audio#_TRIANGLE)   
     audio.SetEnvelope(channel, 0)
-    audio.SetVolumeSpeed(channel,10)
     
     freq := 30000
     volcount := 3000
@@ -342,7 +341,6 @@ PRI Jump(channel) | freq, volcount
 PRI Ding(channel)
     audio.SetWaveform(channel, audio#_SINE)
     audio.SetEnvelope(channel, 1)
-    audio.SetVolumeSpeed(channel,1000)
     audio.SetADSR(channel, 127,120, 0, 120)
     audio.PlaySound(channel, 60)
     fn.Sleep(100)

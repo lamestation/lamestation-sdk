@@ -31,7 +31,6 @@ DAT
 
     osc_state       long    0
     
-    osc_volinc      long    1000[4]                                             ' 1000 is instaneous, 0 is never
     osc_target      long    0[4]
     osc_vol         long    (127<<12)[4]
     
@@ -50,10 +49,6 @@ PUB SetVolume(channel, value)
     
     osc_vol[channel] := value << 12
     
-PUB SetVolumeSpeed(channel, value)
-    
-    osc_volinc[channel] := value << 12
-
 PUB SetNote(channel, value)
     
     osc_inc[channel] := freqtable[value//12] >> (9 - value/12)
@@ -85,14 +80,6 @@ PUB LoadPatch(patchAddr) | i, j, t, c
                 SetParam(j, i, byte[t++])
         c >>= 1
     
-PUB SetAttack(channel, value)
-    
-    osc_attack.byte[channel] := value
-    
-PUB SetRelease(channel, value)
-
-    osc_release.byte[channel] := value
-
 PUB SetWaveform(channel, value)
     
     osc_waveform.byte[channel] := value
@@ -161,8 +148,6 @@ entry                   mov     dira, diraval                               ' se
                         mov     addr_state, t1                              ' adsr state address
                         add     t1, #4
                         
-                        mov     addr_volinc, t1                             ' volume inc address
-                        add     t1, #16
                         mov     addr_voltgt, t1                             ' volume target address
                         add     t1, #16
                         mov     addr_vol, t1                                ' volume address
@@ -190,7 +175,6 @@ loop_main               waitcnt time, periodval                             ' wa
                         
                         mov     ptr_state, addr_state
                         
-                        mov     ptr_volinc, addr_volinc
                         mov     ptr_voltgt, addr_voltgt
                         mov     ptr_vol, addr_vol
                         
@@ -211,7 +195,6 @@ loop_channel            call    #routine_adsr
                         
                         add     ptr_state, #1
                         
-                        add     ptr_volinc, #4
                         add     ptr_voltgt, #4
                         add     ptr_vol, #4
                         
@@ -433,7 +416,6 @@ addr_wav        res     1
 
 addr_state      res     1
 
-addr_volinc     res     1
 addr_voltgt     res     1
 addr_vol        res     1
 
@@ -450,7 +432,6 @@ ptr_wav         res     1
 
 ptr_state       res     1
 
-ptr_volinc      res     1
 ptr_voltgt      res     1
 ptr_vol         res     1
 

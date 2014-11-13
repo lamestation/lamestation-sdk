@@ -28,10 +28,9 @@ PUB Main
     ctrl.Start
     
     volume:= 1
-    volume_inc := 1
+    volume_inc := 100
     
     audio.SetWaveform(1, audio#_SAW)
-    audio.SetVolumeSpeed(1, 100)    
     audio.SetEnvelope(1, 0)
 
     repeat
@@ -41,24 +40,18 @@ PUB Main
             freq++
         if ctrl.Down
             freq--
+            
+        if ctrl.Left
+            if volume_inc > 0
+                volume_inc--
+        if ctrl.Right
+            volume_inc++
+
+        volume += volume_inc
 
         audio.SetFreq(1,freq)
-
-        if ctrl.A
-            volume_inc--
-            volcount++ 
-            if (volcount // volume_inc) > (volume_inc >> 1)
-                volume := 127
-            else
-                volume := 0
-            
-            audio.SetVolume(1,volume)
-        else
-            volume_inc := 1000
-            audio.SetVolume(1,0)
-           
-
-    
+        audio.SetVolume(1,(volume >> 10) // 127)
+        
 DAT
 {{
 

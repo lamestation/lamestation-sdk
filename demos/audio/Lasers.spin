@@ -1,5 +1,5 @@
 {{
-MOD ATTACK!
+Lasers
 ------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -31,7 +31,6 @@ PUB Main
     volume_inc := 1
     
     audio.SetWaveform(1, audio#_SAW)
-    audio.SetVolumeSpeed(1, 100)    
     audio.SetEnvelope(1, 0)
 
     repeat

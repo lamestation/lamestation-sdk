@@ -1,5 +1,5 @@
 {{
-MOD ATTACK!
+Robot.spin
 ------------------------------------------------------------
 Version: 1.0
 Copyright (c) 2014 LameStation LLC
@@ -19,7 +19,6 @@ OBJ
     
 VAR
     long    volume
-    long    volume_inc
     long    volcount
     long    freq
 
@@ -28,22 +27,12 @@ PUB Main
     ctrl.Start
     
     volume:= 1
-    volume_inc := 1
     
     audio.SetWaveform(1, audio#_SAW)
-    audio.SetVolumeSpeed(1, 100)    
     audio.SetEnvelope(1, 0)
 
     repeat
         ctrl.Update
-               
-       ' if ctrl.Up
-        '    freq++
-       ' if ctrl.Down
-        '    freq--
-        '    
-'        freq := 200
-
         audio.SetFreq(1,freq)
 
         if ctrl.A
@@ -58,8 +47,6 @@ PUB Main
             
             audio.SetVolume(1,volume)
         else
- '           volume_inc := 0
-'            volcount := 30000
             freq := 40000
             audio.SetVolume(1,0)
            
