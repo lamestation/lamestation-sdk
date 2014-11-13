@@ -108,8 +108,8 @@ PUB Main
     InitGame
     InitLevel
     
-    music.LoadSong(song_theme.Addr)
-    music.LoopSong
+    music.Load(song_theme.Addr)
+    music.Loop
 
     
     gamestate := TITLE
@@ -120,7 +120,7 @@ PUB Main
             INTRO:      GameIntro
                         gamestate := STARTLEVEL
             STARTLEVEL: InitLevel                
-                        music.StopSong                        
+                        music.Stop                        
                         gamestate := INGAME
             INGAME:     GameLoop
             DIED:       PlayerDied
@@ -162,19 +162,19 @@ PUB GameLoop
     fn.Sleep(10)
             
 PUB Victory
-    music.StopSong
+    music.Stop
     fn.Sleep(100)
-    music.LoadSong(song_yeah.Addr)
-    music.LoopSong
+    music.Load(song_yeah.Addr)
+    music.Loop
     
     ShowGameView
     gfx.TextBox(string("YOU WIN"), 40, 30, 100, 60)
     lcd.DrawScreen
     fn.Sleep(2000)
     
-    music.StopSong
-    music.LoadSong(song_theme.Addr)
-    music.LoopSong            
+    music.Stop
+    music.Load(song_theme.Addr)
+    music.Loop            
     StarWarsReel(string("Looks like",10,"the galaxy",10,"is safe once",10,"again, thanks",10,"to you!"),110)
 
 PUB ShowGameView
@@ -189,8 +189,8 @@ PUB ShowGameView
 PUB PlayerDied
     playerlives--
     
-    music.LoadSong(song_ohno.Addr)
-    music.PlaySong         
+    music.Load(song_ohno.Addr)
+    music.Play         
     
     ShowGameView
     gfx.TextBox(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
@@ -227,8 +227,8 @@ PUB StarWarsReel(text,reeltime) | x, choice
         x++
 
 PUB ItsGameOver
-    music.LoadSong(song_superohno.Addr)
-    music.PlaySong     
+    music.Load(song_superohno.Addr)
+    music.Play     
     
     ShowGameView
     gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
@@ -239,9 +239,9 @@ PUB ItsGameOver
     crouching := 1
     pos_frame := 4
     
-   ' music.StopSong   
-    'music.LoadSong(song_sad.Addr)
-   ' music.LoopSong    
+   ' music.Stop   
+    'music.Load(song_sad.Addr)
+   ' music.Loop    
     
     StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
     
@@ -260,9 +260,9 @@ PUB GameIntro
     crouching := 0
     pos_frame := 0
     
-    'music.StopSong   
-   ' music.LoadSong(song_sad.Addr)
-  '  music.LoopSong    
+    'music.Stop   
+   ' music.Load(song_sad.Addr)
+  '  music.Loop    
 
     StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all..",10,10,"Before it's",10,"too late..."),200)
 
@@ -707,8 +707,8 @@ PUB EnemyBoss(index) | dx, dy
     if not bossspawned
         bossspawned := 1
     
-        music.LoadSong(song_boss.Addr)
-        music.LoopSong    
+        music.Load(song_boss.Addr)
+        music.Loop    
 
 
     enemyframe[index] := 0

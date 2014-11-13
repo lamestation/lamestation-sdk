@@ -140,19 +140,19 @@ PUB LogoScreen
 
     audio.SetWaveform(3)
     audio.SetADSR(127, 10, 0, 10)
-    audio.LoadSong(@logoScreenSound)
-    audio.PlaySong
+    audio.Load(@logoScreenSound)
+    audio.Play
 
     fn.Sleep(1500)
 
-    audio.StopSong
+    audio.Stop
 
 PUB TitleScreen
 
     audio.SetWaveform(1)
     audio.SetADSR(127, 127, 100, 127) 
-    audio.LoadSong(@titleScreenSong)
-    audio.LoopSong
+    audio.Load(@titleScreenSong)
+    audio.Loop
 
 
 
@@ -353,7 +353,7 @@ PUB TankFaceOff
 
 PUB GameLoop : menureturn
 
-    audio.StopSong
+    audio.Stop
     audio.SetWaveform(4)
     audio.SetADSR(127, 70, 0, 70)
   
