@@ -27,7 +27,7 @@ OBJ
     font    :   "gfx_font4x6_w"
     box     :   "gfx_scorebox"
 
-    song    :   "sng_tetris"
+    song    :   "song_tetris"
     title   :   "gfx_bretris_logo"
     over    :   "gfx_gameover"
 
@@ -70,7 +70,8 @@ PUB Main
     audio.Start
     music.Start
 
-
+    music.Load(song.Addr)
+    music.Loop
 
     mapw := MAP_W
     maph := MAP_H
@@ -135,8 +136,7 @@ PUB GameOver
     
 PUB TitleScreen
     
-    music.Load(song.Addr)
-    music.Loop
+
     
     gfx.ClearScreen(gfx#BLACK)
     lcd.DrawScreen
@@ -172,7 +172,7 @@ PUB TitleScreen
     gfx.ClearScreen(gfx#BLACK)
     lcd.DrawScreen
     fn.Sleep(300)
-    music.Stop
+    'music.Stop
     fn.Sleep(1000)
     
     
