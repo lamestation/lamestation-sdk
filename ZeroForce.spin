@@ -91,14 +91,14 @@ PUB StaticScreen | x
 
     audio.SetWaveform(4)
     audio.SetADSR(127, 127, 127, 127) 
-    audio.LoadSong(@staticSong)
-    audio.LoopSong
+    audio.Load(@staticSong)
+    audio.Loop
     
     repeat x from 0 to 50
         lcd.DrawScreen
         Static
         
-    audio.StopSong
+    audio.Stop
 
 
 PUB LogoScreen | x
@@ -114,20 +114,20 @@ PUB LogoScreen | x
 
     audio.SetWaveform(3)
     audio.SetADSR(127, 10, 0, 10)
-    audio.LoadSong(@logoScreenSound)  
-    audio.PlaySong
+    audio.Load(@logoScreenSound)  
+    audio.Play
 
     repeat x from 0 to 120000 
 
-    audio.StopSong
+    audio.Stop
 
 
 PUB TitleScreen
 
     audio.SetWaveform(1)
     audio.SetADSR(127, 100, 40, 100) 
-    audio.LoadSong(@titleScreenSong)
-    audio.LoopSong
+    audio.Load(@titleScreenSong)
+    audio.Loop
 
     choice := 1
     repeat until choice == 0  
@@ -144,7 +144,7 @@ PUB TitleScreen
               clicked := 0
               
               
-    audio.StopSong
+    audio.Stop
     
 
    
@@ -421,8 +421,8 @@ PUB BossStage
 
     audio.SetWaveform(1)
     audio.SetADSR(127, 100, 40, 100) 
-    audio.LoadSong(@lastBossSong)
-    audio.PlaySong
+    audio.Load(@lastBossSong)
+    audio.Play
     
     InitLevel
     
@@ -442,7 +442,7 @@ PUB BossStage
         
           
         
-    audio.StopSong
+    audio.Stop
         
         
 
