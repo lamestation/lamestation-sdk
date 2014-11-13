@@ -135,8 +135,8 @@ PUB GameOver
     
 PUB TitleScreen
     
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    music.Load(song.Addr)
+    music.Loop
     
     gfx.ClearScreen(gfx#BLACK)
     lcd.DrawScreen
@@ -172,7 +172,7 @@ PUB TitleScreen
     gfx.ClearScreen(gfx#BLACK)
     lcd.DrawScreen
     fn.Sleep(300)
-    music.StopSong
+    music.Stop
     fn.Sleep(1000)
     
     
