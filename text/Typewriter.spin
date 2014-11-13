@@ -33,8 +33,8 @@ PUB TypewriterTextDemo | count
     audio.Start
     
     music.Start
-    music.LoadSong(blehtrd.Addr)
-    music.LoopSong
+    music.Load(blehtrd.Addr)
+    music.Loop
 
     gfx.ClearScreen(0)
 
