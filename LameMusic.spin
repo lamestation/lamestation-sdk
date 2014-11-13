@@ -21,7 +21,6 @@ CON
     SNOP    = $82
     SOFF    = $83
     
-    NOTEOFF = $90
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
@@ -91,7 +90,7 @@ PRI CalculateTimeConstant(bpm)
 
     return ( clkfreq / bpm * 15 ) ' 60 / 4 for 16th note alignment
 
-PRI MusicPlayer | repeattime, linecursor, barshift, bartmp
+PRI MusicPlayer | repeattime, linecursor, barshift, bartmp, i
     
     repeat
         repeattime := cnt
@@ -119,10 +118,10 @@ PRI MusicPlayer | repeattime, linecursor, barshift, bartmp
                     ptr_song += 2
                     next
                     
-                if byte[addr_song][ptr_song] & $F0 == NOTEOFF
-                    audio.StopSound( byte[addr_song][ptr_song+1] )
-                    ptr_song += 2
-                    next
+'                if byte[addr_song][ptr_song] & $F0 == NOTEOFF
+ '                   audio.StopSound( byte[addr_song][ptr_song+1] )
+  '                  ptr_song += 2
+   '                 next
                             
                 else
                     ptr_pattern := ptr_song
@@ -132,20 +131,22 @@ PRI MusicPlayer | repeattime, linecursor, barshift, bartmp
                     
                         ptr_song := ptr_pattern
 
-                        repeat while byte[addr_song][ptr_song] <> BAROFF and not sig_stop                          
-                            barshift := (barres+1)*byte[addr_song][ptr_song]
-                            bartmp := barshift+1+linecursor
-                            
-                            case byte[addr_pattern][bartmp]
-                                SOFF:   audio.StopSound( byte[addr_pattern][barshift] )
-                                0..127: audio.PlaySound( byte[addr_pattern][barshift] , byte[addr_pattern][bartmp] + transpose )  'channel, note
-                                other:
+                        repeat i from 0 to 3
+                            if sig_stop                          
+                                quit
 
-                            ptr_song += 1
+                            if byte[addr_song][ptr_song] > 0                                
+                                bartmp := barres*(byte[addr_song][ptr_song]-1)+linecursor
+                            
+                                case byte[addr_pattern][bartmp]
+                                    SOFF:   audio.StopSound( i )
+                                    0..127: audio.PlaySound( i , byte[addr_pattern][bartmp] + transpose )  'channel, note
+                                    other:
+                            else
+                                audio.StopSound( i )
+                            ptr_song++
 
                         waitcnt(repeattime += timeconstant)               
-
-                    ptr_song += 1
 
             sig_play := 0
             audio.StopAllSound
