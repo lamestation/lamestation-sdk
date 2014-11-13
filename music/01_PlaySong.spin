@@ -19,7 +19,7 @@ OBJ
     music   : "LameMusic"
     ctrl    : "LameControl"
     
-    song    : "song_pixeltheme"
+    song    : "song_zeroforce"
 
 PUB Main
     audio.Start

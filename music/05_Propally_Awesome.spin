@@ -23,7 +23,7 @@ PUB Main
     audio.Start
     music.Start
     music.Load(song.Addr)
-    music.Loop
+    music.Play
 
 DAT
 {{
