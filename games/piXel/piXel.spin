@@ -80,12 +80,12 @@ OBJ
     
     gfx_tiles_pixel : "gfx_tiles_pixel"
 
-    song_theme      : "sng_pixeltheme"
-    song_sad        : "sng_sad"
-    song_ohno       : "sng_ohno"
-    song_superohno  : "sng_superohno"
-    song_boss       : "sng_boss"
-    song_yeah       : "sng_yeah"
+    song_theme      : "song_pixeltheme"
+    song_sad        : "song_sad"
+    song_ohno       : "song_ohno"
+    song_superohno  : "song_superohno"
+    song_boss       : "song_boss"
+    song_yeah       : "song_yeah"
 
 
 VAR
@@ -165,7 +165,7 @@ PUB Victory
     music.Stop
     fn.Sleep(100)
     music.Load(song_yeah.Addr)
-    music.Loop
+    music.Play
     
     ShowGameView
     gfx.TextBox(string("YOU WIN"), 40, 30, 100, 60)
