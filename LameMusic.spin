@@ -28,120 +28,122 @@ CON
     #0, PATTERN, SONG
     
 DAT
+    MusicPlayerStack    long    0[40]
 
-    songcursor          long    0
-    barcursor           long    0
+    ptr_song            long    0
+    ptr_pattern         long    0
     timeconstant        long    0
-                                
-    barAddr             word    0
-    loopAddr            word    0
-                                
-    play                byte    0
-    replay              byte    0
-    stop                byte    0
-    barres              byte    0
     transpose           long    0
-                                
-    LoopingPlayStack    long    0[40]
+
     songdata            word    0[2]
+    addr_pattern        word    0
+    addr_song           word    0
+
+    sig_play            byte    0
+    sig_replay          byte    0
+    sig_stop            byte    0
+    barres              byte    0
 
 PUB Start
-    cognew(LoopingSongParser, @LoopingPlayStack)
+    cognew(MusicPlayer, @MusicPlayerStack)
         
-PUB LoadSong(songAddr) : n  ' n = alias of result, which initializes to 0, required for songdata[n++]
+PUB Load(songAddr) : n
+    ' n = alias of result, which initializes to 0, required for songdata[n++]
+    Stop
     
     wordmove(@songdata, songAddr, 2)
     repeat 2
         songdata[n++] += songAddr.word[1]
         
-    barAddr := songdata[PATTERN]
-    barres := byte[barAddr++]{0}
+    addr_pattern := songdata[PATTERN]
+    barres := byte[addr_pattern++]{0}
 
-    loopAddr := songdata[SONG]
+    addr_song := songdata[SONG]
     
-    songcursor := 0
-    barcursor := 0
+    ptr_song := 0
+    ptr_pattern := 0
 
-PUB PlaySong
+PUB Play
 
-    play := 1
-    replay := 0
+    sig_play := 1
+    sig_replay := 0
 
-PUB LoopSong
+PUB Loop
 
-    play := 1
-    replay := 1
+    sig_play := 1
+    sig_replay := 1
     
-PUB StopSong
+PUB Stop
 
-    replay := 0
-    play := 0
+    sig_replay := 0
+    sig_play := 0
     
-    stop := 1
-    repeat until not stop
-    stop := 0
+    sig_stop := 1
+    repeat until not sig_stop
+    sig_stop := 0
     
-PUB SongPlaying
+PUB IsPlaying
 
-    return play
+    return sig_play
         
 PRI CalculateTimeConstant(bpm)
 
     return ( clkfreq / bpm * 15 ) ' 60 / 4 for 16th note alignment
 
-PRI LoopingSongParser | repeattime, linecursor, barshift, bartmp
+PRI MusicPlayer | repeattime, linecursor, barshift, bartmp
     
     repeat
         repeattime := cnt
         
-        if replay
-            play := 1
+        if sig_replay
+            sig_play := 1
             
-        if play
-            songcursor := 0
-            repeat while byte[loopAddr][songcursor] <> SONGOFF and not stop
+        if sig_play
+            ptr_song := 0
+            
+            repeat while byte[addr_song][ptr_song] <> SONGOFF and not sig_stop
     
-                if byte[loopAddr][songcursor] & $F0 == ADSRW
-                    audio.LoadPatch(loopAddr + songcursor)                 'can't use array notation because loopAddr is word-size
-                    songcursor += 6
+                if byte[addr_song][ptr_song] & $F0 == ADSRW
+                    audio.LoadPatch(addr_song + ptr_song)               ' can't use array notation because addr_song is word-size
+                    ptr_song += 6
                     next
                         
-                if byte[loopAddr][songcursor] & $F0 == TEMPO
-                    timeconstant := CalculateTimeConstant(byte[loopAddr][songcursor+1])
-                    songcursor += 2
+                if byte[addr_song][ptr_song] & $F0 == TEMPO
+                    timeconstant := CalculateTimeConstant(byte[addr_song][ptr_song+1])
+                    ptr_song += 2
                     next
 
-                if byte[loopAddr][songcursor] & $F0 == TRANS
-                    transpose := byte[loopAddr][songcursor+1]
-                    songcursor += 2
+                if byte[addr_song][ptr_song] & $F0 == TRANS
+                    transpose := byte[addr_song][ptr_song+1]
+                    ptr_song += 2
                     next
                             
                 else
-                    barcursor := songcursor
+                    ptr_pattern := ptr_song
                     repeat linecursor from 0 to (barres-1)
-                        if stop
+                        if sig_stop
                             quit
                     
-                        songcursor := barcursor
+                        ptr_song := ptr_pattern
 
-                        repeat while byte[loopAddr][songcursor] <> BAROFF and not stop                          
-                            barshift := (barres+1)*byte[loopAddr][songcursor]
+                        repeat while byte[addr_song][ptr_song] <> BAROFF and not sig_stop                          
+                            barshift := (barres+1)*byte[addr_song][ptr_song]
                             bartmp := barshift+1+linecursor
                             
-                            case byte[barAddr][bartmp]
-                                SOFF:   audio.StopSound( byte[barAddr][barshift] )
-                                0..127: audio.PlaySound( byte[barAddr][barshift] , byte[barAddr][bartmp] + transpose )  'channel, note
+                            case byte[addr_pattern][bartmp]
+                                SOFF:   audio.StopSound( byte[addr_pattern][barshift] )
+                                0..127: audio.PlaySound( byte[addr_pattern][barshift] , byte[addr_pattern][bartmp] + transpose )  'channel, note
                                 other:
 
-                            songcursor += 1
+                            ptr_song += 1
 
                         waitcnt(repeattime += timeconstant)               
 
-                    songcursor += 1
+                    ptr_song += 1
 
-            play := 0
+            sig_play := 0
             audio.StopAllSound
-        stop := 0
+        sig_stop := 0
 
 DAT
 {{

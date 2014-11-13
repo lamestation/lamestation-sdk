@@ -36,9 +36,6 @@ OBJ
     song_zero : "song_zeroforce"
     song_frap : "song_frappy"
 
-OBJ
-    cap :"ScreenCapture"
-
 VAR
 
     long    songs[SONGCOUNT]    ' song.Addr returns LONG, not WORD
@@ -53,12 +50,9 @@ VAR
     byte    buttonpressed
     byte    character[2]
 
-    word    buffer
-
-
 PUB JukeBox
 
-    lcd.Start(buffer := gfx.Start)
+    lcd.Start(gfx.Start)
     gfx.LoadFont(font.Addr, " ", 4, 6)
     
     ctrl.Start
@@ -93,7 +87,7 @@ PUB JukeBox
         gfx.TextBox(string("Up/dn: choose",10,"  A/B: select"), 74, 0,64,32)
         gfx.PutString(string("NOW:"), 22, 26)
         
-        if music.SongPlaying        
+        if music.IsPlaying        
             gfx.PutString(songnames[songplaying], 40, 26)
         
         repeat songinc from 0 to constant(SONGWINDOW-1)
@@ -124,13 +118,13 @@ PUB JukeBox
         if ctrl.A or ctrl.B
             if not buttonpressed
                 buttonpressed := 1
-                if music.SongPlaying and songplaying == songchoice
-                    music.StopSong
+                if music.IsPlaying and songplaying == songchoice
+                    music.Stop
                 else
                     songplaying := songchoice
-                    music.StopSong
-                    music.LoadSong(songs[songplaying])
-                    music.LoopSong
+                    music.Stop
+                    music.Load(songs[songplaying])
+                    music.Loop
         else
             buttonpressed := 0
                 

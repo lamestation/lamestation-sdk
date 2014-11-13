@@ -83,8 +83,8 @@ PUB TitleScreen | flightstate
 
     xoffset := 0
 
-    music.LoadSong(song.Addr)
-    music.PlaySong
+    music.Load(song.Addr)
+    music.Play
 
     repeat while not ctrl.A or ctrl.B
         ctrl.Update
@@ -113,7 +113,7 @@ PUB TitleScreen | flightstate
         gfx.Sprite(pressa.Addr,44,52,0)
         lcd.DrawScreen
         
-    music.StopSong
+    music.Stop
 
 PUB GameLoop
 

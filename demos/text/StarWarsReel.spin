@@ -33,8 +33,8 @@ PUB Main
 
     audio.Start
     music.Start
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    music.Load(song.Addr)
+    music.Loop
 
     repeat
         StarWarsReel(@inaworld,120)

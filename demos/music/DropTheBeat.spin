@@ -22,14 +22,14 @@ OBJ
 PUB Main
     audio.Start
     music.Start
-    music.LoadSong(song.Addr)
+    music.Load(song.Addr)
 
     audio.SetParam(0, audio#_WAV, audio#_SQUARE)
     audio.SetParam(1, audio#_WAV, audio#_TRIANGLE)
     audio.SetParam(2, audio#_WAV, audio#_SINE)
 '    audio.SetParam(3, audio#_WAV, audio#_SINE)
  '   
-    music.LoopSong
+    music.Loop
 
 DAT
 {{

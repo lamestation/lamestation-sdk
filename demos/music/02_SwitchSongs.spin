@@ -22,29 +22,29 @@ OBJ
     song    : "song_pixeltheme"
     song2   : "song_lastboss"
 
-PUB PlaySong
+PUB Play
     audio.Start
     music.Start
     
-    music.LoadSong(song.Addr)
-    music.LoopSong
+    music.Load(song.Addr)
+    music.Loop
     
     fn.Sleep(2000)
     
-    music.StopSong
-    music.LoadSong(song2.Addr)
-    music.LoopSong
+    music.Stop
+    music.Load(song2.Addr)
+    music.Loop
 
     fn.Sleep(2000)    
 
-    music.StopSong
-    music.LoadSong(song.Addr)
-    music.PlaySong
+    music.Stop
+    music.Load(song.Addr)
+    music.Play
     
-    repeat until not music.SongPlaying
+    repeat until not music.IsPlaying
     
-    music.LoadSong(song2.Addr)
-    music.PlaySong
+    music.Load(song2.Addr)
+    music.Play
 
 DAT
 {{

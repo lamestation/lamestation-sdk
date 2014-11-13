@@ -46,15 +46,3 @@ byte    0,1,2,BAROFF
 byte    4,5,6,BAROFF
 
 byte    SONGOFF
-
-
-{{    
-    audio.SetWaveform(3,audio#_NOISE)
-    audio.SetEnvelope(0,1)
-    audio.SetEnvelope(1,1)
-    audio.SetEnvelope(2,1)
-    audio.SetEnvelope(3,1)
-    audio.SetADSR(3, 127, 100, 0, 100)
-    music.LoadSong(theme.Addr)
-    music.PlaySong
-    }}
