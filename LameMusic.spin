@@ -21,6 +21,7 @@ CON
     SNOP    = $82
     SOFF    = $83
     
+    NOTEOFF = $90
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
@@ -115,6 +116,11 @@ PRI MusicPlayer | repeattime, linecursor, barshift, bartmp
 
                 if byte[addr_song][ptr_song] & $F0 == TRANS
                     transpose := byte[addr_song][ptr_song+1]
+                    ptr_song += 2
+                    next
+                    
+                if byte[addr_song][ptr_song] & $F0 == NOTEOFF
+                    audio.StopSound( byte[addr_song][ptr_song+1] )
                     ptr_song += 2
                     next
                             
