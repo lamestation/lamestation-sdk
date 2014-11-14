@@ -17,7 +17,6 @@ CON
 OBJ
     audio   : "LameAudio"
     music   : "LameMusic"
-    ctrl    : "LameControl"
     
     song    : "song_zeroforce"
 
