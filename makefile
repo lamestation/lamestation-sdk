@@ -15,4 +15,8 @@ test: test_compile
 test_compile: $(BINARIES)
 
 %.binary: %.spin
-	$(SPINC) $^ $(LFLAGS) | grep -v "|-"
+	@echo -n "File encoding: "
+	@FILE=$$(file $< | grep -v "ASCII" | grep -v "UTF-8"); if [ -z "$$FILE" ]; then echo 'OKAY'; else exit 1; fi
+	@echo -n "Line termination: "
+	@FILE=$$(file $< | grep "line terminators"); if [ -z "$$FILE" ]; then echo 'OKAY'; else exit 1 ; fi
+	$(SPINC) $< $(LFLAGS) | grep -v "|-"
