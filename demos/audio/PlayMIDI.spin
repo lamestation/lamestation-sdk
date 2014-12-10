@@ -29,7 +29,6 @@ VAR
     byte    databyte2
 
     long    Stack_MIDIController[40]
-    long    Stack_GUI[40]
 
     byte    attack, decay, sustain, release, waveform, volume
 
@@ -41,8 +40,6 @@ OBJ
     audio   :       "LameAudio"
     gfx     :       "LameGFX"
     lcd     :       "LameLCD"
-    font_sm :       "font4x6"
-    font_bg :       "font6x8"
 
 PRI ControlNote
 
@@ -56,10 +53,10 @@ PRI ControlNote
     
     'TURN NOTE ON
     if statusnibble == $90
-        audio.PlayNewNote(databyte1)
+        audio.PlaySound(0,databyte1)
     'TURN NOTE OFF
     if statusnibble == $80 or databyte2 == 0
-        audio.StopNote(databyte1)
+        audio.StopSound(0)
 
 PRI ControlKnob
 
@@ -72,24 +69,24 @@ PRI ControlKnob
         $01:
     
         ' ADSR
-        $4A:    audio.SetAttack(databyte2)
+        $4A:    'audio.SetAttack(databyte2)
                 attack := databyte2
-        $47:    audio.SetDecay(databyte2)
+        $47:    'audio.SetDecay(databyte2)
                 decay := databyte2
-        $0A:    audio.SetSustain(databyte2)
+        $0A:    'audio.SetSustain(databyte2)
                 sustain := databyte2
-        $07:    audio.SetRelease(databyte2)
+        $07:    'audio.SetRelease(databyte2)
                 release := databyte2
-        $48:    audio.SetVolume(databyte2)
+        $48:    'audio.SetVolume(databyte2)
                 volume := databyte2
-        $49:    audio.SetWaveform(databyte2)
+        $49:    'audio.SetWaveform(databyte2)
                 waveform := databyte2
     
         ' SUSTAIN PEDAL
         $40:    if databyte2 <> 0
-                    audio.PressPedal
+                '    audio.PressPedal
                 else
-                    audio.ReleasePedal
+                '    audio.ReleasePedal
 
 PRI ControlPitchBend
 
@@ -111,7 +108,6 @@ PUB Main
 
     audio.Start  
 
-    cognew(GUI, @Stack_GUI)
     cognew(MIDIController, @Stack_MIDIController)
 
 
@@ -140,28 +136,6 @@ PRI MIDIController
                 $90, $80:   ControlNote
                 $FE:    'ACTIVE SENSING (output by some keyboards)
                 other:
-
-PRI GUI
-    lcd.Start(gfx.Start)
-    lcd.SetFrameLimit(lcd#HALFSPEED)
-    
-    repeat
-        gfx.ClearScreen(0)
-
-        gfx.LoadFont(font_sm.Addr," ",0,0)
-        gfx.PutString(string("LS MIDI Player"),0,0)
-
-        gfx.PutString(string(" Attack:"),0,16)
-        PutNumber(attack, 30, 16)
-        gfx.PutString(string("  Decay:"),0,22)
-        PutNumber(decay, 30, 22)
-        gfx.PutString(string("Sustain:"),0,28)
-        PutNumber(sustain, 30, 28)
-        gfx.PutString(string("Release:"),0,34)
-        PutNumber(release, 30, 34)
-
-        lcd.DrawScreen
-
 CON
     LENGTH = 4
 

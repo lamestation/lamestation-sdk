@@ -19,7 +19,7 @@ OBJ
     gfx     :   "LameGFX"
     map     :   "LameMap"
 
-    map     :   "map_cave"
+    cavemap :   "map_cave"
     tileset :   "gfx_cave"
 
 
@@ -27,7 +27,7 @@ PUB Main
 
     lcd.Start(gfx.Start)
 
-    map.Load(tileset.Addr, map.Addr)
+    map.Load(tileset.Addr, cavemap.Addr)
     map.Draw(0,64)
     lcd.DrawScreen
     
