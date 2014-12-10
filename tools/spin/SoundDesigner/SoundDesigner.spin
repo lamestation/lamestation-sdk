@@ -237,7 +237,7 @@ PRI PatternPlayer | repeattime
 
 PRI GUI_Pattern(x,y,h,active)
 
-       gfx.DrawMapRectangle(0,patoffset,x,y,x+8,y+h+1)
+       gfx.Map(pat.Addr, patview.Addr,0,patoffset,x,y,x+8,y+h+1)
        gfx.Sprite(led.Addr, x, y+h, active)
 
 PRI Control_PAT | i
@@ -273,7 +273,6 @@ PRI Control_PAT | i
         apress := 0
 
     play := 1
-    gfx.LoadMap(pat.Addr, patview.Addr)
 
     repeat i from 0 to patindex_max-1
         if patindex == i

@@ -8,10 +8,11 @@ BINARIES := $(OBJECTS:.spin=.binary)
 all: test
 
 clean:
-	echo $(BINARIES)
+	rm -f `find . -name \*.binary`
 
+test: test_compile
 
-test: $(BINARIES)
+test_compile: $(BINARIES)
 
 %.binary: %.spin
 	$(SPINC) $^ $(LFLAGS) | grep -v "|-"
