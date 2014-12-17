@@ -54,7 +54,4 @@ for i in range(0,MIDINOTES):
 
 output += "\n"
 
-f = open("freqtable.spin",'w')
 print output
-f.write(output)
-f.close()
