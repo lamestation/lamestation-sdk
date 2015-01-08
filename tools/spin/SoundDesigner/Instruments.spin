@@ -12,3 +12,5 @@ CON
     NO_RELEASE      = (127 + ( 12 << D_OFFSET) + (  0 << S_OFFSET) + (  0 << R_OFFSET) + (  0 << W_OFFSET))
     POWER           = (127 + ( 12 << D_OFFSET) + (127 << S_OFFSET) + (  0 << R_OFFSET) + (  0 << W_OFFSET))
     ACCORDION       = (127 + ( 12 << D_OFFSET) + (127 << S_OFFSET) + ( 64 << R_OFFSET) + (  5 << W_OFFSET))
+
+PUB null

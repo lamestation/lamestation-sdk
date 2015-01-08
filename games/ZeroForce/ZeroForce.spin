@@ -33,10 +33,15 @@ CON
         
 
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
-    audio   :               "LameAudio"
-    ctrl    :               "LameControl"
+    lcd     : "LameLCD"
+    gfx     : "LameGFX"
+    audio   : "LameAudio"
+    music   : "LameMusic"
+    ctrl    : "LameControl"
+
+    song_logo : "song_logo"
+    song_lastboss : "song_lastboss"
+    song_zeroforce : "song_zeroforce"
 
 VAR
     word    screen
@@ -64,6 +69,7 @@ PUB Main
     lcd.Start(buffer)
 
     audio.Start
+    music.Start
 
     gfx.ClearScreen(0)
     lcd.DrawScreen
@@ -89,16 +95,15 @@ PUB Static | ran, x
 
 PUB StaticScreen | x
 
-    audio.SetWaveform(4)
-    audio.SetADSR(127, 127, 127, 127) 
-    audio.Load(@staticSong)
-    audio.Loop
+    audio.SetWaveform(1, 4)
+    audio.SetADSR(1,127, 1, 0, 70)
+    audio.PlaySound(1,50)
     
     repeat x from 0 to 50
         lcd.DrawScreen
         Static
         
-    audio.Stop
+    audio.StopSound(1)
 
 
 PUB LogoScreen | x
@@ -112,22 +117,20 @@ PUB LogoScreen | x
     gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
     lcd.DrawScreen
 
-    audio.SetWaveform(3)
-    audio.SetADSR(127, 10, 0, 10)
-    audio.Load(@logoScreenSound)  
-    audio.Play
+    audio.SetWaveform(3,3)
+    audio.SetADSR(3,127, 10, 0, 10)
+    music.Load(song_logo.Addr)  
+    music.Play
 
     repeat x from 0 to 120000 
 
-    audio.Stop
+    music.Stop
 
 
 PUB TitleScreen
 
-    audio.SetWaveform(1)
-    audio.SetADSR(127, 100, 40, 100) 
-    audio.Load(@titleScreenSong)
-    audio.Loop
+    music.Load(song_zeroforce.Addr)
+    music.Loop
 
     choice := 1
     repeat until choice == 0  
@@ -144,7 +147,7 @@ PUB TitleScreen
               clicked := 0
               
               
-    audio.Stop
+    music.Stop
     
 
    
@@ -419,10 +422,8 @@ PUB HandleBoss
 
 PUB BossStage
 
-    audio.SetWaveform(1)
-    audio.SetADSR(127, 100, 40, 100) 
-    audio.Load(@lastBossSong)
-    audio.Play
+    music.Load(song_lastboss.Addr)
+    music.Play
     
     InitLevel
     
@@ -442,7 +443,7 @@ PUB BossStage
         
           
         
-    audio.Stop
+    music.Stop
         
         
 
@@ -716,149 +717,6 @@ word %%0002_0002
 word %%0003_0000
 
 word %%3333_3333 ' End level symbol
-
-
-
-
-
-
-
-
-logoScreenSound
-byte    1
-byte    255
-byte    12
-
-byte    0,72,SNOP,70,SNOP,68,SNOP,63,SNOP,51,75,87,SOFF
-byte    0,BAROFF
-
-byte    SONGOFF
-
-
-
-
-
-staticSong
-byte    1
-byte    200
-byte    1
-
-byte    0,36
-
-byte    0,BAROFF
-byte    SONGOFF
-
-
-
-
-
-
-
-titleScreenSong
-byte    18     'number of bars
-byte    160    'tempo
-byte    8       ' meter/4
-
-'MAIN SECTION
-'0-5
-byte    0,36,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    1,41,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    2,46,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    3,51,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    0,56,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    1,63,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-
-'6
-byte    0,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-
-'7-10
-byte    0,41,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    1,60,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    2,53,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    3,65,65,63,65,SOFF,65,SOFF,63
-
-'11-12
-byte    0,SNOP,SNOP,SNOP,44,SNOP,SNOP,SNOP,SNOP
-byte    3,65,65,63,68,SNOP,SOFF,SNOP,SNOP
-
-'13-14
-byte    2,29,SNOP,SOFF,SNOP,29,SNOP,SOFF,SNOP
-byte    2,29,SNOP,SOFF,SNOP,29,SNOP,27,SNOP
-
-byte    0,46,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    0,45,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-byte    0,44,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-
-
-'SONG ------
-
-byte    0,BAROFF
-byte    1,BAROFF
-byte    2,BAROFF
-byte    3,BAROFF
-byte    4,BAROFF
-byte    5,BAROFF
-
-byte    6,BAROFF
-
-byte    7,8,9,10,BAROFF
-byte    11,12,BAROFF
-byte    7,8,9,10,BAROFF
-byte    11,12,BAROFF
-
-byte    10,13,BAROFF
-byte    12,14,BAROFF
-byte    10,13,BAROFF
-byte    12,14,BAROFF
-
-byte    10,13,15,BAROFF
-byte    12,14,BAROFF
-byte    10,13,16,BAROFF
-byte    12,14,BAROFF
-
-byte    10,13,17,BAROFF
-byte    12,14,BAROFF
-byte    10,13,BAROFF
-byte    12,14,BAROFF
-
-byte    10,13,15,BAROFF
-byte    12,14,BAROFF
-byte    10,13,16,BAROFF
-byte    12,14,BAROFF
-
-byte    SONGOFF
-
-
-
-
-
-
-lastBossSong
-
-byte    4     'number of bars
-byte    150    'tempo
-byte    12     'notes/bar
-
-'MAIN SECTION
-'0-5
-byte    0,45,41,40,45,41,40,45,41,40,45,41,40
-byte    0,46,43,42,46,43,42,46,43,42,46,43,42
-
-byte    1,26,SNOP,SNOP,29,SNOP,SNOP,28,SNOP,SNOP,29,SNOP,SNOP
-byte    1,25,SNOP,SNOP,26,SNOP,SNOP,27,SNOP,SNOP,21,SNOP,SNOP
-
-
-'SONG ------
-
-byte    0,2,BAROFF
-byte    1,3,BAROFF
-byte    0,2,BAROFF
-byte    1,3,BAROFF
-byte    0,2,BAROFF
-byte    1,3,BAROFF
-byte    0,2,BAROFF
-byte    1,3,BAROFF
-byte    SONGOFF
 
 DAT
 {{

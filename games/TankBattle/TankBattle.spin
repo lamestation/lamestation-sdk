@@ -48,12 +48,35 @@ CON
         
 
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
-    audio   :               "LameAudio"
-    pst     :               "LameSerial"
-    ctrl    :               "LameControl"
-    fn      :               "LameFunctions"
+    lcd   : "LameLCD"
+    gfx   : "LameGFX"
+    map   : "LameMap"
+    audio : "LameAudio"
+    music : "LameMusic"
+    pst   : "LameSerial"
+    ctrl  : "LameControl"
+    fn    : "LameFunctions"
+
+    font                        : "gfx_chars_cropped"
+    
+    gfx_tilemap                 : "gfx_tiles_2b_poketron"
+    map_supercastle             : "map_supercastle"
+    
+    gfx_supertank               : "gfx_supertank"
+    gfx_superthang              : "gfx_superthang"
+    gfx_class16                 : "gfx_class16"
+    gfx_happyface               : "gfx_happyface"
+    gfx_moonman                 : "gfx_moonman"
+    
+    gfx_bullet                  : "gfx_bullet"
+    gfx_heart                   : "gfx_heart"
+    gfx_tankstand               : "gfx_tankstand"
+    gfx_logo_teamlame           : "gfx_logo_teamlame"
+    gfx_logo_tankbattle_name    : "gfx_logo_tankbattle_name"
+    gfx_logo_tankbattle         : "gfx_logo_tankbattle"
+
+    song_logo : "song_logo"
+    song_tankbattle : "song_tankbattle"
 
 VAR
 
@@ -103,6 +126,7 @@ PUB Main
     pst.StartRxTx(31, 30, 0, 115200)
 
     audio.Start
+    music.Start
     ctrl.Start
 
     gfx.ClearScreen(0)
@@ -138,21 +162,17 @@ PUB LogoScreen
     gfx.Sprite(gfx_logo_teamlame.Addr, -2, 24, 0)
     lcd.DrawScreen
 
-    audio.SetWaveform(3)
-    audio.SetADSR(127, 10, 0, 10)
-    audio.Load(@logoScreenSound)
-    audio.Play
+    music.Load(song_logo.Addr)
+    music.Play
 
     fn.Sleep(1500)
 
-    audio.Stop
+    music.Stop
 
 PUB TitleScreen
 
-    audio.SetWaveform(1)
-    audio.SetADSR(127, 127, 100, 127) 
-    audio.Load(@titleScreenSong)
-    audio.Loop
+    music.Load(song_tankbattle.Addr)
+    music.Loop
 
 
 
@@ -316,8 +336,8 @@ PUB LevelSelect
         gfx.PutString(string("Level:"),0,16)                  
         gfx.PutString(levelname[currentlevel],40,16)
         
-        gfx.LoadMap(tilemap,leveldata[currentlevel])
-        gfx.DrawMapRectangle(xoffset, yoffset, 0, 24, 128, 64)
+        map.Load(tilemap,leveldata[currentlevel])
+        map.DrawRectangle(xoffset, yoffset, 0, 24, 128, 64)
 
 PUB TankFaceOff
          
@@ -353,9 +373,11 @@ PUB TankFaceOff
 
 PUB GameLoop : menureturn
 
-    audio.Stop
-    audio.SetWaveform(4)
-    audio.SetADSR(127, 70, 0, 70)
+    music.Stop
+    audio.SetWaveform(2,4)
+    audio.SetWaveform(3,4)
+    audio.SetADSR(2,127, 70, 0, 70)
+    audio.SetADSR(3,127, 70, 0, 70)
   
     InitLevel
 
@@ -375,7 +397,7 @@ PUB GameLoop : menureturn
             
             
         'HandleNetworking
-        gfx.DrawMap(xoffset,yoffset)
+        map.Draw(xoffset,yoffset)
 
         DrawTanks
         HandleBullets
@@ -408,7 +430,7 @@ PUB ControlTank
 
 
     ' map collision
-    if gfx.TestMapCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
+    if map.TestCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
         tankx[yourtank] := tankoldx
     
     ' Tank-to-tank collision
@@ -433,7 +455,7 @@ PUB ControlTank
             tanky[yourtank] := levelh<<3 - tankh[yourtank]
  
     ' map collision
-    if gfx.TestMapCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
+    if map.TestCollision(tankx[yourtank], tanky[yourtank], tankw[yourtank], tankh[yourtank])
         tanky[yourtank] := tankoldy
         
     repeat tankindex from 0 to TANKSMASK
@@ -623,7 +645,7 @@ PUB InitLevel
     InitBullets
     InitTanks
     
-    gfx.LoadMap(tilemap,leveldata[currentlevel])
+    map.Load(tilemap,leveldata[currentlevel])
 
     
 
@@ -938,114 +960,6 @@ PUB HandleStatusBar
     intarray[2] := 0
 
     gfx.PutString(@intarray, 112, 0)
-
-
-
-OBJ
-    font                        : "gfx_chars_cropped"
-    
-    gfx_tilemap                 : "gfx_tiles_2b_poketron"
-    map_supercastle             : "map_supercastle"
-    
-    gfx_supertank               : "gfx_supertank"
-    gfx_superthang              : "gfx_superthang"
-    gfx_class16                 : "gfx_class16"
-    gfx_happyface               : "gfx_happyface"
-    gfx_moonman                 : "gfx_moonman"
-    
-    gfx_bullet                  : "gfx_bullet"
-    gfx_heart                   : "gfx_heart"
-    gfx_tankstand               : "gfx_tankstand"
-    gfx_logo_teamlame           : "gfx_logo_teamlame"
-    gfx_logo_tankbattle_name    : "gfx_logo_tankbattle_name"
-    gfx_logo_tankbattle         : "gfx_logo_tankbattle"
-
-DAT 'SONG DATA
-
-logoScreenSound
-byte    1
-byte    255
-byte    12
-
-byte    0,72,SNOP,70,SNOP,68,SNOP,63,SNOP,51,75,87,SOFF
-byte    0,BAROFF
-
-byte    SONGOFF
-
-
-
-
-
-
-
-titleScreenSong
-byte    15     'number of bars
-byte    160    'tempo
-byte    8    'bar resolution
-
-'ROOT BASS
-byte    0, 36,SOFF,  36,SOFF,   34,  36,SOFF,  34
-byte    1, 24,SOFF,  24,SOFF,   22,  24,SOFF,  22
-
-'DOWN TO SAD
-byte    0, 32,SNOP,  32,SOFF,   31,  32,SOFF,  31
-byte    1, 20,SNOP,  20,SOFF,   19,  20,SOFF,  19 
-
-'THEN FOURTH
-byte    0, 29,SNOP,  29,SOFF,   27,  29,SOFF,  27
-byte    1, 17,SNOP,  17,SOFF,   15,  17,SOFF,  15
-
-
-
-byte    2,   48,SNOP,SOFF,  50, SNOP,SOFF,  51,SNOP
-byte    2, SNOP,SOFF,  48,SNOP,   51,SNOP,  48,SNOP
-byte    2,   53,SNOP,SNOP,  51, SNOP,SNOP,  50,SNOP
-byte    2, SNOP,  51,SNOP,SNOP,   50,  51,  50,SNOP  
-
-'melody
-byte    2,   48,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
-byte    2, SNOP,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SOFF      
-
-'harmonies
-byte    3,   44,SNOP,SNOP,  43, SNOP,SNOP,  41,SNOP
-byte    3, SNOP,  39,SNOP,SNOP,   38,SNOP,SNOP,SNOP
-byte    3, SNOP,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SOFF  
-
-
-'SONG ------
-
-byte    0,BAROFF
-byte    0,BAROFF
-byte    0,BAROFF
-byte    0,BAROFF
-byte    0,1,BAROFF
-byte    0,1,BAROFF
-byte    0,1,BAROFF
-byte    0,1,BAROFF
-
-'verse 
-byte    0,1,6,BAROFF
-byte    0,1,7,BAROFF
-byte    0,1,8,BAROFF
-byte    0,1,9,BAROFF
-
-byte    2,3,10,12,BAROFF
-byte    2,3,13,BAROFF
-byte    4,5,BAROFF
-byte    4,5,11,14,BAROFF
-
-'verse
-byte    0,1,6,BAROFF
-byte    0,1,7,BAROFF
-byte    0,1,8,BAROFF
-byte    0,1,9,BAROFF
-
-byte    2,3,10,12,BAROFF
-byte    2,3,13,BAROFF
-byte    4,5,BAROFF
-byte    4,5,11,14,BAROFF
-
-byte    SONGOFF
 
 
 
