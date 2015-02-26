@@ -1,4 +1,4 @@
-PUB m{34343}ain
+PUB main
 
   ' cool this code still does nothing!
 
