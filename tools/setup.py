@@ -1,29 +1,42 @@
-import sys
-from cx_Freeze import setup, Executable
-import platform
+from setuptools import setup, find_packages
 
-# Dependencies are automatically detected, but it might need fine tuning.
-opts = {
-        'compressed' : True,
-        'create_shared_zip' : False,
-        'packages' : ['wx.lib.pubsub']
-        }
-
-
-# GUI applications require a different base on Windows (the default is for a
-# console application).
-if platform.system() == 'Windows':
-    base = 'Win32GUI'
-else:
-    base = None
+with open('README.rst') as f:
+        long_description = f.read()
 
 setup(
-        name = "LSPaint",
-        version = "1.0",
-        description = "A pixelated paint tool for the LameStation.",
-        options = {"build_exe": opts},
-        executables = [
-            Executable("LSPaint.py", base=base),
-            Executable("img2dat.py", base=base)
+        name = "LameStation Tools",
+        version = "0.2.0",
+        author = "LameStation",
+        author_email = "contact@lamestation.com",
+        description = "A collection of pixelated paint tools for the LameStation.",
+        long_description = long_description,
+        license = "GPLv3",
+        url = "https://github.com/lamestation/lamestation-tools",
+        keywords = "packaging qt qmake building distribution",
+        packages=find_packages(exclude=['test']),
+        include_package_data=True,
+        scripts=[
+            'bin/map2dat',
+            'bin/frequencytiming',
+            'bin/noise',
+            ],
+        entry_points={
+            'console_scripts': [
+                'img2dat = img2dat.img2dat:console',
+                ],
+            'gui_scripts': [
+                'img2dat-gui = img2dat.img2dat:gui',
+                'lspaint = lspaint.LSPaint',
+                ]
+            },
+        classifiers=[
+            "Development Status :: 3 - Alpha",
+            "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+            "Programming Language :: Python :: 2 :: Only",
+            "Programming Language :: Python :: 2.7",
+            "Topic :: Games/Entertainment",
+            "Topic :: Multimedia :: Graphics :: Graphics Conversion",
+            "Topic :: Multimedia :: Graphics :: Editors :: Raster-Based",
+            "Topic :: Multimedia :: Graphics :: Viewers",
             ]
         )
