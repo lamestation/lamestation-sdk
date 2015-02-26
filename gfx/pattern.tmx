@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="1" height="8" tilewidth="8" tileheight="12">
+ <tileset firstgid="1" name="pat_piano" tilewidth="8" tileheight="12">
+  <image source="pat_piano.png" trans="ff00ff" width="8" height="12"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="1" height="8">
+  <data encoding="csv">
+1,
+1,
+1,
+1,
+1,
+1,
+1,
+1
+</data>
+ </layer>
+</map>
