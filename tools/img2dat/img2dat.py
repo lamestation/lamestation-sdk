@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
+import os, sys
 import wx
-import os
-import ImageData, Dialog
+from . import ImageData, Dialog
+from . import files
 import PILtoWx
-
+from PIL import Image
+import argparse
 
 PROGRAM_TITLE = "IMG2DAT - Image Converter"
 MIN_SIZE = 2
@@ -39,7 +41,7 @@ class ImageViewer(wx.Panel):
 
 
 
-class Example(wx.Frame):
+class ImageConverter(wx.Frame):
 
     def FileMenu(self):
         fileMenu = wx.Menu()
@@ -114,7 +116,7 @@ class Example(wx.Frame):
 
 
     def __init__(self, parent, title):
-        super(Example, self).__init__(parent, title=title)
+        super(ImageConverter, self).__init__(parent, title=title)
 
         self.filename = ""
         self.scale = 4
@@ -255,8 +257,69 @@ class Example(wx.Frame):
     #    if Dialog.Quit() == wx.ID_YES:
         self.Destroy()
 
-
-if __name__ == '__main__':
+def gui():
     app = wx.App()
-    Example(None, title=PROGRAM_TITLE)
+    ImageConverter(None, title=PROGRAM_TITLE)
     app.MainLoop()
+
+
+def displayResult(scale, oldimage, newimage):
+    canvas = Image.new("RGB",(newimage.size[0],oldimage.size[1]+newimage.size[1]))
+
+    canvas.paste(oldimage,(0,0,oldimage.size[0],oldimage.size[1]))
+    canvas.paste(newimage,(0,oldimage.size[1]))
+    
+    canvas = canvas.resize(tuple([scale*x for x in (newimage.size[0],oldimage.size[1]+newimage.size[1])]))
+    canvas.show()
+
+def console():
+    parser = argparse.ArgumentParser(description='Convert images to Propeller Spin data blocks for use with Lame Graphics.')
+
+    parser.add_argument('-b','--bits', nargs=1, metavar=('BITS'), type=int, choices=[2,8],default=[2],
+            help="Bit depth of images.")
+    parser.add_argument('-f','--framesize', nargs=2, metavar=('WIDTH','HEIGHT'), type=int,
+            help="Size of individual sprite frames (only needed for sprites).")
+    parser.add_argument('-d','--display', action='store_true',
+            help="Display conversion results.")
+    parser.add_argument('-w','--write',action='store_true',
+            help="Write results to file.")
+    parser.add_argument('--noprint', action='store_true',
+            help="Don't print conversion output to screen.")
+
+    parser.add_argument('filenames', metavar='FILE', nargs='+', help='Files to convert')
+    args = parser.parse_args()
+
+    args = getCommandLineArguments()
+    filenames = files.cleanFilenames(args.filenames)
+
+    if not filenames:
+        print "No valid files selected"
+        sys.exit(1)
+
+    for filename in filenames:
+
+        imgdata = ImageData.ImageData()
+        imgdata.openImage(filename)
+
+        if args.framesize:
+            try:
+                imgdata.setFrameSize(tuple(args.framesize))
+            except ValueError as detail:
+                print "error:",detail
+                sys.exit(1)
+
+        oldim = imgdata.im
+        imgdata.setLogicalFrameSize()
+
+        imgdata.padFrames()
+        spritedata = imgdata.renderSpriteData()
+        spin = imgdata.assembleSpinFile(spritedata)
+
+        if args.display:
+            displayResult(4, oldim, imgdata.im)
+
+        if args.write:
+            files.writeFile(spin,imgdata.fullfilename)
+
+        if not args.noprint:
+            print spin

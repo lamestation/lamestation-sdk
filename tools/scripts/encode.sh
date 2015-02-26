@@ -1,28 +1,26 @@
 #!/bin/bash
 
-FILES=$(file $(find . -name \*.spin) | cut -d':' -f 1)
-
-for f in $FILES
+while read -r line
 do
-    ENCODING=$(file $f | cut -d':' -f 2)
+    echo $line
+    ENCODING=$(file "$line" | cut -d':' -f 2)
 
     # Fix encoding
     if [[ $ENCODING == *"ISO-8859"* ]] ; then
         echo "ISO-8859"
-        iconv -f iso-8859-1 -t utf-8 "$f" > "$f.tmp"
-        mv "$f.tmp" "$f"
+        iconv -f iso-8859-1 -t utf-8 "$line" > "$line.tmp"
+        mv "$line.tmp" "$line"
 
     elif [[ $ENCODING == *"UTF-16"* ]] ; then
         echo "UTF-16"
-        iconv -f utf-16 -t utf-8 "$f" > "$f.tmp"
-        mv "$f.tmp" "$f"
+        iconv -f utf-16 -t utf-8 "$line" > "$line.tmp"
+        mv "$line.tmp" "$line"
     fi
 
     # Fix line endings
     if [[ $ENCODING == *"CR line terminators"* ]] ; then
-        mac2unix "$f"
+        mac2unix "$line"
     elif [[ $ENCODING == *"CRLF line terminators"* ]] ; then
-        dos2unix "$f"
+        dos2unix "$line"
     fi
-
-done
+done < <(find . -name \*.spin)
