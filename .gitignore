@@ -2,3 +2,4 @@
 *.spin
 *.spin.html
 *.swp
+out/
