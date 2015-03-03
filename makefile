@@ -26,7 +26,6 @@ clean:
 	rm -f `find . -name \*.spin`
 	rm -f `find . -name \*.spin.md`
 	rm -f `find . -name \*.spin.html`
-	rm -rf $(PREFIX)
 
 
 test: build_code build_docs test_compile
