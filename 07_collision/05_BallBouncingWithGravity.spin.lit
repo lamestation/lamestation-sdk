@@ -1,17 +1,4 @@
     << * >>=
-    {{
-    Ball Bouncing Demo (Adding Gravity)
-    -------------------------------------------------
-    Version: 1.0
-    Copyright (c) 2014 LameStation LLC
-    See end of file for terms of use.
-    
-    Authors: Brett Weir
-    -------------------------------------------------
-    }}
-    
-    ' notice that this demo is completely unstable
-    
     CON
     
         _clkmode = xtal1|pll16x
