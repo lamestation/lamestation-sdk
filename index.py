@@ -72,7 +72,7 @@ def printer(index, path='.', level=0):
 
     for f in index['files']:
         p = os.path.join(path,f)
-        p = os.path.splitext(p)[0]+'.md'
+        p = os.path.splitext(p)[0]+'.html'
 
         output += bullet(link(nice_file(f),p),level+1)+'\n'
 
@@ -84,6 +84,11 @@ def printer(index, path='.', level=0):
 index = build_index('','spin')
 
 f = open('index.md','w')
+f.write("""---
+layout: page
+title: Index
+---
+""")
 f.write(printer(index))
 f.close()
 

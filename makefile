@@ -1,9 +1,6 @@
 SPINC := openspin
 LFLAGS := -L../lamestation-sdk
 
-GRAPHICS := $(shell find . -name gfx)
-OUT_GRAPHICS := $(patsubst %,$(PREFIX)/%,$(GRAPHICS))
-
 LITFILES := $(shell git ls-files '*.spin.lit')
 OBJECTS := $(LITFILES:.spin.lit=.spin)
 DOCS := $(LITFILES:.spin.lit=.spin.md)
@@ -26,22 +23,19 @@ clean:
 	rm -f `find . -name \*.spin`
 	rm -f `find . -name \*.spin.md`
 	rm -f `find . -name \*.spin.html`
+	rm -f `find . -name index.md`
 
 
 test: build_code build_docs test_compile
 
 build_code: $(OBJECTS)
 
-build_docs: $(DOCS)
+build_docs: $(DOCS) index.md
+
+index.md:
+	python index.py
 
 test_compile: $(BINARIES)
-
-gfx:
-	for f in $(GRAPHICS); \
-		do \
-		mkdir -p `dirname $(PREFIX_DOCS)/$$f`; \
-		cp -a $$f $(PREFIX_DOCS)/$$f; \
-		done
 
 $(PREFIX_SRC)/%.spin: %.spin
 	install -D -c -p -m 644 $< $@
@@ -60,16 +54,19 @@ $(PREFIX_SRC)/%.spin: %.spin
 
 %.spin.md: %.spin.lit
 	lit -m --docs-dir $(dir $< ) $<
+	sed -i $@ -e '/<<.*>>/d'
+	echo '\n```' >> $@
+	cat `echo $@ | sed -e 's/.spin.md/.spin/g'` >> $@
+	echo '\n```' >> $@
+	pandoc -t html $@ > $@.tmp
+	mv $@.tmp $@
 	sed -i $@ \
 		-e '1s@^@---\n@g' \
 		-e '1s@^@date: $(DATE)\n@g' \
 		-e '1s@^@version: $(VERSION)\n@g' \
+		-e '1s@^@layout: page\n@g' \
 		-e '1s@^@title: $@\n@g' \
-		-e '1s@^@---\n@g' \
-		-e '/<<.*>>/d'
-	echo '\n```' >> $@
-	cat `echo $@ | sed -e 's/.spin.md/.spin/g'` >> $@
-	echo '\n```' >> $@
+		-e '1s@^@---\n@g'
 
 %.binary: %.spin
 	$(SPINC) $< $(LFLAGS) 1>/dev/null
@@ -77,13 +74,12 @@ $(PREFIX_SRC)/%.spin: %.spin
 $(PREFIX_SRC)/%.spin: %.spin
 	install -D -c -p -m 644 $< $@
 
-$(PREFIX_DOCS)/%.spin.md: %.spin.md
-	install -D -c -p -m 644 $< $@
+install: install_docs
 
-install: $(INSTALL_SRC) $(INSTALL_DOCS) gfx
-
-$(PREFIX_DOCS):
+install_docs:
+	rm -rf $(PREFIX_DOCS)
 	mkdir -p $(PREFIX_DOCS)
+	rsync -rv --include '*/' --include '*.md' --include 'gfx/*' --exclude '*' --prune-empty-dirs . $(PREFIX_DOCS)
 
 $(PREFIX):
 	mkdir -p $(PREFIX)
