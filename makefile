@@ -50,10 +50,10 @@ $(PREFIX_SRC)/%.spin: %.spin
 	lit -c --code-dir $(dir $< ) $<
 	sed -i $@ \
 		-e '1s@^@'\'' -------------------------------------------------------\n@g' \
-		-e '1s@^@'\''               See end of file for terms of use.\n@g' \
+		-e '1s@^@'\'' See end of file for terms of use.\n@g' \
 		-e '1s@^@'\'' Copyright (c) $(YEAR) LameStation LLC\n@g' \
-		-e '1s@^@'\''         Date: $(DATE)\n@g' \
-		-e '1s@^@'\''  SDK Version: $(VERSION)\n@g' \
+		-e '1s@^@'\'' Date: $(DATE)\n@g' \
+		-e '1s@^@'\'' SDK Version: $(VERSION)\n@g' \
 		-e '1s@^@'\'' -------------------------------------------------------\n@g' \
 		-e '1s@^@'\'' $@\n@g'
 #	cat license.stub >> $@
