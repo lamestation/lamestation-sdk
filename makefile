@@ -66,13 +66,6 @@ $(PREFIX_SRC)/%.spin: %.spin
 	echo '\n```' >> $@
 	pandoc -t html $@ > $@.tmp
 	mv $@.tmp $@
-	sed -i $@ \
-		-e '1s@^@---\n@g' \
-		-e '1s@^@date: $(DATE)\n@g' \
-		-e '1s@^@version: $(VERSION)\n@g' \
-		-e '1s@^@layout: page\n@g' \
-		-e '1s@^@title: $@\n@g' \
-		-e '1s@^@---\n@g'
 
 %.binary: %.spin
 	$(SPINC) $< $(LFLAGS) 1>/dev/null
