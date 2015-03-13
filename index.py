@@ -57,38 +57,50 @@ def build_index(path,ext):
         index['dirs'].append(build_index(d,ext))
         os.chdir('..')
 
-#    f = open('index.md','w')
-#    f.write(printer(index, path='.', level=0))
-#    f.close()
-
-    return index
-
-def printer(index, path='.', level=0):
-    output = ""
-    path = os.path.relpath(os.path.join(path, index['path']))
-
-    if level > 0:
-        output += bullet(link(nice_dir(index['path']),index['path']),level)+'\n'
-
-    for f in index['files']:
-        p = os.path.join(path,f)
-        p = os.path.splitext(p)[0]+'.html'
-
-        output += bullet(link(nice_file(f),p),level+1)+'\n'
-
-    for d in index['dirs']:
-        output += printer(d,path,level=level+1)
-
-    return output
-
-index = build_index('','spin')
-
-f = open('index.md','w')
-f.write("""---
+    f = open('index.md','w')
+    f.write("""---
 layout: page
 title: Index
 ---
 """)
-f.write(printer(index))
-f.close()
+    ind = printer(index, path='.', level=0, root=index['path'])
+#    print ind
+    f.write(ind)
+    f.close()
+
+    return index
+
+def printer(index, path='.', level=0, root='.'):
+    output = ""
+
+    path = os.path.relpath(os.path.join(path, index['path']))
+
+#    print 'R',root
+    rpath = os.path.dirname(root).split(os.sep)
+#    print 'R',rpath
+    rpath = filter(None,rpath)
+
+    lpath = path.split(os.sep)
+    for i in xrange(len(rpath)):
+        lpath.pop(0)
+    lpath = os.sep.join(lpath)
+
+    if level > 0:
+        output += bullet(link(nice_dir(index['path']),lpath),level)+'\n'
+
+    for f in index['files']:
+        p = os.path.join(lpath,f)
+        p = os.path.splitext(p)[0]+'.html'
+
+#        print [rpath, lpath, root, index['path']]
+
+        output += bullet(link(nice_file(f),p),level+1)+'\n'
+
+    for d in index['dirs']:
+        output += printer(d,path,level=level+1, root=root)
+
+
+    return output
+
+build_index('','spin')
 

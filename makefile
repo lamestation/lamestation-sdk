@@ -6,13 +6,18 @@ OBJECTS := $(LITFILES:.spin.lit=.spin)
 DOCS := $(LITFILES:.spin.lit=.spin.md)
 BINARIES := $(OBJECTS:.spin=.binary)
 
+NAME := $(shell git remote -v | awk '{print $$2}' | sed -e '1d' -e 's@.*/@@g')
+VERSION := $(shell git describe --tags)
+ifeq ($(VERSION),)
+	VERSION := 0.0.0
+endif
+
 PREFIX ?= out
-PREFIX_DOCS ?= $(PREFIX)/doc
+PREFIX_DOCS ?= $(PREFIX)/learn/$(NAME)/$(VERSION)
 PREFIX_SRC ?= $(PREFIX)/src
 INSTALL_DOCS := $(patsubst %,$(PREFIX_DOCS)/%,$(DOCS))
 INSTALL_SRC := $(patsubst %,$(PREFIX_SRC)/%,$(OBJECTS))
 
-VERSION := $(shell git describe --tags)
 YEAR := $(shell date +%Y)
 DATE := $(shell date +%D)
 
@@ -55,6 +60,7 @@ $(PREFIX_SRC)/%.spin: %.spin
 %.spin.md: %.spin.lit
 	lit -m --docs-dir $(dir $< ) $<
 	sed -i $@ -e '/<<.*>>/d'
+	echo '\n## Resulting Code\n' >> $@
 	echo '\n```' >> $@
 	cat `echo $@ | sed -e 's/.spin.md/.spin/g'` >> $@
 	echo '\n```' >> $@
