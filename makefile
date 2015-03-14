@@ -51,7 +51,6 @@ $(PREFIX_SRC)/%.spin: %.spin
 		-e '1s@^@'\'' -------------------------------------------------------\n@g' \
 		-e '1s@^@'\'' See end of file for terms of use.\n@g' \
 		-e '1s@^@'\'' Copyright (c) $(YEAR) LameStation LLC\n@g' \
-		-e '1s@^@'\'' Date: $(DATE)\n@g' \
 		-e '1s@^@'\'' SDK Version: $(VERSION)\n@g' \
 		-e '1s@^@'\'' -------------------------------------------------------\n@g' \
 		-e '1s@^@'\'' $@\n@g'
@@ -60,7 +59,7 @@ $(PREFIX_SRC)/%.spin: %.spin
 %.spin.md: %.spin.lit
 	lit -m --docs-dir $(dir $< ) $<
 	sed -i $@ -e '/<<.*>>/d'
-	echo '\n## Resulting Code\n' >> $@
+	echo '\n## Complete Code\n' >> $@
 	echo '\n```' >> $@
 	cat `echo $@ | sed -e 's/.spin.md/.spin/g'` >> $@
 	echo '\n```' >> $@
@@ -78,7 +77,7 @@ install: install_docs
 install_docs:
 	rm -rf $(PREFIX_DOCS)
 	mkdir -p $(PREFIX_DOCS)
-	rsync -rv --include '*/' --include '*.md' --include 'gfx/*' --exclude '*' --prune-empty-dirs . $(PREFIX_DOCS)
+	rsync -rv --include '*/' --include '*.md' --include 'gfx/*' --include 'screenshots/*' --exclude '*' --prune-empty-dirs . $(PREFIX_DOCS)
 
 $(PREFIX):
 	mkdir -p $(PREFIX)

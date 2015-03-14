@@ -1,3 +1,5 @@
+One of the most useful things ever in 2D game programming is the tilemap, so naturally, LameStation has a set of functions for drawing completely epic tile-based maps into games that you can use for whatever you want.
+
 Add the usual settings.
     << * >>=
     CON
@@ -7,7 +9,6 @@ Add the usual settings.
 Include the necessary objects. 
     << * >>=
     OBJ
-    
         lcd     :   "LameLCD" 
         gfx     :   "LameGFX"
         map     :   "LameMap"
@@ -34,3 +35,7 @@ Draw your map to the screen buffer.
 Draw to the screen.
     << * >>=
         lcd.DrawScreen
+
+And here's what it'll look like when you run it.
+
+![The resulting display.](screenshots/pic1.png)
