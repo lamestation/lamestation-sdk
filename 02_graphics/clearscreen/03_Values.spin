@@ -1,0 +1,37 @@
+' 02_graphics/clearscreen/03_Values.spin
+' -------------------------------------------------------
+' SDK Version: 0.0.0
+' Copyright (c) 2015 LameStation LLC
+' See end of file for terms of use.
+' -------------------------------------------------------
+CON
+    _clkmode = xtal1|pll16x
+    _xinfreq = 5_000_000
+
+OBJ
+
+    lcd     :               "LameLCD" 
+    gfx     :               "LameGFX"
+    fn      :               "LameFunctions"
+    
+PUB Blit | val
+
+    lcd.Start(gfx.Start)
+    gfx.ClearScreen($FFFF)
+    lcd.DrawScreen
+
+    fn.Sleep(500)
+        
+    gfx.ClearScreen(0)
+    lcd.DrawScreen
+
+    fn.Sleep(500)
+
+    gfx.ClearScreen($FF00)
+    lcd.DrawScreen
+    
+    fn.Sleep(500)
+
+    gfx.ClearScreen($abc3)
+    lcd.DrawScreen
+

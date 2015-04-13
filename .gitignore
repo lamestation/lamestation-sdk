@@ -1,6 +1,2 @@
-*.spin
-*.spin.md
-*.spin.html
 *.swp
 out/
-index.md
