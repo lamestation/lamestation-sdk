@@ -1,13 +1,7 @@
-' 06_music/song_proppaly_awesome.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ' *********************************************************
 ' proppaly_awesome.spin
 ' *********************************************************
-DAT    
+DAT
 song_data
 word    @patterns_data, @sequence_data
 
@@ -15,18 +9,18 @@ CON
     SONGOFF = $80
     SNOP    = $82
     SOFF    = $83
-    
+
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
-    
+
     #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
-    
+
 PUB Addr
     result.word[1] := @@0
     result.word{0} := @song_data
 
-DAT    
+DAT
 
 patterns_data
 byte    16    'bar resolution
@@ -47,8 +41,6 @@ byte    SOFF,SNOP,  45,  45,SOFF,SNOP,  45,SOFF,     45,SNOP,SOFF,  45,SNOP,SOFF
 byte    SOFF,SNOP,  49,  49,SOFF,SNOP,  49,SOFF,   SNOP,SNOP,  49,  49,SOFF,  49,  49,SOFF    '9  chords
 byte    SOFF,SNOP,  49,  49,SOFF,SNOP,  49,SOFF,     50,SNOP,SOFF,  50,SNOP,SOFF,  49,SOFF    '10 chords
 
-
-
 byte      21,SOFF,SNOP,  25,SOFF,SNOP,  26,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '11 bass
 byte      25,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,     21,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '12 bass
 byte      21,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,  28    '13 bass
@@ -56,7 +48,7 @@ byte      33,  28,  21,  21,SNOP,SNOP,SNOP,SNOP,     21,SOFF,  21,  21,SOFF,  21
 
 byte      45,SNOP,SOFF,  45,SNOP,SOFF,  45,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '15 chords
 byte      45,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '16 chords
-                                                                                              
+
 byte      45,SNOP,SOFF,  49,SNOP,SOFF,  50,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '17 chords
 byte      50,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SOFF    '18 chords
 byte      49,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SOFF    '19 chords
@@ -77,8 +69,6 @@ byte      64,  61,  57,  55,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
 byte      57,SOFF,SNOP,  52,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,  55,SOFF    '28 melody again
 byte      55,  52,  50,  49,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,  50,SNOP,SNOP,  52,SNOP    '29 melody again
 byte      45,SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '30 melody again
-
-
 
 sequence_data
 
@@ -118,7 +108,7 @@ byte    ADSRW+%1000, 127, 0, 100, 00, SQUARE
 
 byte     11, 15, 17,  0
 byte     12, 15, 17,  0
-    
+
 byte    TRANS, 7
 
 byte     13, 16, 18, 20
@@ -127,7 +117,7 @@ byte     14, 16, 19, 21
 ' cut out into noise
 
 byte    ADSRW+%1000, 127, 60, 0, 60, NOISE
-    
+
 byte    TRANS, 12
 byte    ADSRW+%0011, 127, 0, 100, 0, SINE
 byte    ADSRW+%0100, 127, 0, 100, 0, SAMPLE
@@ -135,7 +125,7 @@ byte    ADSRW+%0100, 127, 0, 100, 0, SAMPLE
 byte     27,  9, 22,  6
 byte     28, 10, 23,  6
 byte     29,  9, 24,  6
- 
+
 byte    ADSRW+%0110, 127, 0, 100, 0, SQUARE
 
 byte     30, 25, 26,  0
@@ -149,7 +139,5 @@ byte     28,  4, 23,  6
 byte     29,  3, 24,  6
 byte     30, 25, 26,  6
 
-
 byte    SONGOFF
-
 

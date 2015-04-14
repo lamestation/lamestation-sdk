@@ -1,17 +1,11 @@
-' 05_audio/ModAttack.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode = xtal1 + pll16x
     _xinfreq = 5_000_000
-  
+
 OBJ
     audio   : "LameAudio"
     ctrl    : "LameControl"
-    
+
 VAR
     long    frequency
     long    frequency_inc
@@ -19,15 +13,15 @@ VAR
 PUB Main
     audio.Start
     ctrl.Start
-    
+
     frequency := 10000
     frequency_inc := 100
-    
+
     audio.SetEnvelope(0, 0)
     audio.SetEnvelope(1, 0)
     audio.SetEnvelope(2, 0)
     audio.SetEnvelope(3, 0)
-    
+
     audio.SetWaveform(0, audio#_SINE)
     audio.SetWaveform(1, audio#_SAW)
     audio.SetWaveform(2, audio#_SQUARE)
@@ -35,16 +29,15 @@ PUB Main
 
     repeat
         ctrl.Update
-        
+
         if ctrl.Left
             frequency_inc -= 1
         if ctrl.Right
             frequency_inc += 1
-            
+
         frequency += frequency_inc
 
         audio.SetFreq(0, frequency // 100000)
         audio.SetFreq(1, frequency >> 1  // 100000)
         audio.SetFreq(2, frequency // 100000)
         audio.SetFreq(3, frequency >> 2  // 100000)
-

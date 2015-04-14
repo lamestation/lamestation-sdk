@@ -1,18 +1,12 @@
-' 07_collision/04_BallBouncing.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode = xtal1|pll16x
     _xinfreq = 5_000_000
 OBJ
-    lcd  :               "LameLCD" 
+    lcd  :               "LameLCD"
     gfx  :               "LameGFX"
     map  :               "LameMap"
     ctrl :               "LameControl"
-    
+
     ball :               "gfx_ball_16x16"
     map1 :               "map_map"
     tile :               "gfx_box_s"
@@ -22,20 +16,23 @@ VAR
     long    x, y
     long    speedx, speedy
     long    adjust
+
 CON
     w = 16
     h = 16
     maxspeed = 20
+
 PUB Main
     lcd.Start(gfx.Start)
     map.Load(tile.Addr, map1.Addr)
 
     x := 12
     y := 12
-    
+
     repeat
         gfx.ClearScreen(0)
         ctrl.Update
+
         oldx := x
         oldy := y
 
@@ -76,4 +73,3 @@ PUB Main
         gfx.Sprite(ball.Addr,x, y,0)
 
         lcd.DrawScreen
-

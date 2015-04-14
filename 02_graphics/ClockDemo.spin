@@ -1,9 +1,3 @@
-' 02_graphics/ClockDemo.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ''
 '' (not so) simple clock demo
 ''
@@ -65,7 +59,7 @@ PRI init : n
   link[2] := @s_00[-3]                                  '  odd | seconds
 
   frm.init(@time{0})                                    ' frame handler
-  
+
   cognew(clock, @stack{0})                              ' clock handler
   lcd.Start(gfx.Start)                                  ' setup screen and renderer
 
@@ -166,7 +160,7 @@ PRI index : n
                                                         '    0: 0
   if n := time.byte[3]                                  ' even: 1
     return n & 1 +1                                     '  odd: 2
-  
+
 PRI digits(value, at)
 
   gfx.Sprite(@data[-3], at,      16, value  / 10)
@@ -267,4 +261,3 @@ s_00    word    $AAAA, $AAAA, $AAAA, $FFFF, $FFFF, $AAAA, $AAAA, $AAAA
         word    $AAAA, $AAAA, $FFFA, $FFFF, $FFFF, $AFFF, $AAAA, $AAAA
         word    $AAAA, $AAAA, $FEAA, $FFFF, $FFFF, $AABF, $AAAA, $AAAA
         word    $AAAA, $AAAA, $AAAA, $FFFF, $FFFF, $AAAA, $AAAA, $AAAA
-

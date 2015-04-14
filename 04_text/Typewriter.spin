@@ -1,9 +1,3 @@
-' 04_text/Typewriter.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
 
     _clkmode        = xtal1 + pll16x
@@ -16,17 +10,17 @@ OBJ
     fn       : "LameFunctions"
     audio    : "LameAudio"
     music    : "LameMusic"
-    
+
     font_6x8 : "gfx_font6x8_normal_w"
     famus    : "gfx_spacegirl"
     blehtrd  : "sng_blehtroid"
-        
+
 PUB TypewriterTextDemo | count
 
     lcd.Start(gfx.Start)
 
     audio.Start
-    
+
     music.Start
     music.Load(blehtrd.Addr)
     music.Loop
@@ -47,28 +41,26 @@ PUB TypewriterTextDemo | count
         lcd.DrawScreen
     while count < 160
 
-
 PUB Typewriter(stringvar, origin_x, origin_y, w, h, tilesize_x, tilesize_y, countmax) | char, x, y, count
 
     x := origin_x
     y := origin_y
-    
+
     count := 0
     repeat strsize(stringvar)
         count++
         char := byte[stringvar++]
         if char == 10 or char == 13
             y += tilesize_y
-            x := origin_x          
+            x := origin_x
         elseif char == " "
             x += tilesize_x
-        else   
+        else
             gfx.Sprite(font_6x8.Addr, x, y, char - " ")
-            if x+tilesize_x => origin_x+w      
+            if x+tilesize_x => origin_x+w
                 y += tilesize_y
                 x := origin_x
             else
                 x += tilesize_x
         if count > countmax
             return
-

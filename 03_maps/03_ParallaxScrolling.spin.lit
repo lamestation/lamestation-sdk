@@ -37,6 +37,7 @@ But we're also going to add a beautiful backdrop to admire!
         long    dx, dy
     
     PUB Main
+
         lcd.Start(gfx.Start)
     
         map.Load(tileset.Addr, mp.Addr)
@@ -79,6 +80,7 @@ But we're also going to add a beautiful backdrop to admire!
     
             lcd.DrawScreen
 
+
 When you run your code, it will look completely flipping awesome. Why? Because now you don't just have the single tilemap, but two, and they're parallaxed against a backdrop, which creates a nice depth-of-field effect.
 
 But don't take my word for it; see for yourself!
@@ -86,3 +88,4 @@ But don't take my word for it; see for yourself!
 ![I mean, seriously, how awesome.](screenshots/pic5.png)
 
 ![Look at that eye-popping display!](screenshots/pic9.png)
+

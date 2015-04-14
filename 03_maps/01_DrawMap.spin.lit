@@ -6,6 +6,7 @@ Add the usual settings.
         _clkmode = xtal1|pll16x
         _xinfreq = 5_000_000
 
+
 Include the necessary objects. 
     << * >>=
     OBJ
@@ -16,16 +17,19 @@ Include the necessary objects.
         cavemap :   "map_cave"
         tileset :   "gfx_cave"
     
+
 Create a public main function. 
     << * >>=
     PUB Main
 
+
 Set up the LCD and graphics systems.
-    << * >>=
+    << alpha >>=
         lcd.Start(gfx.Start)
 
 Load the necessary graphics and map data into `LameMap`.
     << * >>=
+    << alpha >>
         map.Load(tileset.Addr, cavemap.Addr)
 
 Draw your map to the screen buffer.
@@ -35,6 +39,7 @@ Draw your map to the screen buffer.
 Draw to the screen.
     << * >>=
         lcd.DrawScreen
+
 
 And here's what it'll look like when you run it.
 

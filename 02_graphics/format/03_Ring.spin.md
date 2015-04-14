@@ -1,55 +1,24 @@
-<pre><code>OBJ
-    lcd : &quot;LameLCD&quot;
-    gfx : &quot;LameGFX&quot;
 
-PUB SinglePixel
-    lcd.Start(gfx.Start)
-    gfx.Sprite(@data, 0,0, 0)
-    lcd.DrawScreen
-    
-DAT
+    OBJ
+        lcd : "LameLCD"
+        gfx : "LameGFX"
 
-data
-word    0
-word    8, 8
-word    %%00011000
-word    %%01111110
-word    %%01100110
-word    %%11000011
-word    %%11000011
-word    %%01100110
-word    %%01111110
-word    %%00011000
-</code></pre>
-<h2 id="complete-code">Complete Code</h2>
-<pre><code>&#39; 02_graphics/format/03_Ring.spin
-&#39; -------------------------------------------------------
-&#39; SDK Version: 0.0.0
-&#39; Copyright (c) 2015 LameStation LLC
-&#39; See end of file for terms of use.
-&#39; -------------------------------------------------------
-OBJ
-    lcd : &quot;LameLCD&quot;
-    gfx : &quot;LameGFX&quot;
+    PUB SinglePixel
+        lcd.Start(gfx.Start)
+        gfx.Sprite(@data, 0,0, 0)
+        lcd.DrawScreen
 
-PUB SinglePixel
-    lcd.Start(gfx.Start)
-    gfx.Sprite(@data, 0,0, 0)
-    lcd.DrawScreen
-    
-DAT
+    DAT
 
-data
-word    0
-word    8, 8
-word    %%00011000
-word    %%01111110
-word    %%01100110
-word    %%11000011
-word    %%11000011
-word    %%01100110
-word    %%01111110
-word    %%00011000
+    data
+    word    0
+    word    8, 8
+    word    %%00011000
+    word    %%01111110
+    word    %%01100110
+    word    %%11000011
+    word    %%11000011
+    word    %%01100110
+    word    %%01111110
+    word    %%00011000
 
-
-</code></pre>

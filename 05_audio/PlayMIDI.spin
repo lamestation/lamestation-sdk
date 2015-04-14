@@ -1,9 +1,3 @@
-' 05_audio/PlayMIDI.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON     _clkmode = xtal1 + pll16x
         _xinfreq = 5_000_000
 
@@ -23,7 +17,7 @@ VAR
 
 OBJ
     pst     :       "LameSerial"
-    pst2    :       "LameSerial" 
+    pst2    :       "LameSerial"
     audio   :       "LameAudio"
     gfx     :       "LameGFX"
     lcd     :       "LameLCD"
@@ -32,12 +26,12 @@ PRI ControlNote
 
     databyte1 := newbyte
     databyte2 := pst.CharIn
-    
+
     pst2.Dec(databyte1)
     pst2.Char(" ")
     pst2.Dec(databyte2)
     pst2.Char(" ")
-    
+
     'TURN NOTE ON
     if statusnibble == $90
         audio.PlaySound(0,databyte1)
@@ -49,12 +43,12 @@ PRI ControlKnob
 
     databyte1 := newbyte
     databyte2 := pst.CharIn
-    
+
     'modulation wheel
     case databyte1
         ' Modulation
         $01:
-    
+
         ' ADSR
         $4A:    'audio.SetAttack(databyte2)
                 attack := databyte2
@@ -68,7 +62,7 @@ PRI ControlKnob
                 volume := databyte2
         $49:    'audio.SetWaveform(databyte2)
                 waveform := databyte2
-    
+
         ' SUSTAIN PEDAL
         $40:    if databyte2 <> 0
                 '    audio.PressPedal
@@ -79,12 +73,12 @@ PRI ControlPitchBend
 
     databyte1 := newbyte
     databyte2 := pst.CharIn
-    
+
     pst2.Dec(databyte1)
     pst2.Char(" ")
     pst2.Dec(databyte2)
     pst2.Char(" ")
-    
+
     pst2.Char(pst#NL)
 
 PUB Main
@@ -93,10 +87,9 @@ PUB Main
     pst2.StartRxTx(31, 30, 0, 115200)
     pst2.Clear
 
-    audio.Start  
+    audio.Start
 
     cognew(MIDIController, @Stack_MIDIController)
-
 
 PRI MIDIController
 
@@ -159,4 +152,3 @@ PRI GetChar(digit)
             return "0"
         else
             return " "
-

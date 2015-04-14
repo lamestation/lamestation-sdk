@@ -1,13 +1,7 @@
-' 06_music/song_tankbattle.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ' *********************************************************
 ' tankbattle.spin
 ' *********************************************************
-DAT    
+DAT
 song_data
 word    @patterns_data, @sequence_data
 
@@ -15,18 +9,18 @@ CON
     SONGOFF = $80
     SNOP    = $82
     SOFF    = $83
-    
+
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
-    
+
     #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
-    
+
 PUB Addr
     result.word[1] := @@0
     result.word{0} := @song_data
 
-DAT    
+DAT
 
 patterns_data
 byte    8       'bar resolution
@@ -46,17 +40,16 @@ byte     17,SNOP,  17,SOFF,   15,  17,SOFF,  15
 byte       48,SNOP,SOFF,  50, SNOP,SOFF,  51,SNOP
 byte     SNOP,SOFF,  48,SNOP,   51,SNOP,  48,SNOP
 byte       53,SNOP,SNOP,  51, SNOP,SNOP,  50,SNOP
-byte     SNOP,  51,SNOP,SNOP,   50,  51,  50,SNOP 
+byte     SNOP,  51,SNOP,SNOP,   50,  51,  50,SNOP
 
 'melody
 byte       48,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SNOP
-byte     SNOP,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SOFF     
+byte     SNOP,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SOFF
 
 'harmonies
 byte       44,SNOP,SNOP,  43, SNOP,SNOP,  41,SNOP
 byte     SNOP,  39,SNOP,SNOP,   38,SNOP,SNOP,SNOP
-byte     SNOP,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SOFF 
-
+byte     SNOP,SNOP,SNOP,SNOP, SNOP,SNOP,SNOP,SOFF
 
 sequence_data
 byte    TRANS, 0
@@ -91,6 +84,4 @@ byte    5,6,0,0
 byte    5,6,12,15
 
 byte    SONGOFF
-
-
 

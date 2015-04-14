@@ -1,9 +1,3 @@
-' 04_text/Kerning.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
@@ -12,7 +6,7 @@ OBJ
         lcd     :               "LameLCD"
         gfx     :               "LameGFX"
         font    :               "gfx_font4x6"
-        
+
 PUB Kerning
 
     lcd.Start(gfx.Start)
@@ -22,7 +16,6 @@ PUB Kerning
     ' 0,0 loads default kerning, so normal letter spacing
     gfx.LoadFont(font.Addr, " ", 0, 0)
     gfx.TextBox(@strang,0,0,128,30)
-
 
     ' kerning can also be specified, giving rise to completely
     ' right or completely wrong sizes...
@@ -39,8 +32,6 @@ PUB Kerning
 
     repeat
 
-
 DAT
 
 strang  byte    "This is cool",10,"You think so?",0
-

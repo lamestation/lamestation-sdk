@@ -1,15 +1,9 @@
-' 03_maps/03_ParallaxScrolling.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode = xtal1|pll16x
     _xinfreq = 5_000_000
 OBJ
 
-    lcd     :   "LameLCD" 
+    lcd     :   "LameLCD"
     gfx     :   "LameGFX"
     map     :   "LameMap"
     ctrl    :   "LameControl"
@@ -25,6 +19,7 @@ VAR
     long    dx, dy
 
 PUB Main
+
     lcd.Start(gfx.Start)
 
     map.Load(tileset.Addr, mp.Addr)

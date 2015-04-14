@@ -1,13 +1,7 @@
-' 04_text/sng_blehtroid.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ' *********************************************************
 ' blehtroid.spin
 ' *********************************************************
-DAT    
+DAT
 song_data
 word    @patterns_data, @sequence_data
 
@@ -15,18 +9,18 @@ CON
     SONGOFF = $80
     SNOP    = $82
     SOFF    = $83
-    
+
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
-    
+
     #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
-    
+
 PUB Addr
     result.word[1] := @@0
     result.word{0} := @song_data
 
-DAT    
+DAT
 
 patterns_data
 byte    16    'bar resolution
@@ -34,7 +28,6 @@ byte    16    'bar resolution
 'main
 byte    33, 33, 35, 35, 38, 38, 37, 37, 40, 40, 38, 38, 43, 43, 42, 42
 byte    SNOP, SNOP, 23, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SNOP, SOFF
-
 
 sequence_data
 byte    TRANS, 0
@@ -51,4 +44,3 @@ byte    1,2,0,0
 byte    1,0,0,0
 
 byte    SONGOFF
-

@@ -1,9 +1,3 @@
-' 04_text/PutString.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
@@ -11,9 +5,9 @@ CON
 OBJ
         lcd  : "LameLCD"
         gfx  : "LameGFX"
-        
+
         font : "gfx_font6x8"
-        
+
 PUB Main
 
     lcd.Start(gfx.Start)
@@ -22,4 +16,3 @@ PUB Main
     gfx.PutString(string("THIS IS A TEST"),4,28)
 
     lcd.DrawScreen
-

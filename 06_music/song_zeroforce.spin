@@ -1,13 +1,7 @@
-' 06_music/song_zeroforce.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ' *********************************************************
 ' zeroforce.spin
 ' *********************************************************
-DAT    
+DAT
 song_data
 word    @patterns_data, @sequence_data
 
@@ -15,19 +9,19 @@ CON
     SONGOFF = $80
     SNOP    = $82
     SOFF    = $83
-    
+
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
-    
+
     #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
-    
+
 PUB Addr
     result.word[1] := @@0
     result.word{0} := @song_data
 
-DAT    
-    
+DAT
+
 patterns_data
 byte    8      'bar resolution
 
@@ -60,7 +54,6 @@ byte    29,SNOP,SOFF,SNOP,29,SNOP,27,SNOP
 byte    46,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
 byte    45,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
 byte    44,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-
 
 sequence_data
 byte    TRANS, 0
@@ -101,6 +94,4 @@ byte    11,14,17,10
 byte    13,15,17,10
 
 byte    SONGOFF
-
-
 

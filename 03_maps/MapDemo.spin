@@ -1,9 +1,3 @@
-' 03_maps/MapDemo.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ''
 '' simple map demo
 ''
@@ -28,11 +22,11 @@ CON
 
   #0, PX, PY
   #1, SX, SY
-  
+
 OBJ
    lcd: "LameLCD"
-   gfx: "LameGFX"    
-   map: "LameMap"                     
+   gfx: "LameGFX"
+   map: "LameMap"
   ctrl: "LameControl"
 
 VAR
@@ -81,14 +75,14 @@ PRI navi(dx, dy, spd)
 
 PRI demo(dx, dy, spd, frm)
 
-  gfx.ClearScreen(0)                                          
-  map.Draw(cur_x, cur_y)                                   
+  gfx.ClearScreen(0)
+  map.Draw(cur_x, cur_y)
 
   navi(dx, dy, spd)
 
-  repeat frm                                                  
+  repeat frm
     lcd.WaitForVerticalSync
-  lcd.DrawScreen                                              
+  lcd.DrawScreen
 
 PRI process : d
 
@@ -580,4 +574,3 @@ word    $aaaa
 word    $aaaa
 word    $aaaa
 word    $aaaa
-

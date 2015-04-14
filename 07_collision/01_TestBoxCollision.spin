@@ -1,15 +1,9 @@
-' 07_collision/01_TestBoxCollision.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
 
     _clkmode = xtal1|pll16x
     _xinfreq = 5_000_000
 OBJ
-    lcd  :               "LameLCD" 
+    lcd  :               "LameLCD"
     gfx  :               "LameGFX"
     ctrl :               "LameControl"
     fn   :               "LameFunctions"
@@ -18,18 +12,16 @@ OBJ
 VAR
     byte    x1, y1
     byte    x2, y2
+
 CON
     w = 24
     h = 24
 PUB Main
-
     lcd.Start(gfx.Start)
     x2 := 52
     y2 := 20
-    
     repeat
         gfx.ClearScreen(0)
-
         ctrl.Update
         if ctrl.Left
             if x1 > 0
@@ -45,12 +37,8 @@ PUB Main
                 y1++
         if fn.TestBoxCollision(x1, y1, w, h, x2, y2, w, h)
             gfx.InvertColor(True)
-
         gfx.Sprite(boxo.Addr,x1,y1,0)
         gfx.Sprite(boxo.Addr,x2,y2,0)
         gfx.Sprite(box.Addr,x1,y1,0)
-
         gfx.InvertColor(False)
-
         lcd.DrawScreen
-

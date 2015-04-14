@@ -1,13 +1,7 @@
-' 06_music/song_townhall.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ' *********************************************************
 ' townhall.spin
-' ********************************************************* 
-DAT    
+' *********************************************************
+DAT
 song_data
 word    @patterns_data, @sequence_data
 
@@ -15,19 +9,19 @@ CON
     SONGOFF = $80
     SNOP    = $82
     SOFF    = $83
-    
+
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
-    
+
     #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
-    
+
 PUB Addr
     result.word[1] := @@0
     result.word{0} := @song_data
 
-DAT    
-    
+DAT
+
 patterns_data
 byte    16      'bar resolution
 
@@ -46,7 +40,6 @@ byte    65,SOFF,  65,SOFF,  60,SOFF,  60,SOFF,  63,SNOP,  62,  63,SNOP,  62,  60
 byte    36,  36,  48,  48,  36,  41,  42,  43,SNOP,  43,  43,  43,  43,  43,  43,  43 '0
 byte    52,SOFF,SNOP,SNOP,SNOP,  53,  54,  55,SNOP,  55,  55,  55,  55,  55,  55,  55 '1
 
-    
 sequence_data
 byte    TRANS, 12
 byte    TEMPO, 130
@@ -54,7 +47,7 @@ byte    ADSRW+$F, 127,  30, 100,   0,   SINE
 
 byte    1,0,0,0
 byte    1,0,0,0
-    
+
 byte    1,2,0,0
 byte    1,3,0,0
 
@@ -68,6 +61,4 @@ byte    1,2,0,0
 byte    9,10,0,0
 
 byte    SONGOFF
-
-
 

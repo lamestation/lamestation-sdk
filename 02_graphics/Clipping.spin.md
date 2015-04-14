@@ -1,195 +1,94 @@
-<pre><code>&#39;&#39;
-&#39;&#39; simple clipping demo
-&#39;&#39;
-&#39;&#39;        Author: Marko Lukat
-&#39;&#39; Last modified: 2014/06/17
-&#39;&#39;       Version: 0.6
-&#39;&#39;
-&#39;&#39; use joystick for moving around
-&#39;&#39;
-&#39;&#39; no button: move noise sprite
-&#39;&#39;         A: move top left clip corner
-&#39;&#39;         B: move bottom right clip corner
-&#39;&#39;       A+B: reset clip area to max
-&#39;&#39;
-CON
-  _clkmode = XTAL1|PLL16X
-  _xinfreq = 5_000_000
 
-CON
-  #0, PX, PY
-  
-OBJ
-   lcd: &quot;LameLCD&quot;
-   gfx: &quot;LameGFX&quot;                         
-  ctrl: &quot;LameControl&quot;
+    ''
+    '' simple clipping demo
+    ''
+    ''        Author: Marko Lukat
+    '' Last modified: 2014/06/17
+    ''       Version: 0.6
+    ''
+    '' use joystick for moving around
+    ''
+    '' no button: move noise sprite
+    ''         A: move top left clip corner
+    ''         B: move bottom right clip corner
+    ''       A+B: reset clip area to max
+    ''
+    CON
+      _clkmode = XTAL1|PLL16X
+      _xinfreq = 5_000_000
 
-   bmp: &quot;gfx_rpgtown&quot; 
+    CON
+      #0, PX, PY
 
-VAR
-  long  pos_x, pos_y, cx1, cy1, cx2, cy2                &#39; sprite position and clip area
-  word  size, sx, sy, data[4096]                        &#39; noise sprite
+    OBJ
+       lcd: "LameLCD"
+       gfx: "LameGFX"
+      ctrl: "LameControl"
 
-PUB null : n
+       bmp: "gfx_rpgtown"
 
-  lcd.Start(gfx.Start)                                  &#39; setup screen and renderer
+    VAR
+      long  pos_x, pos_y, cx1, cy1, cx2, cy2                ' sprite position and clip area
+      word  size, sx, sy, data[4096]                        ' noise sprite
 
-  size := 8192
-    sx := 256
-    sy := 128
+    PUB null : n
 
-  frqa := cnt
-  repeat 4096
-    data[n++] := ?frqa                                  &#39; prepare noise sprite
+      lcd.Start(gfx.Start)                                  ' setup screen and renderer
 
-  pos_x := -(cx2 := lcd#SCREEN_W)/2
-  pos_y := -(cy2 := lcd#SCREEN_H)/2                     &#39; initial clip area and position
+      size := 8192
+        sx := 256
+        sy := 128
 
-  repeat
-    process{_buttons}                                   &#39; get button status/events
+      frqa := cnt
+      repeat 4096
+        data[n++] := ?frqa                                  ' prepare noise sprite
 
-    gfx.Blit(bmp.Addr)                                  &#39; draw background (instead of CLS)
-    gfx.SetClipRectangle(cx1, cy1, cx2, cy2)            &#39; limit area for next draw
-    gfx.Sprite(@data[-3], pos_x, pos_y, 0)              &#39; draw noise sprite on top
+      pos_x := -(cx2 := lcd#SCREEN_W)/2
+      pos_y := -(cy2 := lcd#SCREEN_H)/2                     ' initial clip area and position
 
-    repeat 1
-      lcd.WaitForVerticalSync
-    lcd.DrawScreen                                      &#39; update when ready
+      repeat
+        process{_buttons}                                   ' get button status/events
 
-PRI process : button
+        gfx.Blit(bmp.Addr)                                  ' draw background (instead of CLS)
+        gfx.SetClipRectangle(cx1, cy1, cx2, cy2)            ' limit area for next draw
+        gfx.Sprite(@data[-3], pos_x, pos_y, 0)              ' draw noise sprite on top
 
-  ctrl.Update                                           &#39; current button state
+        repeat 1
+          lcd.WaitForVerticalSync
+        lcd.DrawScreen                                      ' update when ready
 
-  button := %01 &amp; ctrl.A
-  button |= %10 &amp; ctrl.B                                &#39; extract A/B
+    PRI process : button
 
-  ifnot button                                          &#39; no buttons, just move noise sprite
-    return advance(@pos_x, 1, -lcd#SCREEN_W, -lcd#SCREEN_H, 0, 0)
+      ctrl.Update                                           ' current button state
 
-  if button == %01 {A}                                  &#39; A: move top left clip corner
-    return advance(@cx1, 1, 0, 0, cx2, cy2)
+      button := %01 & ctrl.A
+      button |= %10 & ctrl.B                                ' extract A/B
 
-  if button == %10 {B}                                  &#39; B: move bottom right clip corner
-    return advance(@cx2, 1, cx1, cy1, lcd#SCREEN_W, lcd#SCREEN_H)
+      ifnot button                                          ' no buttons, just move noise sprite
+        return advance(@pos_x, 1, -lcd#SCREEN_W, -lcd#SCREEN_H, 0, 0)
 
-  cx1 := cy1 := 0
-  cx2 := lcd#SCREEN_W
-  cy2 := lcd#SCREEN_H                                   &#39; A+B: reset clip area to max
+      if button == %01 {A}                                  ' A: move top left clip corner
+        return advance(@cx1, 1, 0, 0, cx2, cy2)
 
-PRI advance(addr, delta, x, y, w, h) : changed
+      if button == %10 {B}                                  ' B: move bottom right clip corner
+        return advance(@cx2, 1, cx1, cy1, lcd#SCREEN_W, lcd#SCREEN_H)
 
-  if ctrl.Right
-    changed or= long[addr][PX] &lt; w
-    long[addr][PX] := w &lt;# (long[addr][PX] + delta)
-  elseif ctrl.Left
-    changed or= long[addr][PX] &gt; x
-    long[addr][PX] := x #&gt; (long[addr][PX] - delta)     &#39; update x of coordinate pair at addr
+      cx1 := cy1 := 0
+      cx2 := lcd#SCREEN_W
+      cy2 := lcd#SCREEN_H                                   ' A+B: reset clip area to max
 
-  if ctrl.Up
-    changed or= long[addr][PY] &gt; y
-    long[addr][PY] := y #&gt; (long[addr][PY] - delta)
-  elseif ctrl.Down
-    changed or= long[addr][PY] &lt; h
-    long[addr][PY] := h &lt;# (long[addr][PY] + delta)     &#39; update y of coordinate pair at addr</code></pre>
-<h2 id="complete-code">Complete Code</h2>
-<pre><code>&#39; 02_graphics/Clipping.spin
-&#39; -------------------------------------------------------
-&#39; SDK Version: 0.0.0
-&#39; Copyright (c) 2015 LameStation LLC
-&#39; See end of file for terms of use.
-&#39; -------------------------------------------------------
-&#39;&#39;
-&#39;&#39; simple clipping demo
-&#39;&#39;
-&#39;&#39;        Author: Marko Lukat
-&#39;&#39; Last modified: 2014/06/17
-&#39;&#39;       Version: 0.6
-&#39;&#39;
-&#39;&#39; use joystick for moving around
-&#39;&#39;
-&#39;&#39; no button: move noise sprite
-&#39;&#39;         A: move top left clip corner
-&#39;&#39;         B: move bottom right clip corner
-&#39;&#39;       A+B: reset clip area to max
-&#39;&#39;
-CON
-  _clkmode = XTAL1|PLL16X
-  _xinfreq = 5_000_000
+    PRI advance(addr, delta, x, y, w, h) : changed
 
-CON
-  #0, PX, PY
-  
-OBJ
-   lcd: &quot;LameLCD&quot;
-   gfx: &quot;LameGFX&quot;                         
-  ctrl: &quot;LameControl&quot;
+      if ctrl.Right
+        changed or= long[addr][PX] < w
+        long[addr][PX] := w <# (long[addr][PX] + delta)
+      elseif ctrl.Left
+        changed or= long[addr][PX] > x
+        long[addr][PX] := x #> (long[addr][PX] - delta)     ' update x of coordinate pair at addr
 
-   bmp: &quot;gfx_rpgtown&quot; 
-
-VAR
-  long  pos_x, pos_y, cx1, cy1, cx2, cy2                &#39; sprite position and clip area
-  word  size, sx, sy, data[4096]                        &#39; noise sprite
-
-PUB null : n
-
-  lcd.Start(gfx.Start)                                  &#39; setup screen and renderer
-
-  size := 8192
-    sx := 256
-    sy := 128
-
-  frqa := cnt
-  repeat 4096
-    data[n++] := ?frqa                                  &#39; prepare noise sprite
-
-  pos_x := -(cx2 := lcd#SCREEN_W)/2
-  pos_y := -(cy2 := lcd#SCREEN_H)/2                     &#39; initial clip area and position
-
-  repeat
-    process{_buttons}                                   &#39; get button status/events
-
-    gfx.Blit(bmp.Addr)                                  &#39; draw background (instead of CLS)
-    gfx.SetClipRectangle(cx1, cy1, cx2, cy2)            &#39; limit area for next draw
-    gfx.Sprite(@data[-3], pos_x, pos_y, 0)              &#39; draw noise sprite on top
-
-    repeat 1
-      lcd.WaitForVerticalSync
-    lcd.DrawScreen                                      &#39; update when ready
-
-PRI process : button
-
-  ctrl.Update                                           &#39; current button state
-
-  button := %01 &amp; ctrl.A
-  button |= %10 &amp; ctrl.B                                &#39; extract A/B
-
-  ifnot button                                          &#39; no buttons, just move noise sprite
-    return advance(@pos_x, 1, -lcd#SCREEN_W, -lcd#SCREEN_H, 0, 0)
-
-  if button == %01 {A}                                  &#39; A: move top left clip corner
-    return advance(@cx1, 1, 0, 0, cx2, cy2)
-
-  if button == %10 {B}                                  &#39; B: move bottom right clip corner
-    return advance(@cx2, 1, cx1, cy1, lcd#SCREEN_W, lcd#SCREEN_H)
-
-  cx1 := cy1 := 0
-  cx2 := lcd#SCREEN_W
-  cy2 := lcd#SCREEN_H                                   &#39; A+B: reset clip area to max
-
-PRI advance(addr, delta, x, y, w, h) : changed
-
-  if ctrl.Right
-    changed or= long[addr][PX] &lt; w
-    long[addr][PX] := w &lt;# (long[addr][PX] + delta)
-  elseif ctrl.Left
-    changed or= long[addr][PX] &gt; x
-    long[addr][PX] := x #&gt; (long[addr][PX] - delta)     &#39; update x of coordinate pair at addr
-
-  if ctrl.Up
-    changed or= long[addr][PY] &gt; y
-    long[addr][PY] := y #&gt; (long[addr][PY] - delta)
-  elseif ctrl.Down
-    changed or= long[addr][PY] &lt; h
-    long[addr][PY] := h &lt;# (long[addr][PY] + delta)     &#39; update y of coordinate pair at addr
-
-</code></pre>
+      if ctrl.Up
+        changed or= long[addr][PY] > y
+        long[addr][PY] := y #> (long[addr][PY] - delta)
+      elseif ctrl.Down
+        changed or= long[addr][PY] < h
+        long[addr][PY] := h <# (long[addr][PY] + delta)     ' update y of coordinate pair at addr

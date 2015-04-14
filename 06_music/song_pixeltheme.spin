@@ -1,13 +1,7 @@
-' 06_music/song_pixeltheme.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ' *********************************************************
 ' song_pixeltheme.spin
 ' *********************************************************
-DAT    
+DAT
 song_data
 word    @patterns_data, @sequence_data
 
@@ -15,18 +9,18 @@ CON
     SONGOFF = $80
     SNOP    = $82
     SOFF    = $83
-    
+
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
-    
+
     #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
-    
+
 PUB Addr
     result.word[1] := @@0
     result.word{0} := @song_data
 
-DAT    
+DAT
 
 patterns_data
 byte    8    'bar resolution
@@ -52,7 +46,6 @@ byte     31,  34,  31,  31,   34,  31,  34,  36
 
 byte     19,  19,  19,  22,   19,  19,  22,  19
 byte     19,  22,  19,  19,   22,  19,  22,  24
-
 
 sequence_data
 byte    TRANS, 0
@@ -109,5 +102,4 @@ byte    3,7,9,0
 byte    4,8,10,0
 
 byte    SONGOFF
-
 

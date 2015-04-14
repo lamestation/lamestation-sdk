@@ -1,15 +1,9 @@
-' 02_graphics/sprite/03_Character.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode = xtal1|pll16x
     _xinfreq = 5_000_000
 
 OBJ
-    lcd     :               "LameLCD" 
+    lcd     :               "LameLCD"
     gfx     :               "LameGFX"
     ctrl    :               "LameControl"
 
@@ -30,9 +24,9 @@ PUB Main | dir,frame
         ctrl.Update
         if ctrl.A
             frame := 0
-            if not apress     
-                apress := 1           
-                frame := 2            
+            if not apress
+                apress := 1
+                frame := 2
         else
             apress := 0
             if ctrl.Left or ctrl.Right or ctrl.Up or ctrl.Down
@@ -54,4 +48,3 @@ PUB Main | dir,frame
 
         gfx.Sprite(sprite.Addr, 56, 24, dir*3+frame)
         lcd.DrawScreen
-

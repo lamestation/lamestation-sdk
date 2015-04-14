@@ -1,9 +1,3 @@
-' 02_graphics/Clipping.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ''
 '' simple clipping demo
 ''
@@ -24,13 +18,13 @@ CON
 
 CON
   #0, PX, PY
-  
+
 OBJ
    lcd: "LameLCD"
-   gfx: "LameGFX"                         
+   gfx: "LameGFX"
   ctrl: "LameControl"
 
-   bmp: "gfx_rpgtown" 
+   bmp: "gfx_rpgtown"
 
 VAR
   long  pos_x, pos_y, cx1, cy1, cx2, cy2                ' sprite position and clip area
@@ -97,4 +91,3 @@ PRI advance(addr, delta, x, y, w, h) : changed
   elseif ctrl.Down
     changed or= long[addr][PY] < h
     long[addr][PY] := h <# (long[addr][PY] + delta)     ' update y of coordinate pair at addr
-

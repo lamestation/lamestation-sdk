@@ -1,17 +1,11 @@
-' 05_audio/Lasers.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode = xtal1 + pll16x
     _xinfreq = 5_000_000
-  
+
 OBJ
     audio   : "LameAudio"
     ctrl    : "LameControl"
-    
+
 VAR
     long    volume
     long    volume_inc
@@ -21,16 +15,16 @@ VAR
 PUB Main
     audio.Start
     ctrl.Start
-    
+
     volume:= 1
     volume_inc := 1
-    
+
     audio.SetWaveform(1, audio#_SAW)
     audio.SetEnvelope(1, 0)
 
     repeat
         ctrl.Update
-               
+
         if ctrl.Up
             freq++
         if ctrl.Down
@@ -40,15 +34,14 @@ PUB Main
 
         if ctrl.A
             volume_inc++
-            
-            volcount++ 
+
+            volcount++
             if (volcount // volume_inc) > (volume_inc >> 1)
                 volume := 127
             else
                 volume := 0
-            
+
             audio.SetVolume(1,volume)
         else
             volume_inc := 0
             audio.SetVolume(1,0)
-

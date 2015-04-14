@@ -1,13 +1,7 @@
-' 06_music/song_frappy.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 ' *********************************************************
 ' song_frappy.spin
 ' *********************************************************
-DAT    
+DAT
 song_data
 word    @patterns_data, @sequence_data
 
@@ -15,18 +9,18 @@ CON
     SONGOFF = $80
     SNOP    = $82
     SOFF    = $83
-    
+
     ADSRW   = $A0
     TEMPO   = $B0
     TRANS   = $C0
-    
+
     #0, SQUARE, SAW, TRIANGLE, SINE, NOISE, SAMPLE
-    
+
 PUB Addr
     result.word[1] := @@0
     result.word{0} := @song_data
 
-DAT    
+DAT
 
 patterns_data
 byte    32    'bar resolution
@@ -41,7 +35,7 @@ byte      63,SNOP,  75,  74,SOFF,  70,SOFF,  67,SNOP,SNOP,SNOP,SNOP,  68,  67,  
 byte      39,  51,  50,  43,  44,  46,  44,  43,  39,  51,  50,  43,  44,  43,  39,  42,    SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
 byte      27,SNOP,  39,SNOP,SOFF,  27,SOFF,  27,SNOP,SNOP,  39,SOFF,  25,  25,  25,  23,    SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
 byte    SOFF,SOFF,  40,SOFF,SOFF,SOFF,  40,SOFF,SOFF,SOFF,  40,SOFF,  40,SOFF,SOFF,  40,    SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
-        
+
 sequence_data
 byte    TRANS, 0
 byte    TEMPO, 80
@@ -52,4 +46,3 @@ byte    1,2,3,4
 byte    5,6,7,8
 
 byte    SONGOFF
-

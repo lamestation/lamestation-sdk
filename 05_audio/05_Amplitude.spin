@@ -1,17 +1,11 @@
-' 05_audio/05_Amplitude.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode = xtal1 + pll16x
     _xinfreq = 5_000_000
-  
+
 OBJ
     audio   : "LameAudio"
     ctrl    : "LameControl"
-    
+
 VAR
     long    volume
     long    volume_inc
@@ -21,21 +15,21 @@ VAR
 PUB Main
     audio.Start
     ctrl.Start
-    
+
     volume:= 1
     volume_inc := 100
-    
+
     audio.SetWaveform(1, audio#_SAW)
     audio.SetEnvelope(1, 0)
 
     repeat
         ctrl.Update
-               
+
         if ctrl.Up
             freq++
         if ctrl.Down
             freq--
-            
+
         if ctrl.Left
             if volume_inc > 0
                 volume_inc--
@@ -46,4 +40,3 @@ PUB Main
 
         audio.SetFreq(1,freq)
         audio.SetVolume(1,(volume >> 10) // 127)
-

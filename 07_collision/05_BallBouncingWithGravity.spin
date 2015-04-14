@@ -1,9 +1,3 @@
-' 07_collision/05_BallBouncingWithGravity.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
 
     _clkmode = xtal1|pll16x
@@ -11,11 +5,11 @@ CON
 
 OBJ
 
-    lcd  :               "LameLCD" 
+    lcd  :               "LameLCD"
     gfx  :               "LameGFX"
     map  :               "LameMap"
     ctrl :               "LameControl"
-    
+
     ball :               "gfx_ball_16x16"
     map1  :               "map_map"
     tile :               "gfx_box_s"
@@ -41,7 +35,7 @@ PUB TestBoxCollision
 
     x := 12
     y := 12
-    
+
     repeat
         oldx := x
         oldy := y
@@ -80,6 +74,4 @@ PUB TestBoxCollision
         gfx.Sprite(ball.Addr,x, y,0)
 
         lcd.DrawScreen
-
-    
 

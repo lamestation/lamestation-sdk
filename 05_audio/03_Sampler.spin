@@ -1,9 +1,3 @@
-' 05_audio/03_Sampler.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
@@ -20,7 +14,7 @@ PUB Main
     audio.SetWaveform(1, audio#_SAMPLE)
     audio.SetWaveform(2, audio#_SAMPLE)
     audio.SetWaveform(3, audio#_SAMPLE)
-    
+
     audio.PlaySound(0,50)
     fn.Sleep(1000)
     audio.PlaySound(1,54)
@@ -30,4 +24,3 @@ PUB Main
     audio.PlaySound(3,62)
     fn.Sleep(2000)
     audio.StopAllSound
-

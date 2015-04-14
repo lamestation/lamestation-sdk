@@ -1,18 +1,12 @@
-' 07_collision/03_TestMapMove.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode = xtal1|pll16x
     _xinfreq = 5_000_000
 OBJ
-    lcd  : "LameLCD" 
+    lcd  : "LameLCD"
     gfx  : "LameGFX"
     map  : "LameMap"
     ctrl : "LameControl"
-    
+
     box  : "gfx_box"
 
     map1 : "map_map"
@@ -21,7 +15,6 @@ OBJ
 CON
     w = 24
     h = 24
-
 VAR
     long    x, y
     long    oldx, oldy
@@ -33,7 +26,7 @@ PUB Main
 
     x := 12
     y := 12
-    
+
     repeat
         gfx.ClearScreen(0)
         oldx := x
@@ -45,12 +38,10 @@ PUB Main
         if ctrl.Right
             if x < gfx#res_x
                 x++
-
         adjust := map.TestMoveX(oldx, oldy, word[box.Addr][1], word[box.Addr][2], x)
         if adjust
             x += adjust
             gfx.InvertColor(True)
-
         if ctrl.Up
             if y > 0
                 y--
@@ -67,4 +58,3 @@ PUB Main
 
         gfx.InvertColor(False)
         lcd.DrawScreen
-

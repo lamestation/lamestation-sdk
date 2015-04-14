@@ -1,9 +1,3 @@
-' 04_text/DialogBox.spin
-' -------------------------------------------------------
-' SDK Version: 0.0.0
-' Copyright (c) 2015 LameStation LLC
-' See end of file for terms of use.
-' -------------------------------------------------------
 CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
@@ -18,7 +12,7 @@ OBJ
         dia     :               "gfx_scroll"
         map1gfx :               "gfx_lostatsea"
         map1    :               "map_lostatsea"
-        
+
 PUB Main
 
     lcd.Start(gfx.Start)
@@ -40,7 +34,6 @@ PUB Main
 
     DialogBox(@strang2,0,32,128,24,6,6)
     lcd.DrawScreen
-
 
 PUB DialogBox(str, x,y,w,h, tw, th) | dx, dy, x1, y1, w1, h1, frame
 
@@ -71,4 +64,3 @@ DAT
 
 strang   byte    "TOAD: And we were lost at sea",10,"for what felt like years...",0
 strang2  byte    "There was no end in sight.",0
-

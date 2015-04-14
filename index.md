@@ -2,7 +2,6 @@
 layout: learnindex
 title: "Index"
 ---
-   * Section : Assembly
    * Section 1: Basics
    * Section 2: Graphics
    * Section 3: Maps
