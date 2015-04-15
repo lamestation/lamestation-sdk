@@ -1,7 +1,7 @@
 Nothing makes you feel like you're playing a real game like parallax scrolling; you know, like that feeling you get when you're on a long car ride and the mountains move so slowly but the street signs whoosh past you. It's that feeling that makes you feel like you're really going somewhere, and it's a cheap and easy way to add a touch of beauty and realism to your game.
 
 Same setup as the previous two examples, but now we're going to add some extra graphics for the stuff that's going on in the background.
-    << * >>=
+    << * >>+=
     CON
         _clkmode = xtal1|pll16x
         _xinfreq = 5_000_000
@@ -15,19 +15,19 @@ Same setup as the previous two examples, but now we're going to add some extra g
 Here's what it's going to have. 
 
 You've got your front level map.
-    << * >>=
+    << * >>+=
         mp      :   "map_cave"
 
 But now you've also got another map for the background tiles.
-    << * >>=
+    << * >>+=
         mp2     :   "map_cave2"
 
 Same tileset as before.
-    << * >>=
+    << * >>+=
         tileset :   "gfx_cave"
 
 But we're also going to add a beautiful backdrop to admire!
-    << * >>=
+    << * >>+=
         bkdrop  :   "gfx_cavelake"
     
     VAR

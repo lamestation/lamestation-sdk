@@ -1,5 +1,5 @@
 Watch how a makeshift mod filter can DESTROY YOUR EARS WITH AN EPIC BATTLE LIKE NONE YOU'VE EVER SEEN!
-    << * >>=
+    << * >>+=
     CON
         _clkmode = xtal1 + pll16x
         _xinfreq = 5_000_000

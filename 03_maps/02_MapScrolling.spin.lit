@@ -5,7 +5,7 @@ The main things that will be different about this exercise than the last are tha
 ## Setup
 
 The setup is the same as before.
-    << * >>=
+    << * >>+=
     CON
         _clkmode = xtal1|pll16x
         _xinfreq = 5_000_000
@@ -19,7 +19,7 @@ The setup is the same as before.
         tileset :   "gfx_cave"
 
 But now we're going to add `LameControl`.
-    << * >>=
+    << * >>+=
         ctrl    :   "LameControl"
 
 
@@ -30,20 +30,20 @@ The first variables are the X and Y offset. In other words, this is how far away
 INSERT DIAGRAM
 
 We'll appropriately call our new variables `xoffset` and `yoffset`
-    << * >>=
+    << * >>+=
     VAR
         long    xoffset
         long    yoffset
 
 
 We're going to add some other fanciness. We don't want to fall off the map, so we're going to add boundaries to the screen.
-    << * >>=
+    << * >>+=
         long    bound_x
         long    bound_y
 
 
 Time to start up the main function and set up the SDK, like in the previous demo.
-    << * >>=
+    << * >>+=
     PUB Main
 
         lcd.Start(gfx.Start)
@@ -51,7 +51,7 @@ Time to start up the main function and set up the SDK, like in the previous demo
 
 
 Here's where we actually set up and initialize the boundaries of the map.
-    << * >>=
+    << * >>+=
         bound_x := map.GetWidth<<3 - lcd#SCREEN_W
         bound_y := map.GetHeight<<3 - lcd#SCREEN_H
 
@@ -64,19 +64,19 @@ There's some stuff happening here to be aware of.
  INSERT DIAGRAM EXPLAINING HOW THE MAP MOVES RELATIVE TO THE TOP-LEFT CORNER
     
 For fun, let's put the starting position of the map at the same place of the previous demo, so you can see how it's changed.    
-    << * >>=
+    << * >>+=
         yoffset := bound_y
 
 
 ## Main Loop
 
 Starting the main loop!
-    << * >>=
+    << * >>+=
         repeat
             gfx.ClearScreen(0)
 
 Add a control block to keep the view inside the map. What's cool is that we're not the ones doing the moving. The map itself moves relative to the screen, giving the illusion that we're moving in a world, but we're not!!
-    << * >>=
+    << * >>+=
 
             ctrl.Update
 
@@ -96,7 +96,7 @@ Add a control block to keep the view inside the map. What's cool is that we're n
 
 
 Draw to the screen.                      
-    << * >>=
+    << * >>+=
             map.Draw(xoffset, yoffset)
             lcd.DrawScreen
 

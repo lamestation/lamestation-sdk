@@ -1,14 +1,14 @@
 One of the most useful things ever in 2D game programming is the tilemap, so naturally, LameStation has a set of functions for drawing completely epic tile-based maps into games that you can use for whatever you want.
 
 Add the usual settings.
-    << * >>=
+    << * >>+=
     CON
         _clkmode = xtal1|pll16x
         _xinfreq = 5_000_000
 
 
 Include the necessary objects. 
-    << * >>=
+    << * >>+=
     OBJ
         lcd     :   "LameLCD" 
         gfx     :   "LameGFX"
@@ -19,26 +19,27 @@ Include the necessary objects.
     
 
 Create a public main function. 
-    << * >>=
+    << * >>+=
     PUB Main
 
 
 Set up the LCD and graphics systems.
-    << alpha >>=
+    << alpha >>+=
         lcd.Start(gfx.Start)
 
 Load the necessary graphics and map data into `LameMap`.
-    << * >>=
+    << * >>+=
     << alpha >>
         map.Load(tileset.Addr, cavemap.Addr)
 
 Draw your map to the screen buffer.
-    << * >>=
+    << * >>+=
         map.Draw(0,64)
 
 Draw to the screen.
-    << * >>=
+    << * >>+=
         lcd.DrawScreen
+
 
 
 And here's what it'll look like when you run it.

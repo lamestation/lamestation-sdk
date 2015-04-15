@@ -1,5 +1,5 @@
 This demo shows you how a simple ClearScreen command can be used to make something not so obvious.
-    << * >>=
+    << * >>+=
     CON
         _clkmode = xtal1|pll16x
         _xinfreq = 5_000_000

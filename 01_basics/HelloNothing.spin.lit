@@ -53,19 +53,19 @@ When you run your program, the comments will be removed, and only the uncommente
 this part is code
 ```
 So let's comment up `HelloNothing.spin`.
-    << * >>=
+    << * >>+=
     ' man, this is best code ever!
     ' more code, code and code.
     ' cool this code still does nothing!
 
 When it's compiled, the code still ends up as.
-    << * >>=
+    << * >>+=
     PUB Main
 
 ### Multi-Line Comments
 
 Whenever you add an opening curly brace ( '{' ) to your code, all text that comes after it will be commented out until it reaches a closing curly brace ( '}' ).
-    << * >>=
+    << * >>+=
     { look at all these comments!
       so commenty; mega comments!
     }

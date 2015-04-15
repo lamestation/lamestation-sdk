@@ -1,4 +1,4 @@
-    << * >>=
+    << * >>+=
     CON
     
         _clkmode        = xtal1 + pll16x
