@@ -7,8 +7,8 @@ section: "Section 3: Maps"
 next_file: "03_ParallaxScrolling.spin.html"
 next_name: "Step 3: Parallax Scrolling"
 
-prev_file: "01_DrawMap.spin.html"
-prev_name: "Step 1: Draw Map"
+prev_file: "01_DrawingMaps.spin.html"
+prev_name: "Step 1: Drawing Maps"
 ---
 
 You probably noticed that we only got to see a small portion of the beautiful map that we have. Well, that really stinks, and is unacceptable. So in this demo, we're going to set things up so that you can move around on the screen.

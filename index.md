@@ -5,7 +5,7 @@ title: "Index"
    * Section 1: Basics
    * Section 2: Graphics
    * Section 3: Maps
-     * [Step 1: Draw Map](03_maps/01_DrawMap.spin.html)
+     * [Step 1: Drawing Maps](03_maps/01_DrawingMaps.spin.html)
      * [Step 2: Map Scrolling](03_maps/02_MapScrolling.spin.html)
      * [Step 3: Parallax Scrolling](03_maps/03_ParallaxScrolling.spin.html)
    * Section 4: Text

@@ -1,7 +1,7 @@
 ---
 version: 0.0.0
 layout: learnpage
-title: "Step 1: Draw Map"
+title: "Step 1: Drawing Maps"
 section: "Section 3: Maps"
 
 next_file: "02_MapScrolling.spin.html"
