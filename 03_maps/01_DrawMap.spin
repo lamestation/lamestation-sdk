@@ -7,8 +7,8 @@ OBJ
     gfx     :   "LameGFX"
     map     :   "LameMap"
 
-    cavemap :   "map_cave"
     tileset :   "gfx_cave"
+    cavemap :   "map_cave"
 
 PUB Main
 
@@ -16,4 +16,3 @@ PUB Main
     map.Load(tileset.Addr, cavemap.Addr)
     map.Draw(0,64)
     lcd.DrawScreen
-

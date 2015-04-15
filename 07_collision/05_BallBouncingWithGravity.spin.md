@@ -1,5 +1,4 @@
 ---
-date: 2015-04-14
 version: 0.0.0
 layout: learnpage
 title: "Step 5: Ball Bouncing With Gravity"

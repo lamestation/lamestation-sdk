@@ -70,7 +70,6 @@ def process_input(filename,section,next_file=None,prev_file=None):
         prev_file = ""
 
     text = """---
-date: """+str(date.today())+"""
 version: """+version()+"""
 layout: learnpage
 title: """+'"'+nice_file(filename)+'"'+"""
