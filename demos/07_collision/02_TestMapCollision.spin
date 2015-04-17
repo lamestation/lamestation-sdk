@@ -12,6 +12,9 @@ OBJ
     tile : "gfx_box_s"
 VAR
     byte    x1, y1
+CON
+    w = 24
+    h = 24
 PUB Main
     lcd.Start(gfx.Start)
     x1 := 12
