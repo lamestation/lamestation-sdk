@@ -1,3 +1,8 @@
+---
+layout: page
+title: LameStation SDK
+---
+
 LameStation SDK
 ===============
 
