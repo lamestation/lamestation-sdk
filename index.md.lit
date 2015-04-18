@@ -1,7 +1,0 @@
-    << index.md >>=
-    ---
-    layout: page
-    title: LameStation SDK
-    ---
-
-    << README.md >>

@@ -117,13 +117,9 @@ def build_index(path,ext,level=0):
         index['dirs'].append(build_index(d,ext,level=level+1))
         os.chdir('..')
 
-    f = open('index.md','w')
+    f = open('toc.md','w')
 
-    text = ""
-    if level > 0:
-        text = "---\nlayout: bare\n"
-    else:
-        text = "---\nlayout: learnindex\n"
+    text = "---\nlayout: bare\n"
 
     if level == 1:
         text += 'title: "'+nice_dir(path)+'"\n'
