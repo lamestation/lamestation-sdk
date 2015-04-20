@@ -18,7 +18,6 @@ CON
     #0, _NAV, _ATK, _DEC, _SUS, _REL, _VOL, _WAV, _NOTE
     #0, _SQR, _SAW, _TRI, _SIN, _NOI, _SAMP
 
-    MIDIPIN = 16
     ROWS    = 4
 
 VAR
@@ -34,15 +33,6 @@ VAR
     byte    apress
     byte    bpress
 
-    byte    newbyte
-    byte    statusbyte
-    byte    statusnibble
-    byte    statuschannel
-
-    byte    databyte1
-    byte    databyte2
-
-    long    Stack_MIDIController[50]
     long    Stack_PatternPlayer[40]
 
 
@@ -55,19 +45,16 @@ OBJ
     lcd     :   "LameLCD"
     ctrl    :   "LameControl"
     fn      :   "LameFunctions"
-    pst     :   "LameSerial"
+
+    midi    :   "MIDIController"
 
     font    :   "gfx_font4x6"
 
-PUB AudioDemo
+PUB Main
     lcd.Start(gfx.Start)
-    lcd.SetFrameLimit(lcd#FULLSPEED)
-
-    pst.StartRxTx(MIDIPIN, MIDIPIN+1, 0, 31250)
-
     audio.Start
+    midi.Start
 
-    'cognew(MIDIController, @Stack_MIDIController)
     cognew(PatternPlayer, @Stack_PatternPlayer)
 
     control[_NAV]  := _PAT
@@ -113,6 +100,11 @@ PUB AudioDemo
         lcd.DrawScreen
 
 
+PRI SetChannel
+    audio.SetADSR(0,control[_ATK],control[_DEC],control[_SUS],control[_REL])
+    audio.SetParam(0,audio#_WAV, control[_WAV] // 6)
+   ' audio.SetVolume(control[_VOL])
+    audio.SetSample(organ.Addr)
 
 
 ' **********************************************************
@@ -447,56 +439,3 @@ wSAMP   byte    "Samp",0
 OBJ
 
     organ   :   "ins_hammond"
-
-   
-' **********************************************************
-' * MIDI Controller
-' **********************************************************
-
-PRI SetChannel
-    audio.SetADSR(0,control[_ATK],control[_DEC],control[_SUS],control[_REL])
-    audio.SetParam(0,audio#_WAV, control[_WAV] // 6)
-   ' audio.SetVolume(control[_VOL])
-    audio.SetSample(organ.Addr)
- {{
-PRI ControlKnob
-
-    databyte1 := newbyte
-    databyte2 := pst.CharIn
-    
-    case databyte1
-        $40:    
-
-PRI ControlNote
-
-    databyte1 := newbyte
-    databyte2 := pst.CharIn
-    
-'    if statusnibble == $90
- '       audio.PlayNewNote(databyte1)
-  '  if statusnibble == $80 or databyte2 == 0
-   '     audio.StopNote(databyte1)
-
-PRI ControlPitchBend
-
-    databyte1 := newbyte
-    databyte2 := pst.CharIn
-
-PRI MIDIController
-
-    repeat
-
-        newbyte := pst.CharIn
-
-        if newbyte & $80
-            statusbyte := newbyte
-            statusnibble := statusbyte & $F0
-            statuschannel := statusbyte & $0F
-
-        else
-            case statusnibble
-                $E0:        ControlPitchBend
-                $B0:        ControlKnob
-                $90, $80:   ControlNote
-                other:
-}}
