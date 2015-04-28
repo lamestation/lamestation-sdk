@@ -10,3 +10,9 @@
 [submodule "games/TankBattle"]
 	path = games/TankBattle
 	url = https://github.com/lamestation/TankBattle
+[submodule "games/FrappyBard"]
+	path = games/FrappyBard
+	url = https://github.com/lamestation/FrappyBard.git
+[submodule "games/Brettris"]
+	path = games/Brettris
+	url = https://github.com/lamestation/Brettris.git
