@@ -1,0 +1,3 @@
+[submodule "tools/SoundDesigner"]
+	path = tools/SoundDesigner
+	url = https://github.com/lamestation/SoundDesigner.git
