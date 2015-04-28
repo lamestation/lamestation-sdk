@@ -16,3 +16,12 @@
 [submodule "games/Brettris"]
 	path = games/Brettris
 	url = https://github.com/lamestation/Brettris.git
+[submodule "games/MazeGame"]
+	path = games/MazeGame
+	url = https://github.com/lamestation/MazeGame.git
+[submodule "games/Helicopter"]
+	path = games/Helicopter
+	url = https://github.com/lamestation/Helicopter.git
+[submodule "games/AKnightOut"]
+	path = games/AKnightOut
+	url = https://github.com/lamestation/AKnightOut.git
