@@ -6,7 +6,7 @@ layout: bare
 
 The core LameStation platform on which all other objects are built.
 
-### [Programming Tutorials](tutorials/)
+### [Programming Tutorials](demos/)
 
 The LameStation programming tutorials.
 
