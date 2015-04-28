@@ -1,3 +1,6 @@
 [submodule "tools/SoundDesigner"]
 	path = tools/SoundDesigner
 	url = https://github.com/lamestation/SoundDesigner.git
+[submodule "games/Pikemanz"]
+	path = games/Pikemanz
+	url = https://github.com/lamestation/Pikemanz.git
