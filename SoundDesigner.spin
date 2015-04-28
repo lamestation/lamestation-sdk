@@ -17,7 +17,6 @@ CON
     #0, _SND, _PAT, _SNG
     #0, _NAV, _ATK, _DEC, _SUS, _REL, _VOL, _WAV, _NOTE
     #0, _SQR, _SAW, _TRI, _SIN, _NOI, _SAMP
-
     ROWS    = 4
 
 VAR
@@ -28,7 +27,6 @@ VAR
     byte    ctrlindex[3]
     byte    channel
     byte    selected, clicked
-    byte    newnote
 
     byte    apress
     byte    bpress
