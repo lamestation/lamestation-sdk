@@ -7,3 +7,6 @@
 [submodule "games/piXel"]
 	path = games/piXel
 	url = https://github.com/lamestation/piXel
+[submodule "games/TankBattle"]
+	path = games/TankBattle
+	url = https://github.com/lamestation/TankBattle
