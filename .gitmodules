@@ -4,3 +4,6 @@
 [submodule "games/Pikemanz"]
 	path = games/Pikemanz
 	url = https://github.com/lamestation/Pikemanz.git
+[submodule "games/piXel"]
+	path = games/piXel
+	url = https://github.com/lamestation/piXel
