@@ -16,8 +16,8 @@
    inkscape:version="0.48.4 r9939"
    sodipodi:docname="pikeman.svg"
    inkscape:export-filename="/home/brett/Projects/lamestation-sdk/games/Pikemanz/pikeman_big.png"
-   inkscape:export-xdpi="427.14001"
-   inkscape:export-ydpi="427.14001">
+   inkscape:export-xdpi="427.13837"
+   inkscape:export-ydpi="427.13837">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -27,16 +27,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.959798"
-     inkscape:cx="69.413883"
-     inkscape:cy="36.894084"
+     inkscape:zoom="7.919596"
+     inkscape:cx="73.199741"
+     inkscape:cy="18.095356"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1920"
-     inkscape:window-height="1031"
-     inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-height="1056"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -162,15 +162,15 @@
     <text
        xml:space="preserve"
        style="font-size:20.43185616px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0.00364852px;word-spacing:0px;fill:#9140fe;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-       x="103.13424"
+       x="116.5873"
        y="387.55057"
        id="text3798"
        sodipodi:linespacing="125%"
        transform="scale(1.0406524,0.96093565)"><tspan
          sodipodi:role="line"
          id="tspan3800"
-         x="103.13424"
+         x="116.5873"
          y="387.55057"
-         style="font-size:7.8583169px;font-weight:normal;line-height:125%;letter-spacing:0.48829678px;fill:#9140fe;fill-opacity:1">eggheadz version</tspan></text>
+         style="font-size:7.8583169px;font-weight:normal;line-height:125%;letter-spacing:0.48829678px;fill:#9140fe;fill-opacity:1">lame version</tspan></text>
   </g>
 </svg>
