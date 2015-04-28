@@ -25,3 +25,15 @@
 [submodule "games/AKnightOut"]
 	path = games/AKnightOut
 	url = https://github.com/lamestation/AKnightOut.git
+[submodule "games/HelloPong"]
+	path = games/HelloPong
+	url = https://github.com/lamestation/HelloPong.git
+[submodule "games/RoundyAndLumpy"]
+	path = games/RoundyAndLumpy
+	url = https://github.com/lamestation/RoundyAndLumpy.git
+[submodule "games/TBot"]
+	path = games/TBot
+	url = https://github.com/lamestation/TBot.git
+[submodule "games/ZeroForce"]
+	path = games/ZeroForce
+	url = https://github.com/lamestation/ZeroForce.git
