@@ -1,4 +1,6 @@
-SPINC := openspin
+ifndef SPINC
+	SPINC := openspin
+endif
 LFLAGS := -Llame
 
 OBJECTS := $(shell git ls-files '*.spin')
@@ -12,7 +14,7 @@ INSTALLS := $(patsubst %,$(PREFIX)/%,$(OBJECTS))
 all: test
 
 clean:
-	rm -f `find . -name \*.binary`
+	find . -name \*.binary -exec rm {} \;
 	rm -rf $(PREFIX)
 
 test: test_compile
