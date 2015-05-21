@@ -5,9 +5,9 @@ title: Game Examples
 
 Click the images or the game names to start the tutorials!
 
-## [Hello Pong](Pong/)
+## [Hello Pong](HelloPong/)
 
-[![](Pong/screenshots/pong4.png)](Pong)
+[![](HelloPong/screenshots/pong4.png)](Pong)
 
 Learn the basics of Spin programming by building the granddaddy of all
 video games, Pong!
