@@ -37,3 +37,6 @@
 [submodule "games/ZeroForce"]
 	path = games/ZeroForce
 	url = https://github.com/lamestation/ZeroForce.git
+[submodule "tools/ScreenCapture"]
+	path = tools/ScreenCapture
+	url = https://github.com/lamestation/ScreenCapture.git
