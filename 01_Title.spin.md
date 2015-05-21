@@ -28,6 +28,8 @@ Now we're gonna add a couple other files.
 
         menu        :   "PikeMenu"
 
+Now let's have some graphics. Then we need to add some
+
         title       :   "gfx_title"
         font_text   :   "gfx_font6x6_b"
         nash        :   "gfx_nash_fetchum"

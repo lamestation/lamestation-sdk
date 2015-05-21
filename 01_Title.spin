@@ -9,7 +9,6 @@ OBJ
     state       :   "PikeState"
 
     menu        :   "PikeMenu"
-
     title       :   "gfx_title"
     font_text   :   "gfx_font6x6_b"
     nash        :   "gfx_nash_fetchum"

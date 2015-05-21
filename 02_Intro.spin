@@ -12,7 +12,7 @@ OBJ
     state   :   "PikeState"
     menu    :   "PikeMenu"
 
-    nash    :   "gfx_nash_fetchum"
+    nash    :   "gfx_mr_pine"
     arrow   :   "gfx_arrow_d"
 
 PUB Main
@@ -21,6 +21,8 @@ PUB Main
     Scene
 
 PUB Scene
+    state.SetState(state#_WORLD)
+
     ctrl.Update
     gfx.ClearScreen(gfx#WHITE)
     gfx.Sprite(nash.Addr,52,4, 0)

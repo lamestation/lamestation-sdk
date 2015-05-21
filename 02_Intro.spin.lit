@@ -26,12 +26,14 @@ Set up your code in the usual way.
 
 Let's add some graphics. We're going to need two.
 
- - `gfx_nash_fetchum` is our friendly main character!
+ - `gfx_mr_pine` is our friendly supporting character!
 
  - `gfx_arrow_d` is a tiny little arrow graphic that will come in handy later!
 
+Add the objects to the code.
+
     << main >>+=
-        nash    :   "gfx_nash_fetchum"
+        nash    :   "gfx_mr_pine"
         arrow   :   "gfx_arrow_d"
 
         
@@ -47,6 +49,8 @@ Use it to pass text to functions.
 
     << main >>+=
     PUB Scene
+        state.SetState(state#_WORLD)
+
         ctrl.Update
         gfx.ClearScreen(gfx#WHITE)
         gfx.Sprite(nash.Addr,52,4, 0)
@@ -102,7 +106,6 @@ But why do we have to add `'10'` so often? The LameStation screen is very small.
         lcd.DrawScreen
         ctrl.WaitKey
         
-        state.SetState(state#_WORLD)
         
     << * >>=
     << main >>

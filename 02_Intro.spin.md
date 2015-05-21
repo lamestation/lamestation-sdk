@@ -27,11 +27,13 @@ Set up your code in the usual way.
 
 Let's add some graphics. We're going to need two.
 
- - `gfx_nash_fetchum` is our friendly main character!
+ - `gfx_mr_pine` is our friendly supporting character!
 
  - `gfx_arrow_d` is a tiny little arrow graphic that will come in handy later!
 
-        nash    :   "gfx_nash_fetchum"
+Add the objects to the code.
+
+        nash    :   "gfx_mr_pine"
         arrow   :   "gfx_arrow_d"
 
 Again, we will create a main function that calls another function that contains the actual demo.
@@ -44,6 +46,8 @@ Again, we will create a main function that calls another function that contains 
 Use it to pass text to functions.
 
     PUB Scene
+        state.SetState(state#_WORLD)
+
         ctrl.Update
         gfx.ClearScreen(gfx#WHITE)
         gfx.Sprite(nash.Addr,52,4, 0)
@@ -95,8 +99,6 @@ But why do we have to add `'10'` so often? The LameStation screen is very small.
         lcd.DrawScreen
         ctrl.WaitKey
 
-        state.SetState(state#_WORLD)
-
 We can see the problem with this approach just by looking at the output.
 
 ### The code
@@ -115,7 +117,7 @@ We can see the problem with this approach just by looking at the output.
         state   :   "PikeState"
         menu    :   "PikeMenu"
 
-        nash    :   "gfx_nash_fetchum"
+        nash    :   "gfx_mr_pine"
         arrow   :   "gfx_arrow_d"
 
     PUB Main
@@ -124,6 +126,8 @@ We can see the problem with this approach just by looking at the output.
         Scene
 
     PUB Scene
+        state.SetState(state#_WORLD)
+
         ctrl.Update
         gfx.ClearScreen(gfx#WHITE)
         gfx.Sprite(nash.Addr,52,4, 0)
@@ -157,8 +161,6 @@ We can see the problem with this approach just by looking at the output.
         menu.Dialog(string("the one you make",10,"yourself!"))
         lcd.DrawScreen
         ctrl.WaitKey
-
-        state.SetState(state#_WORLD)
 
 Wow, that's a lot of code, and look how much of it is repeated! Surely, there must be a better way to do this? How can you shorten it?
 
@@ -233,7 +235,7 @@ Let's take a look at the code again.
         state   :   "PikeState"
         menu    :   "PikeMenu"
 
-        nash    :   "gfx_nash_fetchum"
+        nash    :   "gfx_mr_pine"
         arrow   :   "gfx_arrow_d"
 
     PUB Main
@@ -242,6 +244,8 @@ Let's take a look at the code again.
         Scene
 
     PUB Scene
+        state.SetState(state#_WORLD)
+
         ctrl.Update
         gfx.ClearScreen(gfx#WHITE)
         gfx.Sprite(nash.Addr,52,4, 0)
