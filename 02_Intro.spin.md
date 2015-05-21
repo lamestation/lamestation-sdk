@@ -1,7 +1,7 @@
 
-title: Welcome To Pikemanz
+title: Introducing Mr. Pine
 
-brief: Learn to draw your own Pikemanz and title screen and show them on the console.
+brief: Hear what your friendly neighborhood academic, Mr. Pine, has to teach you about Pikemanz, or tell him what to say!
 
 authors: Brett Weir
 
