@@ -34,8 +34,8 @@ PUB Capture(addr) | amount, length, screen
         waitcnt(clkfreq*3 + cnt)
     
     serial.tx(0)
-    serial.tx(13)
-    serial.tx(10)
+    serial.str(string(10,"-----start",10))
+
     Convert(@tail{0}, addr)                             ' 2bit/px -> 4bit/px
     
     length := 4096 + 70                                 ' image length
@@ -48,9 +48,10 @@ PUB Capture(addr) | amount, length, screen
         length := 0 #> (length - 54)                    ' advance
         
         serial.str(@buffer{0})
-        serial.tx(13)                                   ' send off chip
         serial.tx(10)                                   ' LF needed for Linux compatibility
     while length
+
+    serial.str(string(10,"-----end",10))
 
 PRI Encode(dst, src, length)
 
