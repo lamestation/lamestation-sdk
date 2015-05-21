@@ -1,3 +1,15 @@
+---
+version: 0.0.0
+layout: learnpage
+title: "Step 4: Battle"
+section: "Section : "
+
+next_file: "08_Pikemanz.spin.html"
+next_name: "Step 8: Pikemanz"
+
+prev_file: "03_World.spin.html"
+prev_name: "Step 3: World"
+---
 
     {{
     Pikemanz - Battle Engine

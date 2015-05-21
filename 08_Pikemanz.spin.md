@@ -1,3 +1,13 @@
+---
+version: 0.0.0
+layout: learnpage
+title: "Step 8: Pikemanz"
+section: "Section : "
+
+
+prev_file: "04_Battle.spin.html"
+prev_name: "Step 4: Battle"
+---
 
     {{
 

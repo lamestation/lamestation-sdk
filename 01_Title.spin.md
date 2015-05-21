@@ -1,3 +1,13 @@
+---
+version: 0.0.0
+layout: learnpage
+title: "Step 1: Title"
+section: "Section : "
+
+next_file: "02_Intro.spin.html"
+next_name: "Step 2: Intro"
+
+---
 
 title: Welcome To Pikemanz
 

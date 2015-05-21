@@ -1,3 +1,15 @@
+---
+version: 0.0.0
+layout: learnpage
+title: "Step 2: Intro"
+section: "Section : "
+
+next_file: "03_World.spin.html"
+next_name: "Step 3: World"
+
+prev_file: "01_Title.spin.html"
+prev_name: "Step 1: Title"
+---
 
 title: Introducing Mr. Pine
 
