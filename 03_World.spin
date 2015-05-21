@@ -22,7 +22,7 @@ OBJ
     fn      :               "LameFunctions"
 
     state   :   "PikeState"
-    
+
     player  :               "gfx_nash"
 
 DAT
@@ -36,50 +36,46 @@ DAT
     frame   byte        0
     dir     byte        DOWN
     count   byte        0
-    
+
 OBJ
     map_parrot_town     :   "map_parrot_town"
     map_path1           :   "map_path1"
     map_path2           :   "map_path2"
-        
+
     tilemap     :   "gfx_pikeman"
-    
+
 CON
     WORLD_W = 1
     WORLD_H = 3
 DAT
-    currentmap  word    0 
+    currentmap  word    0
     worldmap    word    0[9]
     worldx      word    0
     worldy      word    2
-    
+
     mapchanged  word    0
-    
-        
+
 PUB Main
     lcd.Start(gfx.Start)
     ctrl.Start
 
     Init
     repeat
-        View    
-    
+        View
+
 PUB Init
-    
+
     playerx := targetx := 3<<3
     playery := targety := 4<<3
-    
+
     worldmap[0] := map_path2.Addr
     worldmap[1] := map_path1.Addr
     worldmap[2] := map_parrot_town.Addr
-    
+
     mapchanged := 1
-    
-    
-    
-    
+
 PUB View
-    
+
     repeat
 
         ctrl.Update
@@ -91,18 +87,16 @@ PUB View
         map.Draw(xoffset, yoffset)
         DrawPlayer
         fn.Sleep(30)
-        
+
         if playerx >> 3 > 10
             'playerx := targetx := 3 << 3
             return state.SetState(state#_BATTLE)
-            
-    
+
         lcd.DrawScreen
 
 PUB HandlePlayer | adjust
-    
-    if not moving
 
+    if not moving
 
     moving := 1
     if targetx > playerx
@@ -136,8 +130,7 @@ PUB HandlePlayer | adjust
 
         else
             moving := 0
-            
-                
+
     if moving
         count++
         if count & $3 == 0
@@ -148,10 +141,8 @@ PUB HandlePlayer | adjust
         frame := 0
         'count := 0
 
-
 PUB DrawPlayer
     gfx.Sprite(player.Addr,(playerx)-xoffset,(playery)-yoffset, dir*3+frame)
-
 
 PUB ControlMap
     if not moving
@@ -163,7 +154,7 @@ PUB ControlMap
             if worldx < WORLD_W-1
                 worldx++
                 playerx := targetx := 0
-            
+
         if playery < 0
             if worldy > 0
                 worldy--
@@ -171,25 +162,25 @@ PUB ControlMap
         if playery > (map.GetHeight-1)<<3
             if worldy < WORLD_H-1
                 worldy++
-                playery := targety := 0   
-                
+                playery := targety := 0
+
     if mapchanged
-        map.Load(tilemap.Addr, worldmap[WORLD_W*worldx + worldy])                     
-    
+        map.Load(tilemap.Addr, worldmap[WORLD_W*worldx + worldy])
+
 PUB ControlOffset | bound_x, bound_y
 
     bound_x := map.GetWidth<<3 - lcd#SCREEN_W
     bound_y := map.GetHeight<<3 - lcd#SCREEN_H
-    
+
     xoffset := playerx + (word[player.Addr][1]>>1) - (lcd#SCREEN_W>>1)
     if xoffset < 0
-        xoffset := 0      
+        xoffset := 0
     elseif xoffset > bound_x
         xoffset := bound_x
-                  
+
     yoffset := playery + (word[player.Addr][2]>>1) - (lcd#SCREEN_H>>1)
     if yoffset < 0
-        yoffset := 0      
+        yoffset := 0
     elseif yoffset > bound_y
         yoffset := bound_y
 
