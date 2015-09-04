@@ -1,9 +1,9 @@
 ifndef SPINC
 	SPINC := openspin
 endif
-LFLAGS := -Llame
+LFLAGS := -L.
 
-OBJECTS := $(shell git ls-files '*.spin')
+OBJECTS := $(shell find . -name \*.spin )
 BINARIES := $(OBJECTS:.spin=.binary)
 
 PREFIX ?= out
