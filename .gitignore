@@ -6,3 +6,5 @@ tags
 *.dat
 *.pack
 *.pyc
+*.swp
+.*.swp

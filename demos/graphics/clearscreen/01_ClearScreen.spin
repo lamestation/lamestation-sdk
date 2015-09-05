@@ -3,7 +3,6 @@ CON
     _xinfreq = 5_000_000
 
 OBJ
-
     lcd     :               "LameLCD"
     gfx     :               "LameGFX"
 
