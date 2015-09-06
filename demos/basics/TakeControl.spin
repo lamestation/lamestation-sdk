@@ -1,6 +1,6 @@
 OBJ
-    ctrl    : "LameControl"
-    pin     : "LamePinout"
+    ctrl : "LameControl"
+    pin  : "LamePinout"
 
 CON
     LED_PIN = pin#LED
