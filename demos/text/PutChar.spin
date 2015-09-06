@@ -21,4 +21,3 @@ PUB PutChar | x, ran, y, count, char
             char := ran? & %11111
             gfx.PutChar("A" + char, x-8, y-8)
             lcd.DrawScreen
-

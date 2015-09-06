@@ -1,16 +1,16 @@
 OBJ
-    pin : "Pinout"
+    pin : "LamePinout"
 
 CON
     LED_PIN = pin#LED
-    LED_PERIOD = 1000
+    COUNT   = 10000
 
 PUB Main
     dira[LED_PIN]~~
     repeat
         outa[LED_PIN]~
-        repeat LED_PERIOD
+        repeat COUNT
 
         outa[LED_PIN]~~
 
-        repeat LED_PERIOD
+        repeat COUNT

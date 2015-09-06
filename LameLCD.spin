@@ -14,7 +14,7 @@
 '' 20140707: moved mailbox into DAT space to link it with the screen area
 ''
 OBJ
-    pin  :   "Pinout"
+    pin  :   "LamePinout"
 CON
 '' These indicate which pins connect to what. If developing your own prototype,
 '' you can change the value of LCDstart to change the location of the LCD

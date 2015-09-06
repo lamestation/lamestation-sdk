@@ -8,7 +8,7 @@
 ' -------------------------------------------------
 
 OBJ
-    pin  :   "Pinout"
+    pin  :   "LamePinout"
     
 CON
     SAMPLES     = 512                                                           ' samples per cycle

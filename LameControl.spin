@@ -15,7 +15,7 @@
 '' managing controls easier.
 
 OBJ
-    pin     :   "Pinout"
+    pin     :   "LamePinout"
     fn      :   "LameFunctions"
     
 CON
