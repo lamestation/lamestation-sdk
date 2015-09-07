@@ -11,7 +11,7 @@ PUB Main | x
             lcd.DrawScreen
         
             repeat 1000
-    
+
 DAT
 
 data
