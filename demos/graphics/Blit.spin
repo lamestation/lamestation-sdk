@@ -8,7 +8,8 @@ OBJ
 
     img     :               "gfx_dagron"
 
-PUB Blit
+PUB Main
     lcd.Start(gfx.Start)
+    
     gfx.Blit(img.Addr)
     lcd.DrawScreen

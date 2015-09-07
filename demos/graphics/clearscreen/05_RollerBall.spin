@@ -3,7 +3,6 @@ CON
     _xinfreq = 5_000_000
 
 OBJ
-
     lcd     :               "LameLCD"
     gfx     :               "LameGFX"
     ctrl    :               "LameControl"
@@ -19,9 +18,10 @@ VAR
     byte    blinktimeout
     byte    blinktoggle
     word    failtimeout
-PUB Blit | val
-
+    
+PUB Main | val
     lcd.Start(gfx.Start)
+    
     gfx.LoadFont(font.Addr, " ", 6, 8)
     ctrl.Start
 

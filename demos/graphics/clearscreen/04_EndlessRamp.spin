@@ -5,9 +5,8 @@ CON
 OBJ
     lcd     :               "LameLCD"
     gfx     :               "LameGFX"
-    fn      :               "LameFunctions"
 
-PUB Blit | val
+PUB Main | val
     lcd.Start(gfx.Start)
 
     val := %%1000_0000_1000_0000

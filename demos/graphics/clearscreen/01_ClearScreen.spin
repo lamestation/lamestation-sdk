@@ -7,7 +7,7 @@ OBJ
     gfx     :               "LameGFX"
 
 PUB Blit
-
     lcd.Start(gfx.Start)
+    
     gfx.ClearScreen(0)
     lcd.DrawScreen

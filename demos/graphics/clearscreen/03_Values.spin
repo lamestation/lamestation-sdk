@@ -7,9 +7,9 @@ OBJ
     gfx     :               "LameGFX"
     fn      :               "LameFunctions"
 
-PUB Blit | val
-
+PUB Main
     lcd.Start(gfx.Start)
+    
     gfx.ClearScreen($FFFF)
     lcd.DrawScreen
 
