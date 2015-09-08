@@ -9,7 +9,7 @@ OBJ
     music    : "LameMusic"
 
     font_6x8 : "gfx_font6x8_normal_w"
-    song     : "sng_ibelieve"
+    song     : "song_ibelieve"
 
 PUB Main
 

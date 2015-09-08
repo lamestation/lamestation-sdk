@@ -40,7 +40,6 @@ CON
     MAXSTR_LENGTH = 49                  ' Maximum length of received numerical string (not including zero terminator).
 
 VAR
-
   long  cog                             ' Cog flag/id
 
   long  rx_head                         ' 9 contiguous longs (must keep order)
@@ -58,22 +57,11 @@ VAR
 
   byte  str_buffer[MAXSTR_LENGTH+1]     ' String buffer for numerical strings
 
+PUB Start
+
+    return StartRxTx(31, 30, 0, 115200)
 
 PUB StartRxTx(rxpin, txpin, mode, baudrate) : okay
-{{
-    Start serial communication with designated pins, mode, and baud.
-  Parameters:
-    rxpin    - input pin; receives signals from external device's TX pin.
-    txpin    - output pin; sends signals to  external device's RX pin.
-    mode     - signaling mode (4-bit pattern).
-               bit 0 - inverts rx.
-               bit 1 - inverts tx.
-               bit 2 - open drain/source tx.
-               bit 3 - ignore tx echo on rx.
-    baudrate - bits per second.
-  Returns    : True (non-zero) if cog started, or False (0) if no cog is available.
-}}
-
     Stop
     longfill(@rx_head, 0, 4)
     longmove(@rx_pin, @rxpin, 3)
@@ -81,23 +69,7 @@ PUB StartRxTx(rxpin, txpin, mode, baudrate) : okay
     buffer_ptr := @rx_buffer
     okay := cog := cognew(@entry, @rx_head) + 1
 
-PUB Stop
-{{
-    Stop serial communication; frees a cog.
-}}
-
-    if cog
-        cogstop(cog~ - 1)
-    longfill(@rx_head, 0, 9)
-
 PUB Char(bytechr)
-{{
-    Send single-byte character.  Waits for room in transmit buffer if necessary.
-    
-    Parameter:
-    
-     * bytechr - character (ASCII byte value) to send.
-}}
 
     repeat until (tx_tail <> ((tx_head + 1) & BUFFER_MASK))
     tx_buffer[tx_head] := bytechr
@@ -106,27 +78,7 @@ PUB Char(bytechr)
     if rxtx_mode & %1000
         CharIn
 
-PUB CharIn : bytechr
-{{
-    Receive single-byte character.  Waits until character received.
-    Returns: $00..$FF
-}}
-
-repeat while (bytechr := RxCheck) < 0
-  
-  
-PUB Str(stringptr)
-{{Send zero terminated string.
-  Parameter:
-    stringptr - pointer to zero terminated string to send.}}
-
-  repeat strsize(stringptr)
-    Char(byte[stringptr++])
-
 PUB Dec(value) | i, x
-{{Send value as decimal characters.
-  Parameter:
-    value - byte, word, or long value to send as decimal characters.}}
 
   x := value == NEGX                                                            'Check for max negative
   if value < 0
@@ -145,41 +97,44 @@ PUB Dec(value) | i, x
     i /= 10                                                                     'Update divisor
 
 PUB Bin(value, digits)
-{{Send value as binary characters up to digits in length.
-  Parameters:
-    value  - byte, word, or long value to send as binary characters.
-    digits - number of binary digits to send.  Will be zero padded if necessary.}}
 
   value <<= 32 - digits
   repeat digits
     Char((value <-= 1) & 1 + "0")
 
 PUB Hex(value, digits)
-{{Send value as hexadecimal characters up to digits in length.
-  Parameters:
-    value  - byte, word, or long value to send as hexadecimal characters.
-    digits - number of hexadecimal digits to send.  Will be zero padded if necessary.}}
 
   value <<= (8 - digits) << 2
   repeat digits
     Char(lookupz((value <-= 4) & $F : "0".."9", "A".."F"))
+    
+PUB Str(stringptr)
+
+  repeat strsize(stringptr)
+    Char(byte[stringptr++])
 
 PUB Clear
-{{Clear screen and place cursor at top-left.}}
   
   Char(CS)
   
+PUB CharIn : bytechr
+
+    repeat while (bytechr := RxCheck) < 0
+
 PUB RxCount : count
-{{Get count of characters in receive buffer.
-  Returns: number of characters waiting in receive buffer.}}
 
   count := rx_head - rx_tail
   count -= BUFFER_LENGTH*(count < 0)
 
 PUB RxFlush
-{{Flush receive buffer.}}
 
   repeat while rxcheck => 0
+  
+PUB Stop
+
+    if cog
+        cogstop(cog~ - 1)
+    longfill(@rx_head, 0, 9)
     
 PRI RxCheck : bytechr
 {Check if character received; return immediately.
@@ -204,15 +159,8 @@ Ignores all non-digit characters (except negative (-) when base is decimal (10))
        
 DAT
 
-'***********************************
-'* Assembly language serial driver *
-'***********************************
-
                         org     0
-'
-'
-' Entry
-'
+
 entry                   mov     t1,par                'get structure address
                         add     t1,#4 << 2            'skip past heads and tails
 

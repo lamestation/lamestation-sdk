@@ -13,7 +13,7 @@ OBJ
 
     font_6x8 : "gfx_font6x8_normal_w"
     famus    : "gfx_spacegirl"
-    blehtrd  : "sng_blehtroid"
+    blehtrd  : "song_blehtroid"
 
 PUB TypewriterTextDemo | count
 
