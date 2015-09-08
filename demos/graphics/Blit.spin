@@ -3,10 +3,10 @@ CON
     _xinfreq = 5_000_000
 
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
+    lcd : "LameLCD"
+    gfx : "LameGFX"
 
-    img     :               "gfx_dagron"
+    img : "gfx_dagron"
 
 PUB Main
     lcd.Start(gfx.Start)

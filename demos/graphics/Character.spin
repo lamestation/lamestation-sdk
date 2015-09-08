@@ -3,11 +3,11 @@ CON
     _xinfreq = 5_000_000
 
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
-    ctrl    :               "LameControl"
+    lcd     : "LameLCD"
+    gfx     : "LameGFX"
+    ctrl    : "LameControl"
 
-    sprite  :               "gfx_supertank"
+    sprite  : "gfx_supertank"
 
 VAR
     byte    apress

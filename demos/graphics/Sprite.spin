@@ -3,10 +3,10 @@ CON
     _xinfreq = 5_000_000
 
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
+    lcd     : "LameLCD"
+    gfx     : "LameGFX"
 
-    sprite  :               "gfx_supertank"
+    sprite  : "gfx_supertank"
 
 PUB Main
     lcd.Start(gfx.Start)

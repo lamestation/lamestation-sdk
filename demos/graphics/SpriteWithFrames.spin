@@ -4,10 +4,10 @@ CON
 
 OBJ
 
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
+    lcd     : "LameLCD"
+    gfx     : "LameGFX"
 
-    sprite  :               "gfx_radar"
+    sprite  : "gfx_radar"
 
 PUB Main | frame
 
