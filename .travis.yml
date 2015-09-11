@@ -4,7 +4,7 @@ script:
 - wget https://github.com/bweir/OpenSpin/releases/download/qt-0.1.0/openspin
 - chmod a+x ./openspin
 - SPINC=./openspin make -f scripts/makefile -j
-- make -f scripts/makefile clean
+- make -f scripts/makefile clean 
   RELEASE=${TRAVIS_TAG} ./scripts/release.sh
 after_script:
 - ls *.zip
