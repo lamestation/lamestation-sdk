@@ -2,6 +2,7 @@ language: cpp
 sudo: false
 script:
 - wget https://github.com/bweir/OpenSpin/releases/download/qt-0.1.0/openspin
+- chmod a+x ./openspin
 - SPINC=./openspin make -f scripts/makefile -j
 - make -f scripts/makefile clean
 - git clone https://github.com/lamestation/lamestation-sdk "lamestation-sdk-${TRAVIS_TAG}" --recursive
