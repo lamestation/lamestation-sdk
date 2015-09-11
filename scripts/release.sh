@@ -1,7 +1,7 @@
 #!/bin/bash -x
 set -e
 
-RELEASENAME=lamestation-sdk-${1:?"Pass tag name as parameter"}
+RELEASENAME=lamestation-sdk-$1
 
 mkdir -p .build/
 mv * .build/ -f
