@@ -1,0 +1,26 @@
+sudo: false
+matrix:
+  include:
+    env:
+    - SPINC = ./openspin
+    - FILENAME = lamestation-sdk-${TRAVIS_TAG}
+script:
+- wget https://github.com/bweir/OpenSpin/releases/download/0.2.2/openspin.linux-gcc.zip
+- unzip openspin.linux-gcc.zip
+- make -f scripts/makefile -j
+- make clean
+- git clone https://github.com/lamestation/lamestation-sdk ${FILENAME} --recursive
+- zip ${FILENAME}.zip ${FILENAME}
+after_script:
+- ls *.zip
+deploy:
+  provider: releases
+  api_key:
+    secure: NEA2RzoKNiT4JL1d6iJFNeZksns5m9AaVT2hA1CljJzhOjUJ7o4zhfyOI0Ev61M5WAKOEyKNQSh4dvXiFr37xuWVNAiSxUIKID2QZ7FMm2933lzxYhztA6HLChb/qSGrHluJmOsxr9Cz3GbaWCPARjbnPMtbl2l5hszykxCAMPo=
+  file_glob: true
+  file: ${FILENAME}.zip
+  skip_cleanup: true
+  on:
+    repo: lamestation/lamestation-sdk
+    tags: true
+    all_branches: true
