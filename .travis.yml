@@ -2,6 +2,7 @@ language: cpp
 sudo: false
 matrix:
   include:
-  - compiler: gcc
+    env:
+    - SPINC=./openspin  FILENAME=lamestation-sdk-${TRAVIS_TAG}
 script:
-- make
+- make -f scripts/makefile -j
