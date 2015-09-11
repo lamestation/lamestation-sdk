@@ -3,7 +3,7 @@ matrix:
   include:
     env:
     - SPINC = ./openspin
-    - FILENAME = lamestation-sdk-${TRAVIS_TAG}  
+    - FILENAME = lamestation-sdk-${TRAVIS_TAG}
 script:
 - wget https://github.com/bweir/OpenSpin/releases/download/0.2.2/openspin.linux-gcc.zip
 - unzip openspin.linux-gcc.zip
