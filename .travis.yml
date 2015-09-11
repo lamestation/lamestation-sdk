@@ -6,9 +6,9 @@ script:
 - SPINC=./openspin make -f scripts/makefile -j
 - make -f scripts/makefile clean
 - git clone https://github.com/lamestation/lamestation-sdk "lamestation-sdk-${TRAVIS_TAG}" --recursive
-- echo "lamestation-sdk-${TRAVIS_TAG}"
-- zip -R "lamestation-sdk-${TRAVIS_TAG}.zip" lamestation-sdk-${TRAVIS_TAG}/
+- zip -r "lamestation-sdk-${TRAVIS_TAG}.zip" lamestation-sdk-${TRAVIS_TAG}/
 - ls *.zip
+- ls *
 deploy:
   provider: releases
   api_key:
