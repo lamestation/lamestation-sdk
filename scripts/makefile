@@ -24,7 +24,7 @@ test_compile: $(BINARIES)
 %.binary: %.spin
 	@FILE=$$(file $< | grep -v "ASCII" | grep -v "UTF-8"); if [ -z "$$FILE" ]; then exit 0 ; else exit 1; fi
 	@FILE=$$(file $< | grep "line terminators"); if [ -z "$$FILE" ]; then exit 0 ; else exit 1 ; fi
-	$(SPINC) $< $(LFLAGS) 1>/dev/null
+	$(SPINC) $< $(LFLAGS) #1>/dev/null
 
 $(PREFIX)/%.spin: %.spin
 	install -D -c -p -m 644 $< $@
