@@ -14,7 +14,7 @@ deploy:
   api_key:
     secure: NEA2RzoKNiT4JL1d6iJFNeZksns5m9AaVT2hA1CljJzhOjUJ7o4zhfyOI0Ev61M5WAKOEyKNQSh4dvXiFr37xuWVNAiSxUIKID2QZ7FMm2933lzxYhztA6HLChb/qSGrHluJmOsxr9Cz3GbaWCPARjbnPMtbl2l5hszykxCAMPo=
   file_glob: true
-  file: *.zip
+  file: lamestation-sdk-*.zip
   skip_cleanup: true
   on:
     repo: lamestation/lamestation-sdk
