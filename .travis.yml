@@ -5,16 +5,16 @@ script:
 - chmod a+x ./openspin
 - SPINC=./openspin make -f scripts/makefile -j
 - make -f scripts/makefile clean
-- git clone https://github.com/lamestation/lamestation-sdk "lamestation-sdk-${TRAVIS_TAG}" --recursive
-- zip -r "lamestation-sdk-${TRAVIS_TAG}.zip" lamestation-sdk-${TRAVIS_TAG}/
+  RELEASE=${TRAVIS_TAG} ./scripts/release.sh
+after_script:
 - ls *.zip
-- ls *
+- du *.zip
 deploy:
   provider: releases
   api_key:
     secure: NEA2RzoKNiT4JL1d6iJFNeZksns5m9AaVT2hA1CljJzhOjUJ7o4zhfyOI0Ev61M5WAKOEyKNQSh4dvXiFr37xuWVNAiSxUIKID2QZ7FMm2933lzxYhztA6HLChb/qSGrHluJmOsxr9Cz3GbaWCPARjbnPMtbl2l5hszykxCAMPo=
   file_glob: true
-  file: lamestation-sdk-${TRAVIS_TAG}.zip
+  file: *.zip
   skip_cleanup: true
   on:
     repo: lamestation/lamestation-sdk
