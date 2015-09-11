@@ -5,7 +5,7 @@ script:
 - chmod a+x ./openspin
 - SPINC=./openspin make -f scripts/makefile -j
 - make -f scripts/makefile clean
-- RELEASE=${TRAVIS_TAG} ./scripts/release.sh
+- ./scripts/release.sh ${TRAVIS_TAG}
 after_script:
 - ls *.zip
 - du *.zip

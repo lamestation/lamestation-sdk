@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/bash -x
 set -e
 
-RELEASENAME=lamestation-sdk-${RELEASE:?"CAUTION: Don't run in personal repository; Set RELEASE to continue"}
+RELEASENAME=lamestation-sdk-${1:?"Pass tag name as parameter"}
 
 mkdir -p .build/
 mv * .build/ -f
