@@ -1,42 +1,6 @@
 [submodule "tools/SoundDesigner"]
 	path = tools/SoundDesigner
 	url = https://github.com/lamestation/SoundDesigner.git
-[submodule "games/Pikemanz"]
-	path = games/Pikemanz
-	url = https://github.com/lamestation/Pikemanz.git
-[submodule "games/piXel"]
-	path = games/piXel
-	url = https://github.com/lamestation/piXel
-[submodule "games/TankBattle"]
-	path = games/TankBattle
-	url = https://github.com/lamestation/TankBattle
-[submodule "games/FrappyBard"]
-	path = games/FrappyBard
-	url = https://github.com/lamestation/FrappyBard.git
-[submodule "games/Brettris"]
-	path = games/Brettris
-	url = https://github.com/lamestation/Brettris.git
-[submodule "games/MazeGame"]
-	path = games/MazeGame
-	url = https://github.com/lamestation/MazeGame.git
-[submodule "games/Helicopter"]
-	path = games/Helicopter
-	url = https://github.com/lamestation/Helicopter.git
-[submodule "games/AKnightOut"]
-	path = games/AKnightOut
-	url = https://github.com/lamestation/AKnightOut.git
-[submodule "games/HelloPong"]
-	path = games/HelloPong
-	url = https://github.com/lamestation/HelloPong.git
-[submodule "games/RoundyAndLumpy"]
-	path = games/RoundyAndLumpy
-	url = https://github.com/lamestation/RoundyAndLumpy.git
-[submodule "games/TBot"]
-	path = games/TBot
-	url = https://github.com/lamestation/TBot.git
-[submodule "games/ZeroForce"]
-	path = games/ZeroForce
-	url = https://github.com/lamestation/ZeroForce.git
 [submodule "tools/ScreenCapture"]
 	path = tools/ScreenCapture
 	url = https://github.com/lamestation/ScreenCapture.git
