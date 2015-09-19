@@ -38,9 +38,10 @@ VAR
 ' * Main
 ' **********************************************************
 OBJ
-    audio   :   "LameAudio"
-    gfx     :   "LameGFX"
     lcd     :   "LameLCD"
+    gfx     :   "LameGFX"
+    txt     :   "LameText"
+    audio   :   "LameAudio"
     ctrl    :   "LameControl"
     fn      :   "LameFunctions"
 
@@ -70,13 +71,13 @@ PUB Main
 
     LoadAssets
 
-    gfx.LoadFont(font.Addr," ",0,0)
+    txt.Load(font.Addr," ",0,0)
 
     repeat
         ctrl.Update
 
         gfx.ClearScreen(0)
-        gfx.PutString(string("SoundDesigner v0.2"),1,1)
+        txt.Str(string("SoundDesigner v0.2"),1,1)
         GUI_TabBrowser(77,0)
 
         case control[_NAV]
@@ -306,7 +307,7 @@ PRI ControlBox(str,value,x,y,active)
 
     gfx.InvertColor(active)
     gfx.Sprite(box18.Addr,x,y,0)
-    gfx.PutString(str,x+3,y+2)
+    txt.Str(str,x+3,y+2)
     
     ValueBar(value,x+19,y)
     gfx.InvertColor(False)
@@ -325,7 +326,7 @@ PRI GUI_Waveform(x,y)
         gfx.InvertColor(True)
 
     gfx.Sprite(box24.Addr,x,y,0)
-    gfx.PutString(wavename[control[_WAV]],x+2,y+2)
+    txt.Str(wavename[control[_WAV]],x+2,y+2)
     gfx.Sprite(wavegfx[control[_WAV]],x,y+10,0)
     gfx.InvertColor(False)
 
@@ -372,7 +373,7 @@ PRI GUI_Tab(text,x,y,inv)
         gfx.InvertColor(True)
 
     gfx.Sprite(box18.Addr,x,y,0)
-    gfx.PutString(text,x+3,y+2)
+    txt.Str(text,x+3,y+2)
 
     gfx.InvertColor(False)
 
