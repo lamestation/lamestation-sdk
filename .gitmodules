@@ -1,6 +1,0 @@
-[submodule "tools/SoundDesigner"]
-	path = tools/SoundDesigner
-	url = https://github.com/lamestation/SoundDesigner.git
-[submodule "tools/ScreenCapture"]
-	path = tools/ScreenCapture
-	url = https://github.com/lamestation/ScreenCapture.git
