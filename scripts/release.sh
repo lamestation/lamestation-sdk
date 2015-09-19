@@ -63,7 +63,7 @@ EOF
 
         echo -n "."
 
-done < <(git ls-tree -r master --name-only | grep .spin$)
+done < <(git ls-tree -r ${VERSION} --name-only | grep .spin$)
 
 echo "DONE"
 
