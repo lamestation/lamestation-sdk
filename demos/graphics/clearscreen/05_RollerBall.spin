@@ -3,13 +3,14 @@ CON
     _xinfreq = 5_000_000
 
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
-    ctrl    :               "LameControl"
-    fn      :               "LameFunctions"
+    lcd     :   "LameLCD"
+    gfx     :   "LameGFX"
+    txt     :   "LameText"
+    ctrl    :   "LameControl"
+    fn      :   "LameFunctions"
 
-    ball    :               "gfx_rollerball"
-    font    :               "gfx_font6x8"
+    ball    :   "gfx_rollerball"
+    font    :   "gfx_font6x8"
 
 VAR
     byte    ball_frame
@@ -22,7 +23,7 @@ VAR
 PUB Main | val
     lcd.Start(gfx.Start)
     
-    gfx.LoadFont(font.Addr, " ", 6, 8)
+    txt.Load(font.Addr, " ", 6, 8)
     ctrl.Start
 
     ball_x := 64
@@ -34,7 +35,7 @@ PUB Main | val
 
         if ball_x < -16
             failtimeout++
-            gfx.PutString(string("YOU FAILED"),30,29)
+            txt.Str(string("YOU FAILED"),30,29)
             if failtimeout > 128
                 ball_x := 64
                 ball_y := 24
@@ -77,7 +78,7 @@ PUB Main | val
 
             if blinktoggle
                 gfx.InvertColor(True)
-                gfx.PutString(string("OH NO GO RIGHT!"),0,0)
+                txt.Str(string("OH NO GO RIGHT!"),0,0)
                 gfx.InvertColor(False)
 
         lcd.DrawScreen

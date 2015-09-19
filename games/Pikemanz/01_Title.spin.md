@@ -50,10 +50,10 @@ Now let's have some graphics. Then we need to add some
 
     PUB View
         gfx.ClearScreen(gfx#WHITE)
-        gfx.LoadFont(font_text.Addr, " ", 0, 0)
+        txt.Load(font_text.Addr, " ", 0, 0)
 
         gfx.Sprite(title.Addr,1,10,0)
-        gfx.PutString(string("lame version"), 17, 53)
+        txt.Str(string("lame version"), 17, 53)
         gfx.Sprite(nash.Addr, 100,14,0)
 
         lcd.DrawScreen

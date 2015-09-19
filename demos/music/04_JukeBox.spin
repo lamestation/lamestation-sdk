@@ -9,6 +9,7 @@ CON
 OBJ
     lcd       : "LameLCD"
     gfx       : "LameGFX"
+    txt       : "LameText"
     audio     : "LameAudio"
     music     : "LameMusic"
     ctrl      : "LameControl"
@@ -40,7 +41,7 @@ VAR
 PUB JukeBox
 
     lcd.Start(gfx.Start)
-    gfx.LoadFont(font.Addr, " ", 4, 6)
+    txt.Load(font.Addr, " ", 4, 6)
 
     ctrl.Start
     audio.Start
@@ -69,20 +70,20 @@ PUB JukeBox
         ctrl.Update
         gfx.Blit(juke.Addr)
 
-        gfx.TextBox(string("The Music Box"),0,0,64,32)
-        gfx.TextBox(string("Up/dn: choose",10,"  A/B: select"), 74, 0,64,32)
-        gfx.PutString(string("NOW:"), 22, 26)
+        txt.Box(string("The Music Box"),0,0,64,32)
+        txt.Box(string("Up/dn: choose",10,"  A/B: select"), 74, 0,64,32)
+        txt.Str(string("NOW:"), 22, 26)
 
         if music.IsPlaying
-            gfx.PutString(songnames[songplaying], 40, 26)
+            txt.Str(songnames[songplaying], 40, 26)
 
         repeat songinc from 0 to constant(SONGWINDOW-1)
 
             if songinc+songoffset == songchoice
-                gfx.PutString(string(">"), 30, SONGPOS+songinc<<3-1)
+                txt.Str(string(">"), 30, SONGPOS+songinc<<3-1)
 
-            gfx.PutChar("1" + songinc + songoffset, 35, SONGPOS+songinc<<3)
-            gfx.PutString(songnames[songinc+songoffset], 40, SONGPOS+songinc<<3)
+            txt.Char("1" + songinc + songoffset, 35, SONGPOS+songinc<<3)
+            txt.Str(songnames[songinc+songoffset], 40, SONGPOS+songinc<<3)
 
         if ctrl.Up
             if not joymoved

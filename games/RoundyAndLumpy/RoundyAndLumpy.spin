@@ -3,9 +3,9 @@ CON
   _xinfreq = 5_000_000
 
 OBJ
-
-    gfx     : "LameGFX"
     lcd     : "LameLCD"
+    gfx     : "LameGFX"
+    txt     : "LameText"
     map     : "LameMap"
     audio   : "LameAudio"
     ctrl    : "LameControl"

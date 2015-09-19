@@ -3,10 +3,11 @@ CON
     _xinfreq = 5_000_000
 
 OBJ
-    lcd      : "LameLCD"
-    gfx      : "LameGFX"
-    audio    : "LameAudio"
-    music    : "LameMusic"
+    lcd      :  "LameLCD"
+    gfx      :  "LameGFX"
+    txt      :  "LameText"
+    audio    :  "LameAudio"
+    music    :  "LameMusic"
 
     font_6x8 : "gfx_font6x8_normal_w"
     song     : "song_ibelieve"
@@ -16,7 +17,7 @@ PUB Main
     lcd.Start(gfx.Start)
     lcd.SetFrameLimit(lcd#QUARTERSPEED)
 
-    gfx.LoadFont(font_6x8.Addr, " ", 0, 0)
+    txt.Load(font_6x8.Addr, " ", 0, 0)
 
     audio.Start
     music.Start
@@ -33,7 +34,7 @@ PUB StarWarsReel(text,reeltime) | x
 
     repeat x from 0 to reeltime
         gfx.ClearScreen(0)
-        gfx.TextBox(text, 16, 64-x, 96, 64)
+        txt.Box(text, 16, 64-x, 96, 64)
         lcd.DrawScreen
 
 DAT

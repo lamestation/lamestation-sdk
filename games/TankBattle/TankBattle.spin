@@ -38,6 +38,7 @@ CON
 OBJ
     lcd   : "LameLCD"
     gfx   : "LameGFX"
+    txt   : "LameText"
     map   : "LameMap"
     audio : "LameAudio"
     music : "LameMusic"
@@ -120,7 +121,7 @@ PUB Main
     gfx.ClearScreen(0)
     lcd.DrawScreen
 
-    gfx.LoadFont(font.Addr, " ", 8, 8)
+    txt.Load(font.Addr, " ", 8, 8)
     InitData
 
     clicked := 0
@@ -249,9 +250,9 @@ PUB TankSelect
 
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
-        gfx.PutString(string("CHOOSE"), 48, 16)
+        txt.Str(string("CHOOSE"), 48, 16)
            
-        gfx.PutString(string("vs."),56,40)
+        txt.Str(string("vs."),56,40)
                 
         gfx.Sprite(gfx_tankstand.Addr, 20, 44, 0) 
         gfx.Sprite(gfx_tankstand.Addr, 86, 44, 0) 
@@ -260,8 +261,8 @@ PUB TankSelect
         gfx.Sprite(tanktypegfx[theirtype], 88, 32, 2) 
 
         
-        gfx.PutString(tanktypename[yourtype],0,24)
-        gfx.PutString(tanktypename[theirtype],56,56)
+        txt.Str(tanktypename[yourtype],0,24)
+        txt.Str(tanktypename[theirtype],56,56)
 
 
 PUB LevelSelect
@@ -321,8 +322,8 @@ PUB LevelSelect
               }}
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
-        gfx.PutString(string("Level:"),0,16)                  
-        gfx.PutString(levelname[currentlevel],40,16)
+        txt.Str(string("Level:"),0,16)                  
+        txt.Str(levelname[currentlevel],40,16)
         
         map.Load(tilemap,leveldata[currentlevel])
         map.DrawRectangle(xoffset, yoffset, 0, 24, 128, 64)
@@ -337,7 +338,7 @@ PUB TankFaceOff
         gfx.ClearScreen(0)
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
-        gfx.PutString(string("Prepare for battle..."),0,24)
+        txt.Str(string("Prepare for battle..."),0,24)
      
         if ctrl.A or ctrl.B
           if not clicked
@@ -512,7 +513,7 @@ PUB PauseMenu : menureturn
         gfx.ClearScreen(0)
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
-        gfx.PutString(string(" PAUSE!"),40,16)
+        txt.Str(string(" PAUSE!"),40,16)
 
 
         if ctrl.Up or ctrl.Down
@@ -539,10 +540,10 @@ PUB PauseMenu : menureturn
           clicked := 0
           
         gfx.Sprite(gfx_bullet.Addr, 3, 4+menuchoice, 0)
-        gfx.PutString(string("Return to Game"),4,4)
-        gfx.PutString(string("Change Level"),4,5)
-        gfx.PutString(string("Change Tank"),4,6)
-        gfx.PutString(string("Give Up?"),4,7)
+        txt.Str(string("Return to Game"),4,4)
+        txt.Str(string("Change Level"),4,5)
+        txt.Str(string("Change Tank"),4,6)
+        txt.Str(string("Give Up?"),4,7)
 
 
     if menuchoice == 1
@@ -940,14 +941,14 @@ PUB HandleStatusBar
     intarray[1] := 48+(score[yourtank]//10)
     intarray[2] := 0
 
-    gfx.PutString(@intarray, 0, 0)
+    txt.Str(@intarray, 0, 0)
 
 
     intarray[0] := 48+(score[theirtank]/10)
     intarray[1] := 48+(score[theirtank]//10)
     intarray[2] := 0
 
-    gfx.PutString(@intarray, 112, 0)
+    txt.Str(@intarray, 112, 0)
 
 
 

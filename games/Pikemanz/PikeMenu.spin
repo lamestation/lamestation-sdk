@@ -1,6 +1,7 @@
 OBJ
-    gfx         :   "LameGFX"
     lcd         :   "LameLCD"
+    gfx         :   "LameGFX"
+    txt         :   "LameText"
     ctrl        :   "LameControl"
     fn          :   "LameFunctions"
     
@@ -15,7 +16,7 @@ OBJ
 PUB YesNo(str)
     
 PUB Dialog(str)
-    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+    txt.Load(font_text.Addr, " ", 0, 0)
     MessageBox(str,1,39,128,24,6,6)
     
 PUB Box(x, y, w, h, tw, th) | dx, dy, x1, y1, w1, h1, frame
@@ -42,9 +43,9 @@ PUB Box(x, y, w, h, tw, th) | dx, dy, x1, y1, w1, h1, frame
             gfx.Sprite(dia.Addr,x+dx*tw,y+dy*th,frame)
 
 PUB MessageBox(str, x, y, w, h, tw, th)
-    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+    txt.Load(font_text.Addr, " ", 0, 0)
     Box(x, y, w, h, tw, th) 
-    gfx.TextBox(str,x+tw, y+th, w-tw, h-th)
+    txt.Box(str,x+tw, y+th, w-tw, h-th)
     
     
 PUB AttackDialog(attack1, attack2, attack3, attack4)

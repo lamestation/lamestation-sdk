@@ -3,18 +3,19 @@ CON
     _clkmode = xtal1|pll16x
     _xinfreq = 5_000_000
 
-    MAXSPRITES = 256
-    BOUND_X = 128-16
-    BOUND_Y = 64-16
+    MAXSPRITES  = 256
+    BOUND_X     = 128-16
+    BOUND_Y     = 64-16
 
 OBJ
 
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
-    ctrl    :               "LameControl"
+    lcd     :   "LameLCD"
+    gfx     :   "LameGFX"
+    txt     :   "LameText"
+    ctrl    :   "LameControl"
 
-    sprite  :               "gfx_happyface"
-    font    :               "gfx_font6x8"
+    sprite  :   "gfx_happyface"
+    font    :   "gfx_font6x8"
 
 VAR
 
@@ -34,12 +35,12 @@ VAR
 PUB SpriteDemo | s, ran
 
     lcd.Start(gfx.Start)
-    gfx.LoadFont(font.Addr, " ", 6, 8)
+    txt.Load(font.Addr, " ", 6, 8)
 
     gfx.ClearScreen(0)
-    gfx.TextBox(string("Sprite Demo!",10,"A/B changes the",10,"number of sprites"), 0, 0, 128, 64)
+    txt.Box(string("Sprite Demo!",10,"A/B changes the",10,"number of sprites"), 0, 0, 128, 64)
     gfx.Sprite(sprite.Addr, 56, 28, 1)
-    gfx.TextBox(string("Press A to begin"), 0, 56, 128, 64)
+    txt.Box(string("Press A to begin"), 0, 56, 128, 64)
     lcd.DrawScreen
 
     repeat
@@ -103,4 +104,4 @@ PUB Overlay | tmp
     intarray[0] := 48+(tmp // 10)
     intarray[3] := 0
 
-    gfx.PutString(@intarray, 0, 0)
+    txt.Str(@intarray, 0, 0)

@@ -19,8 +19,9 @@ CON
 
 OBJ
 
-    gfx     : "LameGFX"
     lcd     : "LameLCD"
+    gfx     : "LameGFX"
+    txt     : "LameText"
     audio   : "LameAudio"
     music   : "LameMusic"
     ctrl    : "LameControl"
@@ -66,7 +67,7 @@ PUB Main
 
     lcd.Start(gfx.Start)
     lcd.SetFrameLimit(lcd#FULLSPEED)
-    gfx.LoadFont(font.Addr, "0", 4, 6)
+    txt.Load(font.Addr, "0", 4, 6)
     audio.Start
     music.Start
 
@@ -287,7 +288,7 @@ PUB KeepScore | tmp
     intarray[0] := 48+(tmp // 10)
     intarray[3] := 0
 
-    gfx.PutString(@intarray, 0, 0)
+    txt.Str(@intarray, 0, 0)
                       
 DAT
     SFXStack    long    0[20]

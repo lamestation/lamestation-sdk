@@ -1,24 +1,25 @@
 CON
-    _clkmode        = xtal1 + pll16x
-    _xinfreq        = 5_000_000
+    _clkmode = xtal1 + pll16x
+    _xinfreq = 5_000_000
 
 OBJ
-        lcd     :               "LameLCD"
-        gfx     :               "LameGFX"
-        map     :               "LameMap"
-        ctrl    :               "LameControl"
+        lcd     :   "LameLCD"
+        gfx     :   "LameGFX"
+        txt     :   "LameText"
+        map     :   "LameMap"
+        ctrl    :   "LameControl"
 
-        font    :               "gfx_font4x6_b"
-        dia     :               "gfx_scroll"
-        map1gfx :               "gfx_lostatsea"
-        map1    :               "map_lostatsea"
+        font    :   "gfx_font4x6_b"
+        dia     :   "gfx_scroll"
+        map1gfx :   "gfx_lostatsea"
+        map1    :   "map_lostatsea"
 
 PUB Main
 
     lcd.Start(gfx.Start)
 
     gfx.ClearScreen(0)
-    gfx.LoadFont(font.Addr, " ", 0, 0)
+    txt.Load(font.Addr, " ", 0, 0)
 
     ' add a map for a cool effect
     map.Load(map1gfx.Addr, map1.Addr)
@@ -58,7 +59,7 @@ PUB DialogBox(str, x,y,w,h, tw, th) | dx, dy, x1, y1, w1, h1, frame
 
             gfx.Sprite(dia.Addr,x+dx*tw,y+dy*th,frame)
 
-    gfx.TextBox(str,x+tw, y+th, w-tw, h-th)
+    txt.Box(str,x+tw, y+th, w-tw, h-th)
 
 DAT
 

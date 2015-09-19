@@ -37,6 +37,7 @@ CON
 OBJ
     lcd     : "LameLCD" 
     gfx     : "LameGFX"
+    txt     : "LameText"
     map     : "LameMap"
     audio   : "LameAudio"
     music   : "LameMusic"
@@ -78,7 +79,7 @@ PUB Main
 
     lcd.Start(gfx.Start)
     lcd.SetFrameLimit(lcd#FULLSPEED)
-    gfx.LoadFont(font.Addr, " ", 8, 8)
+    txt.Load(font.Addr, " ", 8, 8)
 
     audio.Start
     music.Start
@@ -117,9 +118,9 @@ PUB TitleScreen
     ctrl.Update
     gfx.ClearScreen(0)
 
-    gfx.PutString(string("p  i      e  l"), 8, 30)
+    txt.Str(string("p  i      e  l"), 8, 30)
     gfx.Sprite(gfx_pixmain.Addr, 40, 8, 0)        
-    gfx.PutString(string("press A/B"), 28, 56)
+    txt.Str(string("press A/B"), 28, 56)
 
     if ctrl.A or ctrl.B
         if not clicked
@@ -150,7 +151,7 @@ PUB Victory
     music.Play
     
     ShowGameView
-    gfx.TextBox(string("YOU WIN"), 40, 30, 100, 60)
+    txt.Box(string("YOU WIN"), 40, 30, 100, 60)
     lcd.DrawScreen
     fn.Sleep(2000)
     
@@ -175,7 +176,7 @@ PUB PlayerDied
     music.Play         
     
     ShowGameView
-    gfx.TextBox(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
+    txt.Box(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
     lcd.DrawScreen
     fn.Sleep(2000)
 
@@ -202,7 +203,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
         DrawPlayer
 
         
-        gfx.TextBox(text, 16, 64-x, 108, 64) 
+        txt.Box(text, 16, 64-x, 108, 64) 
     
         lcd.DrawScreen
         fn.Sleep(70)
@@ -213,7 +214,7 @@ PUB ItsGameOver
     music.Play     
     
     ShowGameView
-    gfx.TextBox(string("GAME OVER"), 30, 28, 100, 60)
+    txt.Box(string("GAME OVER"), 30, 28, 100, 60)
     lcd.DrawScreen
     fn.Sleep(2000)
     
@@ -230,8 +231,8 @@ PUB ItsGameOver
     gfx.Blit(gfx_starmap.Addr)
     map.Draw(xoffset, yoffset)
     DrawPlayer            
-    gfx.PutString(string("Press A and "),18,24)
-    gfx.PutString(string("try again..."),18,32)
+    txt.Str(string("Press A and "),18,24)
+    txt.Str(string("try again..."),18,32)
     lcd.DrawScreen
     
     repeat until ctrl.A

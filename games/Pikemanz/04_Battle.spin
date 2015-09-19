@@ -13,6 +13,7 @@ CON
 OBJ
     lcd     :   "LameLCD"
     gfx     :   "LameGFX"
+    txt     :   "LameText"
     audio   :   "LameAudio"
     music   :   "LameMusic"
     ctrl    :   "LameControl"
@@ -69,7 +70,7 @@ PUB Wild
 PUB Scene
     ' music.Load(song.Addr)
     ' music.Loop
-    gfx.LoadFont(font_text.Addr, " ", 0, 0)
+    txt.Load(font_text.Addr, " ", 0, 0)
     CreateNumberStr(@str_hpmax, pike.GetMaxHealth(front_pk))
     hp_dsp[BACK] := pike.GetHealth(back_pk)
     hp_dsp[FRONT] := pike.GetHealth(front_pk)
@@ -153,12 +154,12 @@ PUB BattleDialog(x, y)
     gfx.Sprite(arrow.Addr, x + COLWIDTH*(select/ROWS), y + ROWHEIGHT*(select//ROWS)+1, 0)
 
     ' menu options
-    gfx.PutString(string("FYTE"),x+4, y)
-    gfx.PutString(string("ITAM"),x+constant(COLWIDTH+4), y)
+    txt.Str(string("FYTE"),x+4, y)
+    txt.Str(string("ITAM"),x+constant(COLWIDTH+4), y)
 
     y += 6
-    gfx.PutString(string("PIKE"),x+4, y)
-    gfx.PutString(string("RAN"),x+constant(COLWIDTH+4), y)
+    txt.Str(string("PIKE"),x+4, y)
+    txt.Str(string("RAN"),x+constant(COLWIDTH+4), y)
 
 PUB ListSelector
 
@@ -182,14 +183,14 @@ PUB AttackDialog(x, y, name, attack, enemy)
     x += 7
 
     if enemy
-        gfx.PutString(string("Enemy"),x+1, y)
-        gfx.PutString(name,x+36, y)
+        txt.Str(string("Enemy"),x+1, y)
+        txt.Str(name,x+36, y)
     else
-        gfx.PutString(name,x, y)
+        txt.Str(name,x, y)
 
     y += 7
-    gfx.PutString(string("used"),x, y)
-    gfx.PutString(attack,x+30, y)
+    txt.Str(string("used"),x, y)
+    txt.Str(attack,x+30, y)
 
 PUB HealthHandler
         if hp_dsp[FRONT] > pike.GetHealth(front_pk)
@@ -217,7 +218,7 @@ PUB StatusBox(name, health, maxhealth, x, y, opposing) | w
     w := health*word[hp.Addr][1]/maxhealth
 
     ' pikemanz name
-    gfx.PutString(name,x, y+1)
+    txt.Str(name,x, y+1)
     y += 7
 
     ' health bar
@@ -233,9 +234,9 @@ PUB StatusBox(name, health, maxhealth, x, y, opposing) | w
     ' actual health count
     if not opposing
         CreateNumberStr(@str_hp, hp_dsp[FRONT])
-        gfx.PutString(@str_hp,x+11,y)
-        gfx.PutChar("/",x+29,y)
-        gfx.PutString(@str_hpmax,x+34,y)
+        txt.Str(@str_hp,x+11,y)
+        txt.Char("/",x+29,y)
+        txt.Str(@str_hpmax,x+34,y)
 
         y += 7
         x += 11

@@ -5,13 +5,12 @@ CON
     COLLIDEBIT = $80
 
 OBJ
-
     gfx :   "LameGFX"
 
 DAT
 
-map_tilemap     long    0                               ' |
-map_levelmap    long    0                               ' order/type locked
+map_tilemap     long    0
+map_levelmap    long    0
 
 PUB Load(source_tilemap, source_levelmap)
 

@@ -6,6 +6,7 @@ OBJ
 
     lcd     :   "LameLCD"
     gfx     :   "LameGFX"
+    txt     :   "LameText"
     audio   :   "LameAudio"
     music   :   "LameMusic"
     ctrl    :   "LameControl"
@@ -68,7 +69,7 @@ PUB Main
 
     LoadTetrominos
 
-    gfx.LoadFont(font.Addr," ",0,0)
+    txt.Load(font.Addr," ",0,0)
 
     ResetGame
 
@@ -184,14 +185,14 @@ PUB ResetGame | x,y
 
 
 PUB Overlay
-    gfx.PutString(string("Lines"),1,1)
+    txt.Str(string("Lines"),1,1)
     CalculateScoreStr(score)
     gfx.Sprite(box.Addr,1,7,0)
-    gfx.PutString(@scorestr,14,9)
+    txt.Str(@scorestr,14,9)
 
-    gfx.PutString(string("Level"),1,17)
+    txt.Str(string("Level"),1,17)
     gfx.Sprite(box.Addr,1,23,0)
-    gfx.PutChar("0"+level,30,25)
+    txt.Char("0"+level,30,25)
 
 
 VAR

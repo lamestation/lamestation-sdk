@@ -5,17 +5,18 @@ CON
     #0, RIGHT, UP, LEFT, DOWN
 
 OBJ
-    lcd     :               "LameLCD"
-    gfx     :               "LameGFX"
-    map     :               "LameMap"
-    ctrl    :               "LameControl"
-    fn      :               "LameFunctions"
+    lcd     : "LameLCD"
+    gfx     : "LameGFX"
+    txt     : "LameText"
+    map     : "LameMap"
+    ctrl    : "LameControl"
+    fn      : "LameFunctions"
 
-    world   :               "overworld"
-    tilemap :               "tiles_2b_poketron"
-    player  :               "knight"
-    title   :               "epictitle"
-    ghost   :               "ghosterman"
+    world   : "overworld"
+    tilemap : "tiles_2b_poketron"
+    player  : "knight"
+    title   : "epictitle"
+    ghost   : "ghosterman"
 
 VAR
     long    playerx

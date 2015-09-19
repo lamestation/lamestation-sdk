@@ -23,6 +23,7 @@ CON
 OBJ
     lcd     : "LameLCD"
     gfx     : "LameGFX"
+    txt     : "LameText"
     audio   : "LameAudio"
     music   : "LameMusic"
     ctrl    : "LameControl"

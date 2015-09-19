@@ -2,6 +2,16 @@ CON     _clkmode = xtal1 + pll16x
         _xinfreq = 5_000_000
 
         MIDIPIN = 16
+
+OBJ
+    lcd     :   "LameLCD"
+    gfx     :   "LameGFX"
+    txt     :   "LameText"
+    audio   :   "LameAudio"
+
+    ser     :   "LameSerial"
+    ser2    :   "LameSerial"
+
 VAR
     byte    newbyte
     byte    statusbyte
@@ -15,22 +25,15 @@ VAR
 
     byte    attack, decay, sustain, release, waveform, volume
 
-OBJ
-    pst     :       "LameSerial"
-    pst2    :       "LameSerial"
-    audio   :       "LameAudio"
-    gfx     :       "LameGFX"
-    lcd     :       "LameLCD"
-
 PRI ControlNote
 
     databyte1 := newbyte
-    databyte2 := pst.CharIn
+    databyte2 := ser.CharIn
 
-    pst2.Dec(databyte1)
-    pst2.Char(" ")
-    pst2.Dec(databyte2)
-    pst2.Char(" ")
+    ser2.Dec(databyte1)
+    ser2.Char(" ")
+    ser2.Dec(databyte2)
+    ser2.Char(" ")
 
     'TURN NOTE ON
     if statusnibble == $90
@@ -42,7 +45,7 @@ PRI ControlNote
 PRI ControlKnob
 
     databyte1 := newbyte
-    databyte2 := pst.CharIn
+    databyte2 := ser.CharIn
 
     'modulation wheel
     case databyte1
@@ -72,20 +75,20 @@ PRI ControlKnob
 PRI ControlPitchBend
 
     databyte1 := newbyte
-    databyte2 := pst.CharIn
+    databyte2 := ser.CharIn
 
-    pst2.Dec(databyte1)
-    pst2.Char(" ")
-    pst2.Dec(databyte2)
-    pst2.Char(" ")
+    ser2.Dec(databyte1)
+    ser2.Char(" ")
+    ser2.Dec(databyte2)
+    ser2.Char(" ")
 
-    pst2.Char(pst#NL)
+    ser2.Char(ser#NL)
 
 PUB Main
 
-    pst.StartRxTx(MIDIPIN, MIDIPIN+1, 0, 31250)
-    pst2.StartRxTx(31, 30, 0, 115200)
-    pst2.Clear
+    ser.StartRxTx(MIDIPIN, MIDIPIN+1, 0, 31250)
+    ser2.StartRxTx(31, 30, 0, 115200)
+    ser2.Clear
 
     audio.Start
 
@@ -98,16 +101,16 @@ PRI MIDIController
         'status byte, data bytes (1-2)
         'status messages begin with the left-most bit = 1
 
-        newbyte := pst.CharIn
+        newbyte := ser.CharIn
 
         if newbyte & $80
             statusbyte := newbyte
             statusnibble := statusbyte & $F0
             statuschannel := statusbyte & $0F
-            pst2.Char(10)
-            pst2.Char(13)
-            pst2.Hex(statusbyte, 2)
-            pst2.Char(" ")
+            ser2.Char(10)
+            ser2.Char(13)
+            ser2.Hex(statusbyte, 2)
+            ser2.Char(" ")
 
         else
             case statusnibble
@@ -136,7 +139,7 @@ PRI PutNumber(number, x, y) | i
 
     intarray[LENGTH] := 0
 
-    gfx.PutString(@intarray, x, y)
+    txt.Str(@intarray, x, y)
 
 PRI GetChar(digit)
     if not digit > 0

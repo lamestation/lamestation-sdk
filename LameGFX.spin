@@ -11,10 +11,6 @@ CON
     SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
     SCREENSIZE_BYTES_END = SCREENSIZE_BYTES-1
 
-    ' text printing
-    NL = 10
-    LF = 13
-
 '' This table
 ''
 '' +------+-------+------+-------------+
@@ -37,7 +33,6 @@ CON
     WHITE = $5555
     TRANSPARENT = $AAAA
     GRAY = $FFFF
-
 
     ' draw map function
     COLLIDEBIT = $80
@@ -158,48 +153,6 @@ PUB Map(tilemap, levelmap, offset_x, offset_y, x1, y1, x2, y2)
 
     longmove(@c_parameters{0}, @result, 9)
     instruction := c_drawtilemap
-
-' *********************************************************
-'  Text
-' *********************************************************
-PUB LoadFont(sourcevar, startingcharvar, tilesize_xvar, tilesize_yvar)
-
-    font := sourcevar
-    startingchar := startingcharvar
-    ifnot tilesize_x := tilesize_xvar
-      tilesize_x := word[font][SX]
-    ifnot tilesize_y := tilesize_yvar
-      tilesize_y := word[font][SY]
-
-PUB PutChar(char, x, y)
-
-    Sprite(font, x, y, char - startingchar)
-
-PUB PutString(stringvar, origin_x, origin_y)
-
-    repeat strsize(stringvar)
-        Sprite(font, origin_x, origin_y, byte[stringvar++] - startingchar)
-        origin_x += tilesize_x
-
-PUB TextBox(stringvar, origin_x, origin_y, w, h) | char, x, y
-
-    x := origin_x
-    y := origin_y
-
-    repeat strsize(stringvar)
-        char := byte[stringvar++]
-        if char == NL or char == LF
-            y += tilesize_y
-            x := origin_x
-        elseif char == " "
-            x += tilesize_x
-        else
-            Sprite(font, x, y, char - startingchar)
-            if x+tilesize_x => origin_x+w
-                y += tilesize_y
-                x := origin_x
-            else
-                x += tilesize_x
 
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
 '' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
