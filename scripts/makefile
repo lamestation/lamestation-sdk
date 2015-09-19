@@ -3,10 +3,10 @@ ifndef SPINC
 endif
 LFLAGS := -L.
 
-OBJECTS := $(shell git ls-tree -r `git status | grep "On branch" | awk '{print $$3}'` --name-only | grep .spin$$)
+OBJECTS := $(shell find . -name \*.spin )
 BINARIES := $(OBJECTS:.spin=.binary)
 
-PREFIX ?= out
+PREFIX ?= .build
 
 INSTALLS := $(patsubst %,$(PREFIX)/%,$(OBJECTS))
 
@@ -24,12 +24,4 @@ test_compile: $(BINARIES)
 %.binary: %.spin
 	@FILE=$$(file $< | grep -v "ASCII" | grep -v "UTF-8"); if [ -z "$$FILE" ]; then exit 0 ; else exit 1; fi
 	@FILE=$$(file $< | grep "line terminators"); if [ -z "$$FILE" ]; then exit 0 ; else exit 1 ; fi
-	$(SPINC) $< $(LFLAGS)
-
-$(PREFIX)/%.spin: %.spin
-	install -D -c -p -m 644 $< $@
-
-install: $(INSTALLS)
-
-$(PREFIX):
-	mkdir -p $(PREFIX)
+	$(SPINC) $(LFLAGS) $<

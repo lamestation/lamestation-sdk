@@ -3,7 +3,7 @@ sudo: false
 script:
 - wget https://github.com/bweir/OpenSpin/releases/download/qt-0.1.0/openspin
 - chmod a+x ./openspin
-- SPINC=./openspin make -f scripts/makefile -j
+- SPINC="./openspin -q" make -f scripts/makefile -j
 - make -f scripts/makefile clean
 - ./scripts/release.sh ${TRAVIS_TAG}
 after_script:
