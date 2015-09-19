@@ -8,3 +8,6 @@ tags
 *.pyc
 *.swp
 .*.swp
+
+lamestation-sdk-*.zip
+.build/
