@@ -1,19 +1,3 @@
-'' LameControl
-'' -------------------------------------------------
-'' Version: 1.0
-'' Copyright (c) 2013 LameStation LLC
-'' See end of file for terms of use.
-'' 
-'' Authors: Brett Weir
-'' -------------------------------------------------
-''
-'' LameControl? More like Game Control!
-''
-'' This library is a simple wrapper around the
-'' buttons and joystick used by the LameStation
-'' to both show how the controls work and make
-'' managing controls easier.
-
 OBJ
     pin     :   "LamePinout"
     fn      :   "LameFunctions"

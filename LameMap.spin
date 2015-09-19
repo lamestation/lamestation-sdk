@@ -1,12 +1,3 @@
-'' LameMap World Map Library
-'' -------------------------------------------------
-'' Version: 1.0
-'' Copyright (c) 2013-2014 LameStation LLC
-'' See end of file for terms of use.
-''
-'' Authors: Brett Weir, Marko Lukat
-'' -------------------------------------------------
-''
 CON
     #0, MX, MY                                          ' level map header indices
     #1, SX, SY                                          '  tile map header indices
