@@ -332,7 +332,7 @@ PRI Jump(channel) | freq, volcount
         volcount--
     
         freq += 12
-        audio.SetFreq(channel,freq)
+        audio.SetFrequency(channel,freq)
         audio.SetVolume(channel,127)
     
     audio.SetVolume(channel,0)

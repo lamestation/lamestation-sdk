@@ -38,7 +38,7 @@ PUB Main
 
         audio.SetNote(0, note)
         audio.SetNote(1, note - 12)
-        audio.SetFreq(2, note << 10)
-        audio.SetFreq(3, note >> 2)
+        audio.SetFrequency(2, note << 10)
+        audio.SetFrequency(3, note >> 2)
 
         fn.Sleep(5)

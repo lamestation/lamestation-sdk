@@ -38,7 +38,7 @@ PUB Main
         if ctrl.Right
             frequency += 1
 
-        audio.SetFreq(0, frequency)
-        audio.SetFreq(1, frequency << 1)
-        audio.SetFreq(2, frequency)
-        audio.SetFreq(3, frequency >> 1)
+        audio.SetFrequency(0, frequency)
+        audio.SetFrequency(1, frequency << 1)
+        audio.SetFrequency(2, frequency)
+        audio.SetFrequency(3, frequency >> 1)

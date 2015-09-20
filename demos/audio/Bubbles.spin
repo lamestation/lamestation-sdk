@@ -30,7 +30,7 @@ PUB Main
         if ctrl.Down
             freq--
 
-        audio.SetFreq(1,freq)
+        audio.SetFrequency(1,freq)
 
         if ctrl.A
             volume_inc--

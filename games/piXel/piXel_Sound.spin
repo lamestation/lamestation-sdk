@@ -41,7 +41,7 @@ PRI Laser(channel) | freq
             SFXplay := 0
             SFXstop := 0
             return
-        audio.SetFreq(channel,freq)
+        audio.SetFrequency(channel,freq)
         freq -= 30
     
     audio.SetVolume(channel,0)

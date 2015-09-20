@@ -45,7 +45,7 @@ PUB SetNote(channel, value)
     
     osc_inc[channel] := freqtable[value//12] >> (9 - value/12)
     
-PUB SetFreq(channel, value)
+PUB SetFrequency(channel, value)
     
     osc_inc[channel] := value
 

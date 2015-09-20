@@ -38,5 +38,5 @@ PUB Main
 
         volume += volume_inc
 
-        audio.SetFreq(1,freq)
+        audio.SetFrequency(1,freq)
         audio.SetVolume(1,(volume >> 10) // 127)

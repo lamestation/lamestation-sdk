@@ -37,7 +37,7 @@ PUB Main
 
         frequency += frequency_inc
 
-        audio.SetFreq(0, frequency // 100000)
-        audio.SetFreq(1, frequency >> 1  // 100000)
-        audio.SetFreq(2, frequency // 100000)
-        audio.SetFreq(3, frequency >> 2  // 100000)
+        audio.SetFrequency(0, frequency // 100000)
+        audio.SetFrequency(1, frequency >> 1  // 100000)
+        audio.SetFrequency(2, frequency // 100000)
+        audio.SetFrequency(3, frequency >> 2  // 100000)

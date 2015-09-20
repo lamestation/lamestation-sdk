@@ -20,7 +20,7 @@ PUB Main
     repeat
         ctrl.Update
 
-        audio.SetFreq(1,freq)
+        audio.SetFrequency(1,freq)
 
         if ctrl.A
             if freq > 2000
