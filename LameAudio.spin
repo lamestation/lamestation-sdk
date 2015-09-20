@@ -70,11 +70,15 @@ PUB SetEnvelope(channel, enabled)
     if enabled
         osc_envelope.byte[channel] |= 1
     
-PUB TriggerEnvelope(channel, enabled)
+PUB StartEnvelope(channel)
 
     osc_envelope.byte[channel] &= constant(!2)
-    if enabled
-        osc_envelope.byte[channel] |= 2
+    osc_envelope.byte[channel] |= constant(2+4)
+    osc_envelope.byte[channel] &= !4
+
+PUB StopEnvelope(channel)
+
+    osc_envelope.byte[channel] &= constant(!2)
     osc_envelope.byte[channel] |= 4
     osc_envelope.byte[channel] &= !4
  
@@ -97,12 +101,12 @@ PUB LoadPatch(patchAddr) | i, j, t, c
 PUB PlaySound(channel, value)
     
     SetEnvelope(channel, 1)
-    TriggerEnvelope(channel, 1)
+    StartEnvelope(channel)
     SetNote(channel, value)
 
 PUB StopSound(channel)
     
-    TriggerEnvelope(channel, 0)
+    StopEnvelope(channel)
     
 PUB StopAllSound | i
 
