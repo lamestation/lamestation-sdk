@@ -82,9 +82,9 @@ PUB StopEnvelope(channel)
     osc_envelope.byte[channel] |= 4
     osc_envelope.byte[channel] &= !4
  
-PUB SetSample(value)
+PUB SetSample(address)
     
-    osc_sample := value
+    osc_sample := address
 
 PUB LoadPatch(patchAddr) | i, j, t, c
 
