@@ -98,11 +98,11 @@ PUB LoadPatch(patchAddr) | i, j, t, c
                 SetParam(j, i, byte[t++])
         c >>= 1
     
-PUB PlaySound(channel, value)
+PUB PlaySound(channel, note)
     
     SetEnvelope(channel, 1)
     StartEnvelope(channel)
-    SetNote(channel, value)
+    SetNote(channel, note)
 
 PUB StopSound(channel)
     
