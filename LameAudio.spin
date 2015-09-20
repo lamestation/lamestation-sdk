@@ -34,7 +34,8 @@ DAT
 PUB null
    
 PUB Start
-    cognew(@entry, @osc_sample)    'start assembly cog
+
+    cognew(@entry, @osc_sample)
     
 PUB SetVolume(channel, value)
     
