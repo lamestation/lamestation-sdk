@@ -52,25 +52,14 @@ PUB SetParam(channel, type, value)
 
     byte[@osc_envelope[type]][channel] := value
     
-PUB SetADSR(channel, attackvar, decayvar, sustainvar, releasevar)
+PUB SetADSR(channel, attack, decay, sustain, release)
     
-    osc_attack.byte[channel] := attackvar
-    osc_decay.byte[channel] := decayvar
-    osc_sustain.byte[channel] := sustainvar
-    osc_release.byte[channel] := releasevar
+    osc_attack.byte[channel] := attack
+    osc_decay.byte[channel] := decay
+    osc_sustain.byte[channel] := sustain
+    osc_release.byte[channel] := release
     
-PUB LoadPatch(patchAddr) | i, j, t, c
 
-    c := byte[patchAddr] & $F
-        
-    repeat j from 0 to 3
-        if c & $1
-            SetEnvelope(j,1)
-            t := patchAddr + 1
-            repeat i from _ATK to _WAV
-                SetParam(j, i, byte[t++])
-        c >>= 1
-    
 PUB SetWaveform(channel, value)
     
     osc_waveform.byte[channel] := value
@@ -92,6 +81,18 @@ PUB SetSample(value)
     
     osc_sample := value
 
+PUB LoadPatch(patchAddr) | i, j, t, c
+
+    c := byte[patchAddr] & $F
+        
+    repeat j from 0 to 3
+        if c & $1
+            SetEnvelope(j,1)
+            t := patchAddr + 1
+            repeat i from _ATK to _WAV
+                SetParam(j, i, byte[t++])
+        c >>= 1
+    
 PUB PlaySound(channel, value)
     
     SetEnvelope(channel, 1)
