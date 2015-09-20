@@ -139,8 +139,8 @@ PUB ControlMap
         if playerx < 0
             if worldx > 0
                 worldx--
-                playerx := targetx := (map.GetWidth-1)<<3
-        if playerx > (map.GetWidth-1)<<3
+                playerx := targetx := (map.Width-1)<<3
+        if playerx > (map.Width-1)<<3
             if worldx < WORLD_W-1
                 worldx++
                 playerx := targetx := 0
@@ -148,8 +148,8 @@ PUB ControlMap
         if playery < 0
             if worldy > 0
                 worldy--
-                playery := targety := (map.GetHeight-1)<<3
-        if playery > (map.GetHeight-1)<<3
+                playery := targety := (map.Height-1)<<3
+        if playery > (map.Height-1)<<3
             if worldy < WORLD_H-1
                 worldy++
                 playery := targety := 0
@@ -159,8 +159,8 @@ PUB ControlMap
 
 PUB ControlOffset | bound_x, bound_y
 
-    bound_x := map.GetWidth<<3 - lcd#SCREEN_W
-    bound_y := map.GetHeight<<3 - lcd#SCREEN_H
+    bound_x := map.Width<<3 - lcd#SCREEN_W
+    bound_y := map.Height<<3 - lcd#SCREEN_H
 
     xoffset := playerx + (word[player.Addr][1]>>1) - (lcd#SCREEN_W>>1)
     if xoffset < 0

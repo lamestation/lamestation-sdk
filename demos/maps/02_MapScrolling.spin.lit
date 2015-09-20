@@ -52,13 +52,13 @@ Time to start up the main function and set up the SDK, like in the previous demo
 
 Here's where we actually set up and initialize the boundaries of the map.
     << * >>+=
-        bound_x := map.GetWidth<<3 - lcd#SCREEN_W
-        bound_y := map.GetHeight<<3 - lcd#SCREEN_H
+        bound_x := map.Width<<3 - lcd#SCREEN_W
+        bound_y := map.Height<<3 - lcd#SCREEN_H
 
 
 There's some stuff happening here to be aware of.
 
- * `map.GetWidth`, `map.GetHeight` - these functions return the width and height of the currently loaded map in tiles. However, we don't want the number of tiles; we want the number of pixels, so we have to multiply by 8 since the tiles are 8x8 pixels in size.
+ * `map.Width`, `map.Height` - these functions return the width and height of the currently loaded map in tiles. However, we don't want the number of tiles; we want the number of pixels, so we have to multiply by 8 since the tiles are 8x8 pixels in size.
  * `lcd#SCREEN_W`, `lcd#SCREEN_H` - `LameLCD` defines these constants which return the size of the screen, or 128 and 64. We're substract these from the size of the screen because the player's view of the screen actually takes up size, and this prevents the camera from straying off the screen.
 
  INSERT DIAGRAM EXPLAINING HOW THE MAP MOVES RELATIVE TO THE TOP-LEFT CORNER

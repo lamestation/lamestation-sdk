@@ -107,8 +107,8 @@ PUB DrawPlayer
 
 PUB ControlOffset | bound_x, bound_y
 
-    bound_x := map.GetWidth<<3 - lcd#SCREEN_W
-    bound_y := map.GetHeight<<3 - lcd#SCREEN_H
+    bound_x := map.Width<<3 - lcd#SCREEN_W
+    bound_y := map.Height<<3 - lcd#SCREEN_H
     
     xoffset := playerx + (word[player.Addr][1]>>1) - (lcd#SCREEN_W>>1)
     if xoffset < 0

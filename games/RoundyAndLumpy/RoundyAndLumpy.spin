@@ -51,8 +51,8 @@ PUB Main
         xoffset := playerx + (word[lumpy.Addr][1]>>1) - (lcd#SCREEN_W>>1)
         if xoffset < 0
             xoffset := 0      
-        elseif xoffset > map.GetWidth << 3 - lcd#SCREEN_W
-            xoffset := map.GetWidth << 3 - lcd#SCREEN_W
+        elseif xoffset > map.Width << 3 - lcd#SCREEN_W
+            xoffset := map.Width << 3 - lcd#SCREEN_W
 
 
 

@@ -23,8 +23,8 @@ PUB Main
     lcd.Start(gfx.Start)
     map.Load(tileset.Addr, mp.Addr)
 
-    bound_x := map.GetWidth<<3 - lcd#SCREEN_W
-    bound_y := map.GetHeight<<3 - lcd#SCREEN_H
+    bound_x := map.Width<<3 - lcd#SCREEN_W
+    bound_y := map.Height<<3 - lcd#SCREEN_H
 
     yoffset := bound_y
 

@@ -54,12 +54,11 @@ PUB SetParam(channel, type, value)
     
 PUB SetADSR(channel, attack, decay, sustain, release)
     
-    osc_attack.byte[channel] := attack
-    osc_decay.byte[channel] := decay
+    osc_attack.byte[channel]  := attack
+    osc_decay.byte[channel]   := decay
     osc_sustain.byte[channel] := sustain
     osc_release.byte[channel] := release
     
-
 PUB SetWaveform(channel, value)
     
     osc_waveform.byte[channel] := value
@@ -71,6 +70,7 @@ PUB SetEnvelope(channel, value)
         osc_envelope.byte[channel] |= 1
     
 PUB StartEnvelope(channel, enable)
+
     osc_envelope.byte[channel] &= constant(!2)
     if enable
         osc_envelope.byte[channel] |= 2

@@ -365,8 +365,8 @@ PUB HandlePlayer | adjust
         
     if playerx < 0
         playerx := 0
-    if playerx > map.GetWidth << 3 - word[gfx_player.Addr][1]
-        playerx := map.GetWidth << 3 - word[gfx_player.Addr][1]
+    if playerx > map.Width << 3 - word[gfx_player.Addr][1]
+        playerx := map.Width << 3 - word[gfx_player.Addr][1]
 
     if ctrl.A
         if not jumping               
@@ -405,7 +405,7 @@ PUB HandlePlayer | adjust
     if pos_speed > 0
         jumping := 1
         
-    if playery > (map.GetHeight << 3)
+    if playery > (map.Height << 3)
         KillPlayer
                 
     if playerhealth_timeout > 0
@@ -744,8 +744,8 @@ PUB CheckEnemyCollision(index) | x, y, boom, ran
 
 PUB ControlOffset | bound_x, bound_y
 
-    bound_x := map.GetWidth << 3 - SCREEN_W
-    bound_y := map.GetHeight << 3 - SCREEN_H
+    bound_x := map.Width << 3 - SCREEN_W
+    bound_y := map.Height << 3 - SCREEN_H
     
     xoffset := playerx + (word[gfx_player.Addr][1]>>1) - (SCREEN_W>>1)
     if xoffset < 0

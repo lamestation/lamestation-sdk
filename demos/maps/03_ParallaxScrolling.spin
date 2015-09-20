@@ -23,12 +23,12 @@ PUB Main
     lcd.Start(gfx.Start)
 
     map.Load(tileset.Addr, mp.Addr)
-    w1 := map.GetWidth<<3-128
-    h1 := map.GetHeight<<3-64
+    w1 := map.Width<<3-128
+    h1 := map.Height<<3-64
 
     map.Load(tileset.Addr, mp2.Addr)
-    w2 := map.GetWidth<<3-128
-    h2 := map.GetHeight<<3-64
+    w2 := map.Width<<3-128
+    h2 := map.Height<<3-64
 
     dx  := w1/w2
     dy  := h1/h2

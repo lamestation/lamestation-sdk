@@ -94,11 +94,11 @@ PUB TestMoveX(x, y, w, h, newx) | tmp, tx
 
     return tmp + tx
 
-PUB GetWidth
+PUB Width
 
     return word[map_levelmap][MX]
 
-PUB GetHeight
+PUB Height
 
     return word[map_levelmap][MY]
 

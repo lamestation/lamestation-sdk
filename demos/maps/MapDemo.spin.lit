@@ -41,8 +41,8 @@
       lcd.Start(gfx.Start)                                  ' setup screen and renderer
       map.Load(tiles := @gfx_data, @map_data)               ' prepare map
     
-      map_w := map.GetWidth  * word[tiles][SX] - lcd#SCREEN_W
-      map_h := map.GetHeight * word[tiles][SY] - lcd#SCREEN_H
+      map_w := map.Width  * word[tiles][SX] - lcd#SCREEN_W
+      map_h := map.Height * word[tiles][SY] - lcd#SCREEN_H
     
       cur_y := map_h                                        ' game start location (piXel)
     
