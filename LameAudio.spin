@@ -64,16 +64,16 @@ PUB SetWaveform(channel, value)
     
     osc_waveform.byte[channel] := value
     
-PUB SetEnvelope(channel, value)
+PUB SetEnvelope(channel, enabled)
    
     osc_envelope.byte[channel] &= constant(!1)
-    if value
+    if enabled
         osc_envelope.byte[channel] |= 1
     
-PUB StartEnvelope(channel, enable)
+PUB TriggerEnvelope(channel, enabled)
 
     osc_envelope.byte[channel] &= constant(!2)
-    if enable
+    if enabled
         osc_envelope.byte[channel] |= 2
     osc_envelope.byte[channel] |= 4
     osc_envelope.byte[channel] &= !4
@@ -97,12 +97,12 @@ PUB LoadPatch(patchAddr) | i, j, t, c
 PUB PlaySound(channel, value)
     
     SetEnvelope(channel, 1)
-    StartEnvelope(channel, 1)
+    TriggerEnvelope(channel, 1)
     SetNote(channel, value)
 
 PUB StopSound(channel)
     
-    StartEnvelope(channel, 0)
+    TriggerEnvelope(channel, 0)
     
 PUB StopAllSound | i
 

@@ -121,6 +121,6 @@ PUB SFXEngine
         
       '  if hy~>8 > 100
        '     audio.SetWaveform(2, audio#_NOISE)
-        '    audio.StartEnvelope(2,1)
+        '    audio.TriggerEnvelope(2, 1)
         
 '        fn.Sleep(2)
