@@ -37,7 +37,7 @@ PUB Spawn(x, y, type)
     if effect > constant(EFFECTS-1)
         effect := 0
         
-    sfx.RunSound(sfx#_BOOM)
+    sfx.RunSound(3, sfx#_BOOM)
 
 PUB Handle(xoffset, yoffset) | effectxtemp, effectytemp, index
 

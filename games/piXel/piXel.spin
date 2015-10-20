@@ -94,7 +94,6 @@ PUB Main
     music.Load(song_theme.Addr)
     music.Loop
 
-    
     gamestate := TITLE
     clicked := 0
     repeat
@@ -142,7 +141,6 @@ PUB GameLoop
     efx.Handle(xoffset,yoffset)
     HandleStatusBar
     lcd.DrawScreen
-    fn.Sleep(10)
             
 PUB Victory
     music.Stop
@@ -192,8 +190,8 @@ PUB StarWarsReel(text,reeltime) | x, choice
                 clicked := 1
         else
             clicked := 0
-        playerx := 55 << 3
-        playery := 5 << 3
+        playerx := 55 << 6
+        playery := 5 << 6
         pos_dir := LEFT
 
          
@@ -222,9 +220,9 @@ PUB ItsGameOver
     crouching := 1
     pos_frame := 4
     
-   ' music.Stop   
-    'music.Load(song_sad.Addr)
-   ' music.Loop    
+    music.Stop   
+    music.Load(song_sad.Addr)
+    music.Loop    
     
     StarWarsReel(string("There was",10,"nothing you",10,"could do to",10,"stop him..."),100)
     
@@ -243,9 +241,9 @@ PUB GameIntro
     crouching := 0
     pos_frame := 0
     
-    'music.Stop   
-   ' music.Load(song_sad.Addr)
-  '  music.Loop    
+    music.Stop   
+    music.Load(song_sad.Addr)
+    music.Loop    
 
     StarWarsReel(string("You have",10,"escaped",10,"the evil",10,"experiments",10,"of the one",10,"they call",10,"Macrosoth.",10,10,"Now you must",10,"defeat him",10,"once and for",10,"all..",10,10,"Before it's",10,"too late..."),200)
 
@@ -292,10 +290,15 @@ PUB InitLevel
 '  Player
 ' *********************************************************
 CON
-    
-    SPEED = 4
+    TERMINAL_VELOCITY = 120
+    GRAVITY = 4
+    JUMP = 50
+    FRICTION = 3
+    PLAYER_SPEED = 20
+    PLAYER_ACCEL = 6
     STARTING_HEALTH = 5
     STARTING_LIVES = 3
+    
 VAR
     long    playerx
     long    playery
@@ -303,8 +306,8 @@ VAR
     long    pos_oldy
 
     byte    pos_dir
-    long    pos_speed
     long    pos_speedx
+    long    pos_speedy
     byte    pos_frame
     word    pos_count
     
@@ -320,9 +323,9 @@ PUB InitPlayer
     playerhealth := STARTING_HEALTH
     playerhealth_timeout := 0
 
-PUB HandlePlayer | adjust
-    pos_oldx := playerx
-    pos_oldy := playery    
+PUB HandlePlayer | adjust, sx, sy
+    pos_oldx := playerx ~> 3
+    pos_oldy := playery ~> 3
             
     if jumping
         pos_frame := 3
@@ -337,10 +340,13 @@ PUB HandlePlayer | adjust
         if ctrl.Left or ctrl.Right
     
             if ctrl.Left
-                playerx -= SPEED
+                if pos_speedx > -PLAYER_SPEED
+                    pos_speedx -= PLAYER_ACCEL
                 pos_dir := LEFT
+                
             if ctrl.Right
-                playerx += SPEED
+                if pos_speedx < PLAYER_SPEED
+                    pos_speedx += PLAYER_ACCEL
                 pos_dir := RIGHT
     
             pos_count++
@@ -358,20 +364,31 @@ PUB HandlePlayer | adjust
 
     if jumping
         pos_frame := 3
+
+    if pos_speedx > 0
+        pos_speedx -= FRICTION
+    elseif pos_speedx < 0
+        pos_speedx += FRICTION
+
+    playerx += pos_speedx
+    sx := playerx ~> 3
     
-    adjust := map.TestMoveX(pos_oldx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playerx)
+    adjust := map.TestMoveX(pos_oldx, pos_oldy, word[gfx_player.Addr][1], word[gfx_player.Addr][2], sx)
     if adjust
-        playerx += adjust
+        sx += adjust
+        playerx := sx << 3
+        pos_speedx := 0
         
-    if playerx < 0
-        playerx := 0
-    if playerx > map.Width << 3 - word[gfx_player.Addr][1]
-        playerx := map.Width << 3 - word[gfx_player.Addr][1]
+    if sx < 0
+        sx := 0
+    if sx > (map.Width << 3 - word[gfx_player.Addr][1]) << 3
+        sx := (map.Width << 3 - word[gfx_player.Addr][1]) << 3
 
     if ctrl.A
         if not jumping               
-            pos_speed := -9
-            jumping := 1                 
+            pos_speedy := -JUMP
+            jumping := 1
+            sfx.RunSound(1, sfx#_JUMP)
 
     if ctrl.B
         if not playershoot_timeout
@@ -379,33 +396,37 @@ PUB HandlePlayer | adjust
             
             if crouching
                 if pos_dir == LEFT
-                    SpawnBullet(playerx, playery+7, LEFT)
+                    SpawnBullet(sx, pos_oldy+7, LEFT)
                 if pos_dir == RIGHT
-                    SpawnBullet(playerx, playery+7, RIGHT)    
+                    SpawnBullet(sx, pos_oldy+7, RIGHT)    
             else
                 if pos_dir == LEFT
-                    SpawnBullet(playerx, playery+2, LEFT)
+                    SpawnBullet(sx, pos_oldy+2, LEFT)
                 if pos_dir == RIGHT
-                    SpawnBullet(playerx, playery+2, RIGHT)    
+                    SpawnBullet(sx, pos_oldy+2, RIGHT)    
         else
             playershoot_timeout--
     else
         playershoot_timeout := 0
-                
-    pos_speed += 1
-    playery += pos_speed
 
-    adjust := map.TestMoveY(playerx, pos_oldy, word[gfx_player.Addr][1], word[gfx_player.Addr][2], playery)
+    if pos_speedy < TERMINAL_VELOCITY
+        pos_speedy += GRAVITY
+        
+    playery += pos_speedy
+    sy := playery ~> 3
+
+    adjust := map.TestMoveY(sx, pos_oldy, word[gfx_player.Addr][1], word[gfx_player.Addr][2], sy)
     if adjust
-        if  pos_speed > 0
+        if  pos_speedy > 0
             jumping := 0
-        playery += adjust
-        pos_speed := 0
+        sy += adjust
+        pos_speedy := 0
+        playery := sy << 3
     
-    if pos_speed > 0
+    if pos_speedy > 8
         jumping := 1
         
-    if playery > (map.Height << 3)
+    if sy > (map.Height << 3)
         KillPlayer
                 
     if playerhealth_timeout > 0
@@ -413,14 +434,16 @@ PUB HandlePlayer | adjust
         
         
 PUB TestPlayerCollision(x, y, w, h)
-    return fn.TestBoxCollision(x, y, w, h, playerx, playery, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
+    return fn.TestBoxCollision(x, y, w, h, playerx ~> 3, playery ~> 3, word[gfx_player.Addr][1], word[gfx_player.Addr][2])
 
-PUB DrawPlayer
+PUB DrawPlayer | sx, sy
+    sx := playerx ~> 3
+    sy := playery ~> 3
     if not playerhealth_timeout or (playerhealth_timeout & $2)
         if pos_dir == LEFT
-            gfx.Sprite(gfx_player.Addr,playerx-xoffset,playery-yoffset, 5+pos_frame)
+            gfx.Sprite(gfx_player.Addr,sx-xoffset,sy-yoffset, 5+pos_frame)
         if pos_dir == RIGHT
-            gfx.Sprite(gfx_player.Addr,playerx-xoffset,playery-yoffset, pos_frame)
+            gfx.Sprite(gfx_player.Addr,sx-xoffset,sy-yoffset, pos_frame)
 
 PUB KillPlayer
     if playerlives > 1
@@ -477,8 +500,8 @@ PUB ReadObjects(objectaddr) | objcount, object, objtype, objx, objy
         objtype := byte[objectaddr][2]
 
         case objtype
-            PLAYER:     playerx := objx
-                        playery := objy
+            PLAYER:     playerx := objx << 3
+                        playery := objy << 3
             TANK, IBOT, IDRONE:  SpawnEnemy(objx, objy, objtype, LEFT)
             BOSS:       SpawnEnemy(objx, objy, objtype, LEFT)
             
@@ -491,8 +514,6 @@ PUB GetObjectWidth(type)
 PUB GetObjectHeight(type)
     return word[objectgraphics[type]][2]    
 
-
- 
 ' *********************************************************
 '  Bullets
 ' *********************************************************
@@ -529,7 +550,7 @@ PUB SpawnBullet(x, y, dir)
     if bullet > constant(BULLETS-1)
         bullet := 0
 
-    sfx.RunSound(sfx#_LASER)
+    sfx.RunSound(2, sfx#_LASER)
 
 PUB HandleBullets | bulletxtemp, bulletytemp
 
@@ -548,15 +569,15 @@ PUB HandleBullets | bulletxtemp, bulletytemp
           elseif bulletdir[bulletindex] == DOWN
              bullety[bulletindex] += BULLETINGSPEED  
 
-          bulletxtemp := bulletx[bulletindex] - xoffset
-          bulletytemp := bullety[bulletindex] - yoffset
+          bulletxtemp := (bulletx[bulletindex] - xoffset)
+          bulletytemp := (bullety[bulletindex] - yoffset)
 
           if (bulletxtemp => 0) and (bulletxtemp =< SCREEN_W-1) and (bulletytemp => 0) and (bulletytemp =< SCREEN_H - 1)
               if TestPlayerCollision(bulletx[bulletindex], bullety[bulletindex]+4, 8, 1)
                   HitPlayer
                   bulleton[bulletindex] := 0
               else
-                  gfx.Sprite(gfx_laser.Addr, bulletxtemp , bulletytemp, 0)
+                  gfx.Sprite(gfx_laser.Addr, bulletxtemp, bulletytemp, 0)
           else
               bulleton[bulletindex] := 0
 
@@ -622,8 +643,8 @@ PUB EnemyTank(index) | dx, dy
     pos_oldx := enemyx[index]
     pos_oldy := enemyy[index]
     
-    dx := playerx - enemyx[index]
-    dy := playery - enemyy[index]
+    dx := (playerx ~> 3) - enemyx[index]
+    dy := (playery ~> 3) - enemyy[index]
     
     if dx > 0
         enemydir[index] := RIGHT
@@ -666,8 +687,8 @@ PUB EnemyTank(index) | dx, dy
 
 
 PUB EnemyEye(index) | dx, dy
-    dx := playerx - enemyx[index]
-    dy := playery - enemyy[index]
+    dx := (playerx ~> 3) - enemyx[index]
+    dy := (playery ~> 3) - enemyy[index]
     
     if dx > 0
         enemyx[index]++
@@ -684,8 +705,8 @@ PUB EnemyEye(index) | dx, dy
 
 
 PUB EnemyBoss(index) | dx, dy
-    dx := playerx - enemyx[index]
-    dy := playery - enemyy[index]
+    dx := (playerx ~> 3) - enemyx[index]
+    dy := (playery ~> 3) - enemyy[index]
 
     if not bossspawned
         bossspawned := 1
@@ -738,23 +759,25 @@ PUB CheckEnemyCollision(index) | x, y, boom, ran
                 enemyon[index] := 0
             bulleton[bulletindex] := 0
                 
-    if fn.TestBoxCollision(playerx, playery, GetObjectWidth(PLAYER), GetObjectHeight(PLAYER), enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
+    if fn.TestBoxCollision(playerx ~> 3, playery ~> 3, GetObjectWidth(PLAYER), GetObjectHeight(PLAYER), enemyx[index], enemyy[index], GetObjectWidth(enemyon[index]), GetObjectHeight(enemyon[index]))
         HitPlayer
 
 
-PUB ControlOffset | bound_x, bound_y
+PUB ControlOffset | bound_x, bound_y, sx, sy
+
+    sx := playerx ~> 3
+    sy := playery ~> 3
 
     bound_x := map.Width << 3 - SCREEN_W
     bound_y := map.Height << 3 - SCREEN_H
     
-    xoffset := playerx + (word[gfx_player.Addr][1]>>1) - (SCREEN_W>>1)
+    xoffset := sx + (word[gfx_player.Addr][1]>>1) - (SCREEN_W>>1)
     if xoffset < 0
         xoffset := 0      
     elseif xoffset > bound_x
         xoffset := bound_x
-        
-        
-    yoffset := playery + (word[gfx_player.Addr][2]>>1) - (SCREEN_H>>1)
+
+    yoffset := sy + (word[gfx_player.Addr][2]>>1) - (SCREEN_H>>1)
     if yoffset < 0
         yoffset := 0      
     elseif yoffset > bound_y
