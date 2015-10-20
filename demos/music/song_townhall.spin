@@ -43,7 +43,7 @@ byte    52,SOFF,SNOP,SNOP,SNOP,  53,  54,  55,SNOP,  55,  55,  55,  55,  55,  55
 sequence_data
 byte    TRANS, 12
 byte    TEMPO, 130
-byte    ADSRW+$F, 127,  30, 100,   0,   SINE
+byte    ADSRW+$F, 110,  30, 50,   30,   SINE
 
 byte    1,0,0,0
 byte    1,0,0,0
