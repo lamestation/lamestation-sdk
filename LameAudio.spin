@@ -41,24 +41,13 @@ PUB Start
     cognew(@entry, @osc_sample)
 
 {
-OBJ    
-    gfx : "LameGFX"
-    lcd : "LameLCD"
+OBJ
     txt : "LameText"
-    fnt : "gfx_font6x8"
-    
-PUB ConsoleStart
-    lcd.Start (gfx.Start)
-    txt.Load (fnt.Addr, " ", 6, 8)
-    gfx.InvertColor (true)
-
-
 PUB Console
-        gfx.ClearScreen (0)
-        txt.Hex (osc_state, 8, 0,0)
-        txt.Hex (osc_control, 8, 0,8)
-        lcd.DrawScreen
+    txt.Hex (osc_state, 8, 0,0)
+    txt.Hex (osc_control, 8, 0,8)
 }
+
 PUB SetVolume(channel, value)
     
     osc_vol[channel] := value << 12
