@@ -16,10 +16,9 @@ PUB Noise
     audio.Start
     ctrl.Start
 
-    audio.SetNote(0, note := 80)
-    audio.SetVolume(0, volume := 127)
+    audio.SetNote(0, note := 60)
     audio.SetWaveform(0, audio#_SINE)
-    audio.SetADSR(0,127, 100, 0, 127)
+    audio.SetADSR(0,80, 40, 127, 80)
 
     audio.SetEnvelope(0, 1)
 
