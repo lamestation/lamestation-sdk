@@ -29,22 +29,22 @@ PUB Update
 ' 'On' is a logic low for every control pin coming
 ' from the hardware, so they must all be inverted.
 PUB A
-    return (!controls) & SW_A
+    return ((!controls) & SW_A <> 0)
     
 PUB B
-    return (!controls) & SW_B
+    return ((!controls) & SW_B <> 0)
 
 PUB Left
-    return controls & J_L    
+    return (controls & J_L <> 0)
     
 PUB Right
-    return controls & J_R
+    return (controls & J_R <> 0)
 
 PUB Up
-    return controls & J_U
+    return (controls & J_U <> 0)
 
 PUB Down
-    return controls & J_D
+    return (controls & J_D <> 0)
     
 DAT
     click   byte    0
