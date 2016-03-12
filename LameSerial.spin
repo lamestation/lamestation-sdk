@@ -114,12 +114,12 @@ PUB CharIn : bytechr
 
     repeat while (bytechr := RxCheck) < 0
 
-PUB RxCount : count
+PUB Count
 
-  count := rx_head - rx_tail
-  count -= BUFFER_LENGTH*(count < 0)
+  result := rx_head - rx_tail
+  result -= BUFFER_LENGTH*(result < 0)
 
-PUB RxFlush
+PUB Flush
 
   repeat while rxcheck => 0
   
