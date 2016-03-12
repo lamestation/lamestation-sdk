@@ -32,6 +32,7 @@ DAT
 
 PUB Start
     cognew(MusicPlayer, @MusicPlayerStack)
+    timeconstant := CalculateTimeConstant(120)                              ' default tempo
         
 PUB Load(songAddr) : n
     ' n = alias of result, which initializes to 0, required for songdata[n++]
