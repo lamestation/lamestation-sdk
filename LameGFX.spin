@@ -1,18 +1,16 @@
-CON
+{{
+    LameGFX provides a fast sprite drawing engine along with supporting
+    commands for the 3-color graphics format native to the LameStation.
+    
+    There is no concept of sprite layers in LameGFX; you get a buffer and
+    you draw to it. Have fun!
+}}
 
+CON
     ' screensize constants
     SCREEN_W = 128
     SCREEN_H = 64
-    BITSPERPIXEL = 2
-
-    SCREEN_H_BYTES = SCREEN_H / 8
-    SCREENSIZE = SCREEN_W*SCREEN_H
-
-    SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
-    SCREENSIZE_BYTES_END = SCREENSIZE_BYTES-1
-
-'' This table
-''
+    
 '' +------+-------+------+-------------+
 '' | Flip | Color | Mask | Color       |
 '' +------+-------+------+-------------+
@@ -26,8 +24,6 @@ CON
 '' +------+-------+------+-------------+
 ''
 '' This operation is equivalent to `Mask = Flip & !Color`.
-''
-'' The color constant definitions here correspond to this.
 ''
     BLACK = $0000
     WHITE = $5555
@@ -69,7 +65,9 @@ c_sprite        long    0
 c_parameters    long    0[9]
 
 PUB Start
-
+{{
+    Initialize the LameGFX drawing library.
+}}
     drawsurface := @graphicsdriver                      ' reuse DAT section
     ifnot (instruction |= lock := locknew) +1           ' complete lock (see below)
         abort
@@ -84,10 +82,10 @@ PUB Start
     c_drawtilemap := @c_parameters << 16 | (@drawtilemap - @graphicsdriver) >> 2 | %1000_1 << 11
     c_sprite      := @c_parameters << 16 | (@drawsprite  - @graphicsdriver) >> 2 | %0100_1 << 11
 
-' Since we reuse the DAT section holding the driver we have to make sure that the cog is up
-' and running before we make it public (and someone e.g. clears it). As part of the command
-' loop the instruction field is cleared. This also happens at startup, IOW we can simply
-' monitor said location becoming zero again (NEGX == $80000000).
+    ' Since we reuse the DAT section holding the driver we have to make sure that the cog is up
+    ' and running before we make it public (and someone e.g. clears it). As part of the command
+    ' loop the instruction field is cleared. This also happens at startup, IOW we can simply
+    ' monitor said location becoming zero again (NEGX == $80000000).
 
     repeat
     while instruction
@@ -96,15 +94,10 @@ PUB Start
 
     return drawsurface
 
-PUB WaitToDraw
-' Check command completion without affecting the lock state.
-
-    repeat
-    while instruction
-
 PUB ClearScreen(color)
-'' Fill the composition buffer with the given color.
-
+{{
+    Fill the screen buffer with a repeating word of color data specified by `color`.
+}}
     repeat
     while lockset(lock)
 
@@ -112,10 +105,9 @@ PUB ClearScreen(color)
     instruction := c_fillbuffer
 
 PUB Blit(source)
-'' This command blits a 128x64 size image to the screen. It is
-'' primarily influenced for reference on drawing to the screen,
-'' not for its game utility so much.
-
+{{
+    Draw a screen-sized (128x64) image to the screen buffer.
+}}
     repeat
     while lockset(lock)
 
@@ -123,13 +115,9 @@ PUB Blit(source)
     instruction := c_blitscreen
 
 PUB Sprite(source, x, y, frame)
-'' This function allows the user to blit an arbitrarily-sized image
-'' from a memory address. It is designed to accept the sprite output from img2dat,
-'' and can handle multi-frame sprites, 3-color sprites, and sprites with transparency.
-''
-'' Read more on img2dat to see how you can generate source images to use with this
-'' drawing command.
-
+{{
+    Draw an image of any size to the screen buffer.
+}}
     repeat
     while lockset(lock)
 
@@ -137,14 +125,31 @@ PUB Sprite(source, x, y, frame)
     instruction := c_sprite
     
 PUB Width(source)
+{{
+    Return the width of an image at `source`.
+}}
     return word[source][1]
 
 PUB Height(source)
+{{
+    Return the height of an image at `source`.
+}}
     return word[source][2]
 
-PUB InvertColor(enabled) ' boolean value
-'' When enabled colors black and white are plotted inverted (gray is left unchanged).
+PUB Map(tilemap, levelmap, offset_x, offset_y, x1, y1, x2, y2)
+{{
+    Draw a tile-based level map at the specified coordinates.
+}}
+    repeat
+    while lockset(lock)
 
+    longmove(@c_parameters{0}, @result, 9)
+    instruction := c_drawtilemap
+
+PUB InvertColor(enabled)
+{{
+    Enable swapping of black and white pixels (gray is unchanged).
+}}
     repeat
     while lockset(lock)
 
@@ -152,23 +157,23 @@ PUB InvertColor(enabled) ' boolean value
     c_parameters[1] := F_INVERTCOLOR
     instruction := c_setmode
 
-PUB Map(tilemap, levelmap, offset_x, offset_y, x1, y1, x2, y2)
-
-    repeat
-    while lockset(lock)
-
-    longmove(@c_parameters{0}, @result, 9)
-    instruction := c_drawtilemap
-
 PUB SetClipRectangle(clipx1, clipy1, clipx2, clipy2)
-'' Sets bounding box for tile/sprite drawing operations, to prevent overdraw.
-'' Defaults to 0, 0, 128, 64.
-
+{{
+    Set bounding box for drawing operations to prevent overdraw.
+    The default values are (0, 0, 128, 64).
+}}
     repeat
     while lockset(lock)
 
     longmove(@c_parameters{0}, @clipx1, 4)
     instruction := c_setcliprect
+
+PUB WaitToDraw
+{{
+    Wait until the last drawing operation has completed before continuing.
+}}
+    repeat
+    while instruction
 
 DAT                     org     0
 
@@ -315,7 +320,7 @@ popCR_ret               ret
 '             arg7: cx2
 '             arg8: cy2
 {
-PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
+  PUB DrawMap(offset_x, offset_y) | tile, tilecnttemp, x, y, tx, ty
 
     tx := word[map_tilemap][SX]
     ty := word[map_tilemap][SY]
