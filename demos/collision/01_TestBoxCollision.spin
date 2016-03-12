@@ -16,6 +16,7 @@ VAR
 CON
     w = 24
     h = 24
+    
 PUB Main
     lcd.Start(gfx.Start)
     x2 := 52
