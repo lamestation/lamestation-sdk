@@ -16,7 +16,26 @@ PUB Load(source_tilemap, source_levelmap)
 
     map_tilemap  := source_tilemap
     map_levelmap := source_levelmap
-    
+
+PUB Draw(offset_x, offset_y)
+'' This function uses the Sprite command to draw an array of tiles to the screen.
+'' Used in conjunction with the map2dat program included with this kit, it is
+'' an easy way to draw your first game world to the screen.
+
+    gfx.Map(map_tilemap, map_levelmap, offset_x, offset_y, 0, 0, gfx#res_x, gfx#res_y)
+
+PUB DrawRectangle(offset_x, offset_y, x1, y1, x2, y2)
+
+    gfx.Map(map_tilemap, map_levelmap, offset_x, offset_y, x1, y1, x2, y2)
+
+PUB Width
+
+    return word[map_levelmap][MX]
+
+PUB Height
+
+    return word[map_levelmap][MY]
+
 PUB TestPoint(x, y) | tilebase
     tilebase := 4 + word[map_levelmap][MX] * y + map_levelmap
     if (byte[tilebase][x] & COLLIDEBIT)
@@ -93,23 +112,3 @@ PUB TestMoveX(x, y, w, h, newx) | tmp, tx
 ' newx == x is covered at the top so now newx *is* less than x
 
     return tmp + tx
-
-PUB Width
-
-    return word[map_levelmap][MX]
-
-PUB Height
-
-    return word[map_levelmap][MY]
-
-PUB Draw(offset_x, offset_y)
-'' This function uses the Sprite command to draw an array of tiles to the screen.
-'' Used in conjunction with the map2dat program included with this kit, it is
-'' an easy way to draw your first game world to the screen.
-
-    gfx.Map(map_tilemap, map_levelmap, offset_x, offset_y, 0, 0, gfx#res_x, gfx#res_y)
-
-PUB DrawRectangle(offset_x, offset_y, x1, y1, x2, y2)
-
-    gfx.Map(map_tilemap, map_levelmap, offset_x, offset_y, x1, y1, x2, y2)
-
