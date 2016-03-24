@@ -13,7 +13,7 @@ PUB PutChar | x, ran, y, count, char
     lcd.Start(gfx.Start)
     txt.Load(font.Addr, " ", 0, 0)
     repeat
-        gfx.ClearScreen(0)
+        gfx.Clear
         repeat count from 1 to 1000
             ran := cnt
             x := ran? & $7F

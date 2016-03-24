@@ -38,7 +38,7 @@ PUB Game | x,y,t
     buffer := gfx.Start
     lcd.Start(buffer)
     lcd.SetFrameLimit(10)
-    gfx.ClearScreen(0)
+    gfx.Clear
 
     longfill(@gfx_maze,0,64)
     repeat y from 0 to 31
@@ -54,7 +54,7 @@ PUB Game | x,y,t
           long[buffer][(y*8)+(x+4)]:=gfx_maze[y*2+x]
       gfx.Sprite(@gfx_clown1,0,0,0)
       lcd.DrawScreen
-      gfx.ClearScreen(0)
+      gfx.Clear
 
       old1:=new1
       old2:=new2
@@ -67,7 +67,7 @@ PUB Game | x,y,t
               long[buffer][(y*8)+(x+4)]:=gfx_maze[y*2+x]
           gfx.Sprite(@gfx_clown1,0,0,1)
           lcd.DrawScreen
-          gfx.ClearScreen(0)
+          gfx.Clear
 
         PlayGame
 
@@ -76,12 +76,12 @@ PUB ShowEaten
       longfill(buffer,0,512)
       gfx.Sprite(@gfx_clown1,0,0,3)
       lcd.DrawScreen
-      gfx.ClearScreen(0)
+      gfx.Clear
     repeat 14
       longfill(buffer,0,512)
       gfx.Sprite(@gfx_clown1,0,0,2)
       lcd.DrawScreen
-      gfx.ClearScreen(0)
+      gfx.Clear
     gameover:=1
 
 PUB PlayGame | x,y,t,done
@@ -230,7 +230,7 @@ PUB PlayGame | x,y,t,done
 
       gameframe++
       lcd.DrawScreen
-      gfx.ClearScreen(0)
+      gfx.Clear
 
       rexcount++
       if rexcount>rexspeed

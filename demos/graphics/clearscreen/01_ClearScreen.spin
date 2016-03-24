@@ -9,5 +9,5 @@ OBJ
 PUB Blit
     lcd.Start(gfx.Start)
     
-    gfx.ClearScreen(0)
+    gfx.Clear
     lcd.DrawScreen

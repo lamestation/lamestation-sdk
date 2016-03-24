@@ -12,7 +12,7 @@ PUB Kerning
 
     lcd.Start(gfx.Start)
 
-    gfx.ClearScreen(0)
+    gfx.Clear
 
     ' 0,0 loads default kerning, so normal letter spacing
     txt.Load(font.Addr, " ", 0, 0)

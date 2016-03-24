@@ -60,7 +60,7 @@ PUB Main
     audio.Start
     music.Start
 
-    gfx.ClearScreen(0)
+    gfx.Clear
     lcd.DrawScreen
 
     clicked := 0
@@ -78,7 +78,7 @@ PUB Static | ran, x
     gfx.WaitToDraw
     
     ran := cnt
-    repeat x from 0 to constant(gfx#SCREENSIZE_BYTES/2-1) step 1
+    repeat x from 0 to constant(gfx#SCREEN_W*gfx#SCREEN_H/16-1) step 1
          word[buffer][x] := ran?
 
 
@@ -97,12 +97,12 @@ PUB StaticScreen | x
 
 PUB LogoScreen | x
 
-    gfx.ClearScreen(0)
+    gfx.Clear
     lcd.DrawScreen
     
     repeat x from 0 to 100000
     
-    gfx.ClearScreen(0)
+    gfx.Clear
     gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
     lcd.DrawScreen
 
@@ -355,7 +355,7 @@ PUB LevelStage
     choice := 1
     repeat until not choice
         lcd.DrawScreen     
-        gfx.ClearScreen(0)
+        gfx.Clear
        
 
         HandlePlayer                        
@@ -422,7 +422,7 @@ PUB BossStage
 
         lcd.DrawScreen
         
-        gfx.ClearScreen(0)
+        gfx.Clear
         
         gfx.Sprite(@gfx_planet, 20,48, 0)
               

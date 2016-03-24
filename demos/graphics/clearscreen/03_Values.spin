@@ -10,20 +10,20 @@ OBJ
 PUB Main
     lcd.Start(gfx.Start)
     
-    gfx.ClearScreen($FFFF)
+    gfx.Fill($FFFF)
     lcd.DrawScreen
 
     fn.Sleep(500)
 
-    gfx.ClearScreen(0)
+    gfx.Clear
     lcd.DrawScreen
 
     fn.Sleep(500)
 
-    gfx.ClearScreen($FF00)
+    gfx.Fill($FF00)
     lcd.DrawScreen
 
     fn.Sleep(500)
 
-    gfx.ClearScreen($abc3)
+    gfx.Fill($abc3)
     lcd.DrawScreen

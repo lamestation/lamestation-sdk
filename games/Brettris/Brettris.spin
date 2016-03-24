@@ -99,13 +99,13 @@ PUB GameOver
     lcd.InvertScreen(true)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#WHITE)
+    gfx.Fill(gfx#WHITE)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#GRAY)
+    gfx.Fill(gfx#GRAY)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#BLACK)
+    gfx.Fill(gfx#BLACK)
     gfx.Sprite(over.Addr,22,28,0)
     fn.Sleep(200)
     lcd.InvertScreen(false)
@@ -114,13 +114,13 @@ PUB GameOver
     ctrl.WaitKey
     
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#WHITE)
+    gfx.Fill(gfx#WHITE)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#GRAY)
+    gfx.Fill(gfx#GRAY)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#BLACK)
+    gfx.Fill(gfx#BLACK)
     lcd.DrawScreen
     fn.Sleep(500)
     
@@ -128,23 +128,23 @@ PUB TitleScreen
     
 
     
-    gfx.ClearScreen(gfx#BLACK)
+    gfx.Fill(gfx#BLACK)
     lcd.DrawScreen
     fn.Sleep(1500)
-    gfx.ClearScreen(gfx#GRAY)
+    gfx.Fill(gfx#GRAY)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#WHITE)
+    gfx.Fill(gfx#WHITE)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#BLACK)
+    gfx.Fill(gfx#BLACK)
     gfx.Sprite(title.Addr,12,12,0)
     lcd.DrawScreen
     lcd.InvertScreen(true)    
     fn.Sleep(200)
     lcd.InvertScreen(false)
         
-    gfx.ClearScreen(gfx#BLACK)
+    gfx.Fill(gfx#BLACK)
     gfx.Sprite(title.Addr,12,12,0)
     lcd.DrawScreen
 
@@ -153,13 +153,13 @@ PUB TitleScreen
     lcd.InvertScreen(true)
     fn.Sleep(200)
     lcd.InvertScreen(false)
-    gfx.ClearScreen(gfx#WHITE)
+    gfx.Fill(gfx#WHITE)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#GRAY)
+    gfx.Fill(gfx#GRAY)
     lcd.DrawScreen
     fn.Sleep(200)
-    gfx.ClearScreen(gfx#BLACK)
+    gfx.Fill(gfx#BLACK)
     lcd.DrawScreen
     fn.Sleep(300)
     'music.Stop

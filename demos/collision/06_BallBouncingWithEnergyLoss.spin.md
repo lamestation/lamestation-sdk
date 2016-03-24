@@ -54,7 +54,7 @@ prev_name: "Step 5: Ball Bouncing With Gravity"
         repeat
             oldx := x
             oldy := y
-            gfx.ClearScreen(0)
+            gfx.Clear
             ctrl.Update
 
             ' use the joystick to control speed of the ball

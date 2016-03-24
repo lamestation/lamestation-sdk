@@ -47,7 +47,7 @@ PUB Main
 
     repeat
         ctrl.Update
-        gfx.ClearScreen(gfx#BLACK)
+        gfx.Fill(gfx#BLACK)
             
         xoffset++
                 

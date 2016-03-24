@@ -11,6 +11,6 @@ PUB Main | val
 
     val := %%1000_0000_1000_0000
     repeat
-        gfx.ClearScreen(val)
+        gfx.Fill(val)
         lcd.DrawScreen
         val ->= 2

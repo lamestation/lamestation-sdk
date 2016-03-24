@@ -28,7 +28,7 @@ PUB Main
     y := 12
 
     repeat
-        gfx.ClearScreen(0)
+        gfx.Clear
         oldx := x
         oldy := y
         ctrl.Update

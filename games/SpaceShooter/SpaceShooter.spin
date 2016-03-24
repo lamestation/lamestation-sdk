@@ -99,7 +99,7 @@ PUB Main
 'THE TITLE SCREEN
 PUB TitleScreen
     ctrl.Update
-    gfx.ClearScreen(0)
+    gfx.Clear
     txt.Str(@str_pressA,35,25)
     if ctrl.A
         gamestate := GAMELOOP
@@ -164,7 +164,7 @@ PUB CheckInput
   
 'HANDLES DRAWING GRAPHICS
 PUB HandleGraphics
-    gfx.ClearScreen(0)
+    gfx.Clear
     txt.Load(number_font.Addr,"0",4,3)
     gfx.Sprite(ball.Addr,x,y,0)
     
@@ -360,7 +360,7 @@ PUB KeepHighScore | hightmp
 'DISPLAY GAMEOVER SCREEN
 PUB EndScreen
     ctrl.Update
-    gfx.ClearScreen(0)
+    gfx.Clear
     txt.Load(font.Addr," ",7,0)
     
     'DISPLAY GAME OVER STRING

@@ -10,15 +10,15 @@ OBJ
 PUB Main
     lcd.Start(gfx.Start)
     
-    gfx.ClearScreen(gfx#WHITE)
+    gfx.Fill(gfx#WHITE)
     lcd.DrawScreen
 
     fn.Sleep(1000)
 
-    gfx.ClearScreen(gfx#BLACK)
+    gfx.Fill(gfx#BLACK)
     lcd.DrawScreen
 
     fn.Sleep(1000)
 
-    gfx.ClearScreen(gfx#GRAY)
+    gfx.Fill(gfx#GRAY)
     lcd.DrawScreen

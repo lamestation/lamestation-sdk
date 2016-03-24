@@ -69,7 +69,7 @@ PUB View
     repeat
 
         ctrl.Update
-        gfx.ClearScreen(0)
+        gfx.Clear
 
         HandlePlayer
         ControlMap

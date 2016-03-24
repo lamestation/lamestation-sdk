@@ -61,7 +61,7 @@ Use it to pass text to functions.
         state.SetState(state#_WORLD)
 
         ctrl.Update
-        gfx.ClearScreen(gfx#WHITE)
+        gfx.Fill(gfx#WHITE)
         gfx.Sprite(nash.Addr,52,4, 0)
 
 ## Adding the dialog
@@ -242,7 +242,7 @@ Wow, that would have been so much longer if written the other way.
         state.SetState(state#_WORLD)
 
         ctrl.Update
-        gfx.ClearScreen(gfx#WHITE)
+        gfx.Fill(gfx#WHITE)
         gfx.Sprite(nash.Addr,52,4, 0)
 
         DisplayWaitDialog(string("TEACH: Hi there!"))

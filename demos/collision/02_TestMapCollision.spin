@@ -21,7 +21,7 @@ PUB Main
     y1 := 12
     map.Load(tile.Addr, map1.Addr)
     repeat
-        gfx.ClearScreen(0)
+        gfx.Clear
 
         ctrl.Update
         if ctrl.Left

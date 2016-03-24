@@ -18,7 +18,7 @@ PUB Main
 
     lcd.Start(gfx.Start)
 
-    gfx.ClearScreen(0)
+    gfx.Clear
     txt.Load(font.Addr, " ", 0, 0)
 
     ' add a map for a cool effect

@@ -111,7 +111,7 @@ PUB Main
 
     ctrl.Start
 
-    gfx.ClearScreen(0)
+    gfx.Clear
     lcd.DrawScreen
 
    'start/restart level
@@ -161,7 +161,7 @@ pub CheckPlayerInput
 
 
 pub RenderGraphics | enemy_ptr
-     gfx.ClearScreen(0)
+     gfx.Clear
 
      DrawLevel
 
@@ -393,7 +393,7 @@ pub StartLevel
    bullet_action := BULLET_NONE
 
    'clear the screen
-   gfx.ClearScreen(0)
+   gfx.Clear
 
    'add the sprites to the screen
    gfx.Sprite(tbot.GetPtr, 48, 24, 0)

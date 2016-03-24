@@ -24,7 +24,7 @@ PUB Scene
     state.SetState(state#_WORLD)
 
     ctrl.Update
-    gfx.ClearScreen(gfx#WHITE)
+    gfx.Fill(gfx#WHITE)
     gfx.Sprite(nash.Addr,52,4, 0)
 
     DisplayWaitDialog(string("TEACH: Hi there!"))

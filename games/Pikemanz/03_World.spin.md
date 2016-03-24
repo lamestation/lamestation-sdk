@@ -82,7 +82,7 @@ prev_name: "Step 2: Intro"
         repeat
 
             ctrl.Update
-            gfx.ClearScreen(0)
+            gfx.Clear
 
             HandlePlayer
             ControlMap

@@ -31,7 +31,7 @@ PUB Main | val
 
     val := %%1000_0000_1000_0000
     repeat
-        gfx.ClearScreen(val)
+        gfx.Fill(val)
 
         if ball_x < -16
             failtimeout++

@@ -54,7 +54,7 @@ PUB null : visible | tiles
     if process{_buttons}                                ' get button status/events
       visible := 73                                     ' and reset visibility if any
 
-    gfx.ClearScreen(0)                                  ' clear screen (map may be transparent)
+    gfx.Clear                                  ' clear screen (map may be transparent)
     map.Draw(cur_x, cur_y)                              ' draw map
 
     if visible                                          ' draw navi cross if visible (auto-hide)
@@ -75,7 +75,7 @@ PRI navi(dx, dy, spd)
 
 PRI demo(dx, dy, spd, frm)
 
-  gfx.ClearScreen(0)
+  gfx.Clear
   map.Draw(cur_x, cur_y)
 
   navi(dx, dy, spd)

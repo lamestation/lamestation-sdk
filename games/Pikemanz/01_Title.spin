@@ -19,7 +19,7 @@ PUB Main
     View
 
 PUB View
-    gfx.ClearScreen(gfx#WHITE)
+    gfx.Fill(gfx#WHITE)
     txt.Load(font_text.Addr, " ", 0, 0)
 
     gfx.Sprite(title.Addr,1,10,0)

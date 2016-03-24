@@ -29,7 +29,7 @@ PUB Main
     yoffset := bound_y
 
     repeat
-        gfx.ClearScreen(0)
+        gfx.Clear
 
         ctrl.Update
 

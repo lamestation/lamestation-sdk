@@ -59,7 +59,7 @@ A setup similar to the previous tutorial.
         y := 12
 
         repeat
-            gfx.ClearScreen(0)
+            gfx.Clear
 
 We were going to save the `x` and `y` position at the start of every loop. Here's where we do that.
 

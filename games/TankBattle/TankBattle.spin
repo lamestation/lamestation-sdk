@@ -110,7 +110,7 @@ PUB Main
 
     dira~
     lcd.Start(gfx.Start)
-    gfx.ClearScreen(0)
+    gfx.Clear
     lcd.SetFrameLimit(40)
     pst.StartRxTx(31, 30, 0, 115200)
 
@@ -118,7 +118,7 @@ PUB Main
     music.Start
     ctrl.Start
 
-    gfx.ClearScreen(0)
+    gfx.Clear
     lcd.DrawScreen
 
     txt.Load(font.Addr, " ", 8, 8)
@@ -145,9 +145,9 @@ PUB Main
 ' *********************************************************   
 PUB LogoScreen
 
-    gfx.ClearScreen(0)
+    gfx.Clear
     lcd.DrawScreen
-    gfx.ClearScreen(0)
+    gfx.Clear
     gfx.Sprite(gfx_logo_teamlame.Addr, -2, 24, 0)
     lcd.DrawScreen
 
@@ -184,7 +184,7 @@ PUB TitleScreen
         else
               clicked := 0
 
-        repeat while pst.RxCount > 0
+        repeat while pst.Count > 0
            receivebyte := pst.CharIn
                     
            if receivebyte == UPDATEORDER
@@ -203,7 +203,7 @@ PUB TankSelect
 
         ctrl.Update
         lcd.DrawScreen       
-        gfx.ClearScreen(0)
+        gfx.Clear
 
         if ctrl.Up or ctrl.Down
            if joyclicked == 0
@@ -237,7 +237,7 @@ PUB TankSelect
 
         'MULTIPLAYER HANDLING
         {{
-        repeat while pst.RxCount > 0
+        repeat while pst.Count > 0
            receivebyte := pst.CharIn
                         
            if receivebyte == UPDATETYPE
@@ -273,7 +273,7 @@ PUB LevelSelect
 
         ctrl.Update
         lcd.DrawScreen
-        gfx.ClearScreen(0)      
+        gfx.Clear      
 
 
         if ctrl.Up or ctrl.Down
@@ -310,7 +310,7 @@ PUB LevelSelect
 
         'MULTIPLAYER HANDLING
         {{
-        repeat while pst.RxCount > 0
+        repeat while pst.Count > 0
            receivebyte := pst.CharIn
                     
            if receivebyte == UPDATELEVEL
@@ -335,7 +335,7 @@ PUB TankFaceOff
 
         ctrl.Update 
         lcd.DrawScreen        
-        gfx.ClearScreen(0)
+        gfx.Clear
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
         txt.Str(string("Prepare for battle..."),0,24)
@@ -351,7 +351,7 @@ PUB TankFaceOff
 
         'MULTIPLAYER HANDLING
         {{
-        repeat while pst.RxCount > 0
+        repeat while pst.Count > 0
            receivebyte := pst.CharIn
                     
            if receivebyte == UPDATEADVANCE
@@ -376,7 +376,7 @@ PUB GameLoop : menureturn
 
         ctrl.Update
         lcd.DrawScreen
-        gfx.ClearScreen(0)
+        gfx.Clear
 
         if tankon[yourtank]
             ControlTank 
@@ -510,7 +510,7 @@ PUB PauseMenu : menureturn
            
         ctrl.Update 
         lcd.DrawScreen         
-        gfx.ClearScreen(0)
+        gfx.Clear
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
         txt.Str(string(" PAUSE!"),40,16)
@@ -793,7 +793,7 @@ PUB HandleNetworking
        pst.Char(score[yourtank])
 
 
-    repeat while pst.RxCount > 0
+    repeat while pst.Count > 0
           receivebyte := pst.CharIn
 
           if receivebyte == UPDATETANKX

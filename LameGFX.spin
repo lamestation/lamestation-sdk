@@ -94,7 +94,13 @@ PUB Start
 
     return drawsurface
 
-PUB ClearScreen(color)
+PUB Clear
+{{
+    Clear the screen to black.
+}}
+    Fill(0)
+
+PUB Fill(color)
 {{
     Fill the screen buffer with a repeating word of color data specified by `color`.
 }}

@@ -43,7 +43,7 @@ prev_name: "Step 3: Test Map Move"
         y := 12
 
         repeat
-            gfx.ClearScreen(0)
+            gfx.Clear
             ctrl.Update
 
             oldx := x

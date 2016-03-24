@@ -22,7 +22,7 @@ PUB Main
     x2 := 52
     y2 := 20
     repeat
-        gfx.ClearScreen(0)
+        gfx.Clear
         ctrl.Update
         if ctrl.Left
             if x1 > 0

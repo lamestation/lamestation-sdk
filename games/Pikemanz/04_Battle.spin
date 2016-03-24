@@ -40,14 +40,14 @@ PUB Main
     music.Start
     ctrl.Start
 
-    gfx.ClearScreen(gfx#WHITE)
+    gfx.Fill(gfx#WHITE)
 
     Wild
 
 PUB FaceOffScene | i
 
     repeat i from 120 to 0 step 2
-        gfx.ClearScreen(gfx#WHITE)
+        gfx.Fill(gfx#WHITE)
         pike.Draw(back_pk, BACK_OX - i, BACK_OY)
         pike.Draw(front_pk, FRONT_OX + i, FRONT_OY)
         menu.MessageBox(string("DURP wants",10,"to FIGHT"), 1,40,128,24,6,6)
@@ -86,7 +86,7 @@ PUB Scene
 PUB View
 
         ctrl.Update
-        gfx.ClearScreen(gfx#WHITE)
+        gfx.Fill(gfx#WHITE)
 
         if ctrl.A
             if not click

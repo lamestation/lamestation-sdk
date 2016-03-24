@@ -80,7 +80,7 @@ For fun, let's put the starting position of the map at the same place of the pre
 Starting the main loop!
 
         repeat
-            gfx.ClearScreen(0)
+            gfx.Clear
 
 Add a control block to keep the view inside the map. What's cool is that we're not the ones doing the moving. The map itself moves relative to the screen, giving the illusion that we're moving in a world, but we're not!!
 

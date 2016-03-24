@@ -64,7 +64,7 @@ Let's start up a program loop so we can move around.
 
 Clear the screen to black so that moving around won't leave a trail on the screen.
 
-            gfx.ClearScreen(0)
+            gfx.Clear
 
 Let's take box #1 (which has the position `(x1, y1)`) and allow the player to move it around on the screen. **BUT!** We will be careful and not let the box move off the screen (because who wants *that*!).
 

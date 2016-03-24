@@ -39,7 +39,7 @@ PUB GameInit
 
 PUB GameLoop
 
-    gfx.ClearScreen(0)
+    gfx.Clear
     ctrl.Update
 
    ' add code for your game loop here

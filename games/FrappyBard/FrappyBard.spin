@@ -92,7 +92,7 @@ PUB TitleScreen | flightstate
 
         xoffset++
 
-        gfx.ClearScreen(gfx#WHITE)
+        gfx.Fill(gfx#WHITE)
 
         PutTileParallax(0,48,16,UNDER)
         PutTileParallax(xoffset,56,16,FLOOR)
@@ -130,7 +130,7 @@ PUB GameLoop
 
     repeat while not died
         ctrl.Update
-        gfx.ClearScreen(gfx#WHITE)
+        gfx.Fill(gfx#WHITE)
 
         xoffset++
 

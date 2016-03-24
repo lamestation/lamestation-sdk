@@ -76,7 +76,7 @@ PUB Main
     repeat
         ctrl.Update
 
-        gfx.ClearScreen(0)
+        gfx.Clear
         txt.Str(string("SoundDesigner v0.2"),1,1)
         GUI_TabBrowser(77,0)
 

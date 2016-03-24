@@ -25,7 +25,7 @@ PUB TypewriterTextDemo | count
     music.Load(blehtrd.Addr)
     music.Loop
 
-    gfx.ClearScreen(0)
+    gfx.Clear
 
     gfx.Sprite(famus.Addr,38,0,0)
 

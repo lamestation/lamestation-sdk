@@ -19,7 +19,7 @@ PUB Main | dir,frame
     ctrl.Start
 
     repeat
-        gfx.ClearScreen(0)
+        gfx.Clear
 
         ctrl.Update
         if ctrl.A

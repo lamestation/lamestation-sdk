@@ -43,7 +43,7 @@ PUB TestBoxCollision
     repeat
         oldx := x
         oldy := y
-        gfx.ClearScreen(0)
+        gfx.Clear
         ctrl.Update
 
         ' use the joystick to control speed of the ball

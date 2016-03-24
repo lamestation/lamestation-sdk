@@ -91,7 +91,7 @@ PUB ResetGame
 PUB GameLoop
     
     ctrl.Update
-    gfx.ClearScreen(0)
+    gfx.Clear
 
     if ballx => paddle1_x+8 and ballx =< paddle2_x
         ControlPlayer

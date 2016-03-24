@@ -59,7 +59,7 @@ Now we're going to load a map with `LameMap`. Pass the addresses of the level an
 Let's add the same set up from the previous example.
 
         repeat
-            gfx.ClearScreen(0)
+            gfx.Clear
 
             ctrl.Update
             if ctrl.Left

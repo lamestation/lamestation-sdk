@@ -74,7 +74,7 @@ PUB SetIntro
     gamestate := GAMELOOP
     
 PUB HandleGraphics
-      gfx.ClearScreen(0)
+      gfx.Clear
       
       gfx.Sprite(border.Addr,33,0,0)
       gfx.Sprite(selector.Addr,selector_x,selector_y,0)
@@ -329,7 +329,7 @@ PUB HandleTime
         gamestate := GAMEOVER
  
 PUB Endgame
-    gfx.ClearScreen(0)
+    gfx.Clear
     txt.Load(font.Addr," ",5,3)
     txt.Str(string("Game Over"),40,25)
    

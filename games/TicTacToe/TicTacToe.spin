@@ -63,7 +63,7 @@ PUB SetIntro
     gamestate := GAMELOOP
     
 PUB HandleGraphics
-      gfx.ClearScreen(0)
+      gfx.Clear
       
       gfx.Sprite(border.Addr,33,0,0)
       gfx.Sprite(selector.Addr,selector_x,selector_y,0)
@@ -240,7 +240,7 @@ PUB Winner(win)
         
 PUB Endgame
   
-    gfx.ClearScreen(0)
+    gfx.Clear
     txt.Load(font.Addr, " ", 6,5)
     if champion == 1
         txt.Str(string("X won!"),40,25)
