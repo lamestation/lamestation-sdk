@@ -2,7 +2,7 @@ CON
     #0, MX, MY                                          ' level map header indices
     #1, SX, SY                                          '  tile map header indices
 
-    COLLIDEBIT = $80
+    COLLIDEMASK = $80
 
 OBJ
     gfx :   "LameGFX"
@@ -38,7 +38,7 @@ PUB Height
 
 PUB TestPoint(x, y) | tilebase
     tilebase := 4 + word[map_levelmap][MX] * y + map_levelmap
-    if (byte[tilebase][x] & COLLIDEBIT)
+    if (byte[tilebase][x] & COLLIDEMASK)
         return 1
 
 PUB TestCollision(objx, objy, objw, objh) | tilebase, x, y, tx, ty
@@ -70,7 +70,7 @@ PUB TestCollision(objx, objy, objw, objh) | tilebase, x, y, tx, ty
 
     repeat y from objy to objh
         repeat x from objx to objw
-            if (byte[tilebase][x] & COLLIDEBIT)
+            if (byte[tilebase][x] & COLLIDEMASK)
                 return (x+1)+((y+1) << 16)
 
         tilebase += word[map_levelmap][MX]

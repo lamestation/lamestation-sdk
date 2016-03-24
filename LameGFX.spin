@@ -31,8 +31,8 @@ CON
     GRAY = $FFFF
 
     ' draw map function
-    COLLIDEBIT = $80
-    TILEBYTE = COLLIDEBIT-1
+    COLLIDEMASK = $80
+    TILEMASK = $7F
 
 CON
     #0, MX, MY                                          ' level map header indices
@@ -338,7 +338,7 @@ popCR_ret               ret
 
     repeat y from offset_y to cy2 -1 step ty
         repeat x from offset_x to cx2 -1 step tx
-            if tile := byte[tilecnttemp][(x - offset_x) / tx] & TILEBYTE
+            if tile := byte[tilecnttemp][(x - offset_x) / tx] & TILEMASK
                  Sprite(map_tilemap, x, y, --tile)
 
         tilecnttemp += word[map_levelmap][MX]
@@ -460,7 +460,7 @@ drawtilemap             call    #pushCR                 ' preserve current clipp
 
 :xloop                  rdbyte  drei, zwei              ' get tile info
                         add     zwei, #1                ' advance
-                        and     drei, #TILEBYTE wz      ' tile index (0 is transparent)
+                        and     drei, #TILEMASK wz      ' tile index (0 is transparent)
                 if_z    jmp     #:xnext
 
                         sub     drei, #1                ' adjust index
