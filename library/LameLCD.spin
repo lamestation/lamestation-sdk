@@ -1,75 +1,50 @@
 OBJ
     pin  :   "LamePinout"
-CON
-'' These indicate which pins connect to what. If developing your own prototype,
-'' you can change the value of LCDstart to change the location of the LCD
-'' pinout.
-''
-''
-  DI = pin#DI
-  EN = pin#E
-  
-  DB = pin#D0
-  
-  CSA = pin#CSA
-  CSB = pin#CSB
-      
-  LCDstart = DI
-  LCDend   = CSB
 
-'' The pins on a KS0108 LCD are as follows.
-''
-'' * **D/I** - Indicates whether next command is data or instruction. 
-'' * **R/W** - Controls whether reading from or writing to the LCD. On the LameStation, this pin is wired to ground.
-'' * **EN** - This pin controls whether data is being sent. It remains off while data is prepared then toggled on to deliver.
-'' * **DB0-7** - These 8 bits are how data is delivered to the LCD, whether it is pixel data, address values, or otherwise.
-'' * **CSA, CSB** - Each KS0108 controller only actually handles 64x64 on-screen pixels, so a 128x64 LCD
-''           requires two of these chips in order to function. To handle this, the control signals are demultiplexed
-''           to one or both of the two chips, depending on which one is selected. In most cases, the Propeller is only
-''           talking to one of these chips at a time, because most time is spending sending screen data. The rare case
-''
-'' I have this constant so that the frame rate can be limited;
-'' however, in practice, I set it to some high value like 300
-'' so that the screen will refresh as fast as possible.
-''
-'' ### Ideal settings
-''
-'' * LCD - (FRAMERATE,BYTEPERIOD)
-''
-'' * KS0108, white on blue STN LCD - (133, 190)
-''
-  SYNC_PERIOD = 80_000_000/73
-  BUSY_PERIOD = 400
+CON
+    ' LCD pins
+    DI = pin#DI         ' data / instruction
+    EN = pin#E          ' enable to send data
     
-  ' screensize constants
-  SCREEN_W = 128
-  SCREEN_H = 64
-  BITSPERPIXEL = 2
+    DB = pin#D0         ' starting data bit
+    
+    CSA = pin#CSA       ' chip select a
+    CSB = pin#CSB       ' chip select b
+      
+    LCDstart = DI
+    LCDend   = CSB
 
-  SCREEN_H_BYTES = SCREEN_H / 8
-  SCREENSIZE_BYTES = SCREEN_W * SCREEN_H_BYTES * BITSPERPIXEL
-  TOTALBUFFER_BYTES = SCREENSIZE_BYTES
+    ' period
+    SYNC_PERIOD = 80_000_000/73
+    BUSY_PERIOD = 400
+    
+    ' screen size
+    SCREEN_W = 128
+    SCREEN_H = 64
+    
+    ' frame rate
+    FULLSPEED = 40
+    HALFSPEED = 20
+    QUARTERSPEED = 10
 
-  FULLSPEED = 40
-  HALFSPEED = 20
-  QUARTERSPEED = 10
 
-
-CON
-  CMD_SETSCREEN     = $01F
-  CMD_SETFRAMELIMIT = $022
-  CMD_DRAWSCREEN    = $026
-  CMD_INVERTSCREEN  = $036
+    ' for internal use
+    CMD_SETSCREEN     = $01F
+    CMD_SETFRAMELIMIT = $022
+    CMD_DRAWSCREEN    = $026
+    CMD_INVERTSCREEN  = $036
 
 PUB Start(buffer) 'must be long aligned
-'' Initializes the LCD object.
-''
-'' parameters
-''   buffer: DrawScreen source buffer (usually provided by LameGFX)
-''
-'' result
-''   Aborts when any part of the initialization fails, otherwise returns
-''   the address of the screen buffer.
+{{
+    Initializes the LCD object.
+    
+    parameters
+       buffer: DrawScreen source buffer (usually provided by LameGFX)
+    
+    result
+       Aborts when any part of the initialization fails, otherwise returns
+       the address of the screen buffer.
+}}
 
     draw := buffer
     ifnot cognew(@screen, @insn) +1
@@ -81,38 +56,47 @@ PUB Start(buffer) 'must be long aligned
 
     return @screen{0}
 
-PRI Exec(command, parameters)
 
-    command.word[1] := parameters
-    insn := command
-    repeat
-    while insn
-  
 PUB DrawScreen
-'' Copy render buffer to screen buffer.
+{{
+    Copy render buffer to screen buffer.
+}}
 
     Exec(CMD_DRAWSCREEN, draw)
 
 PUB SetFrameLimit(frequency)
-'' Set user-defined frame limit (0: off)
+{{
+    Set user-defined frame limit (0: off)
+}}
 
     rate := clkfreq / frequency                         ' division by 0 is 0 in SPIN
     Exec(CMD_SETFRAMELIMIT, @rate)
     
 PUB InvertScreen(enabled) ' boolean value
-'' Invert black/white but leave gray untouched.
+{{
+    Invert black/white but leave gray untouched.
+}}
 
     Exec(CMD_INVERTSCREEN, enabled <> 0)
     
 PUB WaitForVerticalSync
-'' Block execution until vertical sync pulse starts.
+{{
+    Block execution until vertical sync pulse starts.
+}}
 
     ifnot rate
         repeat
         until sync.byte{0}
         repeat
         while sync.byte{0}                              ' 1/0 transition
-  
+
+PRI Exec(command, parameters)
+
+    command.word[1] := parameters
+    insn := command
+    repeat
+    while insn
+
 DAT                                                     ' DAT mailbox
 
 insn                    long    0                       ' screen[-4]

@@ -1,9 +1,11 @@
 ifndef SPINC
 	SPINC := openspin -q
 endif
-LFLAGS := -L.
 
-OBJECTS := $(shell find . -name \*.spin )
+LFLAGS := -L library/
+FOLDERS := .
+
+OBJECTS := $(shell find $(FOLDERS) -name \*.spin )
 BINARIES := $(OBJECTS:.spin=.binary)
 
 PREFIX ?= .build
