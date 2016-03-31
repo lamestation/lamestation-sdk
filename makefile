@@ -13,11 +13,14 @@ PREFIX ?= .build
 INSTALLS := $(patsubst %,$(PREFIX)/%,$(OBJECTS))
 
 
-all: test
+all: test build_media
 
 clean:
 	rm -f $(BINARIES)
 	rm -rf $(PREFIX)
+
+build_media:
+	./media/media.sh
 
 test: test_compile
 
