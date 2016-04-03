@@ -9,7 +9,7 @@ BUILDDIR=.build
 rm -rf ./$BUILDDIR/
 mkdir -p $BUILDDIR/
 
-cp * -r $BUILDDIR/
+cp demos/ games/ tutorials/ library/* -r $BUILDDIR/
 
 if [ -z $1 ] ; then
         echo "No version given... pass as parameter"
@@ -65,9 +65,11 @@ EOF
 
 done < <(git ls-tree -r ${VERSION} --name-only | grep .spin$)
 
-echo "DONE"
+cp media/ -r $BUILDDIR/
 
-rm -rf ./$BUILDDIR/scripts
+rm -f `find $BUILDDIR/ -name .\* -type f`
+
+echo "DONE"
 
 mv ${BUILDDIR} ${RELEASENAME}
 
