@@ -18,6 +18,11 @@ fi
 echo -n "Packaging SDK"
 while read LINE
 do
+        if [[ ! -f $BUILDDIR/$LINE ]]  ; then
+            continue
+        fi
+
+       
         F=`basename $LINE`
 
         # Generate file date
@@ -58,7 +63,6 @@ do
 EOF
         else
                 cat $LINE > $BUILDDIR/$LINE
-
         fi
 
         echo -n "."
