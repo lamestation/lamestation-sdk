@@ -9,7 +9,7 @@ BUILDDIR=.build
 rm -rf ./$BUILDDIR/
 mkdir -p $BUILDDIR/
 
-cp demos/ games/ tutorials/ library/* -r $BUILDDIR/
+cp library/demos/ library/games/ library/tutorials/ library/*.spin -r $BUILDDIR/
 
 if [ -z $1 ] ; then
         echo "No version given... pass as parameter"
@@ -19,6 +19,7 @@ echo -n "Packaging SDK"
 while read LINE
 do
         if [[ ! -f $BUILDDIR/$LINE ]]  ; then
+            echo "Failed to find file $BUILDDIR/$LINE"
             continue
         fi
 
@@ -42,6 +43,7 @@ do
 
         if [[ ! "$F" =~ ^gfx_.*|^map_.*|^ins_.*|^song_.* ]]; then
 
+                echo "SOODO"
                 cat > $BUILDDIR/$LINE << EOF
 ' ${LINE}
 ' -------------------------------------------------
@@ -69,7 +71,7 @@ EOF
 
 done < <(git ls-tree -r ${VERSION} --name-only | grep .spin$)
 
-cp media/ -r $BUILDDIR/
+cp library/media/ -r $BUILDDIR/
 
 rm -f `find $BUILDDIR/ -name .\* -type f`
 
@@ -78,6 +80,6 @@ echo "DONE"
 mv ${BUILDDIR} ${RELEASENAME}
 
 rm -f ${RELEASENAME}.zip
-zip -r ${RELEASENAME}.zip ${RELEASENAME}/
+#zip -r ${RELEASENAME}.zip ${RELEASENAME}/
 
 mv ${RELEASENAME} ${BUILDDIR} 

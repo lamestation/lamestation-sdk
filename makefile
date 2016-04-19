@@ -3,7 +3,7 @@ ifndef SPINC
 endif
 
 LFLAGS := -L library/
-FOLDERS := .
+FOLDERS := library/
 
 OBJECTS := $(shell find $(FOLDERS) -name \*.spin )
 BINARIES := $(OBJECTS:.spin=.binary)
