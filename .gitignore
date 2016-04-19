@@ -11,3 +11,4 @@ tags
 
 lamestation-sdk-*.zip
 .build/
+build/

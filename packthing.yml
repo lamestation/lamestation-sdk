@@ -1,0 +1,88 @@
+name: LameStation SDK
+package: lamestation-sdk
+org: LameStation LLC
+url: http://www.lamestation.com/
+maintainer: LameStation
+email: contact@lamestation.com
+copyright: 2014-2015
+license: GPLv3
+tagline: The development environment for LameStation
+description: Everything you need to get started making LameStation games today.
+master: lamestation-sdk 
+
+target: 
+    deb: 
+        depends: libftdi1
+        categories: Education;ComputerScience
+        section: Applications/Education
+        help2man:
+            - propelleride
+            - propman
+            - openspin
+            - lsimage
+            - img2dat
+    dmg: 
+        category: public.app-category.education
+        background: icons/mac-dmg.png
+        bundle: lamestation-sdk
+    inno:
+        banner: icons/win-banner.bmp
+        run: lslauncher
+
+repos: 
+    lslauncher:
+        url: https://github.com/lamestation/lslauncher.git
+        builder: qmake
+        files:
+            lslauncher:
+                name: LameStudio
+                icon: icons/seal.png
+
+    lamestation-sdk:
+        url: https://github.com/lamestation/lamestation-sdk.git
+        builder: dir
+        root: library
+        tag: 0.6.1-rc2
+
+    propelleride:
+        url: https://github.com/parallaxinc/PropellerIDE.git
+        builder: qmake
+        files:
+            propelleride:
+                name: PropellerIDE
+                icon: icons/icon-new.png
+                mimetypes:
+                    - type: text/x-spin
+                      extension: spin
+                      description: Propeller Spin object
+                      icon: icons/text-x-spin.png
+
+                    - type: application/x-binary
+                      extension: binary
+                      description: Propeller binary
+                      icon: icons/application-x-binary.png
+
+        branch: master
+
+    openspin:
+        url: https://github.com/bweir/OpenSpin.git
+        tag: 0.3.0
+        builder: qmake
+        root: qmake
+
+    library:
+        url: https://github.com/parallaxinc/spin-standard-library.git
+        builder: dir
+        root: library
+
+    doc:
+        url: https://github.com/parallaxinc/spin-docs.git
+        builder: dir
+
+    lsimage:
+        url: https://github.com/lamestation/lsimage.git
+        builder: qmake
+        files:
+            lsimage:
+                name: LSImage
+                icon: icons/img.png
