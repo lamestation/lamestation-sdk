@@ -51,7 +51,7 @@ PUB Main
             snakey++
             
         gfx.Sprite(@dot_gfx, snakex, snakey, 0)
-        lcd.DrawScreen
+        lcd.Draw
     
 DAT
     dot_gfx

@@ -53,7 +53,7 @@ PUB Game | x,y,t
         repeat x from 0 to 1
           long[buffer][(y*8)+(x+4)]:=gfx_maze[y*2+x]
       gfx.Sprite(@gfx_clown1,0,0,0)
-      lcd.DrawScreen
+      lcd.Draw
       gfx.Clear
 
       old1:=new1
@@ -66,7 +66,7 @@ PUB Game | x,y,t
             repeat x from 0 to 1
               long[buffer][(y*8)+(x+4)]:=gfx_maze[y*2+x]
           gfx.Sprite(@gfx_clown1,0,0,1)
-          lcd.DrawScreen
+          lcd.Draw
           gfx.Clear
 
         PlayGame
@@ -75,12 +75,12 @@ PUB ShowEaten
     repeat 5
       longfill(buffer,0,512)
       gfx.Sprite(@gfx_clown1,0,0,3)
-      lcd.DrawScreen
+      lcd.Draw
       gfx.Clear
     repeat 14
       longfill(buffer,0,512)
       gfx.Sprite(@gfx_clown1,0,0,2)
-      lcd.DrawScreen
+      lcd.Draw
       gfx.Clear
     gameover:=1
 
@@ -229,7 +229,7 @@ PUB PlayGame | x,y,t,done
         plot(rexx+rexxstp+48,rexy+rexystp+48-t,3)
 
       gameframe++
-      lcd.DrawScreen
+      lcd.Draw
       gfx.Clear
 
       rexcount++

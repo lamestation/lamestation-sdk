@@ -81,5 +81,5 @@ PUB Main | val
                 txt.Str(string("OH NO GO RIGHT!"),0,0)
                 gfx.InvertColor(False)
 
-        lcd.DrawScreen
+        lcd.Draw
         val ->= 2

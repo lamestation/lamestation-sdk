@@ -104,7 +104,7 @@ PUB TitleScreen
     if ctrl.A
         gamestate := GAMELOOP
         
-    lcd.DrawScreen
+    lcd.Draw
 
 'INITIALIZATION OF VARIABLES AND EVENTS
 PUB SetIntro
@@ -193,7 +193,7 @@ PUB HandleGraphics
     KeepScore
     KeepHighScore
     
-    lcd.DrawScreen
+    lcd.Draw
   
 PUB PowerUp
     if powerup_counter == 25
@@ -380,7 +380,7 @@ PUB EndScreen
     'BACK TO INTRO SCREEN
     if ctrl.A
         gamestate := INTRO
-    lcd.DrawScreen
+    lcd.Draw
           
 DAT
   

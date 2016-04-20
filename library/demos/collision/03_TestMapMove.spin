@@ -57,4 +57,4 @@ PUB Main
         gfx.Sprite(box.Addr,x, y,0)
 
         gfx.InvertColor(False)
-        lcd.DrawScreen
+        lcd.Draw

@@ -112,7 +112,7 @@ PUB Main
     ctrl.Start
 
     gfx.Clear
-    lcd.DrawScreen
+    lcd.Draw
 
    'start/restart level
    StartLevel
@@ -182,7 +182,7 @@ pub RenderGraphics | enemy_ptr
        enemy_ptr += ENEMY_LENGTH              
 
      'handles the update to the sprite elements
-     lcd.DrawScreen
+     lcd.Draw
 
 pub HandleBullet
      if bullet_action > BULLET_NONE
@@ -400,7 +400,7 @@ pub StartLevel
    
    DrawLevel
 
-   lcd.DrawScreen
+   lcd.Draw
 
 pub DrawLevel  | lvlptr, lvl_x, lvl_y, i, j
    lvlptr := @leveldata + (level_current_room * SCREEN_SIZE) 

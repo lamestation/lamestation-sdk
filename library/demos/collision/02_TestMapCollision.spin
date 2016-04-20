@@ -41,5 +41,5 @@ PUB Main
         map.Draw(0,0)
         gfx.Sprite(box.Addr,x1,y1,0)
         gfx.InvertColor(False)
-        lcd.DrawScreen
+        lcd.Draw
 

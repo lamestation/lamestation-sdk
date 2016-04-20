@@ -83,7 +83,7 @@ Putting it together:
 Then we're going to want to draw the screen, and wait for the player to click something before continuing (otherwise how will we read the text?).
 
         menu.Dialog(string("TEACH: Hi there!"))
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 Here's what you will see.
@@ -95,7 +95,7 @@ Here's what you will see.
 The cool thing about this is... you can make him say whatever you want!
 
         menu.Dialog(string("I am an elephant!"))
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 ![](screenshots/intro3.png)
@@ -105,7 +105,7 @@ The cool thing about this is... you can make him say whatever you want!
 If you tried to add a sentence longer than three or four words, you probably noticed that your text goes clear off the page and gets messed up.
 
         menu.Dialog(string("I am going off the page!"))
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 ![](screenshots/intro4.png)
@@ -119,7 +119,7 @@ We can do this by inserting a new line character into the string with the number
 [Click here](http://en.wikipedia.org/wiki/ASCII) to learn more about ASCII, or [here](http://web.cs.mun.ca/~michael/c/ascii-table.html) to see a complete ASCII table.
 
         menu.Dialog(string("I am going off the",10,"page!"))
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 ![](screenshots/intro5.png)
@@ -140,11 +140,11 @@ Now we can continue the text on the next page and let the player know that they 
 
         menu.Dialog(string("My name",10,"is Mr. Pine, but"))
         gfx.Sprite(arrow.Addr, 115,54, 0)
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
         menu.Dialog(string("you can call me",10,"TEACH."))
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 ![](screenshots/intro-spanning1.png)
@@ -155,7 +155,7 @@ How cool is that!
 
 ## Shortening the code
 
-I don't know about you, but I'm getting annoyed having to write `lcd.DrawScreen` and `ctrl.WaitKey` all the time. Surely, there must be a better way to do this? How can you shorten it?
+I don't know about you, but I'm getting annoyed having to write `lcd.Draw` and `ctrl.WaitKey` all the time. Surely, there must be a better way to do this? How can you shorten it?
 
 ### A convenience function
 
@@ -165,7 +165,7 @@ We'll create two. The first we'll call `DisplayWaitDialog` because that's what i
 
     PUB DisplayWaitDialog(str)
         menu.Dialog(str)
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 Now we can display a dialog window in one line!
@@ -177,7 +177,7 @@ One problem though. Now there's no way to display that little arrow like we had 
     PUB DisplayWaitDialogArrow(str)
         menu.Dialog(str)
         gfx.Sprite(arrow.Addr, 115,54, 0)
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 ### More than one way to...
@@ -192,7 +192,7 @@ Here's what it would have looked like.
         if arrow
             gfx.Sprite(arrow.Addr, 115,54, 0)
 
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 It's a matter of preference really.
@@ -258,13 +258,13 @@ Wow, that would have been so much longer if written the other way.
 
     PUB DisplayWaitDialog(str)
         menu.Dialog(str)
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
     PUB DisplayWaitDialogArrow(str)
         menu.Dialog(str)
         gfx.Sprite(arrow.Addr, 115,54, 0)
-        lcd.DrawScreen
+        lcd.Draw
         ctrl.WaitKey
 
 ## Your turn

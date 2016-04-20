@@ -22,7 +22,7 @@ PUB Main
             frame := 3
 
         gfx.Sprite(@data, 60, 28, frame)
-        lcd.DrawScreen
+        lcd.Draw
 
 DAT
 

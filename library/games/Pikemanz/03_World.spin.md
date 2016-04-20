@@ -95,7 +95,7 @@ prev_name: "Step 2: Intro"
                 'playerx := targetx := 3 << 3
                 return state.SetState(state#_BATTLE)
 
-            lcd.DrawScreen
+            lcd.Draw
 
     PUB HandlePlayer | adjust
 

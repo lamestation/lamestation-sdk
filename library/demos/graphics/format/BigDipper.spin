@@ -11,7 +11,7 @@ PUB Main
     gfx.Sprite(@data, 30, 30, 0)
     gfx.Sprite(@data, 45, 10, 0)
 
-    lcd.DrawScreen
+    lcd.Draw
 
 DAT
 

@@ -39,14 +39,14 @@ PUB Start(buffer) 'must be long aligned
     Initializes the LCD object.
     
     parameters
-       buffer: DrawScreen source buffer (usually provided by LameGFX)
+       buffer: source buffer (usually provided by LameGFX)
     
     result
        Aborts when any part of the initialization fails, otherwise returns
        the address of the screen buffer.
 }}
 
-    draw := buffer
+    _draw := buffer
     ifnot cognew(@screen, @insn) +1
       abort
 
@@ -57,12 +57,12 @@ PUB Start(buffer) 'must be long aligned
     return @screen{0}
 
 
-PUB DrawScreen
+PUB Draw
 {{
     Copy render buffer to screen buffer.
 }}
 
-    Exec(CMD_DRAWSCREEN, draw)
+    Exec(CMD_DRAWSCREEN, _draw)
 
 PUB SetFrameLimit(frequency)
 {{
@@ -101,7 +101,7 @@ DAT                                                     ' DAT mailbox
 
 insn                    long    0                       ' screen[-4]
 sync                    long    0                       ' screen[-3]
-draw                    long    0                       ' screen[-2]
+_draw                   long    0                       ' screen[-2]
 rate                    long    0                       ' screen[-1]
 
 DAT                     org     0                       ' single screen LCD driver

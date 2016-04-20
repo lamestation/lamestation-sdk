@@ -61,7 +61,7 @@ PUB Main
     music.Start
 
     gfx.Clear
-    lcd.DrawScreen
+    lcd.Draw
 
     clicked := 0
     StaticScreen
@@ -89,7 +89,7 @@ PUB StaticScreen | x
     audio.PlaySound(1,50)
     
     repeat x from 0 to 50
-        lcd.DrawScreen
+        lcd.Draw
         Static
         
     audio.StopSound(1)
@@ -98,13 +98,13 @@ PUB StaticScreen | x
 PUB LogoScreen | x
 
     gfx.Clear
-    lcd.DrawScreen
+    lcd.Draw
     
     repeat x from 0 to 100000
     
     gfx.Clear
     gfx.Sprite(@gfx_logo_teamlame, 0, 24, 0)
-    lcd.DrawScreen
+    lcd.Draw
 
     audio.SetWaveform(3,3)
     audio.SetADSR(3,127, 10, 0, 10)
@@ -123,7 +123,7 @@ PUB TitleScreen
 
     choice := 1
     repeat until choice == 0  
-        lcd.DrawScreen
+        lcd.Draw
 
         gfx.Blit(@gfx_zeroforcelogo)
         ctrl.Update
@@ -354,7 +354,7 @@ PUB LevelStage
     
     choice := 1
     repeat until not choice
-        lcd.DrawScreen     
+        lcd.Draw     
         gfx.Clear
        
 
@@ -420,7 +420,7 @@ PUB BossStage
     
     repeat until not choice
 
-        lcd.DrawScreen
+        lcd.Draw
         
         gfx.Clear
         

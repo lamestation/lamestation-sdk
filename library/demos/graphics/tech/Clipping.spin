@@ -54,7 +54,7 @@ PUB null : n
 
     repeat 1
       lcd.WaitForVerticalSync
-    lcd.DrawScreen                                      ' update when ready
+    lcd.Draw                                      ' update when ready
 
 PRI process : button
 

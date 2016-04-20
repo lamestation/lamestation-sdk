@@ -102,6 +102,6 @@ Always remember to turn off color inversion when you're done with it, so the res
 
 Finally take the drawing buffer and copy it to the screen.
 
-            lcd.DrawScreen
+            lcd.Draw
 
 Now run our program and see how awesome it is!

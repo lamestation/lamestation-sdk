@@ -48,4 +48,4 @@ PUB Main
                 xoffset++
 
         map.Draw(xoffset, yoffset)
-        lcd.DrawScreen
+        lcd.Draw

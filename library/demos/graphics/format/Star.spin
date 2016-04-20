@@ -7,32 +7,32 @@ PUB Main
     
     repeat
         gfx.Sprite(@data1, 0,0, 0)
-        lcd.DrawScreen
+        lcd.Draw
         
         repeat 1000
         
         gfx.Sprite(@data2, 0,0, 0)
-        lcd.DrawScreen
+        lcd.Draw
         
         repeat 1000
         
         gfx.Sprite(@data3, 0,0, 0)
-        lcd.DrawScreen
+        lcd.Draw
     
         repeat 1000
         
         gfx.Sprite(@data4, 0,0, 0)
-        lcd.DrawScreen
+        lcd.Draw
         
         repeat 1000
         
         gfx.Sprite(@data5, 0,0, 0)
-        lcd.DrawScreen
+        lcd.Draw
         
         repeat 1000
         
         gfx.Sprite(@data6, 0,0, 0)
-        lcd.DrawScreen
+        lcd.Draw
     
 DAT
 

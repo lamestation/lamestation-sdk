@@ -101,7 +101,7 @@ PUB Main
     
         DrawCopter(hx~>8, hy~>8 - yoffset, frame)
  
-        lcd.DrawScreen                           
+        lcd.Draw                           
     
 PUB DrawCopter(x, y, f)
     

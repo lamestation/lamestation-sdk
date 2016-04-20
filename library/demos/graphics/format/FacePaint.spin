@@ -28,4 +28,4 @@ PUB Main
             y++
         
         gfx.Sprite(sprite.Gfx, x, y, 0)
-        lcd.DrawScreen
+        lcd.Draw

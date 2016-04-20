@@ -1,4 +1,4 @@
-![LameStation SDK logo](https://lamestation.atlassian.net/wiki/download/attachments/13762604/lamestation-sdk.png)
+![LameStation SDK logo](icons/sdk.png)
 
 [![Build Status](https://travis-ci.org/lamestation/lamestation-sdk.svg?branch=master)](https://travis-ci.org/lamestation/lamestation-sdk)
 

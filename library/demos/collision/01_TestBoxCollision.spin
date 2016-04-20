@@ -42,4 +42,4 @@ PUB Main
         gfx.Sprite(boxo.Addr,x2,y2,0)
         gfx.Sprite(box.Addr,x1,y1,0)
         gfx.InvertColor(False)
-        lcd.DrawScreen
+        lcd.Draw

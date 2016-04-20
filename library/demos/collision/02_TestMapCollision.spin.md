@@ -88,5 +88,5 @@ Draw the map to the screen, and the sprite on top of it.
 Reset the colors and draw to the screen.
 
             gfx.InvertColor(False)
-            lcd.DrawScreen
+            lcd.Draw
 

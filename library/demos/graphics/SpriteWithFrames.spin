@@ -15,7 +15,7 @@ PUB Main | frame
     lcd.SetFrameLimit(lcd#QUARTERSPEED)
     repeat
         gfx.Sprite(sprite.Addr, 56, 24, frame)
-        lcd.DrawScreen
+        lcd.Draw
         frame++
         if frame > 15
             frame := 0

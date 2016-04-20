@@ -29,7 +29,7 @@ PUB Kerning
     txt.Load(font.Addr, " ", 3, 3)
     txt.Box(@strang,0,52,128,30)
 
-    lcd.DrawScreen
+    lcd.Draw
 
     repeat
 

@@ -36,7 +36,7 @@ PUB Main
 
     lcd.Start(gfx.Start)
     gfx.Clear
-    lcd.DrawScreen
+    lcd.Draw
     lcd.SetFrameLimit(40)
     map.Load(tilemap.Addr, map1.Addr)
 
@@ -56,7 +56,7 @@ PUB Main
 
 
 
-        lcd.DrawScreen
+        lcd.Draw
 
 
 

@@ -60,5 +60,5 @@ PUB Main
         map.Load(tileset.Addr, mp.Addr)
         map.Draw(xoffset, yoffset)
 
-        lcd.DrawScreen
+        lcd.Draw
 

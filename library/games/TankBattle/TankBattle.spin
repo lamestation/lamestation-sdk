@@ -119,7 +119,7 @@ PUB Main
     ctrl.Start
 
     gfx.Clear
-    lcd.DrawScreen
+    lcd.Draw
 
     txt.Load(font.Addr, " ", 8, 8)
     InitData
@@ -146,10 +146,10 @@ PUB Main
 PUB LogoScreen
 
     gfx.Clear
-    lcd.DrawScreen
+    lcd.Draw
     gfx.Clear
     gfx.Sprite(gfx_logo_teamlame.Addr, -2, 24, 0)
-    lcd.DrawScreen
+    lcd.Draw
 
     music.Load(song_logo.Addr)
     music.Play
@@ -168,7 +168,7 @@ PUB TitleScreen
     choice := 1
     repeat until not choice
         ctrl.Update
-        lcd.DrawScreen
+        lcd.Draw
 
         gfx.Blit(gfx_logo_tankbattle.Addr)
 
@@ -202,7 +202,7 @@ PUB TankSelect
     repeat until not choice
 
         ctrl.Update
-        lcd.DrawScreen       
+        lcd.Draw       
         gfx.Clear
 
         if ctrl.Up or ctrl.Down
@@ -272,7 +272,7 @@ PUB LevelSelect
     repeat until not choice
 
         ctrl.Update
-        lcd.DrawScreen
+        lcd.Draw
         gfx.Clear      
 
 
@@ -334,7 +334,7 @@ PUB TankFaceOff
     repeat until not choice
 
         ctrl.Update 
-        lcd.DrawScreen        
+        lcd.Draw        
         gfx.Clear
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)
@@ -375,7 +375,7 @@ PUB GameLoop : menureturn
     repeat while not choice
 
         ctrl.Update
-        lcd.DrawScreen
+        lcd.Draw
         gfx.Clear
 
         if tankon[yourtank]
@@ -509,7 +509,7 @@ PUB PauseMenu : menureturn
     repeat while not choice
            
         ctrl.Update 
-        lcd.DrawScreen         
+        lcd.Draw         
         gfx.Clear
 
         gfx.Sprite(gfx_logo_tankbattle_name.Addr, 0, 0, 0)

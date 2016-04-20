@@ -85,7 +85,7 @@ PUB Main
             snakey[i] := snakey[i-1]
             gfx.Sprite(@dot_gfx, snakex[i], snakey[i], 0) 
             
-        lcd.DrawScreen
+        lcd.Draw
     
 DAT
     dot_gfx

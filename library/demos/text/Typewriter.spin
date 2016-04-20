@@ -29,7 +29,7 @@ PUB TypewriterTextDemo | count
 
     gfx.Sprite(famus.Addr,38,0,0)
 
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(2000)
 
     count := 0
@@ -38,7 +38,7 @@ PUB TypewriterTextDemo | count
         count++
         fn.Sleep(80)
 
-        lcd.DrawScreen
+        lcd.Draw
     while count < 160
 
 PUB Typewriter(stringvar, origin_x, origin_y, w, h, tilesize_x, tilesize_y, countmax) | char, x, y, count

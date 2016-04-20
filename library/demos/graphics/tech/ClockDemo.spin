@@ -154,7 +154,7 @@ PRI display(current) : idle
 
   repeat 1
     lcd.WaitForVerticalSync
-  lcd.DrawScreen                                        ' update when ready
+  lcd.Draw                                        ' update when ready
 
 PRI index : n
                                                         '    0: 0

@@ -10,4 +10,4 @@ PUB Blit
     lcd.Start(gfx.Start)
     
     gfx.Clear
-    lcd.DrawScreen
+    lcd.Draw

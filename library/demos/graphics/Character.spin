@@ -47,4 +47,4 @@ PUB Main | dir,frame
             dir := 3
 
         gfx.Sprite(sprite.Addr, 56, 24, dir*3+frame)
-        lcd.DrawScreen
+        lcd.Draw

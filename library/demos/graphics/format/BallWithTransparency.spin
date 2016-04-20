@@ -10,7 +10,7 @@ PUB Main
     lcd.Start(gfx.Start)
     gfx.Sprite(@box, 40, 20, 0)
     gfx.Sprite(@ball, 42, 22, 0)
-    lcd.DrawScreen
+    lcd.Draw
 
 DAT
 

@@ -92,36 +92,36 @@ PUB Main
         DrawTetromino
         
 
-        lcd.DrawScreen
+        lcd.Draw
 
 PUB GameOver
     
     lcd.InvertScreen(true)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#WHITE)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#GRAY)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#BLACK)
     gfx.Sprite(over.Addr,22,28,0)
     fn.Sleep(200)
     lcd.InvertScreen(false)
-    lcd.DrawScreen
+    lcd.Draw
 
     ctrl.WaitKey
     
     fn.Sleep(200)
     gfx.Fill(gfx#WHITE)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#GRAY)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#BLACK)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(500)
     
 PUB TitleScreen
@@ -129,24 +129,24 @@ PUB TitleScreen
 
     
     gfx.Fill(gfx#BLACK)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(1500)
     gfx.Fill(gfx#GRAY)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#WHITE)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#BLACK)
     gfx.Sprite(title.Addr,12,12,0)
-    lcd.DrawScreen
+    lcd.Draw
     lcd.InvertScreen(true)    
     fn.Sleep(200)
     lcd.InvertScreen(false)
         
     gfx.Fill(gfx#BLACK)
     gfx.Sprite(title.Addr,12,12,0)
-    lcd.DrawScreen
+    lcd.Draw
 
     ctrl.WaitKey
     
@@ -154,13 +154,13 @@ PUB TitleScreen
     fn.Sleep(200)
     lcd.InvertScreen(false)
     gfx.Fill(gfx#WHITE)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#GRAY)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(200)
     gfx.Fill(gfx#BLACK)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(300)
     'music.Stop
     fn.Sleep(1000)
@@ -234,7 +234,7 @@ PUB DrawTetromino
     otx := tx
 
     ' drop down
-    if dropcounter > dropmax or ctrl.A
+    if dropcounter > dropmax or ctrl.A or ctrl.Down
         dropcounter := 0
         ty++
     else

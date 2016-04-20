@@ -7,12 +7,12 @@ PUB Main
     
     repeat
         gfx.Sprite(@data1, 0, 0, 0)
-        lcd.DrawScreen
+        lcd.Draw
         
         repeat 10000
         
         gfx.Sprite(@data2, 0, 0, 0)
-        lcd.DrawScreen
+        lcd.Draw
         
         repeat 10000
 

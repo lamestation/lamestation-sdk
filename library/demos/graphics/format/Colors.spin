@@ -12,7 +12,7 @@ PUB Main
     gfx.Sprite(@black, 0, 0, 0)
     gfx.Sprite(@gray, 8, 0, 0)
     gfx.Sprite(@white, 16, 0, 0)
-    lcd.DrawScreen
+    lcd.Draw
 
 DAT
 

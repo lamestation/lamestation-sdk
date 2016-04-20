@@ -40,7 +40,7 @@ PUB Main
     gfx.Clear
     gfx.Sprite(title.Addr, 20, 0, 0)
     gfx.Sprite(ghost.Addr, 15, 25, 0)
-    lcd.DrawScreen
+    lcd.Draw
 
     repeat while not ctrl.A or ctrl.B
         ctrl.Update
@@ -57,7 +57,7 @@ PUB Main
         map.Draw(xoffset,yoffset)
         DrawPlayer
 
-        lcd.DrawScreen
+        lcd.Draw
         
 
 PUB HandlePlayer  | adjust

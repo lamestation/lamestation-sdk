@@ -14,4 +14,4 @@ VAR
 PUB Main
     lcd.Start(gfx.Start)
     gfx.Sprite(sprite.Gfx, x, 24, 0)
-    lcd.DrawScreen
+    lcd.Draw

@@ -70,7 +70,7 @@ PUB HandleGraphics
       
       DrawBoard
       
-      lcd.DrawScreen
+      lcd.Draw
       
 PUB HandleInput
   
@@ -247,5 +247,5 @@ PUB Endgame
     elseif champion == 2
         txt.Str(string("O won!"),40,25)
         
-    lcd.DrawScreen
+    lcd.Draw
 

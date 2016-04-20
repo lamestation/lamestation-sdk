@@ -89,4 +89,4 @@ prev_name: "Step 3: Test Map Move"
             map.Draw(0,0)
             gfx.Sprite(ball.Addr,x, y,0)
 
-            lcd.DrawScreen
+            lcd.Draw

@@ -64,7 +64,7 @@
 
         repeat 1
           lcd.WaitForVerticalSync
-        lcd.DrawScreen                                      ' update when ready
+        lcd.Draw                                      ' update when ready
 
     PRI navi(dx, dy, spd)
 
@@ -83,7 +83,7 @@
 
       repeat frm
         lcd.WaitForVerticalSync
-      lcd.DrawScreen
+      lcd.Draw
 
     PRI process : d
 

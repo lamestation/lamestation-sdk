@@ -51,7 +51,7 @@ PUB FaceOffScene | i
         pike.Draw(back_pk, BACK_OX - i, BACK_OY)
         pike.Draw(front_pk, FRONT_OX + i, FRONT_OY)
         menu.MessageBox(string("DURP wants",10,"to FIGHT"), 1,40,128,24,6,6)
-        lcd.DrawScreen
+        lcd.Draw
     fn.Sleep(1000)
 
 OBJ
@@ -108,7 +108,7 @@ PUB View
 
         HandleInterface
 
-        lcd.DrawScreen
+        lcd.Draw
 DAT
     dialog      byte    _SELECT
 
@@ -307,6 +307,6 @@ PUB SquareWipe | x1, y1, x2, y2, x, y, dir
                     else
                         dir := DOWN
                         x1++
-        lcd.DrawScreen
+        lcd.Draw
 
     lcd.SetFrameLimit(lcd#FULLSPEED)

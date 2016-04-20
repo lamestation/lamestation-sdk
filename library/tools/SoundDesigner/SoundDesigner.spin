@@ -96,7 +96,7 @@ PUB Main
         else
             bpress := 0
 
-        lcd.DrawScreen
+        lcd.Draw
 
 
 PRI SetChannel

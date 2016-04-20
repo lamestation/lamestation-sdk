@@ -16,19 +16,19 @@ PUB Main
     
     repeat 140
         gfx.Sprite(sprite.Gfx, x, 24, 0)
-        lcd.DrawScreen
+        lcd.Draw
         x++
         
     x := 0
         
     repeat 140
         gfx.Sprite(sprite.Gfx, x, 4, 0)
-        lcd.DrawScreen
+        lcd.Draw
         x++
 
     x := 0
         
     repeat
         gfx.Sprite(sprite.Gfx, x, 44, 0)
-        lcd.DrawScreen
+        lcd.Draw
         x++                

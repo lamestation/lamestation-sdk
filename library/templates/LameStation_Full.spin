@@ -30,7 +30,7 @@ PUB GameTitleScreen
 
     ' add code for a title screen here
 
-    lcd.DrawScreen
+    lcd.Draw
     ctrl.WaitKey
 
 PUB GameInit
@@ -44,4 +44,4 @@ PUB GameLoop
 
    ' add code for your game loop here
 
-    lcd.DrawScreen
+    lcd.Draw

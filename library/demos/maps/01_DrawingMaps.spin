@@ -15,4 +15,4 @@ PUB Main
     lcd.Start(gfx.Start)
     map.Load(tileset.Addr, cavemap.Addr)
     map.Draw(0,64)
-    lcd.DrawScreen
+    lcd.Draw

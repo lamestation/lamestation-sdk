@@ -8,7 +8,7 @@ PUB Main | x
     repeat
         repeat x from 0 to 5
             gfx.Sprite(@data, 0,0, x)
-            lcd.DrawScreen
+            lcd.Draw
         
             repeat 1000
 

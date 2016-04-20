@@ -56,7 +56,7 @@ Now let's have some graphics. Then we need to add some
         txt.Str(string("lame version"), 17, 53)
         gfx.Sprite(nash.Addr, 100,14,0)
 
-        lcd.DrawScreen
+        lcd.Draw
 
         ctrl.WaitKey
 

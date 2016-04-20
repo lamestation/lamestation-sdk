@@ -103,7 +103,7 @@ Add a control block to keep the view inside the map. What's cool is that we're n
 Draw to the screen.
 
             map.Draw(xoffset, yoffset)
-            lcd.DrawScreen
+            lcd.Draw
 
 The finished product. You are looking at the same map as before, but now you will be able to move back and forth across it.
 

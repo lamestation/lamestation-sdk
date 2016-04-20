@@ -15,4 +15,4 @@ PUB Main
     txt.Load(font.Addr, " ", 0, 0)
     txt.Str(string("THIS IS A TEST"),4,28)
 
-    lcd.DrawScreen
+    lcd.Draw

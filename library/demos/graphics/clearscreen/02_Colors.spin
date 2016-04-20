@@ -11,14 +11,14 @@ PUB Main
     lcd.Start(gfx.Start)
     
     gfx.Fill(gfx#WHITE)
-    lcd.DrawScreen
+    lcd.Draw
 
     fn.Sleep(1000)
 
     gfx.Fill(gfx#BLACK)
-    lcd.DrawScreen
+    lcd.Draw
 
     fn.Sleep(1000)
 
     gfx.Fill(gfx#GRAY)
-    lcd.DrawScreen
+    lcd.Draw

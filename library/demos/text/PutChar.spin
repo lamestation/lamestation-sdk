@@ -20,4 +20,4 @@ PUB PutChar | x, ran, y, count, char
             y := ran? & $3F
             char := ran? & %11111
             txt.Char("A" + char, x-8, y-8)
-            lcd.DrawScreen
+            lcd.Draw

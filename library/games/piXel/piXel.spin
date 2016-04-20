@@ -127,7 +127,7 @@ PUB TitleScreen
             clicked := 1
         else
             clicked := 0
-    lcd.DrawScreen
+    lcd.Draw
 
 PUB GameLoop
     ctrl.Update
@@ -140,7 +140,7 @@ PUB GameLoop
     HandleEnemies
     efx.Handle(xoffset,yoffset)
     HandleStatusBar
-    lcd.DrawScreen
+    lcd.Draw
             
 PUB Victory
     music.Stop
@@ -150,7 +150,7 @@ PUB Victory
     
     ShowGameView
     txt.Box(string("YOU WIN"), 40, 30, 100, 60)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(2000)
     
     music.Stop
@@ -175,7 +175,7 @@ PUB PlayerDied
     
     ShowGameView
     txt.Box(string("Macrosoth",10,"lives yet..."), 20, 20, 100, 60)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(2000)
 
 PUB StarWarsReel(text,reeltime) | x, choice
@@ -203,7 +203,7 @@ PUB StarWarsReel(text,reeltime) | x, choice
         
         txt.Box(text, 16, 64-x, 108, 64) 
     
-        lcd.DrawScreen
+        lcd.Draw
         fn.Sleep(70)
         x++
 
@@ -213,7 +213,7 @@ PUB ItsGameOver
     
     ShowGameView
     txt.Box(string("GAME OVER"), 30, 28, 100, 60)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep(2000)
     
     jumping := 0
@@ -231,7 +231,7 @@ PUB ItsGameOver
     DrawPlayer            
     txt.Str(string("Press A and "),18,24)
     txt.Str(string("try again..."),18,32)
-    lcd.DrawScreen
+    lcd.Draw
     
     repeat until ctrl.A
         ctrl.Update

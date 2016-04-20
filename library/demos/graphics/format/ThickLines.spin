@@ -8,7 +8,7 @@ PUB Main
     gfx.Sprite(@line1, 32, 24, 0)
     gfx.Sprite(@line2, 90, 24, 0)
         
-    lcd.DrawScreen
+    lcd.Draw
 
 DAT
 

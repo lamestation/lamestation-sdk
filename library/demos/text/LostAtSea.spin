@@ -27,14 +27,14 @@ PUB Main
 
     ' cool dialog box function with customizable graphics
     DialogBox(@strang,0,32,128,24,6,6)
-    lcd.DrawScreen
+    lcd.Draw
 
     repeat
         ctrl.Update
     until ctrl.A
 
     DialogBox(@strang2,0,32,128,24,6,6)
-    lcd.DrawScreen
+    lcd.Draw
 
 PUB DialogBox(str, x,y,w,h, tw, th) | dx, dy, x1, y1, w1, h1, frame
 

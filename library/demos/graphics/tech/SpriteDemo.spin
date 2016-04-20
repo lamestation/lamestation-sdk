@@ -41,7 +41,7 @@ PUB SpriteDemo | s, ran
     txt.Box(string("Sprite Demo!",10,"A/B changes the",10,"number of sprites"), 0, 0, 128, 64)
     gfx.Sprite(sprite.Addr, 56, 28, 1)
     txt.Box(string("Press A to begin"), 0, 56, 128, 64)
-    lcd.DrawScreen
+    lcd.Draw
 
     repeat
         ctrl.Update
@@ -93,7 +93,7 @@ PUB SpriteDemo | s, ran
             gfx.Sprite(sprite.Addr, x[s], y[s], (dir[s] & $3)<<1 + frame[s])
 
         Overlay
-        lcd.DrawScreen
+        lcd.Draw
 
 PUB Overlay | tmp
     tmp := maxsprite

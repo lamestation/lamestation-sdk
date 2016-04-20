@@ -70,17 +70,17 @@ PUB InitGame
 PUB TitleScreen
     txt.Str(string("HELLO PONG!"),24,30)
     txt.Box(string("This game is",10,"impossible"),0,46,128,64)
-    lcd.DrawScreen
+    lcd.Draw
     ctrl.WaitKey
 
 PUB YouLose
     txt.Str(string("You lose!"),28,20)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep (4000)
     
 PUB YouWin
     txt.Str(string("You win!"),28,20)
-    lcd.DrawScreen
+    lcd.Draw
     fn.Sleep (4000)
     
 PUB ResetGame
@@ -106,7 +106,7 @@ PUB GameLoop
     
     txt.Dec (score1, 0, 56)
     txt.Dec (score2, 120, 56)
-    lcd.DrawScreen
+    lcd.Draw
 
 PUB ControlPlayer
 

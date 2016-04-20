@@ -17,5 +17,5 @@ PUB Main
     repeat
         gfx.Fill (0)
         gfx.Sprite(sprite.Gfx, x / 4, 24, 0)
-        lcd.DrawScreen
+        lcd.Draw
         x += 1

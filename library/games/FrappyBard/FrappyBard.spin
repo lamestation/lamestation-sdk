@@ -112,7 +112,7 @@ PUB TitleScreen | flightstate
     
         gfx.Sprite(title.Addr, 40, 4, 0)
         gfx.Sprite(pressa.Addr,44,52,0)
-        lcd.DrawScreen
+        lcd.Draw
         
     music.Stop
 
@@ -145,12 +145,12 @@ PUB GameLoop
 
         KeepScore
 
-        lcd.DrawScreen
+        lcd.Draw
 
 
 PUB GameOver
     gfx.Sprite(youdied.Addr,40,32,0)
-    lcd.DrawScreen
+    lcd.Draw
     Errr
     fn.Sleep(1000)
 

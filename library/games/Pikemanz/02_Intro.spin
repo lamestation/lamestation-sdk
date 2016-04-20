@@ -40,11 +40,11 @@ PUB Scene
 
 PUB DisplayWaitDialog(str)
     menu.Dialog(str)
-    lcd.DrawScreen
+    lcd.Draw
     ctrl.WaitKey
 
 PUB DisplayWaitDialogArrow(str)
     menu.Dialog(str)
     gfx.Sprite(arrow.Addr, 115,54, 0)
-    lcd.DrawScreen
+    lcd.Draw
     ctrl.WaitKey

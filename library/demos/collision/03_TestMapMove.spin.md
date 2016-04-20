@@ -119,6 +119,6 @@ Draw the map and sprite to the screen.
             gfx.Sprite(box.Addr,x, y,0)
 
             gfx.InvertColor(False)
-            lcd.DrawScreen
+            lcd.Draw
 
 And now you can't do crazy things like travel through walls!

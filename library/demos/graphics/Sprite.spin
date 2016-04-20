@@ -12,4 +12,4 @@ PUB Main
     lcd.Start(gfx.Start)
     
     gfx.Sprite(sprite.Addr, 56, 24, 0)
-    lcd.DrawScreen
+    lcd.Draw

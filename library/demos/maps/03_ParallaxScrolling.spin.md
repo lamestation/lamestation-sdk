@@ -89,7 +89,7 @@ But we're also going to add a beautiful backdrop to admire!
             map.Load(tileset.Addr, mp.Addr)
             map.Draw(xoffset, yoffset)
 
-            lcd.DrawScreen
+            lcd.Draw
 
 When you run your code, it will look completely flipping awesome. Why? Because now you don't just have the single tilemap, but two, and they're parallaxed against a backdrop, which creates a nice depth-of-field effect.
 

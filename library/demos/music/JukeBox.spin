@@ -65,7 +65,7 @@ PUB JukeBox
 
     repeat
 
-        lcd.DrawScreen
+        lcd.Draw
 
         ctrl.Update
         gfx.Blit(juke.Addr)

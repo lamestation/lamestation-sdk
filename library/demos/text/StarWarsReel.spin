@@ -35,7 +35,7 @@ PUB StarWarsReel(text,reeltime) | x
     repeat x from 0 to reeltime
         gfx.Clear
         txt.Box(text, 16, 64-x, 96, 64)
-        lcd.DrawScreen
+        lcd.Draw
 
 DAT
 

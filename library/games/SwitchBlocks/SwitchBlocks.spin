@@ -80,7 +80,7 @@ PUB HandleGraphics
       gfx.Sprite(selector.Addr,selector_x,selector_y,0)
       
       DrawBoard
-      lcd.DrawScreen
+      lcd.Draw
       
 PUB HandleInput
   
@@ -301,7 +301,7 @@ PUB KeepScore | tmp
     
     txt.Load(number_font.Addr,"0",4,4)
     txt.Str(@score_array, 6, 8)
-    lcd.DrawScreen
+    lcd.Draw
     
 'KEEP THE TIME
 PUB KeepTime | tmp
@@ -318,7 +318,7 @@ PUB KeepTime | tmp
     
     txt.Load(number_font.Addr,"0",4,4)
     txt.Str(@time_array, 6, 25)
-    lcd.DrawScreen
+    lcd.Draw
     
 PUB HandleTime
     time_pause++
@@ -333,5 +333,5 @@ PUB Endgame
     txt.Load(font.Addr," ",5,3)
     txt.Str(string("Game Over"),40,25)
    
-    lcd.DrawScreen
+    lcd.Draw
  
