@@ -4,6 +4,8 @@ import os, sys, shutil
 import errno    
 import subprocess
 import zipfile
+import fnmatch
+import re
 
 
 def zipdir(path, ziph):
@@ -19,6 +21,12 @@ def mkdir(path):
             pass
         else:
             raise
+
+def purge(directory, pattern):
+    for root, dirnames, filenames in os.walk(directory):
+        for filename in fnmatch.filter(filenames, pattern):
+            print "del", os.path.join(root, filename)
+            os.remove(os.path.join(root, filename))
 
 version = 'master'
 
@@ -37,6 +45,10 @@ except:
     pass
 shutil.copytree("library",builddir)
 
+purge(builddir, "*.sh")
+purge(builddir, "*.xcf")
+purge(builddir, "*.svg")
+
 def command(cmd):
     try:
         out = subprocess.check_output(cmd)
@@ -46,12 +58,10 @@ def command(cmd):
     return out
 
 
-out = command(["git","ls-tree","-r",version,"--name-only"])
+files = command(["git","ls-tree","-r",version,"--name-only"]).splitlines()
+files = [f for f in files if re.match(r'.*\.spin', f)]
 
-for line in out.splitlines():
-
-    if not line.endswith(".spin"):  continue
-
+for line in files:
     filebase = os.path.basename(line)
 
     if filebase.startswith('gfx'):  continue
