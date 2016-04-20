@@ -30,6 +30,11 @@ target:
         run: lslauncher
 
 repos: 
+    lamestation-sdk:
+        url: https://github.com/lamestation/lamestation-sdk.git
+        builder: dir
+        root: library
+
     lslauncher:
         url: https://github.com/lamestation/lslauncher.git
         builder: qmake
@@ -37,12 +42,6 @@ repos:
             lslauncher:
                 name: LameStudio
                 icon: icons/seal.png
-
-    lamestation-sdk:
-        url: https://github.com/lamestation/lamestation-sdk.git
-        builder: dir
-        root: library
-        tag: 0.6.1-rc2
 
     propelleride:
         url: https://github.com/parallaxinc/PropellerIDE.git

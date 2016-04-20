@@ -6,7 +6,7 @@ script:
 - SPINC="./openspin -q" make -j
 - make clean
 - rm ./openspin -f
-- ./scripts/release.sh ${TRAVIS_TAG}
+- RELEASE_TAG=${TRAVIS_TAG} make release
 
 after_script:
 - ls *.zip

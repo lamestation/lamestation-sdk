@@ -7,13 +7,13 @@ import zipfile
 import fnmatch
 import re
 
-
 def zipdir(path, ziph):
     for root, dirs, files in os.walk(path):
         for file in files:
             ziph.write(os.path.join(root, file))
 
 def mkdir(path):
+    print 'dir', path
     try:
         os.makedirs(path)
     except OSError as exc:  # Python >2.5
@@ -28,6 +28,17 @@ def purge(directory, pattern):
             print "del", os.path.join(root, filename)
             os.remove(os.path.join(root, filename))
 
+def command(cmd):
+    try:
+        out = subprocess.check_output(cmd)
+    except subprocess.CalledProcessError as e:
+        print "Error: Command failed"
+        sys.exit(1)
+    return out
+
+
+
+
 version = 'master'
 
 if len(sys.argv) > 1:
@@ -36,8 +47,10 @@ if len(sys.argv) > 1:
 release = "lamestation-sdk-"+version
 archive = release+".zip"
 builddir = ".build"
+docsdir = os.path.join(builddir, 'docs')
 
-print release
+print 'version', version
+print 'release', release
 
 try:
     shutil.rmtree(builddir)
@@ -49,14 +62,11 @@ purge(builddir, "*.sh")
 purge(builddir, "*.xcf")
 purge(builddir, "*.svg")
 
-def command(cmd):
-    try:
-        out = subprocess.check_output(cmd)
-    except subprocess.CalledProcessError as e:
-        print "Error: Command failed"
-        sys.exit(1)
-    return out
-
+mkdir(docsdir)
+print 'wget'
+command(['wget','-4','-q','-O',
+    os.path.join(docsdir,'lamestation-book-'+version+'.pdf'),
+    'https://www.gitbook.com/download/pdf/book/bweir/lamestation-book'])
 
 files = command(["git","ls-tree","-r",version,"--name-only"]).splitlines()
 files = [f for f in files if re.match(r'.*\.spin', f)]
@@ -76,7 +86,7 @@ for line in files:
     filename = os.sep.join(filecomps)
     newfilename = os.path.join(builddir, filename)
 
-    print line
+    print 'meta', line
     logs = command(["git","log", "--format=%aD","--follow", line]).splitlines()
     today = logs[0].split()[3]
     created = logs[-1].split()[3]
@@ -116,9 +126,11 @@ try:
 except:
     pass
 
-print "Building zip:",archive
+print 'zip', archive
 zipf = zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED)
 zipdir(release, zipf)
 zipf.close()
 
 shutil.move(release, builddir)
+
+print 'done'

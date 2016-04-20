@@ -20,8 +20,11 @@ clean:
 	rm -f $(BINARIES) $(ZIPS)
 	rm -rf $(PREFIX)
 
-build_media:
-	./media/media.sh
+media:
+	./library/media/media.sh
+
+release:
+	./scripts/release.py $(RELEASE_TAG)
 
 test: test_compile
 
