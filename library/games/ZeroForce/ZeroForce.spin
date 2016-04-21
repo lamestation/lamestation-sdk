@@ -78,7 +78,7 @@ PUB Static | ran, x
     gfx.WaitToDraw
     
     ran := cnt
-    repeat x from 0 to constant(gfx#SCREEN_W*gfx#SCREEN_H/16-1) step 1
+    repeat x from 0 to constant(gfx#SCREEN_W*gfx#SCREEN_H/8-1) step 1
          word[buffer][x] := ran?
 
 
