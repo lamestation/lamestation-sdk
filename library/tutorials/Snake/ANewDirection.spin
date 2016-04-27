@@ -25,6 +25,8 @@ PUB Main
     snakex := 32
     snakey := 32
     
+    snakedir := 1
+    
     repeat
         gfx.Clear
         ctrl.Update
