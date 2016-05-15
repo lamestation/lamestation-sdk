@@ -90,7 +90,7 @@ PUB ControlBall | ballcenter, paddlecenter, oldx, oldy
         if oldx => playerx + gfx.Width (@paddle_gfx) - 1
             ballspeedx := -ballspeedx
             paddlecenter := playery + gfx.Height(@paddle_gfx)/2
-            ballspeedy := (ballcenter - paddlecenter + playerspeedy * 2)
+            ballspeedy := ballcenter - paddlecenter + playerspeedy * 2
         else
             if oldy < playery or oldy > playery + gfx.Height (@paddle_gfx)
                 ballspeedy := -ballspeedy
@@ -99,7 +99,7 @@ PUB ControlBall | ballcenter, paddlecenter, oldx, oldy
         if oldx + gfx.Width (@ball_gfx) =< opponentx
             ballspeedx := -ballspeedx
             paddlecenter := opponenty + gfx.Height(@paddle_gfx)/2        
-            ballspeedy := (ballcenter - paddlecenter + opponentspeedy * 2)
+            ballspeedy := ballcenter - paddlecenter + opponentspeedy * 2
         else
             if oldy < opponenty or oldy > opponenty + gfx.Height (@paddle_gfx)
                 ballspeedy := -ballspeedy
