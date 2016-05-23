@@ -4,8 +4,8 @@ CON
     
     BULLETS = 10
     
-    PLAYERSPEED = 2
-    BULLSPEED = 8
+    PLAYERSPEED = 1
+    BULLSPEED = 2
     
     SONGS = 2
     SONGOFF = 255
@@ -28,9 +28,12 @@ OBJ
     music   : "LameMusic"
     ctrl    : "LameControl"
 
-    song_logo : "song_logo"
-    song_lastboss : "song_lastboss"
-    song_zeroforce : "song_zeroforce"
+    song_logo       : "song_logo"
+    song_lastboss   : "song_lastboss"
+    song_zeroforce  : "song_zeroforce"
+    
+    gfx_zeroforce   : "gfx_zeroforce"
+    gfx_laser       : "gfx_laser"
 
 VAR
     word    screen
@@ -49,8 +52,9 @@ VAR
     byte    blinkstate
     byte    collided
     byte    bosshealth
-
     
+    long    random
+
 PUB Main
 
     dira~
@@ -63,14 +67,15 @@ PUB Main
     gfx.Clear
     lcd.Draw
 
+    random := cnt
     clicked := 0
-    StaticScreen
-    LogoScreen
+'    StaticScreen
+'    LogoScreen
     
     repeat
-        TitleScreen
-        'LevelStage
-        BossStage
+'        TitleScreen
+        LevelStage
+        'BossStage
 
 
 PUB Static | ran, x
@@ -85,7 +90,7 @@ PUB Static | ran, x
 PUB StaticScreen | x
 
     audio.SetWaveform(1, 4)
-    audio.SetADSR(1,127, 1, 0, 70)
+    audio.SetADSR(1,127, 0, 127, 70)
     audio.PlaySound(1,50)
     
     repeat x from 0 to 50
@@ -232,10 +237,6 @@ PUB CreateRandomEnemies | ran, x
 
 
 
-
-
-
-
 ' *********************************************************
 '  Player
 ' *********************************************************
@@ -251,8 +252,6 @@ PUB InitPlayer
 
 PUB HandlePlayer
 
-        ctrl.Update      
-        
         if ctrl.Left
              playerx -= PLAYERSPEED
              if playerx < 0
@@ -274,15 +273,15 @@ PUB HandlePlayer
                 playery := 6 << 3
 
                
-        if ctrl.A or ctrl.B
+        if ctrl.A
             bullettiming++
-            if bullettiming > 2
-                SpawnBullet(playerx + 8,playery + 7)                
+            if bullettiming > 12
+                SpawnBullet(playerx + 10,playery + 5)
                 bullettiming := 0
         else
             bullettiming := 0
             
-        gfx.Sprite(@gfx_zeroforce, playerx, playery, 0)             
+        gfx.Sprite(gfx_zeroforce.Addr, playerx, playery, 0)             
         
 
     
@@ -326,50 +325,114 @@ PUB HandleBullets
             if bulletx[bulletindex] => SCREEN_W
                 bulleton[bulletindex] := 0
             else
-                gfx.Sprite(@gfx_laser, bulletx[bulletindex], bullety[bulletindex], 0)
+                gfx.Sprite(gfx_laser.Addr, bulletx[bulletindex], bullety[bulletindex], 2)
    
-
-    
-
-    
-
-        
-
-
 PUB InitLevel
+
     InitBoss
     InitPlayer
     InitBullets
     InitEnemies
+    InitStars
     
-
-
-
-
-
-
 PUB LevelStage
     
     InitLevel
     
     choice := 1
     repeat until not choice
-        lcd.Draw     
-        gfx.Clear
-       
+        GameLoop
+    
+PUB GameLoop
 
-        HandlePlayer                        
-                        
-     '   CreateFixedEnemies
-        currentenemiesoffset++
-        if currentenemiesoffset > 100
-            CreateRandomEnemies
-            currentenemiesoffset := 0
+    gfx.Clear
+    ctrl.Update
+   
+    HandleStars
+   
+    HandlePlayer                        
 
+{
+ '   CreateFixedEnemies
+    currentenemiesoffset++
+    if currentenemiesoffset > 100
+        CreateRandomEnemies
+        currentenemiesoffset := 0
+
+        
+    HandleEnemies                
+}                   
+    HandleBullets
+
+    lcd.Draw     
+
+CON
+    STAR_COUNT_MAX = 100
+
+VAR
+
+    byte    star_meter
+    byte    star_count
+    byte    star_speed
+    byte    star_frame
+    
+    long    star_x[STAR_COUNT_MAX]
+    byte    star_y[STAR_COUNT_MAX]
+    'byte    star_frame[STAR_COUNT_MAX]
+    
+OBJ
+
+    gfx_star : "gfx_star"
+    
+PUB NewStar(i) 
+    
+    star_x[i] := (||random? // 144)
+    star_y[i] := (random? & $3F)
+    'star_frame[i] := 3
+    
+    if star_y[i] > 24 and star_y[i] =< 32
+        star_y[i] := (random? & $F)
+        
+    elseif star_y[i] > 32 and star_y[i] < 40
+        star_y[i] := 48 + (random? & $F)
+        
+'    if star_y[i] < 16 or star_y[i] > 48
+ '       star_frame := 3
+    
+PUB InitStars | i
+
+    star_count := 50
+    star_speed := 8
+    star_frame := 3
+    
+    repeat i from 0 to constant(STAR_COUNT_MAX-1)
+        NewStar(i)
             
-        HandleEnemies                
-                       
-        HandleBullets
+
+PUB HandleStars | i
+
+    if ctrl.B
+        if star_count < STAR_COUNT_MAX
+            star_count++
+    else
+        if star_count > 20
+            star_count--
+
+    star_speed := 1 + star_count >> 5
+    star_frame := star_count >> 5
+
+
+    repeat i from 0 to constant(STAR_COUNT_MAX-1)
+        if star_x[i] > -16
+            star_x[i] -= star_speed
+        else
+            NewStar(i)
+            star_x[i] := 128 + (random? & $7)
+
+        if i < star_count
+            gfx.Sprite (gfx_star.Addr, star_x[i], star_y[i], star_frame)
+
+
 
 
 ' *********************************************************
@@ -402,11 +465,6 @@ PUB HandleBoss
                     bosshealth--
 }}
 
-        
-    gfx.Sprite(@gfx_vortex_hand, 72,24, 0)
-    gfx.Sprite(@gfx_vortex, 64,0, 0)        
-    gfx.Sprite(@gfx_vortex_hand, 96,32, 0)   
-
 
 
 PUB BossStage
@@ -424,7 +482,7 @@ PUB BossStage
         
         gfx.Clear
         
-        gfx.Sprite(@gfx_planet, 20,48, 0)
+        'gfx.Sprite(@gfx_planet, 20,48, 0)
               
         HandleBoss
         HandlePlayer   
@@ -477,14 +535,6 @@ word    $aaaa, $af5f, $aaaa, $aaaa, $4114, $aaab, $57aa, $5104, $aab0, $757a, $d
 word    $5555, $c575, $4047, $555d, $d1d7, $500d, $57d5, $1755, $557d, $dd75, $4545, $5d55, $555f, $5545, $d57f, $1554
 word    $0dcd, $ff02, $1554, $0305, $3556, $1554, $a80c, $000a, $555d, $aa8c, $2aaa, $75dd, $aaa8, $aaaa, $01d0, $aaaa
 
-
-gfx_laser
-word    16  'frameboost
-word    8, 8   'width, height
-
-word    $aaaa, $d557, $bffe, $aaaa, $aaaa, $d557, $bffe, $aaaa
-
-
 gfx_moon
 word    256  'frameboost
 word    32, 32   'width, height
@@ -525,63 +575,6 @@ word    32  'frameboost
 word    16, 8   'width, height
 
 word    $aaaa, $a002, $0ffa, $83fc, $c0aa, $8d57, $3000, $f511, $503c, $1555, $d7f3, $055f, $0000, $03f0, $00aa, $a000
-
-
-gfx_vortex_hand
-word    144  'frameboost
-word    24, 24   'width, height
-
-word    $002a, $a000, $a00a, $ffca, $83ff, $8d40, $55f2, $0f55, $87c0, $0070, $0d00, $0f05, $ff00, $00ff, $3c3d, $5540
-word    $0155, $307f, $5570, $0d55, $3057, $55f0, $0f55, $0155, $ffc0, $03ff, $0fd5, $0c00, $0000, $03d5, $5fc0, $03d5
-word    $00f5, $5570, $0d55, $30ff, $5570, $0d55, $003f, $55f0, $0f55, $0c3c, $5ff0, $0ff5, $0f3c, $ffc0, $03ff, $0d70
-word    $0000, $0000, $035c, $55c0, $0d55, $83d7, $57f0, $0f55, $a0fc, $ffc0, $03ff, $a80c, $0000, $0000, $aa00, $fc02
-word    $003f, $aaa0, $002a, $8000, $aaaa, $00aa, $a000, $aaaa
-
-
-gfx_vortex
-word    1024  'frameboost
-word    64, 64   'width, height
-
-word    $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $aaaa, $00aa, $0000, $0000, $aa80
-word    $aaaa, $aaaa, $aaaa, $aaaa, $002a, $0000, $3d5f, $aa80, $aaaa, $aaaa, $aaaa, $aaaa, $540a, $1550, $5540, $aa03
-word    $aaaa, $aaaa, $aaaa, $aaaa, $5402, $1571, $5444, $aa0d, $aaaa, $aaaa, $aaaa, $2aaa, $fc03, $15c3, $4344, $aa3d
-word    $aaaa, $aaaa, $aaaa, $00aa, $0000, $4700, $0d44, $a835, $aaaa, $aaaa, $02aa, $0000, $ffc0, $4f0f, $3d44, $a834
-word    $aaaa, $aaaa, $f2aa, $57ff, $5555, $4035, $fd44, $a0f4, $aaaa, $aaaa, $5caa, $5555, $5555, $0fd5, $f541, $80d0
-word    $aaaa, $aaaa, $570a, $f555, $d557, $3d57, $3550, $03d4, $aaaa, $aaaa, $5542, $5555, $5555, $ff55, $0150, $0fd5
-word    $aaaa, $aaaa, $d570, $555f, $5555, $ffd5, $5354, $ff55, $aaaa, $aaaa, $55f2, $0055, $57d4, $3ff5, $5c54, $ff55
-word    $aaaa, $aaaa, $5f02, $54d5, $5550, $0ffd, $54d5, $fff5, $aaaa, $aaaa, $f002, $54d5, $d551, $43ff, $550d, $003f
-word    $aaaa, $aaaa, $0002, $5357, $f551, $10ff, $f570, $4103, $aaaa, $aaaa, $3fc2, $4d5c, $fd45, $0c3f, $3555, $0054
-word    $aaaa, $aaaa, $d570, $0570, $fc15, $50c3, $cd55, $0005, $aaaa, $aaaa, $5570, $35f3, $c155, $5430, $43d5, $0005
-word    $aaaa, $aaaa, $5ff2, $35f1, $0555, $5500, $73d5, $0005, $aaaa, $aaaa, $5002, $37cd, $0554, $5550, $53f5, $0035
-word    $aaaa, $aaaa, $5052, $ff33, $555c, $1555, $73ff, $0015, $aaaa, $aaaa, $5402, $fc3c, $555c, $0155, $7000, $00d5
-word    $aaaa, $aaaa, $d572, $f0cc, $555c, $4055, $47c0, $0355, $aaaa, $aaaa, $100a, $f3f3, $555c, $5035, $c7f4, $3555
-word    $aaaa, $aaaa, $c5ca, $0f54, $555c, $c001, $05d0, $1555, $aaaa, $aaaa, $f1ca, $0f54, $d55c, $0050, $1544, $5557
-word    $aaaa, $aaaa, $3c02, $0f55, $3557, $c154, $1400, $557c, $aaaa, $aaaa, $4f02, $03d5, $0d57, $ccd5, $03f0, $7fc0
-word    $aaaa, $aaaa, $53f2, $30f5, $4155, $103c, $fd50, $0000, $aaaa, $aaaa, $543c, $3cf5, $c05f, $1d03, $5554, $fffd
-word    $aaaa, $aaaa, $554f, $373d, $f0df, $1743, $4155, $5455, $aaaa, $aaaa, $55f0, $35cf, $4037, $17c0, $5155, $5455
-word    $aaaa, $aaaa, $d5fc, $3553, $0537, $c5f0, $5055, $5455, $aaaa, $aaaa, $d5f2, $3553, $f5f7, $c5f0, $5c55, $5c55
-word    $aaaa, $aaaa, $f7f2, $0554, $3d0f, $c57c, $7c55, $5c55, $aaaa, $aaaa, $3fca, $0355, $4cf3, $c570, $7c55, $7c55
-word    $aaaa, $aaaa, $0f0a, $43d5, $4740, $0500, $f05f, $7055, $aaaa, $aaaa, $730a, $54fd, $047d, $0001, $c0ff, $f0ff
-word    $aaaa, $aaaa, $dc02, $5407, $45f5, $0005, $0000, $0000, $aaaa, $aaaa, $7f02, $55f3, $55d5, $5555, $0000, $0000
-word    $a800, $aaaa, $ff00, $55fc, $57fd, $5555, $5555, $5555, $00fc, $0aa8, $0ff0, $d5ff, $55f5, $5555, $5555, $0555
-word    $3f5c, $0000, $c000, $f17f, $05f5, $0030, $1000, $fc30, $d55c, $ffff, $f3ff, $c14f, $c7f5, $ffff, $5fff, $fffd
-word    $555e, $5555, $f355, $5557, $c3d5, $5517, $5555, $fd7d, $1572, $5000, $f055, $5575, $4dd5, $5555, $5555, $fd77
-word    $5572, $5555, $f0d5, $f755, $71d5, $5501, $5555, $ff77, $1fca, $5554, $c0f1, $dfd5, $f1d5, $5501, $5555, $c337
-word    $ffea, $1550, $c0fc, $d7d5, $c1d7, $5535, $5555, $c0f3, $fc2a, $1503, $c0ff, $cdf7, $cdd7, $5535, $7515, $f0f7
-word    $f0aa, $54ff, $c0ff, $c3f7, $ccd7, $5c35, $7415, $000f, $02aa, $17f0, $c03f, $c017, $43f7, $7c31, $7407, $000f
-word    $aaaa, $ffc0, $c00f, $c03f, $c3f7, $7017, $7c05, $0007, $aaaa, $f002, $003f, $c03c, $c037, $f41f, $7c01, $0000
-word    $aaaa, $002a, $000c, $c03c, $003f, $f01f, $fc01, $0000, $aaaa, $00aa, $0000, $40f0, $000f, $f00f, $3c07, $0000
-word    $aaaa, $2aaa, $0000, $00c0, $000f, $c03c, $300f, $0004, $aaaa, $2aaa, $0000, $0000, $0000, $0000, $300d, $0000
-word    $aaaa, $aaaa, $0000, $0000, $0000, $0000, $0400, $0000, $aaaa, $aaaa, $0000, $0000, $0000, $0000, $0000, $0000
-word    $aaaa, $aaaa, $0002, $0000, $0000, $0000, $0000, $0000, $aaaa, $aaaa, $0002, $0000, $0000, $0000, $0000, $0000
-
-
-gfx_zeroforce
-word    64  'frameboost
-word    16, 16   'width, height
-
-word    $aaaa, $aaaa, $aaaa, $aaaa, $aa95, $aaaa, $aa70, $aaaa, $9742, $aaaa, $01c2, $aaa4, $0dc2, $aa41, $7702, $a900
-word    $7002, $5555, $fff3, $7fff, $055c, $00cf, $157c, $aa00, $95f0, $aaaa, $57c2, $a401, $fc2a, $aaa5, $02aa, $aaa0
 
 
 
