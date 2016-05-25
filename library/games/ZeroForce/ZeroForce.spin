@@ -67,7 +67,7 @@ PUB Main
     bullets.SetType (cc#_LASER3,   gfx_laser.Addr,     2,  false,  false,   3)
     bullets.SetType (cc#_MISSILE,  gfx_missile.Addr,   0,  true,   true,    10)
     
-    nextstate := cc#_TITLE
+    nextstate := cc#_LOGO
     
     repeat
         case nextstate
