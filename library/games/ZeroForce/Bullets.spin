@@ -3,8 +3,8 @@ CON
     MAX_GFX = 5
     
     BULLET_SPEED = 1
-    BULLET_SPEED_MAX = 5 << 3
-    BULLET_ACCEL = 1    
+    BULLET_SPEED_MAX = 7 << 3
+    BULLET_ACCEL = 3
    
 
 OBJ
@@ -19,12 +19,12 @@ DAT
     bullet_x        long    0[MAX_BULLETS]
     bullet_y        long    0[MAX_BULLETS]
     bullet_speedx   long    0[MAX_BULLETS]
-    
 
     bullet_gfx      word    0[MAX_GFX]
     bullet_frame    byte    0[MAX_GFX]
     bullet_accels   byte    0[MAX_GFX]
     bullet_explodes byte    0[MAX_GFX]
+    bullet_damage   byte    0[MAX_GFX]
     
     bullet_on       byte    0[MAX_BULLETS]
     bullet          byte    0
@@ -38,12 +38,13 @@ PUB Init
     longfill(@bullet_y,     0, MAX_BULLETS)
     longfill(@bullet_speedx,0, MAX_BULLETS)
     
-PUB SetType(index, addr, frame, accels, explodes)
+PUB SetType(index, addr, frame, accels, explodes, damage)
 
     bullet_gfx[index] := addr
     bullet_frame[index] := frame
     bullet_accels[index] := accels
     bullet_explodes[index] := explodes
+    bullet_damage[index] := damage
 
 PUB Spawn(x, y, type)
 

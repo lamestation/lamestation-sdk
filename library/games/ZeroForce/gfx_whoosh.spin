@@ -11,6 +11,22 @@ gfx_data
 
 word    14
 word    8, 7
+word    $aaaa '         
+word    $aaaa '         
+word    $0000 ' ████████
+word    $ffff ' ▓▓▓▓▓▓▓▓
+word    $0000 ' ████████
+word    $aaaa '         
+word    $aaaa '         
+
+word    $aaaa '         
+word    $0000 ' ████████
+word    $ffff ' ▓▓▓▓▓▓▓▓
+word    $5555 ' ░░░░░░░░
+word    $ffff ' ▓▓▓▓▓▓▓▓
+word    $0000 ' ████████
+word    $aaaa '         
+
 word    $0000 ' ████████
 word    $ffff ' ▓▓▓▓▓▓▓▓
 word    $5555 ' ░░░░░░░░

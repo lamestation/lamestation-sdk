@@ -1,6 +1,6 @@
 CON
     PRECISION = 3
-    SPEED = 1
+    SPEED = 3
     
 OBJ
     gfx     : "LameGFX"
@@ -20,16 +20,19 @@ DAT
     bullettiming    byte    0
     
     pup_multiply    byte    1
-    pup_weapon      byte    2
+    pup_weapon      byte    3
 
 PUB Init
 
-    player_x := 3
-    player_y := 3
+    SetPosition(3, 3)
+    
+PUB SetPosition(x, y)
+
+    player_x := x
+    player_y := y    
 
 PUB Handle
 
-    ' acceleration
     if ctrl.Left
         player_x -= SPEED
             
@@ -41,8 +44,6 @@ PUB Handle
             
     if ctrl.Down
         player_y += SPEED
-
-    ' apply movement
     
     if player_x < 0
         player_x := 0
@@ -56,6 +57,7 @@ PUB Handle
     if player_y > gfx#SCREEN_H - gfx.Height (gfx_zeroforce.Addr)
         player_y := gfx#SCREEN_H - gfx.Height (gfx_zeroforce.Addr)
 
+
     if ctrl.A
         if not bullettiming
             bullettiming := 1
@@ -67,7 +69,10 @@ PUB Handle
                         
     else
         bullettiming := 0
+        
+    Draw
 
+PUB Draw
 
     gfx.Sprite(gfx_zeroforce.Addr, player_x, player_y, 0)
     

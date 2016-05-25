@@ -11,10 +11,11 @@ gfx_data
 
 word    4
 word    16, 1
-word    $aaaf,$aaaa ' ▓▓              
+word    $aaa1,$aaaa ' ░█              
 
-word    $aaff,$aaaa ' ▓▓▓▓            
+word    $aa15,$aaaa ' ░░░█            
 
-word    $ffff,$aaaa ' ▓▓▓▓▓▓▓▓        
+word    $0fff,$aaaa ' ▓▓▓▓▓▓██        
 
-word    $ffff,$ffff ' ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+word    $ffff,$03ff ' ▓▓▓▓▓▓▓▓▓▓▓▓▓███
+

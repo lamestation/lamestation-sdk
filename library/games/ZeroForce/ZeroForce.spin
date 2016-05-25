@@ -20,23 +20,26 @@ OBJ
     star        : "StarEffect"
     static      : "StaticEffect"
     explosion   : "ExplosionEffect"
+    whoosh      : "WhooshEffect"
 
     song_logo           : "song_logo"
     song_lastboss       : "song_lastboss"
     song_zeroforce      : "song_zeroforce"
 
-    gfx_logo_zeroforce  : "gfx_logo_zeroforce_inv"
+    gfx_zeroforce       : "gfx_zeroforce"
+    gfx_logo_zeroforce  : "gfx_logo_zeroforce"
     gfx_logo_teamlame   : "gfx_logo_teamlame"
     
     gfx_explosion       : "gfx_explosion"
     
     gfx_laser           : "gfx_laser"
     gfx_missile         : "gfx_missile"
+    
+    font                : "gfx_font6x6_g"
+
 
 VAR
     word    buffer
-    
-    byte    choice
     
     long    xoffset
     
@@ -50,18 +53,21 @@ VAR
 PUB Main
 
     lcd.Start(buffer := gfx.Start)
+    lcd.SetFrameLimit (lcd#FULLSPEED)
+    
+    txt.Load (font.Addr, " ", 8, 6)
 
     audio.Start
     music.Start
     
     explosion.SetGraphics (0, gfx_explosion.Addr)
     
-    bullets.SetType (cc#_LASER1,   gfx_laser.Addr,     0,  false,  false)
-    bullets.SetType (cc#_LASER2,   gfx_laser.Addr,     1,  false,  false)
-    bullets.SetType (cc#_LASER3,   gfx_laser.Addr,     2,  false,  false)
-    bullets.SetType (cc#_MISSILE,  gfx_missile.Addr,   0,  true,   true)
+    bullets.SetType (cc#_LASER1,   gfx_laser.Addr,     0,  false,  false,   1)
+    bullets.SetType (cc#_LASER2,   gfx_laser.Addr,     1,  false,  false,   2)
+    bullets.SetType (cc#_LASER3,   gfx_laser.Addr,     2,  false,  false,   3)
+    bullets.SetType (cc#_MISSILE,  gfx_missile.Addr,   0,  true,   true,    10)
     
-    nextstate := cc#_LEVEL
+    nextstate := cc#_TITLE
     
     repeat
         case nextstate
@@ -95,21 +101,95 @@ PUB LogoScreen | x
 
     music.Stop    
 
-PUB TitleScreen
+PUB TitleScreen | blink, i
 
     music.Load(song_zeroforce.Addr)
     music.Loop
     
     star.Init
     
-    gfx.Blit (gfx_logo_zeroforce.Addr)
-    lcd.Draw
+    ShipWhoosh(16, -160, 300, 12)
+    ShipWhoosh(48, -160, 300, 12)
+    ShipWhoosh(32, -150, 50, 12)
+
+    fn.Sleep (500)
     
-    ctrl.WaitKey          
-              
+    TitleSwoop(40)
+
+    repeat
+        gfx.Clear
+        ctrl.Update
+        
+        star.Handle
+
+        ShipWhooshFrame(50, 32)
+        TitleSwoopFrame(0, 32)
+        
+        blink++
+        if (blink >> 4) & $1
+            txt.Str (string("PRESS START"), constant(64 - 4*10), 48)
+        '
+        lcd.Draw
+        
+        if ctrl.A
+            quit
+            
+    star.SetLightSpeed (true)
+    
+    i := 50
+    repeat while i > 5
+        gfx.Clear
+        star.Handle
+        ShipWhooshFrame(i, 32)
+        lcd.Draw
+        i--
+        
+    repeat while i < 20
+        gfx.Clear
+        star.Handle
+        ShipWhooshFrame(i, 32)
+        lcd.Draw
+        i++
+        
+    repeat while i < 400
+        gfx.Clear
+        star.Handle
+        ShipWhooshFrame(i, 32)
+        lcd.Draw
+        i += 12
+
     music.Stop
 
-   
+PUB TitleSwoop(y) | i
+
+    repeat i from (y << 1) to 0
+        gfx.Clear
+        ShipWhooshFrame(50, 32)
+        TitleSwoopFrame(i >> 1, 32)
+        lcd.Draw
+
+PUB TitleSwoopFrame(y, desty) | h
+    h := gfx.Height (gfx_logo_zeroforce.Addr) >> 1
+    gfx.Sprite (gfx_logo_zeroforce.Addr, 0, desty - h + y, 0)
+    gfx.Sprite (gfx_logo_zeroforce.Addr, 67, desty - h - y, 1)
+
+PUB ShipWhoosh(y, start, end, speed) | x
+
+    repeat x from start to end step speed
+        gfx.Clear
+        ShipWhooshFrame(x, y)
+        lcd.Draw
+        
+    gfx.Clear
+    ShipWhooshFrame(end, y)
+    lcd.Draw
+
+PUB ShipWhooshFrame(x, y)
+    whoosh.Draw (x, y, whoosh#RIGHT) 
+
+    player.SetPosition (x, y - gfx.Height (gfx_zeroforce.Addr) >> 1)
+    player.Draw
+
 ' *********************************************************
 '  Enemies
 ' *********************************************************
@@ -214,8 +294,7 @@ PUB LevelStage
     
     InitLevel
     
-    choice := 1
-    repeat until not choice
+    repeat
         GameLoop
     
 PUB GameLoop
@@ -288,9 +367,7 @@ PUB BossStage
     
     InitLevel
     
-    choice := 1
-    
-    repeat until not choice
+    repeat
 
         lcd.Draw
         

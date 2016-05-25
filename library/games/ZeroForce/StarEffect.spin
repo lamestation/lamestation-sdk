@@ -1,10 +1,11 @@
 CON
     STAR_COUNT_MAX = 100
     STAR_METER_MAX = 140
+    STAR_METER_SPEED = 2
 
 DAT
 
-    star_meter      byte    0
+    star_meter      word    0
     star_count      byte    0
     star_speed      byte    0
     star_frame      byte    0
@@ -57,16 +58,22 @@ PUB Handle | i
 
     if lightspeed
         if star_meter < STAR_METER_MAX
-            star_meter++
+            star_meter += STAR_METER_SPEED
     else
         if star_meter > 20
-            star_meter--
+            star_meter -= STAR_METER_SPEED
             
     if star_meter < STAR_COUNT_MAX
         star_count := star_meter
-        star_frame := star_meter >> 5
-
-    star_speed := 1 + star_frame
+    else
+        star_count := STAR_COUNT_MAX
+       
+    
+    star_frame := star_meter >> 5    
+    star_speed := 2 + star_frame << 1
+    
+    if star_frame > 3
+        star_frame := 3
 
     repeat i from 0 to constant(STAR_COUNT_MAX-1)
         if star_x[i] > -16
