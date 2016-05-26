@@ -15,11 +15,11 @@ PUB Main
     ctrl.Start
 
     repeat i from 0 to 7
-        gfx.Sprite (@centerline_gfx, 64, i*8, 0)
+        gfx.Sprite (@centerline_gfx, 64 - gfx.Width (@centerline_gfx) / 2, i*8, 0)
     
-    gfx.Sprite (@ball_gfx, 64, 32, 0)
-    gfx.Sprite (@paddle_gfx, 4, 32, 0)
-    gfx.Sprite (@paddle_gfx, 124, 32, 0)
+    gfx.Sprite (@ball_gfx, 64 - gfx.Width (@ball_gfx) / 2, 32 - gfx.Height (@ball_gfx) / 2, 0)
+    gfx.Sprite (@paddle_gfx, 4, 32 - gfx.Height (@paddle_gfx) / 2, 0)
+    gfx.Sprite (@paddle_gfx, 124 - gfx.Width (@paddle_gfx), 32 - gfx.Height (@paddle_gfx) / 2, 0)
     
     lcd.Draw
 

@@ -9,19 +9,52 @@ OBJ
     
 VAR
     byte    i
+    
+    byte    ballx
+    byte    bally
+    
+    byte    playerx
+    byte    playery
+    
+    byte    opponentx
+    byte    opponenty
 
 PUB Main
     lcd.Start(gfx.Start)
     ctrl.Start
-
-    repeat i from 0 to 7
-        gfx.Sprite (@centerline_gfx, 64, i*8, 0)
     
-    gfx.Sprite (@ball_gfx, 64, 32, 0)
-    gfx.Sprite (@paddle_gfx, 4, 32, 0)
-    gfx.Sprite (@paddle_gfx, 124, 32, 0)
+    SetupGame
+    
+    repeat
+        RunGame
+    
+PUB SetupGame
+
+    ballx := 64 - gfx.Width (@ball_gfx) / 2
+    bally := 32 - gfx.Height (@ball_gfx) / 2
+    
+    playerx := 4
+    playery := 32 - gfx.Height (@paddle_gfx) / 2
+
+    opponentx := 124 - gfx.Width (@paddle_gfx)
+    opponenty := 32 - gfx.Height (@paddle_gfx) / 2
+    
+PUB RunGame
+
+    gfx.Clear
+
+    DrawGraphics
     
     lcd.Draw
+
+PUB DrawGraphics
+
+    repeat i from 0 to 7
+        gfx.Sprite (@centerline_gfx, 63, i*8, 0)
+    
+    gfx.Sprite (@ball_gfx, ballx, bally, 0)
+    gfx.Sprite (@paddle_gfx, playerx, playery, 0)
+    gfx.Sprite (@paddle_gfx, opponentx, opponenty, 0)
 
 DAT
 
