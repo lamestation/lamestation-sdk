@@ -2,7 +2,6 @@ CON
     _clkmode        = xtal1 + pll16x
     _xinfreq        = 5_000_000
     
-    FP_OFFSET = 3
 
 OBJ
     lcd         : "LameLCD"
@@ -16,6 +15,7 @@ OBJ
     cc          : "Constants"
     player      : "Player"
     bullets     : "Bullets"
+    enemies     : "Enemies"
 
     star        : "StarEffect"
     static      : "StaticEffect"
@@ -67,8 +67,7 @@ PUB Main
     bullets.SetType (cc#_LASER3,   gfx_laser.Addr,     2,  false,  false,   3)
     bullets.SetType (cc#_MISSILE,  gfx_missile.Addr,   0,  true,   true,    10)
     
-    nextstate := cc#_LOGO
-    
+    nextstate := cc#_LOGO    
     repeat
         case nextstate
             cc#_LOGO:   LogoScreen
@@ -129,7 +128,7 @@ PUB TitleScreen | blink, i
         
         blink++
         if (blink >> 4) & $1
-            txt.Str (string("PRESS START"), constant(64 - 4*11), 48)
+            txt.Str (string("PRESS A"), constant(64 - 4*7), 48)
         '
         lcd.Draw
         
@@ -149,32 +148,9 @@ PUB TitleScreen | blink, i
         
     gfx.Clear
     lcd.Draw
-    fn.Sleep (500)
+    fn.Sleep (700)
 
-    i := -96
-    repeat i from -96 to 32 step 8
-        gfx.Clear
-        star.Handle
-        txt.Str (string("MISSION 1"), i, 30)
-        lcd.Draw
-
-    repeat 60
-        gfx.Clear
-        star.Handle
-        txt.Str (string("MISSION 1"), 32, 30)
-        lcd.Draw
-
-        
-    repeat i from 32 to 129 step 8
-        gfx.Clear
-        star.Handle
-        txt.Str (string("MISSION 1"), i, 30)
-        lcd.Draw
-
-    repeat 20
-        gfx.Clear
-        star.Handle
-        lcd.Draw
+    TextSwoop(string("MISSION 2"), 64, 32)
         
     PlayerMove(-32, 32, 16, 32, 4, true, true)
     star.SetLightSpeed (false)
@@ -182,6 +158,35 @@ PUB TitleScreen | blink, i
     PlayerMove(16, 32, 24, 32, 2, true, true)
     
     music.Stop
+    
+PUB TextSwoop(text, x, y) | len, i
+
+    len := 0
+    repeat until text[len] == 0
+        len++
+        
+    x -= 7*len
+
+    i := -96
+    repeat i from -96 to x step 8
+        gfx.Clear
+        star.Handle
+        txt.Str (text, i, 30)
+        lcd.Draw
+
+    repeat 60
+        gfx.Clear
+        star.Handle
+        txt.Str (text, x, 30)
+        lcd.Draw
+
+        
+    repeat i from x to 129 step 8
+        gfx.Clear
+        star.Handle
+        txt.Str (text, i, 30)
+        lcd.Draw
+
 
 PUB TitleSwoop(y) | i
 
@@ -192,6 +197,7 @@ PUB TitleSwoop(y) | i
         lcd.Draw
 
 PUB TitleSwoopFrame(y, desty) | h
+
     h := gfx.Height (gfx_logo_zeroforce.Addr) >> 1
     gfx.Sprite (gfx_logo_zeroforce.Addr, 0, desty - h + y, 0)
     gfx.Sprite (gfx_logo_zeroforce.Addr, 67, desty - h - y, 1)
@@ -271,103 +277,12 @@ PUB ShipWhooshFrame(x, y, whooshing)
     player.SetPosition (x, y - gfx.Height (gfx_zeroforce.Addr) >> 1)
     player.Draw
 
-' *********************************************************
-'  Enemies
-' *********************************************************
-CON
-    ENEMIES = 16
-
-VAR           
-  
-    byte    enemyindex
-    byte    enemycount
-    byte    nextenemy
-    byte    enemyon[ENEMIES]    
-    long    enemyx[ENEMIES]
-    long    enemyy[ENEMIES] 
-    byte    enemyhealth[ENEMIES]
-    word    enemyspeed[ENEMIES] 
-    
-    word    enemygraphics[3]
-    byte    enemytypespeed[3]
-    byte    enemytypeacceleration[3]
-    
-    word    currentenemies
-    word    currentenemiestmp
-    word    currentenemiesoffset
-
-
-PUB InitEnemies
-
-    enemygraphics[0] := @gfx_spacetank
-    enemygraphics[1] := @gfx_krakken
-    enemygraphics[2] := @gfx_blackhole
-
-    enemytypespeed[0] := 6
-    enemytypespeed[1] := 3
-    enemytypespeed[2] := 2
-    
-    currentenemiesoffset := 0
-    enemycount := 0
-    
-    repeat enemyindex from 0 to constant(ENEMIES-1)
-        enemyon[enemyindex] := 0
-        enemyx[enemyindex] := 0
-        enemyy[enemyindex] := 0
-        
-                
-PUB HandleEnemies
-
-    repeat enemyindex from 0 to constant(ENEMIES-1)
-        if enemyon[enemyindex]
-            enemyx[enemyindex] -= enemytypespeed[enemyon[enemyindex]-1]
-            if enemyx[enemyindex] => -(24 << FP_OFFSET)
-                gfx.Sprite(enemygraphics[enemyon[enemyindex]-1], enemyx[enemyindex] >> FP_OFFSET, enemyy[enemyindex] >> FP_OFFSET, 0)
-            else
-                enemyon[enemyindex] := 0
-                enemycount--
-
-
-PUB SpawnEnemy(dx, dy, type)
-    if enemycount < ENEMIES-1
-        enemyon[nextenemy] := type
-        enemyx[nextenemy] := dx << FP_OFFSET
-        enemyy[nextenemy] := dy << FP_OFFSET
-        enemyhealth[nextenemy] := 1
-        
-        nextenemy++
-        if nextenemy => ENEMIES
-            nextenemy := 0
-            
-        enemycount++
-        
-        
-{PUB CreateFixedEnemies | x
-        currentenemies := word[@level1][currentenemiesoffset]
-        currentenemiestmp := currentenemies
-        repeat x from 0 to 5
-            currentenemiestmp := currentenemies & $3
-            if currentenemiestmp > 0
-                SpawnEnemy(gfx#SCREEN_W, x << 3, currentenemiestmp)
-            currentenemies >>= 2
-}
-PUB CreateRandomEnemies | ran, x
-    ran := cnt
-    
-    currentenemies := ran? & ran?
-    repeat x from 0 to 7
-        currentenemiestmp := currentenemies & $3
-        if currentenemiestmp > 0
-            SpawnEnemy(gfx#SCREEN_W,x << 3,currentenemiestmp)    
-        currentenemies >>= 2
-
-
 PUB InitLevel
 
     InitBoss
     player.Init
-    bullets.init
-    InitEnemies
+    bullets.Init
+    enemies.Init
     explosion.Init
     
 PUB LevelStage
@@ -392,6 +307,7 @@ PUB GameLoop
     player.Handle
 
 
+    enemies.CreateRandomEnemies
  '   CreateFixedEnemies
 '    currentenemiesoffset++
 '    if currentenemiesoffset > 100
@@ -399,7 +315,7 @@ PUB GameLoop
 '        currentenemiesoffset := 0
 
         
-    HandleEnemies                
+    enemies.Handle
 
     bullets.Handle
     
@@ -465,44 +381,3 @@ PUB BossStage
         
         
 
-
-
-' *********************************************************
-'  Data
-' *********************************************************
-DAT
-
-gfx_blackhole
-word    144  'frameboost
-word    24, 24   'width, height
-
-word    $aaaa, $aaaa, $aaaa, $ff5a, $aaaa, $a5fa, $eaa5, $aaaf, $9abf, $aaa9, $ffff, $9aab, $daa9, $0003, $9aa7, $5aa9
-word    $5001, $a6b5, $4ea6, $5405, $a5c1, $cf96, $1f17, $a900, $435a, $0d03, $ab50, $056a, $0000, $ab14, $15aa, $5000
-word    $ab01, $57aa, $5500, $ab00, $f7aa, $5f55, $ab00, $d3aa, $17d7, $ab00, $53aa, $05d7, $af00, $d3ea, $0755, $bfc0
-word    $55fe, $1555, $faf0, $1d6d, $5537, $dab5, $fd55, $d437, $6aa5, $b5a5, $d7f7, $6a57, $a5aa, $deb6, $55aa, $a5aa
-word    $9e96, $aaaa, $a6aa, $9696, $aaaa, $aaaa, $aaaa, $aaaa
-
-
-gfx_krakken
-word    96  'frameboost
-word    24, 16   'width, height
-
-word    $aaaa, $af5f, $aaaa, $aaaa, $4114, $aaab, $57aa, $5104, $aab0, $757a, $d7f5, $aa14, $c0de, $7555, $af0d, $c006
-word    $5555, $c575, $4047, $555d, $d1d7, $500d, $57d5, $1755, $557d, $dd75, $4545, $5d55, $555f, $5545, $d57f, $1554
-word    $0dcd, $ff02, $1554, $0305, $3556, $1554, $a80c, $000a, $555d, $aa8c, $2aaa, $75dd, $aaa8, $aaaa, $01d0, $aaaa
-
-
-gfx_rocket
-word    96  'frameboost
-word    24, 16   'width, height
-
-word    $aaaa, $aaaa, $5aaa, $aaaa, $aaaa, $d5aa, $5555, $aaa9, $bd56, $5555, $6aa1, $abd5, $ffff, $568f, $abff, $ffff
-word    $f54f, $aaff, $ffff, $554f, $a955, $ffff, $0fcf, $a000, $ffff, $000f, $ffff, $ffff, $0fcf, $ac00, $ffff, $5543
-word    $a955, $0000, $d580, $aaff, $0000, $5aa0, $abfd, $0000, $aaa8, $abd5, $aaaa, $aaaa, $ad5a, $aaaa, $aaaa, $95aa
-
-
-gfx_spacetank
-word    32  'frameboost
-word    16, 8   'width, height
-
-word    $aaaa, $a002, $0ffa, $83fc, $c0aa, $8d57, $3000, $f511, $503c, $1555, $d7f3, $055f, $0000, $03f0, $00aa, $a000
