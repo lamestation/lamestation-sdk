@@ -24,12 +24,12 @@ DAT
 
 PUB Init
 
-    SetPosition(3, 3)
+    SetPosition(24, 32 - gfx.Height (gfx_zeroforce.Addr) >> 1)
     
 PUB SetPosition(x, y)
 
     player_x := x
-    player_y := y    
+    player_y := y
 
 PUB Handle
 

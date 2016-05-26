@@ -1,6 +1,6 @@
 CON
 
-    #0, _LOGO, _TITLE, _LEVEL, _BOSS
+    #0, _LOGO, _INTRO, _TITLE, _LEVEL, _BOSS
     
     #0, _LASER1, _LASER2, _LASER3, _MISSILE
 

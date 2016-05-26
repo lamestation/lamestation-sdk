@@ -37,7 +37,6 @@ OBJ
     
     font                : "gfx_font6x6_g"
 
-
 VAR
     word    buffer
     
@@ -60,6 +59,7 @@ PUB Main
     audio.Start
     music.Start
     
+    star.Init
     explosion.SetGraphics (0, gfx_explosion.Addr)
     
     bullets.SetType (cc#_LASER1,   gfx_laser.Addr,     0,  false,  false,   1)
@@ -72,6 +72,8 @@ PUB Main
     repeat
         case nextstate
             cc#_LOGO:   LogoScreen
+                        nextstate := cc#_INTRO
+            cc#_INTRO:  TitleIntro
                         nextstate := cc#_TITLE
             cc#_TITLE:  TitleScreen
                         nextstate := cc#_LEVEL
@@ -101,20 +103,20 @@ PUB LogoScreen | x
 
     music.Stop    
 
-PUB TitleScreen | blink, i
+PUB TitleIntro
 
     music.Load(song_zeroforce.Addr)
     music.Loop
     
-    star.Init
-    
     ShipWhoosh(16, -160, 300, 12)
     ShipWhoosh(48, -160, 300, 12)
-    ShipWhoosh(32, -150, 50, 12)
+    ShipWhoosh(32, -20, 50, 3)
 
     fn.Sleep (500)
     
     TitleSwoop(40)
+    
+PUB TitleScreen | blink, i    
 
     repeat
         gfx.Clear
@@ -122,12 +124,12 @@ PUB TitleScreen | blink, i
         
         star.Handle
 
-        ShipWhooshFrame(50, 32)
+        ShipWhooshFrame(50, 32, true)
         TitleSwoopFrame(0, 32)
         
         blink++
         if (blink >> 4) & $1
-            txt.Str (string("PRESS START"), constant(64 - 4*10), 48)
+            txt.Str (string("PRESS START"), constant(64 - 4*11), 48)
         '
         lcd.Draw
         
@@ -136,35 +138,56 @@ PUB TitleScreen | blink, i
             
     star.SetLightSpeed (true)
     
-    i := 50
-    repeat while i > 5
+    PlayerMove(50, 32, 5, 32, 1, true, false)
+    PlayerMove(5, 32, 25, 32, 1, true, true)
+    PlayerMove(25, 32, 400, 32, 12, true, true)
+    
+    repeat 20
         gfx.Clear
         star.Handle
-        ShipWhooshFrame(i, 32)
         lcd.Draw
-        i--
         
-    repeat while i < 20
-        gfx.Clear
-        star.Handle
-        ShipWhooshFrame(i, 32)
-        lcd.Draw
-        i++
-        
-    repeat while i < 400
-        gfx.Clear
-        star.Handle
-        ShipWhooshFrame(i, 32)
-        lcd.Draw
-        i += 12
+    gfx.Clear
+    lcd.Draw
+    fn.Sleep (500)
 
+    i := -96
+    repeat i from -96 to 32 step 8
+        gfx.Clear
+        star.Handle
+        txt.Str (string("MISSION 1"), i, 30)
+        lcd.Draw
+
+    repeat 60
+        gfx.Clear
+        star.Handle
+        txt.Str (string("MISSION 1"), 32, 30)
+        lcd.Draw
+
+        
+    repeat i from 32 to 129 step 8
+        gfx.Clear
+        star.Handle
+        txt.Str (string("MISSION 1"), i, 30)
+        lcd.Draw
+
+    repeat 20
+        gfx.Clear
+        star.Handle
+        lcd.Draw
+        
+    PlayerMove(-32, 32, 16, 32, 4, true, true)
+    star.SetLightSpeed (false)
+    
+    PlayerMove(16, 32, 24, 32, 2, true, true)
+    
     music.Stop
 
 PUB TitleSwoop(y) | i
 
     repeat i from (y << 1) to 0
         gfx.Clear
-        ShipWhooshFrame(50, 32)
+        ShipWhooshFrame(50, 32, true)
         TitleSwoopFrame(i >> 1, 32)
         lcd.Draw
 
@@ -173,19 +196,77 @@ PUB TitleSwoopFrame(y, desty) | h
     gfx.Sprite (gfx_logo_zeroforce.Addr, 0, desty - h + y, 0)
     gfx.Sprite (gfx_logo_zeroforce.Addr, 67, desty - h - y, 1)
 
+PUB PlayerMove(x1, y1, x2, y2, speed, staring, whooshing) | dx, dy, xmet, ymet
+
+    dx := x2 - x1
+    dy := y2 - y1
+    
+    xmet := false
+    ymet := false
+
+    repeat
+        if not xmet
+            if dx > 0
+                if x1 < x2
+                    x1 += speed
+                else
+                    x1 := x2
+                    xmet := true
+            elseif dx < 0
+                if x1 > x2
+                    x1 -= speed
+                else
+                    x1 := x2
+                    xmet := true
+            else
+                xmet := true
+
+        if not ymet
+            if dy > 0
+                if y1 < y2
+                    y1 += speed
+                else
+                    y1 := y2
+                    ymet := true
+            elseif dy < 0
+                if y1 > y2
+                    y1 -= speed
+                else
+                    y1 := y2
+                    ymet := true
+            else
+                ymet := true
+
+        gfx.Clear
+
+        if staring
+            star.Handle
+            
+        ShipWhooshFrame(x1, y1, whooshing)
+
+        lcd.Draw
+
+        if xmet and ymet
+            quit
+        
+    gfx.Clear
+    ShipWhooshFrame(x2, y2, whooshing)
+    lcd.Draw
+
 PUB ShipWhoosh(y, start, end, speed) | x
 
     repeat x from start to end step speed
         gfx.Clear
-        ShipWhooshFrame(x, y)
+        ShipWhooshFrame(x, y, true)
         lcd.Draw
         
     gfx.Clear
-    ShipWhooshFrame(end, y)
+    ShipWhooshFrame(end, y, true)
     lcd.Draw
 
-PUB ShipWhooshFrame(x, y)
-    whoosh.Draw (x, y, whoosh#RIGHT) 
+PUB ShipWhooshFrame(x, y, whooshing)
+    if whooshing
+        whoosh.Draw (x, y, whoosh#RIGHT) 
 
     player.SetPosition (x, y - gfx.Height (gfx_zeroforce.Addr) >> 1)
     player.Draw
@@ -287,7 +368,6 @@ PUB InitLevel
     player.Init
     bullets.init
     InitEnemies
-    star.Init
     explosion.Init
     
 PUB LevelStage

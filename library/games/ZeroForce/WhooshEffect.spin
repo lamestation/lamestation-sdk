@@ -24,6 +24,6 @@ PUB Draw(x, y, dir) | i, w, h, count, frame
         else
             return
         
-    repeat while i =< x
+    repeat while i < x
         gfx.Sprite (gfx_whoosh.Addr, i, y - h, frame)
         i += w
