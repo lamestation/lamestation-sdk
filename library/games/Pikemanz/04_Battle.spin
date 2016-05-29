@@ -23,7 +23,7 @@ OBJ
     menu    :   "PikeMenu"
     pike    :   "PikeManager"
 
-    song    :   "song_battle"
+'    song    :   "song_battle"
 
 VAR
     byte    front_pk
