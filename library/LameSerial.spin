@@ -33,7 +33,6 @@ CON
     MAXSTR_LENGTH = 49                  ' Maximum length of received numerical string (not including zero terminator).
 
 VAR
-  long  cog                             ' Cog flag/id
 
   long  rx_head                         ' 9 contiguous longs (must keep order)
   long  rx_tail
@@ -54,13 +53,13 @@ PUB Start
 
     return StartRxTx(31, 30, 0, 115200)
 
-PUB StartRxTx(rxpin, txpin, mode, baudrate) : okay
-    Stop
+PUB StartRxTx(rxpin, txpin, mode, baudrate)
+
     longfill(@rx_head, 0, 4)
     longmove(@rx_pin, @rxpin, 3)
     bit_ticks := clkfreq / baudrate
     buffer_ptr := @rx_buffer
-    okay := cog := cognew(@entry, @rx_head) + 1
+    cognew(@entry, @rx_head)
 
 PUB Char(bytechr)
 
@@ -122,12 +121,6 @@ PUB Count
 PUB Flush
 
   repeat while rxcheck => 0
-  
-PUB Stop
-
-    if cog
-        cogstop(cog~ - 1)
-    longfill(@rx_head, 0, 9)
     
 PRI RxCheck : bytechr
 {Check if character received; return immediately.
