@@ -9,35 +9,29 @@ DAT
 
 gfx_data
 
-word    8
-word    8, 4
-word    $aa0a '   ██    
-word    $aa52 '  █░░    
-word    $aa54 ' █░░░    
-word    $aa14 ' █░░█    
+word    6
+word    8, 3
+word    $aaba '   ▓     
+word    $aa9e '  ▓░     
+word    $aab7 ' ▓░▓     
 
-word    $aaa0 ' ██      
-word    $aa85 ' ░░█     
-word    $aa15 ' ░░░█    
-word    $aa14 ' █░░█    
+word    $aaab ' ▓       
+word    $aaad ' ░▓      
+word    $aab7 ' ▓░▓     
 
-word    $aa00 ' ████    
-word    $aa55 ' ░░░░    
-word    $aa55 ' ░░░░    
-word    $aa00 ' ████    
+word    $aabf ' ▓▓▓     
+word    $aa95 ' ░░░     
+word    $aabf ' ▓▓▓     
 
-word    $aa14 ' █░░█    
-word    $aa54 ' █░░░    
-word    $aa52 '  █░░    
-word    $aa0a '   ██    
+word    $aab7 ' ▓░▓     
+word    $aa9e '  ▓░     
+word    $aaba '   ▓     
 
-word    $aa14 ' █░░█    
-word    $aa15 ' ░░░█    
-word    $aa85 ' ░░█     
-word    $aaa0 ' ██      
+word    $aab7 ' ▓░▓     
+word    $aaad ' ░▓      
+word    $aaab ' ▓       
 
-word    $aa14 ' █░░█    
-word    $aa14 ' █░░█    
-word    $aa14 ' █░░█    
-word    $aa14 ' █░░█    
+word    $aab7 ' ▓░▓     
+word    $aab7 ' ▓░▓     
+word    $aab7 ' ▓░▓     
 

@@ -3,14 +3,14 @@ CON
     _xinfreq = 5_000_000
     
     MAX_TURN = 13
-    MAX_FORWARD = 150
+    MAX_FORWARD = 180
     
     DIR_LEFT = 0
     DIR_STRAIGHT = 1
     DIR_RIGHT = 2
     END_TRACK = 5
     
-    TILESIZE = 4
+    TILESIZE = 3
     
     #0, UP, RIGHT, DOWN, LEFT
     #0, T_DOWNRIGHT, T_DOWNLEFT, T_HORIZONTAL, T_UPRIGHT, T_UPLEFT, T_VERTICAL
@@ -19,6 +19,7 @@ CON
 OBJ
     lcd  : "LameLCD"
     gfx  : "LameGFX"
+    txt  : "LameText"
     ctrl : "LameControl"
     
     road    : "gfx_road"
@@ -27,11 +28,13 @@ OBJ
     car     : "gfx_car"
     goal    : "gfx_goal"
     minimap : "gfx_minimap"
+    dot     : "gfx_dot"
+    
+    fnt     : "gfx_font6x6_b"
 
 VAR
     word    buffer
     
-    long    turnoffset
     long    turn
     
     long    forward
@@ -39,18 +42,34 @@ VAR
     
     long    dir
     long    dir_acc
+    long    distance
+    long    distance_acc
     
     long    time
     long    time_acc
     
     long    random
     
+    byte    roaddir
     byte    playerdir
+    
+    byte    nextwaypoint
+    byte    waypoint
+    
+    long    targetdir
+    long    targetdistance
+    
+    long    offset_x
+    long    offset_x_acc
+    
+    byte    showgoal
 
 PUB Main | i
     lcd.Start(buffer := gfx.Start)
     lcd.SetFrameLimit (lcd#FULLSPEED)
     ctrl.Start
+    
+    txt.Load (fnt.Addr, " ", 6, 6)
     
     random := cnt
     dir_acc := 0
@@ -59,17 +78,54 @@ PUB Main | i
         GameLoop
         
 PUB GameLoop
+
     ctrl.Update
-    if ctrl.Left
+
+    if dir > targetdir
+    
         if turn > -MAX_TURN
             turn--
-    if ctrl.Right
+
+        dir_acc += turn * forward
+        dir := dir_acc ~> 10
+
+        if dir < targetdir
+            dir := targetdir
+            dir_acc := dir << 10
+
+    elseif dir < targetdir
+    
         if turn < MAX_TURN
             turn++
-            
+
+        dir_acc += turn * forward
+        dir := dir_acc ~> 10
+        
+        if dir > targetdir
+            dir := targetdir
+            dir_acc := dir << 10            
+
+    else    
+        dir := targetdir
+        dir_acc := dir << 10
+
+        if turn > 0
+            turn--
+        elseif turn < 0
+            turn++
+
+    offset_x_acc += turn * (forward^2)
+    if ctrl.Left
+        offset_x_acc += (1 + forward) * 800 / forward
+    if ctrl.Right
+        offset_x_acc -= (1 + forward) * 800 / forward
+    
+    
+    offset_x := offset_x_acc ~> 11
+                
     if ctrl.A
         if forward < MAX_FORWARD
-            forward++
+            forward += 2
     else
         if forward > 0
             forward--
@@ -80,12 +136,19 @@ PUB GameLoop
         else
             forward := 0
 
+    HandleLevel(@level1)
     HandleField
     DrawRoad(turn)
     DrawCar
 
-    'DrawScaledSprite(DIR_STRAIGHT, goal.Addr, 0, 16)
+    if showgoal
+        DrawScaledSprite(DIR_STRAIGHT, goal.Addr, 0, 16)
+            
     DrawMap(@level1)
+    
+    
+    txt.Dec (forward, 3, 3)
+    txt.Dec (waypoint, 3, 9)
     lcd.Draw
 
 PUB DrawField(fieldcolor1, fieldcolor2, skycolor, sunframe) | i
@@ -97,7 +160,7 @@ PUB DrawField(fieldcolor1, fieldcolor2, skycolor, sunframe) | i
         if ((forward_acc >> 6) - i + 10) >> 4 & $1
             wordfill(buffer + 1024 + i << 5, fieldcolor2, 16)
 
-    gfx.Sprite (sun.Addr, 60 - (dir - 180), 2, sunframe)
+    gfx.Sprite (sun.Addr, 60 - ((dir // 360) - 180), 2, sunframe)
 
     wordfill(buffer + 1024, fieldcolor2, 16)
 
@@ -112,8 +175,8 @@ PUB HandleField | timestate
     elseif timestate > 8
         DrawField(0, $FFFF, 0, 1)
     
-    dir_acc += turn * forward
-    dir := dir_acc >> 10 // 360
+    distance_acc += forward
+    distance := distance_acc
     
     time++
     
@@ -123,7 +186,7 @@ PUB DrawRoad(turnspeed) | i, x, offset
     x := 0
     offset := 0
     repeat i from 0 to 31
-        gfx.Sprite (road.Addr, 32 + (offset ~> 7), 63 - i, 31 - i + ((i + (forward_acc >> 6)) >> 3 & $1)<<5)
+        gfx.Sprite (road.Addr, offset_x + 32 + (offset ~> 7), 63 - i, 31 - i + ((i + (forward_acc >> 6)) >> 3 & $1)<<5)
         offset += x
         x += turnspeed
 
@@ -160,7 +223,7 @@ PUB DrawScaledSprite(side, source, pos_x, pos_y) | i, x, y, frame, offset
     elseif side == DIR_LEFT
         x -= y
 
-    gfx.Sprite (source, pos_x + x, pos_y + y, frame)        
+    gfx.Sprite (source, offset_x + pos_x + x, pos_y + y, frame)        
         
 PUB DrawCar
 
@@ -178,7 +241,7 @@ PUB DrawMap(level) | addr, x, y, lastdir, c, tile, oldx, oldy
     
     lastdir := UP
     x := 20
-    y := 40
+    y := 46
     
 
     addr := level
@@ -239,9 +302,54 @@ PUB DrawMap(level) | addr, x, y, lastdir, c, tile, oldx, oldy
                             lastdir := DOWN
 
         gfx.Sprite (minimap.Addr, oldx, oldy, tile)
+        if addr - level == waypoint
+            gfx.Sprite (dot.Addr, oldx-1, oldy-1, 0)
+
+PUB HandleLevel(level) | addr, c
+
+    addr := level + waypoint
+    
+    if waypoint == nextwaypoint
+        nextwaypoint++
+
+        c := byte[addr]
+        case c
+            DIR_LEFT:       targetdir -= 90
+            DIR_RIGHT:      targetdir += 90
+            DIR_STRAIGHT:   targetdistance := distance + 5000
+                            
+            END_TRACK:      nextwaypoint := waypoint := 0    
+                            showgoal := true
+
+    if waypoint < nextwaypoint
+        c := byte[addr]
+        case c
+            DIR_LEFT:       if dir =< targetdir
+                                waypoint++
+                                showgoal := false
+            DIR_RIGHT:      if dir => targetdir
+                                waypoint++
+                                showgoal := false
+            DIR_STRAIGHT:   if distance => targetdistance
+                                waypoint++
+                                showgoal := false
         
 DAT    
 ' way points
+
+{
+level1
+byte    DIR_STRAIGHT
+byte    DIR_LEFT
+byte    DIR_STRAIGHT
+byte    DIR_LEFT
+byte    DIR_STRAIGHT
+byte    DIR_LEFT
+byte    DIR_STRAIGHT
+byte    DIR_LEFT
+
+byte    END_TRACK
+}
 
 
 level1
