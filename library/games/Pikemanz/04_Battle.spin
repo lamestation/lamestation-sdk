@@ -68,8 +68,8 @@ PUB Wild
 '    back_pk := pike.SetPikeman(1, string("MOOTOO"), 130, 40, 32, 50, pk2.Addr)
 
 PUB Scene
-    music.Load(song.Addr)
-    music.Loop
+'    music.Load(song.Addr)
+'    music.Loop
     txt.Load(font_text.Addr, " ", 0, 0)
     CreateNumberStr(@str_hpmax, pike.GetMaxHealth(front_pk))
     hp_dsp[BACK] := pike.GetHealth(back_pk)

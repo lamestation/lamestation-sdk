@@ -2,8 +2,9 @@ CON
     _clkmode = xtal1 + pll16x
     _xinfreq = 5_000_000
     
+    MAX_LEVELS = 6
     MAX_TURN = 13
-    MAX_FORWARD = 180
+    MAX_FORWARD = 150
     
     DIR_LEFT = 0
     DIR_STRAIGHT = 1
@@ -12,8 +13,11 @@ CON
     
     TILESIZE = 3
     
+    #0, DAY, NIGHT, DUSK
     #0, UP, RIGHT, DOWN, LEFT
     #0, T_DOWNRIGHT, T_DOWNLEFT, T_HORIZONTAL, T_UPRIGHT, T_UPLEFT, T_VERTICAL
+    
+    #0, PLAYER, COMP1, COMP2, COMP3
     
 
 OBJ
@@ -30,13 +34,16 @@ OBJ
     minimap : "gfx_minimap"
     dot     : "gfx_dot"
     meter   : "gfx_meter"
+    mountain: "gfx_mountain"
     
-    fnt     : "gfx_font6x6_b"
+    fntb    : "gfx_font4x6_b"
+    fntw    : "gfx_font4x6_w"
 
 VAR
     word    buffer
     
     long    turn
+    long    turn_acc
     
     long    forward
     long    forward_acc
@@ -64,13 +71,27 @@ VAR
     long    offset_x_acc
     
     byte    showgoal
+    long    sunposition
+    word    currentlevel
+    
+    word    levels[MAX_LEVELS]
+    byte    time_of_day
 
 PUB Main | i
     lcd.Start(buffer := gfx.Start)
     lcd.SetFrameLimit (lcd#FULLSPEED)
     ctrl.Start
     
-    txt.Load (fnt.Addr, " ", 6, 6)
+    txt.Load (fntb.Addr, " ", 0, 0)
+    
+    levels[0] := @level1
+    levels[1] := @level2
+    levels[2] := @level1
+    levels[3] := @level1
+    
+    currentlevel := levels[1]
+    
+    SetOffset(PLAYER, -14)
     
     random := cnt
     dir_acc := 0
@@ -84,8 +105,12 @@ PUB GameLoop | turnspeed, spinout
 
     if dir > targetdir
     
-        if turn > -MAX_TURN
-            turn--
+        if turn_acc > constant(-MAX_TURN << 8)
+            turn_acc -= forward
+        else
+            turn_acc := constant(-MAX_TURN << 8)
+
+        turn := turn_acc ~> 8
 
         dir_acc += turn * forward
         dir := dir_acc ~> 10
@@ -96,8 +121,12 @@ PUB GameLoop | turnspeed, spinout
 
     elseif dir < targetdir
     
-        if turn < MAX_TURN
-            turn++
+        if turn_acc < constant(MAX_TURN << 8)
+            turn_acc += forward
+        else
+            turn_acc := constant(MAX_TURN << 8)
+
+        turn := turn_acc ~> 8
 
         dir_acc += turn * forward
         dir := dir_acc ~> 10
@@ -110,16 +139,18 @@ PUB GameLoop | turnspeed, spinout
         dir := targetdir
         dir_acc := dir << 10
 
-        if turn > 0
-            turn--
-        elseif turn < 0
-            turn++
+        if turn_acc > 0
+            turn_acc := turn_acc - forward #> 0
+        elseif turn_acc < 0
+            turn_acc := turn_acc + forward <# 0
+
+        turn := turn_acc ~> 8
 
     spinout := turn * (forward^2)
     
     offset_x_acc += spinout
     
-    turnspeed := forward * 10 + (forward + 100) / (forward + 1) '(forward * 1200) / (forward + 1)
+    turnspeed := forward * 10 + (forward + 7000) / (forward + 1)
 
     if forward
         if ctrl.Left
@@ -150,7 +181,7 @@ PUB GameLoop | turnspeed, spinout
         else
             forward := 0
 
-    HandleLevel(@level2)
+    HandleLevel(currentlevel)
     HandleField
     DrawRoad(turn)
     DrawCar
@@ -158,24 +189,27 @@ PUB GameLoop | turnspeed, spinout
     if showgoal
         DrawScaledSprite(DIR_STRAIGHT, goal.Addr, 0, 16)
             
-    DrawMap(@level2)
+    DrawMap(currentlevel)
     
-    gfx.Sprite (meter.Addr, 1, 1, 0)
-    
-    gfx.SetClipRectangle (1, 1, 1 + gfx.Width (meter.Addr) * forward / MAX_FORWARD, 8)
-    gfx.Sprite (meter.Addr, 1, 1, 1)
-    gfx.SetClipRectangle (0, 0, 128, 64)
-    
-    txt.Dec (offset_x, 64, 3)
-    txt.Dec (spinout, 64, 9)
-    txt.Dec (turnspeed, 64, 15)
- '   txt.Str (string("MPH:"), 3, 3)
- '   
-    txt.Dec (((dir // 360) + 180), 25, 12)
-    txt.Dec (waypoint, 3, 9)
+    DrawMeter(meter.Addr, forward, MAX_FORWARD, 1, 1)
+    txt.Str(string("mph:"), 10, 6)
+    txt.Dec(forward, 26, 6)
+
     lcd.Draw
 
-PUB DrawField(fieldcolor1, fieldcolor2, skycolor, sunframe) | i
+PUB SetOffset(index, value)
+
+    offset_x := value
+    offset_x_acc := offset_x << 10
+
+PUB DrawMeter(source, value, range, x, y)
+
+    gfx.Sprite (source, x, y, 0)
+    gfx.SetClipRectangle (x, y, x + gfx.Width (source) * value / range, y + gfx.Height (source))
+    gfx.Sprite (source, x, y, 1)
+    gfx.SetClipRectangle (0, 0, 128, 64)
+
+PUB DrawField(fieldcolor1, fieldcolor2, skycolor, sunframe, mountainframe) | i
 
     wordfill(buffer, skycolor, 512)
     wordfill(buffer + 1024, fieldcolor1, 512)
@@ -184,20 +218,36 @@ PUB DrawField(fieldcolor1, fieldcolor2, skycolor, sunframe) | i
         if ((forward_acc >> 6) - i + 10) >> 4 & $1
             wordfill(buffer + 1024 + i << 5, fieldcolor2, 16)
 
-    gfx.Sprite (sun.Addr, 60 - ((dir // 360) - 180), 2, sunframe)
+    sunposition := GetPosition(sun.Addr, dir)
+    
+    gfx.Sprite (sun.Addr, sunposition, 2, sunframe)
+    gfx.Sprite (mountain.Addr, GetPosition(mountain.Addr, dir + 120), 32 - gfx.Height (mountain.Addr), mountainframe)
 
     wordfill(buffer + 1024, fieldcolor2, 16)
 
+PUB GetPosition(source, direction)
+
+    if direction > 0
+        return 64 - gfx.Width (source) - (direction // 360 - 180)
+    else
+        return 64 - gfx.Width (source) - (direction // 360 + 180)
+
 PUB HandleField | timestate
 
-    'timestate := time >> 6 & $F
-    timestate := 1
+    timestate := time >> 6 & $F
+
     if timestate == 0 or timestate == 8
-        DrawField(0, $FFFF, $FFFF, 0)
+        time_of_day := DUSK
+        txt.Load (fntb.Addr, " ", 0, 0)
+        DrawField(0, $FFFF, $FFFF, 0, 0)
     elseif timestate > 0 and timestate < 8
-        DrawField($5555, $FFFF, $5555, 0)
+        time_of_day := DAY
+        txt.Load (fntb.Addr, " ", 0, 0)
+        DrawField($5555, $FFFF, $5555, 0, 0)
     elseif timestate > 8
-        DrawField(0, $FFFF, 0, 1)
+        time_of_day := NIGHT
+        txt.Load (fntw.Addr, " ", 0, 0)
+        DrawField(0, $FFFF, 0, 1, 1)
     
     distance_acc += forward
     distance := distance_acc
@@ -264,8 +314,8 @@ PUB DrawCar
 PUB DrawMap(level) | addr, x, y, lastdir, c, tile, oldx, oldy, dotx, doty
     
     lastdir := UP
-    x := 20
-    y := 46
+    x := 15
+    y := 49
     dotx := x-1
     doty := y-1 
 
@@ -365,7 +415,6 @@ PUB HandleLevel(level) | addr, c
 DAT    
 ' way points
 
-
 level1
 byte    DIR_STRAIGHT
 byte    DIR_LEFT
@@ -377,8 +426,6 @@ byte    DIR_STRAIGHT
 byte    DIR_LEFT
 
 byte    END_TRACK
-
-
 
 level2
 byte    DIR_STRAIGHT
