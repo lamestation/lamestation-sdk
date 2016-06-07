@@ -29,6 +29,7 @@ OBJ
     goal    : "gfx_goal"
     minimap : "gfx_minimap"
     dot     : "gfx_dot"
+    meter   : "gfx_meter"
     
     fnt     : "gfx_font6x6_b"
 
@@ -77,7 +78,7 @@ PUB Main | i
     repeat
         GameLoop
         
-PUB GameLoop
+PUB GameLoop | turnspeed, spinout
 
     ctrl.Update
 
@@ -114,21 +115,34 @@ PUB GameLoop
         elseif turn < 0
             turn++
 
-    offset_x_acc += turn * (forward^2)
-    if ctrl.Left
-        offset_x_acc += (1 + forward) * 800 / forward
-    if ctrl.Right
-        offset_x_acc -= (1 + forward) * 800 / forward
+    spinout := turn * (forward^2)
     
+    offset_x_acc += spinout
     
-    offset_x := offset_x_acc ~> 11
+    turnspeed := forward * 10 + (forward + 100) / (forward + 1) '(forward * 1200) / (forward + 1)
+
+    if forward
+        if ctrl.Left
+            offset_x_acc += turnspeed
+        if ctrl.Right
+            offset_x_acc -= turnspeed
+            
+    offset_x := offset_x_acc ~> 10
+
+    if ||offset_x > 25
+        if forward > 60
+            forward -= 4
+
                 
     if ctrl.A
         if forward < MAX_FORWARD
             forward += 2
     else
         if forward > 0
-            forward--
+            forward -= 4
+    
+    if forward < 0
+        forward := 0
             
     if ctrl.B
         if forward > 0
@@ -136,7 +150,7 @@ PUB GameLoop
         else
             forward := 0
 
-    HandleLevel(@level1)
+    HandleLevel(@level2)
     HandleField
     DrawRoad(turn)
     DrawCar
@@ -144,10 +158,20 @@ PUB GameLoop
     if showgoal
         DrawScaledSprite(DIR_STRAIGHT, goal.Addr, 0, 16)
             
-    DrawMap(@level1)
+    DrawMap(@level2)
     
+    gfx.Sprite (meter.Addr, 1, 1, 0)
     
-    txt.Dec (forward, 3, 3)
+    gfx.SetClipRectangle (1, 1, 1 + gfx.Width (meter.Addr) * forward / MAX_FORWARD, 8)
+    gfx.Sprite (meter.Addr, 1, 1, 1)
+    gfx.SetClipRectangle (0, 0, 128, 64)
+    
+    txt.Dec (offset_x, 64, 3)
+    txt.Dec (spinout, 64, 9)
+    txt.Dec (turnspeed, 64, 15)
+ '   txt.Str (string("MPH:"), 3, 3)
+ '   
+    txt.Dec (((dir // 360) + 180), 25, 12)
     txt.Dec (waypoint, 3, 9)
     lcd.Draw
 
@@ -237,12 +261,13 @@ PUB DrawCar
     gfx.Sprite (car.Addr, 52, 50, playerdir)
     
 
-PUB DrawMap(level) | addr, x, y, lastdir, c, tile, oldx, oldy
+PUB DrawMap(level) | addr, x, y, lastdir, c, tile, oldx, oldy, dotx, doty
     
     lastdir := UP
     x := 20
     y := 46
-    
+    dotx := x-1
+    doty := y-1 
 
     addr := level
     repeat until byte[addr] == END_TRACK
@@ -303,7 +328,10 @@ PUB DrawMap(level) | addr, x, y, lastdir, c, tile, oldx, oldy
 
         gfx.Sprite (minimap.Addr, oldx, oldy, tile)
         if addr - level == waypoint
-            gfx.Sprite (dot.Addr, oldx-1, oldy-1, 0)
+            dotx := x-1
+            doty := y-1
+    
+    gfx.Sprite (dot.Addr, dotx, doty, 0)
 
 PUB HandleLevel(level) | addr, c
 
@@ -316,7 +344,7 @@ PUB HandleLevel(level) | addr, c
         case c
             DIR_LEFT:       targetdir -= 90
             DIR_RIGHT:      targetdir += 90
-            DIR_STRAIGHT:   targetdistance := distance + 5000
+            DIR_STRAIGHT:   targetdistance := distance + 10000
                             
             END_TRACK:      nextwaypoint := waypoint := 0    
                             showgoal := true
@@ -337,7 +365,7 @@ PUB HandleLevel(level) | addr, c
 DAT    
 ' way points
 
-{
+
 level1
 byte    DIR_STRAIGHT
 byte    DIR_LEFT
@@ -349,10 +377,10 @@ byte    DIR_STRAIGHT
 byte    DIR_LEFT
 
 byte    END_TRACK
-}
 
 
-level1
+
+level2
 byte    DIR_STRAIGHT
 byte    DIR_LEFT
 byte    DIR_LEFT
