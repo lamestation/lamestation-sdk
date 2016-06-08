@@ -174,8 +174,9 @@ PUB GameLoop | turnspeed, spinout
 
                 
     if ctrl.A
-        if forward < MAX_FORWARD
-            forward += 2
+        ifnot rc_sfx.IsBellActive
+            if forward < MAX_FORWARD
+                forward += 2
     else
         if forward > 0
             forward -= 4
@@ -184,6 +185,7 @@ PUB GameLoop | turnspeed, spinout
         forward := 0
             
     if ctrl.B
+        rc_sfx.Bell
         if forward > 0
             forward -= 8
         else
@@ -322,7 +324,6 @@ PUB DrawCar
         
     gfx.Sprite (car.Addr, 52, 50, playerdir)
     
-
 PUB DrawMap(level) | addr, x, y, lastdir, c, tile, oldx, oldy, dotx, doty
     
     x := byte[level++]
