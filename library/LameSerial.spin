@@ -59,7 +59,7 @@ PUB StartRxTx(rxpin, txpin, mode, baudrate)
     longmove(@rx_pin, @rxpin, 3)
     bit_ticks := clkfreq / baudrate
     buffer_ptr := @rx_buffer
-    cognew(@entry, @rx_head)
+    return cognew(@entry, @rx_head) + 1
 
 PUB Char(bytechr)
 
