@@ -21,10 +21,14 @@ CON
     
 
 OBJ
-    lcd  : "LameLCD"
-    gfx  : "LameGFX"
-    txt  : "LameText"
-    ctrl : "LameControl"
+    lcd     : "LameLCD"
+    gfx     : "LameGFX"
+    txt     : "LameText"
+    ctrl    : "LameControl"
+    audio   : "LameAudio"
+    music   : "LameMusic"
+    
+    rc_sfx  : "RaceyCarSound"
     
     road    : "gfx_road"
     sun     : "gfx_sun"
@@ -76,24 +80,32 @@ VAR
     
     word    levels[MAX_LEVELS]
     byte    time_of_day
+    
+    byte    lap
 
-PUB Main | i
+PUB Main
+
     lcd.Start(buffer := gfx.Start)
     lcd.SetFrameLimit (lcd#FULLSPEED)
     ctrl.Start
+    audio.Start
+    music.Start
+    
+    rc_sfx.Start
+
+    random := cnt
     
     txt.Load (fntb.Addr, " ", 0, 0)
     
     levels[0] := @level1
     levels[1] := @level2
-    levels[2] := @level1
+    levels[2] := @level3
     levels[3] := @level1
     
-    currentlevel := levels[1]
+    currentlevel := levels[2]
     
     SetOffset(PLAYER, -14)
     
-    random := cnt
     dir_acc := 0
     
     repeat
@@ -158,6 +170,8 @@ PUB GameLoop | turnspeed, spinout
         if ctrl.Right
             offset_x_acc -= turnspeed
             
+            
+    rc_sfx.RevEngine (forward)
     offset_x := offset_x_acc ~> 10
 
     if ||offset_x > 25
@@ -194,6 +208,10 @@ PUB GameLoop | turnspeed, spinout
     DrawMeter(meter.Addr, forward, MAX_FORWARD, 1, 1)
     txt.Str(string("mph:"), 10, 6)
     txt.Dec(forward, 26, 6)
+    
+    txt.Str (string("lap:"), 94, 3)
+    txt.Dec (lap, 110, 3)
+    txt.Str (string("/3"), 114, 3)
 
     lcd.Draw
 
@@ -396,7 +414,9 @@ PUB HandleLevel(level) | addr, c
             DIR_RIGHT:      targetdir += 90
             DIR_STRAIGHT:   targetdistance := distance + 10000
                             
-            END_TRACK:      nextwaypoint := waypoint := 0    
+            END_TRACK:      nextwaypoint := waypoint := 0
+                            targetdistance := distance := 0
+                            lap++
                             showgoal := true
 
     if waypoint < nextwaypoint
@@ -424,7 +444,6 @@ byte    DIR_STRAIGHT
 byte    DIR_LEFT
 byte    DIR_STRAIGHT
 byte    DIR_LEFT
-
 byte    END_TRACK
 
 level2
@@ -446,6 +465,33 @@ byte    DIR_STRAIGHT
 byte    DIR_RIGHT
 byte    DIR_LEFT
 byte    DIR_LEFT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    END_TRACK
+
+level3
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_RIGHT
+byte    DIR_STRAIGHT
+byte    DIR_RIGHT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_LEFT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_RIGHT
+byte    DIR_STRAIGHT
+byte    DIR_RIGHT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_STRAIGHT
+byte    DIR_RIGHT
 byte    DIR_STRAIGHT
 byte    DIR_STRAIGHT
 byte    END_TRACK
