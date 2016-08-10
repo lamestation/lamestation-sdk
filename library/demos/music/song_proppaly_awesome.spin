@@ -70,13 +70,33 @@ byte      57,SOFF,SNOP,  52,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP
 byte      55,  52,  50,  49,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,  50,SNOP,SNOP,  52,SNOP    '29 melody again
 byte      45,SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '30 melody again
 
+byte      49,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,     45,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '31 chords
+
+byte    SOFF,SNOP,  47,SNOP,SOFF,  48,SNOP,SOFF,     50,SNOP,SOFF,  52,SNOP,SOFF,  53,SNOP    '32 ending
+byte    SOFF,SNOP,  43,SNOP,SOFF,  45,SNOP,SOFF,     47,SNOP,SOFF,  48,SNOP,SOFF,  50,SNOP    '33 ending
+byte    SOFF,SNOP,  31,SNOP,SOFF,  35,SNOP,SOFF,     36,SNOP,SOFF,  38,SNOP,SOFF,  31,SNOP    '34 ending
+byte    SOFF,SNOP,  19,SNOP,SOFF,  23,SNOP,SOFF,     24,SNOP,SOFF,  26,SNOP,SOFF,  19,SNOP    '35 ending
+
+byte    SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '36 ending 2
+
+byte      57,SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '37 endchord
+byte      52,SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '38 endchord
+byte      33,SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '39 endchord
+byte      21,SNOP,SOFF,SNOP,SNOP,SNOP,SNOP,SNOP,   SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP,SNOP    '40 endchord
+
+byte      57,SOFF,  45,SOFF,  47,SOFF,  45,SOFF,     49,SOFF,  45,  47,SNOP,  47,  45,  45    '41  melody again again
+byte      57,  57,  45,  45,  47,SOFF,  45,SOFF,     49,SOFF,  45,  47,SNOP,  47,  45,  45    '42  melody again again
+
+byte    SOFF,SNOP,   9,SNOP,SNOP,  13,SNOP,SNOP,     16,SNOP,SNOP,  15,SNOP,  16,  15,SNOP    '43 bass outro
+byte    SOFF,SNOP,  21,SNOP,SNOP,  25,SNOP,SNOP,     28,SNOP,SNOP,  27,SNOP,  28,  27,SNOP    '44 bass outro
+
 sequence_data
 
 byte    TEMPO, 120
 
 byte    TRANS, 0
-byte    ADSRW+%0011, 127, 0, 100, 00, SINE
-byte    ADSRW+%0100, 127, 0, 100, 00, SQUARE
+byte    ADSRW+%0011, 127, 30, 70, 60, SINE
+byte    ADSRW+%0100, 127, 0, 100, 0, SQUARE
 byte    ADSRW+%1000, 127, 60, 0, 60, NOISE
 
 ' main section
@@ -95,8 +115,8 @@ byte      2,  4,  5,  6
 
 byte    TRANS, 10
 
-byte    ADSRW+%0011, 127, 0, 100, 0, SAW
-byte    ADSRW+%0100, 127, 0, 100, 0, SQUARE
+byte    ADSRW+%0011, 127, 0, 100, 60, SAW
+byte    ADSRW+%0100, 127, 0, 100, 60, SQUARE
 
 byte      7,  9,  5,  6
 byte      8, 10,  5,  6
@@ -104,10 +124,10 @@ byte      7,  9,  5,  6
 byte      8, 10,  5,  6
 
 byte    TRANS, 8
-byte    ADSRW+%1000, 127, 0, 100, 00, SQUARE
+byte    ADSRW+%1000, 127, 0, 100, 0, SQUARE
 
-byte     11, 15, 17,  0
-byte     12, 15, 17,  0
+byte     11, 15, 17, 20
+byte     12, 20, 31, 20
 
 byte    TRANS, 7
 
@@ -116,28 +136,37 @@ byte     14, 16, 19, 21
 
 ' cut out into noise
 
-byte    ADSRW+%1000, 127, 60, 0, 60, NOISE
-
 byte    TRANS, 12
-byte    ADSRW+%0011, 127, 0, 100, 0, SINE
-byte    ADSRW+%0100, 127, 0, 100, 0, SAMPLE
+byte    ADSRW+%0011, 127, 30, 70, 60, SINE
+byte    ADSRW+%0100, 127, 0, 100, 60, SAMPLE
+byte    ADSRW+%1000, 127, 60,  0, 60, NOISE
 
 byte     27,  9, 22,  6
 byte     28, 10, 23,  6
 byte     29,  9, 24,  6
 
-byte    ADSRW+%0110, 127, 0, 100, 0, SQUARE
+byte    ADSRW+%0110, 127, 0, 100, 60, SQUARE
 
 byte     30, 25, 26,  0
 
 ' final breakdown!!!
 
-byte    ADSRW+%0011, 127, 0, 100, 0, SQUARE
+byte    TRANS, 12
 
-byte     27,  3, 22,  6
-byte     28,  4, 23,  6
-byte     29,  3, 24,  6
-byte     30, 25, 26,  6
+byte    ADSRW+%0001, 127, 0, 100, 60, SQUARE
+byte    ADSRW+%1000, 127, 30,100, 60, TRIANGLE
+byte    ADSRW+%0010, 127, 0, 100, 60, SAW
+byte    ADSRW+%0100, 127, 0, 100, 60, SQUARE
+
+byte     27,  3, 22, 41
+byte     28,  4, 23, 42
+byte     29,  3, 24, 41
+byte     30, 44, 43, 42
+
+byte     32, 33, 34, 35
+byte     36, 36, 36, 36
+
+byte     37, 38, 39, 40
 
 byte    SONGOFF
 
